@@ -20,9 +20,9 @@ const app = express();
 /* ================= MIDDLEWARE ================= */
 
 app.use(cors({
-    origin: "https://stately-quokka-2f6199.netlify.app",
-    methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-    allowedHeaders: ["Content-Type","Authorization"]
+  origin: "https://grand-pothos-ca9f21.netlify.app",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.options("*", cors());
