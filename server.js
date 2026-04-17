@@ -31,6 +31,13 @@ app.use((req, res, next) => {
     next();
 });
 
+/* ================= TEST ================= */
+app.get("/", (req, res) => {
+    res.send("🚀 Academy ERP Backend Running Successfully");
+});
+
+/* ================= Close TEST ================= */
+
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 
@@ -42,7 +49,7 @@ app.use("/api/founder", founderRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/founder", founderTimeClashRoutes);
 
-/* ================= TEST ================= */
+
 
 
 
