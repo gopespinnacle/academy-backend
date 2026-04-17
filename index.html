@@ -870,6 +870,8 @@ function toggleMenu(){
 </script>
 
 <script>
+window.onload = function(){
+
 document.getElementById("admissionForm").addEventListener("submit", async function(e){
 
     e.preventDefault();
@@ -892,7 +894,10 @@ document.getElementById("admissionForm").addEventListener("submit", async functi
     const result = await res.json();
 
     alert("✅ Admission Request Sent!");
+
 });
+};
+</script>
 </script>
 </body>
 </html>
