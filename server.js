@@ -44,9 +44,7 @@ app.use("/api/founder", founderTimeClashRoutes);
 
 /* ================= TEST ================= */
 
-app.get("/", (req, res) => {
-    res.send("🚀 Academy ERP Backend Running Successfully");
-});
+
 
 /* ================= DB ================= */
 
