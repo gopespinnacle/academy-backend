@@ -29,8 +29,8 @@
         <input type="checkbox"> Remember Me
     </div>
 
-  <button class="login-btn" id="loginBtn">
-    Log In
+  <button type="button" class="login-btn" onclick="loginUser()">
+  Log In
 </button>
 <p>
   Don’t have an account? 
@@ -43,8 +43,7 @@
 
 </div>
 <script>
-    
-    console.log("SCRIPT LOADED ✅");
+console.log("SCRIPT LOADED ✅");
 
 function loginUser() {
   const email = document.getElementById("email").value;
@@ -57,28 +56,29 @@ function loginUser() {
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      email: email,
-      password: password
-    })
+    body: JSON.stringify({ email, password })
   })
-  .then(response => response.json())
+  .then(res => res.json())
   .then(data => {
-    console.log("SUCCESS:", data);
+  console.log("SUCCESS:", data);
 
-    if (data.success) {
-      alert("Login Success ✅");
-    } else {
-      alert("Login Failed ❌");
-    }
-  })
-  .catch(error => {
-    console.error("ERROR:", error);
-    alert("Server not reachable ❌");
+  if (data.message === "Login successful") {
+
+    // ✅ ADD THIS LINE (VERY IMPORTANT)
+    localStorage.setItem("token", data.token);
+
+    alert("Login Success ✅");
+
+    window.location.href = "./founder-dashboard.html";
+  } else {
+    alert("Login Failed ❌");
+  }
+})
+  .catch(err => {
+    console.error("ERROR:", err);
+    alert("Server error ❌");
   });
 }
-
-document.getElementById("loginBtn").addEventListener("click", loginUser);
 </script>
 </body>
 </html>

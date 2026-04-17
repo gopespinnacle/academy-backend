@@ -20,7 +20,7 @@ const app = express();
 /* ================= MIDDLEWARE ================= */
 
 app.use(cors({
-  origin: "https://grand-pothos-ca9f21.netlify.app",
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
