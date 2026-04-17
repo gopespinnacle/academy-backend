@@ -203,7 +203,7 @@ function logout() {
 }
 /*async function loadPendingCount() {
 
-    const response = await fetch("http://academy-backend-jpup.onrender.com/api/auth/founder/pending-count", {
+    const response = await fetch("https://academy-backend-eatl.onrender.com/api/auth/founder/pending-count", {
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("token")
         }
@@ -228,7 +228,7 @@ async function loadAnalytics() {
 
     const token = localStorage.getItem("token");
 
-    const response = await fetch("http://academy-backend-jpup.onrender.com/api/founder/analytics", {
+    const response = await fetch("https://academy-backend-eatl.onrender.com/api/founder/analytics", {
         headers: {
             "Authorization": "Bearer " + token
         }
@@ -279,7 +279,7 @@ const token = localStorage.getItem("token");
 
 const res = await fetch(
 
-"http://academy-backend-jpup.onrender.com/api/founder/generate-sessions",
+"https://academy-backend-eatl.onrender.com/api/founder/generate-sessions",
 
 {
 method:"POST",
@@ -310,7 +310,7 @@ const token = localStorage.getItem("token");
 
 const res = await fetch(
 
-"http://academy-backend-jpup.onrender.com/api/founder/today-classes",
+"https://academy-backend-eatl.onrender.com/api/founder/today-classes",
 
 {
 headers:{
@@ -350,7 +350,7 @@ const token = localStorage.getItem("token");
 
 const res = await fetch(
 
-"http://academy-backend-jpup.onrender.com/api/founder/live-classes",
+"https://academy-backend-eatl.onrender.com/api/founder/live-classes",
 
 {
 headers:{
@@ -414,7 +414,7 @@ if(!confirmEnd) return;
 const token = localStorage.getItem("token");
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/founder/end-session/" + sessionId,
+"https://academy-backend-eatl.onrender.com/api/founder/end-session/" + sessionId,
 {
 method:"PUT",
 headers:{
@@ -439,7 +439,7 @@ loadLiveClasses();
 const token = localStorage.getItem("token");
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/founder/student-attendance-report",
+"https://academy-backend-eatl.onrender.com/api/auth/founder/student-attendance-report",
 {
 headers:{
 "Authorization":"Bearer "+token
@@ -473,7 +473,7 @@ loadStudentAttendance();*/
 const token = localStorage.getItem("token");
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/founder/teacher-late",
+"https://academy-backend-eatl.onrender.com/api/auth/founder/teacher-late",
 {
 headers:{
 "Authorization":"Bearer "+token
@@ -512,7 +512,7 @@ loadTeacherLate();*/
 const token = localStorage.getItem("token");
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/founder/student-late",
+"https://academy-backend-eatl.onrender.com/api/auth/founder/student-late",
 {
 headers:{
 "Authorization":"Bearer "+token
@@ -545,7 +545,7 @@ loadStudentLate();*/
 
 async function loadCompReport(){
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/founder/compensation-report");
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/compensation-report");
 
 const data = await res.json();
 

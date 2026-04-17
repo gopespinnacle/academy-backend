@@ -87,7 +87,7 @@ const token = localStorage.getItem("token");
 
 async function loadData(){
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/teacher/compensation-classes",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/teacher/compensation-classes",{
 headers:{
 "Authorization":"Bearer "+token
 }
@@ -163,7 +163,7 @@ if(minutes < 1){
     return;
 }
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/teacher/use-compensation",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/teacher/use-compensation",{
     method:"POST",
     headers:{
         "Content-Type":"application/json"
@@ -228,7 +228,7 @@ alert("Too short");
 return;
 }
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/teacher/use-student-compensation",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/teacher/use-student-compensation",{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
@@ -249,7 +249,7 @@ loadStudentCompensation();
 
 async function checkReminder(){
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/teacher/pending-compensation");
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/teacher/pending-compensation");
 
 const data = await res.json();
 

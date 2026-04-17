@@ -135,7 +135,7 @@ className + " - " + subject;
 async function loadStudents(){
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/founder/students",
+"https://academy-backend-eatl.onrender.com/api/founder/students",
 {
 headers:{ "Authorization":"Bearer "+token }
 }
@@ -257,7 +257,7 @@ return;
 /* 🔥 SEND TO BACKEND */
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/founder/assign-period",
+"https://academy-backend-eatl.onrender.com/api/founder/assign-period",
 {
 method:"POST",
 headers:{
@@ -449,7 +449,7 @@ assignedData[index].eca = getChecked(ALL_ECA);
 /* SAVE TO DB */
 
 await fetch(
-"http://academy-backend-jpup.onrender.com/api/founder/assign-period",
+"https://academy-backend-eatl.onrender.com/api/founder/assign-period",
 {
 method:"POST",
 headers:{
@@ -486,7 +486,7 @@ const day = localStorage.getItem("selectedDay");
 const startTime = localStorage.getItem("startTime");
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/founder/get-period-assignments",
+"https://academy-backend-eatl.onrender.com/api/founder/get-period-assignments",
 {
 method:"POST",
 headers:{
@@ -542,7 +542,7 @@ assignedData.splice(index,1);
 
 /* 🔥 SEND UPDATED DATA TO DB */
 await fetch(
-"http://academy-backend-jpup.onrender.com/api/founder/assign-period",
+"https://academy-backend-eatl.onrender.com/api/founder/assign-period",
 {
 method:"POST",
 headers:{
