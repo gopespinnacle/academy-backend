@@ -1436,16 +1436,19 @@ cursor:pointer;
 .class-card button:hover{
 background:#1a252f;
 }
-.sidebar{
-width:220px;
-background:#173b63;
-color:white;
-height:100vh;
-padding:20px;
-position:fixed;
-top:0;
-left:0;
-box-sizing:border-box;
+.sidebar {
+position: fixed;
+left: 0;
+top: 0;
+width: 220px;
+height: 100vh;
+background: #1e3a5f;
+color: white;
+padding: 15px;
+
+display: flex;
+flex-direction: column;
+overflow-y: auto;   /* ✅ scroll fix */
 }
 
 .sidebar h2{
