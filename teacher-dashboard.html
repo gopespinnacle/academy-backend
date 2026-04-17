@@ -73,7 +73,7 @@ document.getElementById("teacherName").innerText = name;
 async function loadDashboard() {
 
     const res = await fetch(
-        "http://academy-backend-jpup.onrender.com/api/teacher/classes",
+        "https://academy-backend-eatl.onrender.com/api/teacher/classes",
         {
             headers: {
                 "Authorization": "Bearer " + token
@@ -86,7 +86,7 @@ if (!res.ok) {
 }
     /* GET PERIOD DATA */
 const res2 = await fetch(
-    "http://academy-backend-jpup.onrender.com/api/teacher/all-period-assignments",
+    "https://academy-backend-eatl.onrender.com/api/teacher/all-period-assignments",
     {
         headers: {
             "Authorization": "Bearer " + token
@@ -115,7 +115,7 @@ animateNumber("totalClasses", totalClasses);
 animateNumber("totalStudents", totalStudents);
 
     /* Assessments (this is OK) */
-    const res3 = await fetch("http://academy-backend-jpup.onrender.com/api/teacher/assessments", {
+    const res3 = await fetch("https://academy-backend-eatl.onrender.com/api/teacher/assessments", {
         headers: { "Authorization": "Bearer " + token }
     });
 
