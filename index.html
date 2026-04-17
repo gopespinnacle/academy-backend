@@ -842,11 +842,11 @@ footer{
 <section id="admission" class="admission">
     <h2>Secure Admission Now</h2>
 
-    <form class="admission-form">
-        <input type="text" placeholder="Parent Name" required>
-        <input type="text" placeholder="Student Name" required>
-        <input type="text" placeholder="Grade (1 – 12)" required>
-        <input type="tel" placeholder="Mobile Number" required>
+    <form class="admission-form" id="admissionForm">
+        <input type="text" id="parentName" placeholder="Parent Name" required>
+<input type="text" id="studentName" placeholder="Student Name" required>
+<input type="text" id="grade" placeholder="Grade (1 – 12)" required>
+<input type="tel" id="mobile" placeholder="Mobile Number" required>
         <button type="submit">Request Admission Call</button>
     </form>
 </section>
@@ -867,6 +867,32 @@ function toggleMenu(){
     document.getElementById("navMenu").classList.toggle("active");
     document.querySelector(".menu-overlay").classList.toggle("active");
 }
+</script>
+
+<script>
+document.getElementById("admissionForm").addEventListener("submit", async function(e){
+
+    e.preventDefault();
+
+    const data = {
+        parentName: document.getElementById("parentName").value,
+        studentName: document.getElementById("studentName").value,
+        grade: document.getElementById("grade").value,
+        mobile: document.getElementById("mobile").value
+    };
+
+    const res = await fetch("https://academy-backend-jpup.onrender.com/api/founder/admission", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+
+    alert("✅ Admission Request Sent!");
+});
 </script>
 </body>
 </html>

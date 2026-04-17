@@ -452,4 +452,39 @@ router.get("/compensation-report", async (req,res)=>{
         res.status(500).json({ message:"Error" });
     }
 });
+
+
+/* ================= ADMISSION FORM ================= */
+
+const mongoose = require("mongoose");
+
+const admissionSchema = new mongoose.Schema({
+    parentName: String,
+    studentName: String,
+    grade: String,
+    mobile: String
+});
+
+const Admission = mongoose.model("Admission", admissionSchema);
+
+router.post("/admission", async (req, res) => {
+
+    try {
+        const { parentName, studentName, grade, mobile } = req.body;
+
+        await Admission.create({
+            parentName,
+            studentName,
+            grade,
+            mobile
+        });
+
+        res.json({ message: "Admission Saved Successfully" });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Error saving admission" });
+    }
+
+});
 module.exports = router;
