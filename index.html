@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="icon" href="images/logo.png">
+    <link rel="icon" href="favicon.ico">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gopes Pinnacle Academy | Structured Online Academy</title>
@@ -21,7 +21,10 @@ body{
     color:#222;
     line-height:1.6;
 }
-
+html, body{
+    width:100%;
+    overflow-x:hidden;
+}
 /* ===== HEADER ===== */
 .header{
     background:#0d1b2a;
@@ -137,9 +140,7 @@ body{
     flex-wrap:wrap;
     gap:12px;
     margin-bottom:35px;
-    max-width:800px;
-    margin-left:auto;
-    margin-right:auto;
+    width:100%;
 }
 
 .hero-points span{
@@ -461,6 +462,121 @@ footer{
     margin-top:20px;
     color:#0d1b2a;
 }
+
+/* ===== MOBILE RESPONSIVE FIX ===== */
+@media (max-width: 600px){
+
+    .hero{
+        padding:90px 15px;
+    }
+
+    .hero h1{
+        font-size:24px;
+        line-height:1.4;
+    }
+
+    .hero p{
+        font-size:14px;
+    }
+
+    .hero-points{
+        flex-direction:column;
+        align-items:center;
+        gap:10px;
+    }
+
+    .hero-points span{
+        width:90%;
+        min-width:auto;
+        font-size:13px;
+        padding:8px 10px;
+    }
+
+    .btn-primary{
+        font-size:14px;
+        padding:12px 20px;
+    }
+}
+
+/* ===== MOBILE NAV FIX ===== */
+@media (max-width: 768px){
+
+    .header{
+        padding:10px 15px;
+    }
+
+    .header-container{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+
+    .main-nav{
+        width:100%;
+        flex-wrap:wrap;
+        gap:10px;
+        margin-top:10px;
+    }
+
+    .main-nav a, .dropbtn{
+        font-size:14px;
+        margin-left:0;
+    }
+
+}
+
+.header-container,
+.hero,
+.system,
+.courses,
+.online-section,
+.admission,
+.problem-section,
+.authority-section,
+.results-section,
+.roadmap-section,
+.founder-section{
+    width:100%;
+    max-width:100%;
+}
+
+
+/* ===== HAMBURGER MENU ===== */
+.menu-toggle{
+    display:none;
+    font-size:26px;
+    color:white;
+    cursor:pointer;
+}
+
+/* Mobile */
+@media (max-width: 768px){
+
+    .menu-toggle{
+        display:block;
+        position:absolute;
+        right:20px;
+        top:18px;
+    }
+
+    .main-nav{
+        display:none;
+        flex-direction:column;
+        width:100%;
+        background:#0d1b2a;
+        margin-top:10px;
+        padding:10px 0;
+    }
+
+    .main-nav a{
+        padding:10px 20px;
+        display:block;
+        width:100%;
+    }
+
+    .main-nav.active{
+        display:flex;
+    }
+}
 </style>
 </head>
 
@@ -471,7 +587,8 @@ footer{
         <div class="logo">
     <img src="images/logo.png" alt="Gopes Pinnacle Academy Logo">
 </div>
-        <nav class="main-nav">
+<div class="menu-toggle" onclick="toggleMenu()">☰</div>
+        <nav class="main-nav" id="navMenu">
             <a href="#system">Academic System</a>
             <a href="#courses">Programs</a>
             <a href="#online">Online Model</a>
@@ -686,5 +803,11 @@ footer{
    target="_blank">
    💬
 </a>
+
+<script>
+function toggleMenu(){
+    document.getElementById("navMenu").classList.toggle("active");
+}
+</script>
 </body>
 </html>
