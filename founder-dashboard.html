@@ -239,14 +239,18 @@ if (!response.ok) {
 }
 
     const data = await response.json();
+    console.log(data);
 
    document.getElementById("studentCount").innerText = data.totalStudents;
 document.getElementById("teacherCount").innerText = data.totalTeachers;
 document.getElementById("pendingCount").innerText = data.pendingModifications;
 document.getElementById("averageMarks").innerText = data.averageMarks;
 document.getElementById("totalAssessments").innerText = data.totalAssessments;
-document.getElementById("pendingFees").innerText = "₹ " + data.pendingFees;
-document.getElementById("upcomingAssessments").innerText = data.upcomingAssessments;
+document.getElementById("pendingFees").innerText =
+  data.pendingFees ? "₹ " + data.pendingFees : "₹ 0";
+
+document.getElementById("upcomingAssessments").innerText =
+  data.upcomingAssessments ? data.upcomingAssessments : 0;
 
     // Recent Activities
     const activityDiv = document.getElementById("recentActivities");
