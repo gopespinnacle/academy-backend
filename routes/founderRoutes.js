@@ -478,4 +478,14 @@ router.post("/admission", async (req, res) => {
         res.status(500).json({ message: "Error saving admission" });
     }
 });
+
+// GET ALL ADMISSIONS
+router.get("/admissions", async (req, res) => {
+  try {
+    const data = await Admission.find().sort({ _id: -1 });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 module.exports = router;
