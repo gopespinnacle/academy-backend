@@ -1,4 +1,5 @@
 console.log("FOUNDER ROUTES LOADED");
+const Admission = require("../models/Admission");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const express = require("express");
 const router = express.Router();
@@ -456,29 +457,11 @@ router.get("/compensation-report", async (req,res)=>{
 
 /* ================= ADMISSION FORM ================= */
 
-const mongoose = require("mongoose");
-
-const admissionSchema = new mongoose.Schema({
-    parentName: String,
-    studentName: String,
-    grade: String,
-    mobile: String
-});
-
-const Admission = mongoose.model("Admission", admissionSchema);
-
 router.post("/admission", async (req, res) => {
     console.log("🔥 ADMISSION HIT");
 
     try {
         const { parentName, studentName, grade, mobile } = req.body;
-
-        const Admission = mongoose.model("Admission", new mongoose.Schema({
-            parentName: String,
-            studentName: String,
-            grade: String,
-            mobile: String
-        }));
 
         await Admission.create({
             parentName,
@@ -490,7 +473,7 @@ router.post("/admission", async (req, res) => {
         res.json({ message: "Admission Saved Successfully" });
 
     } catch (error) {
-        console.log(error);
+        console.log("❌ ERROR:", error);
         res.status(500).json({ message: "Error saving admission" });
     }
 });
