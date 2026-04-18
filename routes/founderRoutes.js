@@ -1,4 +1,5 @@
 console.log("FOUNDER ROUTES LOADED");
+console.log("🔥 ADMISSION ROUTE FILE LOADED");
 const Admission = require("../models/Admission");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const express = require("express");
