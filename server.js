@@ -45,10 +45,14 @@ app.use("/uploads", express.static("uploads"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/teacher", teacherRoutes);
-app.use("/api/founder", founderTimeClashRoutes);
-app.use("/api/founder", founderRoutes);
-app.use("/api/student", studentRoutes);
 
+// ✅ FIRST load MAIN routes
+app.use("/api/founder", founderRoutes);
+
+// ✅ THEN load additional routes
+app.use("/api/founder", founderTimeClashRoutes);
+
+app.use("/api/student", studentRoutes);
 
 
 
