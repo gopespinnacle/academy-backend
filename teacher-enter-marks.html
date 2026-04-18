@@ -94,7 +94,7 @@ const token = localStorage.getItem("token");
 
 async function loadAssessments(){
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/auth/teacher/assessments",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/auth/teacher/assessments",{
 
 headers:{
 "Authorization":"Bearer "+token
@@ -122,7 +122,7 @@ loadAssessments();
 
 async function loadStudents(){
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/auth/teacher/students",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/auth/teacher/students",{
 
 headers:{
 "Authorization":"Bearer "+token
@@ -171,7 +171,7 @@ const assessmentId = document.getElementById("assessmentSelect").value;
 
 const marks = document.getElementById("marks-"+studentId).value;
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/auth/teacher/submit-marks",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/auth/teacher/submit-marks",{
 
 method:"POST",
 

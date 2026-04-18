@@ -124,7 +124,7 @@ async function loadTeachers(){
 
 const token = localStorage.getItem("token");
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/founder/teachers",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/teachers",{
 
 headers:{ "Authorization":"Bearer "+token }
 
@@ -221,7 +221,7 @@ if (startTime >= endTime) {
 // 🔥 NEW BACKEND CLASH CHECK
 const token = localStorage.getItem("token");
 
-const clashRes = await fetch("http://academy-backend-jpup.onrender.com/api/founder/check-clash", {
+const clashRes = await fetch("https://academy-backend-eatl.onrender.com/api/founder/check-clash", {
     method: "POST",
     headers: {
         "Content-Type": "application/json",
@@ -244,7 +244,7 @@ if (clashData.clash) {
 }
 
 document.getElementById("clashWarning").style.display = "none";
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/founder/add-schedule",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/add-schedule",{
 
 method:"POST",
 
@@ -300,7 +300,7 @@ async function loadSchedules(){
 
 const token = localStorage.getItem("token");
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/founder/schedules",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/schedules",{
 
 headers:{ "Authorization":"Bearer "+token }
 
@@ -436,7 +436,7 @@ const token = localStorage.getItem("token");
 
 if(!confirm("Delete this schedule?")) return;
 
-await fetch("http://academy-backend-jpup.onrender.com/api/founder/delete-schedule/" + id,{
+await fetch("https://academy-backend-eatl.onrender.com/api/founder/delete-schedule/" + id,{
 method:"DELETE",
 headers:{
 "Authorization":"Bearer " + token
@@ -584,7 +584,7 @@ async function saveScheduleEdit(){
 const teacherId = document.getElementById("teacher").value;
 // 🔥 BACKEND CLASH CHECK FOR EDIT
  const token = localStorage.getItem("token");
-const clashRes = await fetch("http://academy-backend-jpup.onrender.com/api/founder/check-clash", {
+const clashRes = await fetch("https://academy-backend-eatl.onrender.com/api/founder/check-clash", {
     method: "POST",
    
 
@@ -623,7 +623,7 @@ if (clashData.clash) {
 
         try {
 
-        const res = await fetch("http://academy-backend-jpup.onrender.com/api/founder/update-schedule/" + currentEditId,{
+        const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/update-schedule/" + currentEditId,{
             method:"PUT",
             headers:{
                 "Content-Type":"application/json",
@@ -695,7 +695,7 @@ async function checkTimeClashLive() {
     try {
 const token = localStorage.getItem("token");
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/founder/check-clash", {
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/check-clash", {
     method: "POST",
     headers: {
         "Content-Type": "application/json",

@@ -80,7 +80,7 @@ const assessmentId = params.get("assessmentId");
 async function loadAnswers(){
 
 const res = await fetch(
-`http://academy-backend-jpup.onrender.com/api/auth/teacher/answers/${assessmentId}`,
+`https://academy-backend-eatl.onrender.com/api/auth/teacher/answers/${assessmentId}`,
 {
 headers:{
 "Authorization":"Bearer "+token
@@ -102,7 +102,7 @@ table.innerHTML += `
 <td>${a.student.name}</td>
 
 <td>
-<a href="http://academy-backend-jpup.onrender.com/uploads/${a.answerFile}" target="_blank">
+<a href="https://academy-backend-eatl.onrender.com/uploads/${a.answerFile}" target="_blank">
 Download
 </a>
 </td>
@@ -131,7 +131,7 @@ async function saveMarks(answerId){
 const marks = document.getElementById("marks-"+answerId).value;
 
 await fetch(
-`http://academy-backend-jpup.onrender.com/api/auth/teacher/give-marks/${answerId}`,
+`https://academy-backend-eatl.onrender.com/api/auth/teacher/give-marks/${answerId}`,
 {
 method:"PUT",
 headers:{

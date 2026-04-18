@@ -212,7 +212,7 @@ loadCategories();
 // LOAD DATA
 async function loadCategories(){
 
-const res = await fetch(`http://academy-backend-jpup.onrender.com/api/founder/categories/${TYPE}`);
+const res = await fetch(`https://academy-backend-eatl.onrender.com/api/founder/categories/${TYPE}`);
 
 let data;
 
@@ -249,7 +249,7 @@ async function addCategory(){
 
 const name = document.getElementById("subjectName").value;
 
-await fetch("http://academy-backend-jpup.onrender.com/api/founder/add-category",{
+await fetch("https://academy-backend-eatl.onrender.com/api/founder/add-category",{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
@@ -287,7 +287,7 @@ async function saveCategory(id){
 
 const newName = document.getElementById("edit-"+id).value;
 
-await fetch(`http://academy-backend-jpup.onrender.com/api/founder/category/${id}`,{
+await fetch(`https://academy-backend-eatl.onrender.com/api/founder/category/${id}`,{
 method:"PUT",
 headers:{
 "Content-Type":"application/json"
@@ -302,7 +302,7 @@ loadCategories();
 // DELETE
 async function deleteCategory(id){
 
-await fetch(`http://academy-backend-jpup.onrender.com/api/founder/category/${id}`,{
+await fetch(`https://academy-backend-eatl.onrender.com/api/founder/category/${id}`,{
 method:"DELETE"
 });
 

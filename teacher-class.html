@@ -35,7 +35,7 @@ let attendanceData = {};
 /* LOAD STUDENTS + SESSION */
 async function loadStudents(){
 
-const res1 = await fetch("http://academy-backend-jpup.onrender.com/api/auth/teacher/today-sessions",{
+const res1 = await fetch("https://academy-backend-eatl.onrender.com/api/auth/teacher/today-sessions",{
 headers:{ "Authorization":"Bearer "+token }
 });
 
@@ -46,7 +46,7 @@ const session = data1.sessions.find(s => s._id === sessionId);
 
 // get students
 const res2 = await fetch(
-`http://academy-backend-jpup.onrender.com/api/auth/teacher/students?className=${className}&subject=${subject}`,
+`https://academy-backend-eatl.onrender.com/api/auth/teacher/students?className=${className}&subject=${subject}`,
 {
 headers:{ "Authorization":"Bearer "+token }
 });
@@ -96,7 +96,7 @@ async function submitAttendance(){
 for(const studentId in attendanceData){
 
 await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/teacher/attendance",
+"https://academy-backend-eatl.onrender.com/api/auth/teacher/attendance",
 {
 method:"POST",
 headers:{

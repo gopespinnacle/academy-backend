@@ -127,7 +127,7 @@ let studentData = [];
 
 async function loadStudentCounts(){
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/teacher/all-period-assignments",
+"https://academy-backend-eatl.onrender.com/api/teacher/all-period-assignments",
 {
 headers:{ "Authorization":"Bearer " + token }
 }
@@ -141,7 +141,7 @@ studentData = data.data || [];
 async function loadTimetable(){
 
     const res = await fetch(
-        "http://academy-backend-jpup.onrender.com/api/teacher/all-period-assignments",
+        "https://academy-backend-eatl.onrender.com/api/teacher/all-period-assignments",
         {
             headers:{ "Authorization":"Bearer "+token }
         }
@@ -162,7 +162,7 @@ async function loadTimetable(){
 async function loadStudents(){
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/teacher/all-period-assignments",
+"https://academy-backend-eatl.onrender.com/api/teacher/all-period-assignments",
 {
 headers:{ "Authorization":"Bearer "+token }
 }

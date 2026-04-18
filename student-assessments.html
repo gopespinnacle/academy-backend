@@ -70,7 +70,7 @@ const token = localStorage.getItem("token");
 async function loadAssessments(){
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/student/assessments",
+"https://academy-backend-eatl.onrender.com/api/auth/student/assessments",
 {
 headers:{
 "Authorization":"Bearer "+token
@@ -94,7 +94,7 @@ table.innerHTML += `
 <td>${a.subject}</td>
 
 <td>
-<a href="http://academy-backend-jpup.onrender.com/uploads/${a.questionPaper}" target="_blank">
+<a href="https://academy-backend-eatl.onrender.com/uploads/${a.questionPaper}" target="_blank">
 View PDF
 </a>
 </td>
@@ -130,7 +130,7 @@ formData.append("assessmentId",assessmentId);
 formData.append("answer",fileInput.files[0]);
 
 await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/student/upload-answer",
+"https://academy-backend-eatl.onrender.com/api/auth/student/upload-answer",
 {
 method:"POST",
 headers:{

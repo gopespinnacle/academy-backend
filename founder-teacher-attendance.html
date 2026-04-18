@@ -174,7 +174,7 @@ window.location.href="founder-login.html";
 async function loadTeachers(){
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/founder/teachers",
+"https://academy-backend-eatl.onrender.com/api/auth/founder/teachers",
 {
 headers:{
 "Authorization":"Bearer "+token
@@ -218,7 +218,7 @@ if(!teacherId) return;
 
 const res = await fetch(
 
-"http://academy-backend-jpup.onrender.com/api/auth/founder/teacher-attendance-report/"+teacherId,
+"https://academy-backend-eatl.onrender.com/api/auth/founder/teacher-attendance-report/"+teacherId,
 
 {
 headers:{

@@ -55,7 +55,7 @@ const token = localStorage.getItem("token");
 /* LOAD TEACHERS */
 
 const tRes = await fetch(
-"http://academy-backend-jpup.onrender.com/api/founder/teachers",
+"https://academy-backend-eatl.onrender.com/api/founder/teachers",
 {
 headers:{ "Authorization":"Bearer "+token }
 });
@@ -89,7 +89,7 @@ return;
 }
 
 const res = await fetch(
-`http://academy-backend-jpup.onrender.com/api/founder/teacher-schedule/${teacherId}`,
+`https://academy-backend-eatl.onrender.com/api/founder/teacher-schedule/${teacherId}`,
 {
 headers:{ "Authorization":"Bearer "+token }
 });

@@ -51,7 +51,7 @@ const token = localStorage.getItem("token");
 async function loadCameras(){
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/teacher/exam-cameras/"+assessmentId,
+"https://academy-backend-eatl.onrender.com/api/auth/teacher/exam-cameras/"+assessmentId,
 {
 headers:{
 "Authorization":"Bearer "+token

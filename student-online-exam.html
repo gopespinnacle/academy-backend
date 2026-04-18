@@ -95,7 +95,7 @@ ctx.drawImage(video,0,0);
 const image = canvas.toDataURL("image/jpeg");
 
 fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/student/upload-camera",
+"https://academy-backend-eatl.onrender.com/api/auth/student/upload-camera",
 {
 method:"POST",
 headers:{
@@ -176,7 +176,7 @@ alert("Copy/Paste is disabled during exam");
 setInterval(async()=>{
 
 await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/student/exam-activity",
+"https://academy-backend-eatl.onrender.com/api/auth/student/exam-activity",
 {
 method:"POST",
 headers:{
@@ -201,7 +201,7 @@ let remainingSeconds = 0;
 async function loadExam(){
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/student/assessments",
+"https://academy-backend-eatl.onrender.com/api/auth/student/assessments",
 {
 headers:{
 "Authorization":"Bearer "+token
@@ -213,7 +213,7 @@ const data = await res.json();
 const exam = data.assessments.find(a => a._id === assessmentId);
 
 document.getElementById("questionPaper").src =
-"http://academy-backend-jpup.onrender.com/uploads/"+exam.questionPaper;
+"https://academy-backend-eatl.onrender.com/uploads/"+exam.questionPaper;
 
 /* TIMER CALCULATION */
 
@@ -268,7 +268,7 @@ async function submitExam(){
 const answer = document.getElementById("answer").value;
 
 await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/student/submit-online-exam",
+"https://academy-backend-eatl.onrender.com/api/auth/student/submit-online-exam",
 {
 method:"POST",
 headers:{

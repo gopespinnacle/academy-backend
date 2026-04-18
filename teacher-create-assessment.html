@@ -84,7 +84,7 @@ formData.append("examStartTime",document.getElementById("startTime").value);
 formData.append("pdf",document.getElementById("pdf").files[0]);
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/teacher/create-assessment",
+"https://academy-backend-eatl.onrender.com/api/auth/teacher/create-assessment",
 {
 method:"POST",
 headers:{

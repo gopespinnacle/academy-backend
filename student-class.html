@@ -274,7 +274,7 @@ btn.disabled = true;
 
 try{
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/student/join-class",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/student/join-class",{
 method:"POST",
 headers:{
   "Content-Type":"application/json",
@@ -323,7 +323,7 @@ async function loadStudents(){
 try{
 
 const res = await fetch(
-`http://academy-backend-jpup.onrender.com/api/teacher/period-students?className=${className}&subject=${subject}&day=${day}&startTime=${startTime}`,
+`https://academy-backend-eatl.onrender.com/api/teacher/period-students?className=${className}&subject=${subject}&day=${day}&startTime=${startTime}`,
 {
 headers:{ "Authorization":"Bearer "+token }
 }
@@ -362,7 +362,7 @@ async function loadAttendance(){
 
 try{
 
-const res = await fetch(`http://academy-backend-jpup.onrender.com/api/student/my-attendance?className=${className}`,{
+const res = await fetch(`https://academy-backend-eatl.onrender.com/api/student/my-attendance?className=${className}`,{
 headers:{ "Authorization":"Bearer "+token }
 });
 

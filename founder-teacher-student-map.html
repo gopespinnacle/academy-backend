@@ -53,7 +53,7 @@ const body = {
     teacherId: teacherId
 };
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/founder/get-period-assignments",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/get-period-assignments",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
@@ -65,7 +65,7 @@ body: JSON.stringify(body)
 const data = await res.json();
 console.log("Assignments API Response:", data);
 // 🔥 Load all students once
-const studentRes = await fetch("http://academy-backend-jpup.onrender.com/api/founder/students",{
+const studentRes = await fetch("https://academy-backend-eatl.onrender.com/api/founder/students",{
 headers:{
 "Authorization":"Bearer "+token
 }
@@ -118,7 +118,7 @@ if(!confirm("Delete this assignment?")) return;
 const token = localStorage.getItem("token");
 
 // send empty assignments → overwrite
-await fetch("http://academy-backend-jpup.onrender.com/api/founder/assign-period",{
+await fetch("https://academy-backend-eatl.onrender.com/api/founder/assign-period",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
@@ -145,7 +145,7 @@ async function loadTeachers(){
 
 const token = localStorage.getItem("token");
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/founder/teachers",{
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/teachers",{
 headers:{
 "Authorization":"Bearer "+token
 }

@@ -224,7 +224,7 @@ function resetSalary(){
 }
 async function loadSubjects(){
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/founder/categories/subject");
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/categories/subject");
 const data = await res.json();
 
 const container = document.getElementById("subjects");
@@ -241,7 +241,7 @@ ${s.name}
 }
 async function loadCategory(type, elementId){
 
-const res = await fetch(`http://academy-backend-jpup.onrender.com/api/founder/categories/${type}`);
+const res = await fetch(`https://academy-backend-eatl.onrender.com/api/founder/categories/${type}`);
 const data = await res.json();
 
 const container = document.getElementById(elementId);
@@ -291,7 +291,7 @@ function submitTeacher(){
     console.log("ECA:", selectedECA);
     console.log("Language:", selectedLanguages);
 
-    fetch("http://academy-backend-jpup.onrender.com/api/founder/add-teacher", {
+    fetch("https://academy-backend-eatl.onrender.com/api/founder/add-teacher", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

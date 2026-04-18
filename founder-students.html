@@ -266,10 +266,10 @@ let url = "";
 let method = "";
 
 if(editStudentId){
-url = `http://academy-backend-jpup.onrender.com/api/founder/student/${editStudentId}`;
+url = `https://academy-backend-eatl.onrender.com/api/founder/student/${editStudentId}`;
 method = "PUT";
 }else{
-url = "http://academy-backend-jpup.onrender.com/api/founder/student";
+url = "https://academy-backend-eatl.onrender.com/api/founder/student";
 method = "POST";
 }
 
@@ -320,7 +320,7 @@ const token = localStorage.getItem("token");
 
 const student = students[index];
 
-await fetch(`http://academy-backend-jpup.onrender.com/api/founder/student/${student._id}`,{
+await fetch(`https://academy-backend-eatl.onrender.com/api/founder/student/${student._id}`,{
 method:"DELETE",
 headers:{
 "Authorization":"Bearer "+token
@@ -393,7 +393,7 @@ document.getElementById("studentProfilePopup").style.display="none";
 }
 /*async function loadStudentSubjects(){
 
-const res = await fetch("http://academy-backend-jpup.onrender.com/api/founder/categories/subject");
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/categories/subject");
 const data = await res.json();
 
 const container = document.getElementById("studentSubjects");
@@ -417,7 +417,7 @@ async function loadCategoriesForStudent(){
     try{
 
         // SUBJECTS
-        const subRes = await fetch("http://academy-backend-jpup.onrender.com/api/founder/categories/subject");
+        const subRes = await fetch("https://academy-backend-eatl.onrender.com/api/founder/categories/subject");
         let subData;
 try {
     subData = await subRes.json();
@@ -442,7 +442,7 @@ try {
         });
 
         // ECA
-        const ecaRes = await fetch("http://academy-backend-jpup.onrender.com/api/founder/categories/eca");
+        const ecaRes = await fetch("https://academy-backend-eatl.onrender.com/api/founder/categories/eca");
         let ecaData;
 try {
     ecaData = await ecaRes.json();   // ✅ CORRECT
@@ -467,7 +467,7 @@ try {
         });
 
         // LANGUAGE
-        const langRes = await fetch("http://academy-backend-jpup.onrender.com/api/founder/categories/language");
+        const langRes = await fetch("https://academy-backend-eatl.onrender.com/api/founder/categories/language");
         let langData;
 try {
     langData = await langRes.json();   // ✅ CORRECT
@@ -551,7 +551,7 @@ async function saveScheduleEdit(){
 
     const token = localStorage.getItem("token");
 
-    await fetch("http://academy-backend-jpup.onrender.com/api/founder/update-schedule/" + currentEditId,{
+    await fetch("https://academy-backend-eatl.onrender.com/api/founder/update-schedule/" + currentEditId,{
         method:"PUT",
         headers:{
             "Content-Type":"application/json",

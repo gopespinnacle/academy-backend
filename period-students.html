@@ -124,7 +124,7 @@ console.log("TOKEN:", token);
 try{
 console.log("API URL:", cleanedParams.toString());
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/teacher/period-students?" + cleanedParams.toString(),
+"https://academy-backend-eatl.onrender.com/api/teacher/period-students?" + cleanedParams.toString(),
 {
 headers:{
 "Authorization":"Bearer " + token
@@ -268,7 +268,7 @@ if(!attendanceMarked && el.innerText !== "Present" && el.innerText !== "Absent")
 el.innerHTML = "<span style='color:red;'>Absent</span>";
 
 /* ✅ SAVE ABSENT IN DB */
-fetch("http://academy-backend-jpup.onrender.com/api/teacher/attendance",{
+fetch("https://academy-backend-eatl.onrender.com/api/teacher/attendance",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
@@ -376,7 +376,7 @@ const teacherId = localStorage.getItem("teacherId");
 
 /* API */
 try{
-await fetch("http://academy-backend-jpup.onrender.com/api/teacher/attendance",{
+await fetch("https://academy-backend-eatl.onrender.com/api/teacher/attendance",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
@@ -417,7 +417,7 @@ const params = new URLSearchParams(window.location.search);
 
 const token = localStorage.getItem("token");
 
-await fetch("http://academy-backend-jpup.onrender.com/api/teacher/end-attendance",{
+await fetch("https://academy-backend-eatl.onrender.com/api/teacher/end-attendance",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",
@@ -440,7 +440,7 @@ async function testSaveAttendance(){
 
 const params = new URLSearchParams(window.location.search);
 
-await fetch("http://academy-backend-jpup.onrender.com/api/teacher/attendance",{
+await fetch("https://academy-backend-eatl.onrender.com/api/teacher/attendance",{
 method:"POST",
 headers:{
 "Content-Type":"application/json",

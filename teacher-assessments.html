@@ -91,7 +91,7 @@ const token = localStorage.getItem("token");
 async function loadAssessments(){
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/teacher/assessments",
+"https://academy-backend-eatl.onrender.com/api/auth/teacher/assessments",
 {
 headers:{
 "Authorization":"Bearer "+token
@@ -107,7 +107,7 @@ table.innerHTML="";
 data.assessments.forEach(a=>{
 
 let pdfLink = a.questionPaper
-? `<a href="http://academy-backend-jpup.onrender.com/uploads/${a.questionPaper}" target="_blank">View PDF</a>`
+? `<a href="https://academy-backend-eatl.onrender.com/uploads/${a.questionPaper}" target="_blank">View PDF</a>`
 : "No PDF";
 
 let sendButton = a.sentToStudents
@@ -156,7 +156,7 @@ async function deleteAssessment(id){
 if(!confirm("Delete this assessment?")) return;
 
 await fetch(
-`http://academy-backend-jpup.onrender.com/api/auth/teacher/delete-assessment/${id}`,
+`https://academy-backend-eatl.onrender.com/api/auth/teacher/delete-assessment/${id}`,
 {
 method:"DELETE",
 headers:{
@@ -172,7 +172,7 @@ loadAssessments();
 async function sendAssessment(id){
 
 await fetch(
-`http://academy-backend-jpup.onrender.com/api/auth/teacher/send-assessment/${id}`,
+`https://academy-backend-eatl.onrender.com/api/auth/teacher/send-assessment/${id}`,
 {
 method:"PUT",
 headers:{

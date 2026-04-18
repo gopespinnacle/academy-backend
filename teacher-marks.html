@@ -30,7 +30,7 @@ let selectedAssessment = null;
 
 async function loadAssessments() {
 
-    const response = await fetch("http://academy-backend-jpup.onrender.com/api/auth/teacher/assessments", {
+    const response = await fetch("https://academy-backend-eatl.onrender.com/api/auth/teacher/assessments", {
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("token")
         }
@@ -56,7 +56,7 @@ async function loadStudents() {
     selectedAssessment = select.value;
     const className = select.options[select.selectedIndex].dataset.className;
 
-    const response = await fetch("http://academy-backend-jpup.onrender.com/api/auth/teacher/students", {
+    const response = await fetch("https://academy-backend-eatl.onrender.com/api/auth/teacher/students", {
         headers: {
             "Authorization": "Bearer " + localStorage.getItem("token")
         }
@@ -94,7 +94,7 @@ async function saveMarks(studentId) {
 
     const marksObtained = document.getElementById("marks-" + studentId).value;
 
-    const response = await fetch("http://academy-backend-jpup.onrender.com/api/auth/teacher/submit-marks", {
+    const response = await fetch("https://academy-backend-eatl.onrender.com/api/auth/teacher/submit-marks", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -119,7 +119,7 @@ async function saveMarks(studentId) {
 
 async function requestModification(studentId) {
 
-    const response = await fetch("http://academy-backend-jpup.onrender.com/api/auth/teacher/request-modification", {
+    const response = await fetch("https://academy-backend-eatl.onrender.com/api/auth/teacher/request-modification", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

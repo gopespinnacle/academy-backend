@@ -74,7 +74,7 @@ async function loadClasses(){
 const token = localStorage.getItem("token");
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/teacher/today-sessions",
+"https://academy-backend-eatl.onrender.com/api/auth/teacher/today-sessions",
 {
 headers:{
 "Authorization":"Bearer " + token
@@ -236,7 +236,7 @@ async function loadAssignedClasses(){
 const token = localStorage.getItem("token");
 
 const res = await fetch(
-"http://academy-backend-jpup.onrender.com/api/auth/teacher/my-assignments",
+"https://academy-backend-eatl.onrender.com/api/auth/teacher/my-assignments",
 {
 headers:{
 "Authorization":"Bearer " + token
