@@ -891,9 +891,15 @@ document.getElementById("admissionForm").addEventListener("submit", async functi
         body: JSON.stringify(data)
     });
 
-    const result = await res.json();
+    if (!res.ok) {
+    alert("❌ Failed to submit");
+    return;
+}
 
-    alert("✅ Admission Request Sent!");
+const result = await res.json();
+console.log(result);
+
+alert("✅ Admission Request Sent!");
 
 });
 };
