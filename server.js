@@ -45,9 +45,10 @@ app.use("/uploads", express.static("uploads"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/teacher", teacherRoutes);
+app.use("/api/founder", founderTimeClashRoutes);
 app.use("/api/founder", founderRoutes);
 app.use("/api/student", studentRoutes);
-app.use("/api/founder", founderTimeClashRoutes);
+
 
 
 
