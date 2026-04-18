@@ -5,6 +5,6 @@ const admissionSchema = new mongoose.Schema({
     studentName: String,
     grade: String,
     mobile: String
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model("Admission", admissionSchema);
