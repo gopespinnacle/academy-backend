@@ -468,9 +468,17 @@ const admissionSchema = new mongoose.Schema({
 const Admission = mongoose.model("Admission", admissionSchema);
 
 router.post("/admission", async (req, res) => {
+    console.log("🔥 ADMISSION HIT");
 
     try {
         const { parentName, studentName, grade, mobile } = req.body;
+
+        const Admission = mongoose.model("Admission", new mongoose.Schema({
+            parentName: String,
+            studentName: String,
+            grade: String,
+            mobile: String
+        }));
 
         await Admission.create({
             parentName,
@@ -485,6 +493,5 @@ router.post("/admission", async (req, res) => {
         console.log(error);
         res.status(500).json({ message: "Error saving admission" });
     }
-
 });
 module.exports = router;
