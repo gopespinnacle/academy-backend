@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Enquiries</title>
+  <style>
+    body { font-family: Arial; padding:20px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:10px; border:1px solid #ccc; text-align:left; }
+    th { background:#333; color:#fff; }
+  </style>
+</head>
+
+<body>
+
+<h2>New Enquiries</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Student Name</th>
+      <th>Parent Name</th>
+      <th>Grade</th>
+      <th>Mobile</th>
+      <th>Date</th>
+    </tr>
+  </thead>
+  <tbody id="dataTable"></tbody>
+</table>
+
+<script>
+async function loadData() {
+  try {
+    const res = await fetch("https://academy-backend-eat1.onrender.com/api/founder/admissions");
+    const data = await res.json();
+
+    const table = document.getElementById("dataTable");
+    table.innerHTML = "";
+
+    data.forEach(item => {
+      const tr = document.createElement("tr");
+
+      const date = new Date(item._id.substring(0,8)*1000);
+
+      tr.innerHTML = `
+        <td>${item.studentName}</td>
+        <td>${item.parentName}</td>
+        <td>${item.grade}</td>
+        <td>${item.mobile}</td>
+        <td>${date.toLocaleString()}</td>
+      `;
+
+      table.appendChild(tr);
+    });
+
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+loadData();
+</script>
+
+</body>
+</html>

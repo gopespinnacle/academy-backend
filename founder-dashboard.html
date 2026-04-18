@@ -87,6 +87,10 @@ window.location.href = page;
         <p id="totalAssessments">0</p>
     </div>
     </div>
+    <div class="card" onclick="openEnquiry()" style="cursor:pointer;">
+    <h3>New Enquiry</h3>
+    <p>View</p>
+</div>
 <h2 style="margin-top:40px;">Recent Activities</h2>
 <div id="recentActivities"></div>
 <h2 style="margin-top:40px;">Today's Classes</h2>
@@ -574,6 +578,11 @@ table.innerHTML += `
 }
 
 loadCompReport();
+</script>
+<script>
+function openEnquiry(){
+    window.location.href = "founder-enquiry.html";
+}
 </script>
 </body>
 </html>
