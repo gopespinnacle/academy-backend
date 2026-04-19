@@ -32,9 +32,7 @@ async function loadData() {
   try {
     const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/admissions");
     const result = await res.json();
-
     const data = result.admissions;
-
     const table = document.getElementById("dataTable");
     table.innerHTML = "";
 
