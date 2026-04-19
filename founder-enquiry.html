@@ -22,6 +22,7 @@
       <th>Grade</th>
       <th>Mobile</th>
       <th>Date</th>
+      <th>Action</th>
     </tr>
   </thead>
   <tbody id="dataTable"></tbody>
@@ -42,11 +43,50 @@ async function loadData() {
       const date = new Date(item.createdAt);
 
       tr.innerHTML = `
+  <td>${item.studentName}</td>
+  <td>${item.parentName}</td>
+  <td>${item.grade}</td>
+  <td>${item.mobile}</td>
+  <td>${date.toLocaleString()}</td>
+  <td>
+    <button onclick="deleteItem('${item._id}')">Delete</button>
+  </td>
+`;
+
+      table.appendChild(tr);
+    });
+
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+loadData();
+</script>
+<script>
+async function loadData() {
+  try {
+    const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/admissions");
+    const result = await res.json();
+    const data = result.admissions;
+
+    const table = document.getElementById("dataTable");
+    table.innerHTML = "";
+
+    data.forEach(item => {
+      const tr = document.createElement("tr");
+
+      const date = new Date(item.createdAt);
+
+      tr.innerHTML = `
         <td>${item.studentName}</td>
         <td>${item.parentName}</td>
         <td>${item.grade}</td>
         <td>${item.mobile}</td>
         <td>${date.toLocaleString()}</td>
+        <td>
+          <button onclick="deleteItem('${item._id}')">Delete</button>
+        </td>
       `;
 
       table.appendChild(tr);
@@ -58,6 +98,26 @@ async function loadData() {
 }
 
 loadData();
+
+
+// ✅ ADD THIS FUNCTION HERE
+async function deleteItem(id) {
+  const confirmDelete = confirm("Are you sure?");
+  if (!confirmDelete) return;
+
+  try {
+    await fetch(`https://academy-backend-eatl.onrender.com/api/founder/admission/${id}`, {
+      method: "DELETE"
+    });
+
+    alert("Deleted successfully");
+    loadData(); // refresh table
+
+  } catch (err) {
+    console.log(err);
+    alert("Delete failed");
+  }
+}
 </script>
 
 </body>

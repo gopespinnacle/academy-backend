@@ -525,4 +525,14 @@ router.get("/admissions", async (req, res) => {
         res.status(500).json({ message: "Error fetching admissions" });
     }
 });
+
+// DELETE ADMISSION
+router.delete("/admission/:id", async (req, res) => {
+  try {
+    await Admission.findByIdAndDelete(req.params.id);
+    res.json({ message: "Deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting" });
+  }
+});
 module.exports = router;
