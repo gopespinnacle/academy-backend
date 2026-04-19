@@ -514,4 +514,15 @@ await axios.post(
         res.status(500).json({ message: "Error" });
     }
 });
+
+
+// ✅ GET ALL ADMISSIONS
+router.get("/admissions", async (req, res) => {
+    try {
+        const data = await Admission.find().sort({ createdAt: -1 });
+        res.json({ admissions: data });
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching admissions" });
+    }
+});
 module.exports = router;
