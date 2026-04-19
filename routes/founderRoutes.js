@@ -458,33 +458,59 @@ router.get("/compensation-report", async (req,res)=>{
 
 /* ================= ADMISSION FORM ================= */
 
+const axios = require("axios"); // 🔥 add this at TOP of file
+
 router.post("/admission", async (req, res) => {
     console.log("🔥 ADMISSION HIT");
 
     try {
         const { parentName, studentName, grade, mobile } = req.body;
 
-        await Admission.create({
+        // ✅ SAVE TO DB
+        const newAdmission = await Admission.create({
             parentName,
             studentName,
             grade,
             mobile
         });
 
-        res.json({ message: "Admission Saved Successfully" });
+        // ✅ SEND WHATSAPP TEMPLATE MESSAGE
+await axios.post(
+  "https://graph.facebook.com/v18.0/1082967508231476/messages",
+  {
+    messaging_product: "whatsapp",
+    to: "919566911472", // your number (no +)
+    type: "template",
+    template: {
+      name: "admission_alert",
+      language: {
+        code: "en"
+      },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: parentName },   // {{1}}
+            { type: "text", text: studentName },  // {{2}}
+            { type: "text", text: grade },        // {{3}}
+            { type: "text", text: mobile }        // {{4}}
+          ]
+        }
+      ]
+    }
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
+
+        res.json({ message: "Admission Saved + WhatsApp Sent ✅" });
 
     } catch (error) {
-        console.log("❌ ERROR:", error);
-        res.status(500).json({ message: "Error saving admission" });
-    }
-});
-
-// GET ALL ADMISSIONS
-router.get("/admissions", async (req, res) => {
-    try {
-        const data = await Admission.find();
-        res.json(data);
-    } catch (err) {
+        console.log("❌ ERROR:", error.response?.data || error.message);
         res.status(500).json({ message: "Error" });
     }
 });

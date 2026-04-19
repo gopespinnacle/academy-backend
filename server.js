@@ -16,7 +16,7 @@ require("./cron/sessionCron");
 require("./cron/attendanceCron");
 
 const app = express();
-
+app.use(cors());
 /* ================= MIDDLEWARE ================= */
 
 app.use((req, res, next) => {
