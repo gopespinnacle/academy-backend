@@ -31,7 +31,9 @@
 async function loadData() {
   try {
     const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/admissions");
-    const data = await res.json();
+    const result = await res.json();
+
+    const data = result.admissions;
 
     const table = document.getElementById("dataTable");
     table.innerHTML = "";
@@ -39,7 +41,7 @@ async function loadData() {
     data.forEach(item => {
       const tr = document.createElement("tr");
 
-      const date = new Date(item._id.substring(0,8)*1000);
+      const date = new Date(item.createdAt);
 
       tr.innerHTML = `
         <td>${item.studentName}</td>
