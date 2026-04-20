@@ -541,7 +541,7 @@ router.delete("/admission/:id", async (req, res) => {
 // storage
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "uploads/");
+        cb(null, "uploads/pdf");
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + "-" + file.originalname);
