@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Teacher Application</title>
+
+<style>
+body{
+    font-family:Arial;
+    background:#f4f7fb;
+}
+
+.container{
+    max-width:700px;
+    margin:40px auto;
+    background:#fff;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+h2{
+    text-align:center;
+}
+
+label{
+    font-weight:bold;
+    display:block;
+    margin-top:10px;
+}
+
+input, textarea{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    margin-top:20px;
+    background:#0d1b2a;
+    color:white;
+    border:none;
+    border-radius:6px;
+}
+
+.section-title{
+    margin-top:20px;
+    font-weight:bold;
+    color:#0d1b2a;
+}
+
+.checkbox-group label{
+    font-weight:normal;
+    margin-top:5px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Teacher Application</h2>
+
+<form id="teacherForm" enctype="multipart/form-data">
+
+<label>Teacher Name</label>
+<input type="text" name="teacherName" required>
+
+<label>WhatsApp Number</label>
+<input type="text" name="whatsapp" required>
+
+<label>Mobile Number</label>
+<input type="text" name="mobile" required>
+
+<label>Email</label>
+<input type="email" name="email" required>
+
+<label>Upload Resume</label>
+<input type="file" name="resume" required>
+
+<label>Education</label>
+<textarea name="education" required></textarea>
+
+<label>Experience</label>
+<textarea name="experience" required></textarea>
+
+<label>Present Job</label>
+<input type="text" name="presentJob">
+
+<label>Working Time</label>
+<input type="text" name="timing" placeholder="10AM - 11AM" required>
+
+<div class="section-title">Terms & Conditions</div>
+
+<div class="checkbox-group">
+
+<label><input type="checkbox" class="terms"> Salary credited before 6th</label>
+<label><input type="checkbox" class="terms"> Login 5 mins before class</label>
+<label><input type="checkbox" class="terms"> Weekly assessments</label>
+<label><input type="checkbox" class="terms"> Provide assessments during leave</label>
+<label><input type="checkbox" class="terms"> Academic communication only</label>
+<label><input type="checkbox" class="terms"> Follow academy communication rules</label>
+<label><input type="checkbox" class="terms"> No sharing personal contact</label>
+<label><input type="checkbox" class="terms"> Inform leave in advance</label>
+<label><input type="checkbox" class="terms"> Take compensation classes</label>
+<label><input type="checkbox" class="terms"> Salary adjustment for long leave</label>
+<label><input type="checkbox" class="terms"> 1 month notice before leaving</label>
+<label><input type="checkbox" class="terms"> Academy may assign replacement</label>
+
+<label><input type="checkbox" id="finalAgree"> I agree to all terms</label>
+
+</div>
+
+<button type="submit">Submit</button>
+
+</form>
+
+</div>
+
+<script>
+
+document.getElementById("teacherForm").addEventListener("submit", async function(e){
+
+    e.preventDefault();
+
+    let terms = document.querySelectorAll(".terms");
+    let final = document.getElementById("finalAgree");
+
+    for(let t of terms){
+        if(!t.checked){
+            alert("Please accept all terms");
+            return;
+        }
+    }
+
+    if(!final.checked){
+        alert("Please confirm agreement");
+        return;
+    }
+
+    const formData = new FormData(this);
+
+    const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/teacher-application", {
+        method: "POST",
+        body: formData
+    });
+
+    if(res.ok){
+        alert("✅ Submitted Successfully");
+        this.reset();
+    } else {
+        alert("❌ Failed");
+    }
+
+});
+
+</script>
+
+</body>
+</html>
