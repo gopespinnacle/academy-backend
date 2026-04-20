@@ -6,7 +6,8 @@ const express = require("express");
 const router = express.Router();
 const founderController = require("../controllers/founderController")
 const jwt = require("jsonwebtoken");
-
+const mongoose = require("mongoose");
+const multer = require("multer");
 const User = require("../models/User");
 const Marks = require("../models/Marks");
 const Assessment = require("../models/Assessment");
@@ -534,5 +535,49 @@ router.delete("/admission/:id", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Error deleting" });
   }
+});
+
+// storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "uploads/");
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + "-" + file.originalname);
+    }
+});
+
+const upload = multer({ storage });
+
+
+// ✅ TEACHER APPLICATION API
+router.post("/teacher-application", upload.single("resume"), async (req, res) => {
+
+    try {
+
+        const data = {
+            teacherName: req.body.teacherName,
+            whatsapp: req.body.whatsapp,
+            mobile: req.body.mobile,
+            email: req.body.email,
+            education: req.body.education,
+            experience: req.body.experience,
+            presentJob: req.body.presentJob,
+            timing: req.body.timing,
+            resume: req.file ? req.file.filename : "",
+            createdAt: new Date()
+        };
+
+        const db = mongoose.connection;
+
+        await db.collection("teacherApplications").insertOne(data);
+
+        res.json({ success: true });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "failed" });
+    }
+
 });
 module.exports = router;
