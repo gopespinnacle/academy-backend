@@ -1,5 +1,6 @@
 console.log("FOUNDER ROUTES LOADED");
 console.log("🔥 ADMISSION ROUTE FILE LOADED");
+const fs = require("fs");
 const TeacherApplication = require("../models/TeacherApplication");
 const Admission = require("../models/Admission");
 const PeriodAssignment = require("../models/PeriodAssignment");
@@ -539,9 +540,16 @@ router.delete("/admission/:id", async (req, res) => {
 });
 
 // storage
+const uploadPath = "uploads";
+
+// create folder automatically if not exists
+if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath);
+}
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "uploads/pdf");
+        cb(null, uploadPath);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + "-" + file.originalname);
