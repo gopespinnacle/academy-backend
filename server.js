@@ -39,7 +39,6 @@ app.get("/", (req, res) => {
 /* ================= Close TEST ================= */
 
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
 
 /* ================= ROUTES ================= */
 
