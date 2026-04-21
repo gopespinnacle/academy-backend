@@ -54,8 +54,15 @@ button{
 }
 
 .checkbox-group label{
-    font-weight:normal;
-    margin-top:5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: normal;
+    margin-top: 8px;
+}
+.checkbox-group input[type="checkbox"]{
+    width: 16px;
+    height: 16px;
 }
 </style>
 
@@ -84,16 +91,16 @@ button{
 <label>Upload Resume</label>
 <input type="file" name="resume" required>
 
-<label>Education</label>
+<label>Education Details</label>
 <textarea name="education" required></textarea>
 
 <label>Experience</label>
 <textarea name="experience" required></textarea>
 
-<label>Present Job</label>
+<label>Current Working</label>
 <input type="text" name="presentJob">
 
-<label>Working Time</label>
+<label>Your Working Time For Gopes Pinnacle</label>
 <input type="text" name="timing" placeholder="10AM - 11AM" required>
 
 <div class="section-title">Terms & Conditions</div>
@@ -111,7 +118,7 @@ button{
 <label><input type="checkbox" class="terms"> Take compensation classes</label>
 <label><input type="checkbox" class="terms"> Salary adjustment for long leave</label>
 <label><input type="checkbox" class="terms"> 1 month notice before leaving</label>
-<label><input type="checkbox" class="terms"> Academy may assign replacement</label>
+<label><input type="checkbox" class="terms"> Academy may assign replacement on notice period</label>
 
 <label><input type="checkbox" id="finalAgree"> I agree to all terms</label>
 
