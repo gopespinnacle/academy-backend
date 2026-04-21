@@ -34,7 +34,7 @@ router.post("/admission", async (req, res) => {
             },
             {
                 headers: {
-                    Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+                    Authorization: `Bearer EAAVkwxL5JawBRRSbmuzJLWMX025DjsaISq4qEozFNf2lAaNeheWpq2ZB8OgviaB5dGqPiWO4LuuK92qr83hogcX5mPElEZAtAtOxH8oVgjxLJB4IArNvsMoF0FRb7VOlqB6xPhSZABjCl0goh58aoRPXjQS9UbLcxZB8mcyySQGXClK3snZAwhC7h0kKsayBUlffDOQIedlhm4ZBZCEPwJqfpGIoZAMGGTKd63cC1sDy`,
                     "Content-Type": "application/json"
                 }
             }
