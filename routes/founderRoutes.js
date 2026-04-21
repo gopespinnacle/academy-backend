@@ -540,19 +540,20 @@ router.delete("/admission/:id", async (req, res) => {
 });
 
 // storage
-const uploadPath = "uploads";
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-// create folder automatically if not exists
-if (!fs.existsSync(uploadPath)) {
-    fs.mkdirSync(uploadPath);
-}
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadPath);
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + "-" + file.originalname);
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: "teacher_resumes",
+        resource_type: "auto"
     }
 });
 
@@ -573,7 +574,7 @@ router.post("/teacher-application", upload.single("resume"), async (req, res) =>
             experience: req.body.experience,
             presentJob: req.body.presentJob,
             timing: req.body.timing,
-            resume: req.file ? req.file.filename : "",
+            resume: req.file ? req.file.path : "",
         };
 
         await TeacherApplication.create(data);
