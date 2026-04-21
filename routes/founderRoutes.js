@@ -544,12 +544,14 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
-const upload = multer({ dest: "temp/" });
+const upload = multer({ dest: "/tmp/" });
 
 // ✅ TEACHER APPLICATION API
 router.post("/teacher-application", upload.single("resume"), async (req, res) => {
     try {
-
+if (!req.file) {
+            return res.status(400).json({ error: "File not received" });
+        }
         console.log("FILE:", req.file);
 
         const result = await cloudinary.uploader.upload(req.file.path, {
