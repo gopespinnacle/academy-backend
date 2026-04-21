@@ -34,7 +34,7 @@ router.post("/admission", async (req, res) => {
             },
             {
                 headers: {
-                    Authorization: `Bearer EAAVkwxL5JawB...`,
+                    Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
                     "Content-Type": "application/json"
                 }
             }
