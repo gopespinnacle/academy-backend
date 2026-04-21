@@ -41,7 +41,7 @@ router.post("/admission", async (req, res) => {
   },
   {
     headers: {
-      Authorization: `Bearer YOUR_ACCESS_TOKEN`,
+      Authorization: `Bearer EAAVkwxL5JawBRf7ZA1GwnBkwjw251CET5TLHIbRCZCzlGDefgjM4wrlWyB4MMZB0m5BJzjHUjcK1t534I775DCXPVxP0cs6KwkkcUZCsPvCXytc9MsNzBwZAg6ZBN6OCZAMUJFAptXgABQZAVYk6QvmNQGhZB57N2QEjGWpoTNtmyJ5l4muhxQCCfW1Stt0QXLtSyyLJ1gZBZAZBc0TOYXTS3lK7K7TxNRH8JYgZCwOCgopqNmb5GoltfRIZBhSOZB3J9R9OnUCAVGfIFHGlZCVp3ZCabrD84m0ji`,
       "Content-Type": "application/json"
     }
   }
