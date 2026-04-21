@@ -145,7 +145,7 @@ document.getElementById("teacherForm").addEventListener("submit", async function
     formData.append("file", file);
     formData.append("upload_preset", "teacher_upload_new");
 
-    const uploadRes = await fetch("https://api.cloudinary.com/v1_1/dlrpncn8k/raw/upload", {
+    const uploadRes = await fetch("https://api.cloudinary.com/v1_1/dlrpncn8k/auto/upload", {
         method: "POST",
         body: formData
     });
