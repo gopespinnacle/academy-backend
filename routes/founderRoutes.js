@@ -586,4 +586,24 @@ router.post("/teacher-application", upload.single("resume"), async (req, res) =>
     }
 
 });
+
+// ✅ GET ALL TEACHER APPLICATIONS
+router.get("/teacher-applications", async (req, res) => {
+    try {
+        const data = await TeacherApplication.find().sort({ createdAt: -1 });
+        res.json({ applications: data });
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching applications" });
+    }
+});
+
+// ✅ DELETE TEACHER APPLICATION
+router.delete("/teacher-application/:id", async (req, res) => {
+    try {
+        await TeacherApplication.findByIdAndDelete(req.params.id);
+        res.json({ message: "Deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting application" });
+    }
+});
 module.exports = router;
