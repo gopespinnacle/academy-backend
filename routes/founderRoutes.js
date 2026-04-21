@@ -556,7 +556,7 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 // ✅ TEACHER APPLICATION API
-router.post("/teacher-application", upload.single("resume"), async (req, res) => {
+router.post("/teacher-application", async (req, res) => {
 
     try {
 
@@ -569,7 +569,7 @@ router.post("/teacher-application", upload.single("resume"), async (req, res) =>
             experience: req.body.experience,
             presentJob: req.body.presentJob,
             timing: req.body.timing,
-            resume: req.file ? req.file.path : "",
+            resume: "test.pdf" // 👈 temporary
         };
 
         await TeacherApplication.create(data);
@@ -577,8 +577,8 @@ router.post("/teacher-application", upload.single("resume"), async (req, res) =>
         res.json({ success: true });
 
     } catch (err) {
-        console.error("UPLOAD ERROR:", err); 
-        res.status(500).json({ error: "failed" });
+        console.error(err);
+        res.status(500).json({ error: err.message });
     }
 
 });
