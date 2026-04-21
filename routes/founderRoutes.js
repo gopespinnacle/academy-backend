@@ -10,7 +10,7 @@ const router = express.Router();
 const founderController = require("../controllers/founderController")
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
-const multer = require("multer");
+
 const User = require("../models/User");
 const Marks = require("../models/Marks");
 const Assessment = require("../models/Assessment");
@@ -544,20 +544,11 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
-const upload = multer({ dest: "/tmp/" });
+
 
 // ✅ TEACHER APPLICATION API
-router.post("/teacher-application", upload.single("resume"), async (req, res) => {
+router.post("/teacher-application", async (req, res) => {
     try {
-if (!req.file) {
-            return res.status(400).json({ error: "File not received" });
-        }
-        console.log("FILE:", req.file);
-
-        const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: "teacher_resumes",
-            resource_type: "auto"
-        });
 
         const data = {
             teacherName: req.body.teacherName,
@@ -568,7 +559,7 @@ if (!req.file) {
             experience: req.body.experience,
             presentJob: req.body.presentJob,
             timing: req.body.timing,
-            resume: result.secure_url
+            resume: req.body.resume
         };
 
         await TeacherApplication.create(data);
@@ -576,7 +567,7 @@ if (!req.file) {
         res.json({ success: true });
 
     } catch (err) {
-        console.error("UPLOAD ERROR:", err);
+        console.error(err);
         res.status(500).json({ error: err.message });
     }
 });

@@ -131,45 +131,61 @@ button{
 </div>
 
 <script>
-
 document.getElementById("teacherForm").addEventListener("submit", async function(e){
 
     e.preventDefault();
 
-    let terms = document.querySelectorAll(".terms");
-    let final = document.getElementById("finalAgree");
+    const file = document.querySelector('input[name="resume"]').files[0];
 
-    for(let t of terms){
-        if(!t.checked){
-            alert("Please accept all terms");
-            return;
-        }
-    }
+    // 1️⃣ Upload file to Cloudinary
+    const cloudData = new FormData();
+    cloudData.append("file", file);
+    cloudData.append("upload_preset", "teacher_upload");
+cloudData.append("resource_type", "raw");
 
-    if(!final.checked){
-        alert("Please confirm agreement");
-        return;
-    }
-
-    const formData = new FormData(this);
-
-    const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/teacher-application", {
-        method: "POST",
-        body: formData
-    });
-
-   const data = await res.json();
-
-if(res.ok){
-    alert("✅ Submitted Successfully");
-    this.reset();
-} else {
-    console.log(data);
-    alert("❌ " + (data.error || data.message || "Server error"));
-}
-
+    const cloudRes = await fetch("https://api.cloudinary.com/v1_1/dlrpcn8k/auto/upload", {
+    method: "POST",
+    body: cloudData
 });
 
+const cloudResult = await cloudRes.json();
+
+console.log("Cloudinary response:", cloudResult); // 🔥 VERY IMPORTANT
+
+if (!cloudRes.ok) {
+    alert("Cloudinary Error: " + (cloudResult.error?.message || "Upload failed"));
+    return;
+}
+
+    // 2️⃣ Send data to backend
+    const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/teacher-application", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            teacherName: this.teacherName.value,
+            whatsapp: this.whatsapp.value,
+            mobile: this.mobile.value,
+            email: this.email.value,
+            education: this.education.value,
+            experience: this.experience.value,
+            presentJob: this.presentJob.value,
+            timing: this.timing.value,
+            resume: cloudResult.secure_url
+        })
+    });
+
+    const data = await res.json();
+
+    if(res.ok){
+        alert("Submitted Successfully");
+        this.reset();
+    } else {
+        alert("Failed");
+    }
+
+});
 </script>
 
 </body>
