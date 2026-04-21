@@ -18,10 +18,10 @@ router.post("/admission", async (req, res) => {
 
         // 📲 SEND WHATSAPP MESSAGE (MOVE HERE ✅)
         await axios.post(
-  "https://graph.facebook.com/v18.0/1082967508231476/messages",
+  `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
   {
     messaging_product: "whatsapp",
-    to: "919566911472",
+    to: "919566911472", // your number (can keep for now)
     type: "template",
     template: {
       name: "admission_alert",
@@ -41,7 +41,7 @@ router.post("/admission", async (req, res) => {
   },
   {
     headers: {
-      Authorization: `Bearer EAAVkwxL5JawBRRI7Wn6FcglpRZBTEQ68J0fuLvrAZAqgeg4UU6eoI0RCmpiBZBoZAVWWZBZBnoUjfk8ZCeG5nYm3SgR9WxFK0JkAk6RzZANDqKI0rnttVYXnPOvym7OJZAMAZBvPy1oo2CTqlI515ln8DyJbPeJiMJYtKkhWOMzi86c6pWgBviKweJjYZB4UMskbuBBaAZDZD`,
+      Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
       "Content-Type": "application/json"
     }
   }
