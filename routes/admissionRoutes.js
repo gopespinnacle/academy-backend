@@ -16,12 +16,12 @@ router.post("/admission", async (req, res) => {
 
         await newAdmission.save();
 
-        // 📲 SEND WHATSAPP MESSAGE (MOVE HERE ✅)
-        await axios.post(
+        // 📲 1. SEND TO ADMIN (YOU)
+await axios.post(
   `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
   {
     messaging_product: "whatsapp",
-    to: "919566911472", // your number (can keep for now)
+    to: "919566911472", // your number
     type: "template",
     template: {
       name: "admission_alert",
@@ -34,6 +34,37 @@ router.post("/admission", async (req, res) => {
             { type: "text", text: studentName },
             { type: "text", text: grade },
             { type: "text", text: mobile }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
+
+
+// 📲 2. SEND TO PARENT
+await axios.post(
+  `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+  {
+    messaging_product: "whatsapp",
+    to: mobile, // dynamic number
+    type: "template",
+    template: {
+      name: "parent_confirmation",
+      language: { code: "en" },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: parentName },
+            { type: "text", text: studentName },
+            { type: "text", text: grade }
           ]
         }
       ]
