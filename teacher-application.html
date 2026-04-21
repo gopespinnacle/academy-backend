@@ -158,12 +158,15 @@ document.getElementById("teacherForm").addEventListener("submit", async function
         body: formData
     });
 
-    if(res.ok){
-        alert("✅ Submitted Successfully");
-        this.reset();
-    } else {
-        alert("❌ Failed");
-    }
+   const data = await res.json();
+
+if(res.ok){
+    alert("✅ Submitted Successfully");
+    this.reset();
+} else {
+    console.log(data);
+    alert("❌ " + (data.error || data.message || "Server error"));
+}
 
 });
 
