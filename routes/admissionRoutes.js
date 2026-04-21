@@ -18,27 +18,23 @@ router.post("/admission", async (req, res) => {
 
         // 📲 SEND WHATSAPP MESSAGE (MOVE HERE ✅)
         await axios.post(
-            "https://graph.facebook.com/v18.0/1082967508231476/messages",
-            {
-                messaging_product: "whatsapp",
-                to: "919566911472",
-                type: "text",
-                text: {
-                    body: `📢 New Admission Request
-
-👨 Parent: ${parentName}
-👧 Student: ${studentName}
-📚 Grade: ${grade}
-📞 Mobile: ${mobile}`
-                }
-            },
-            {
-                headers: {
-                    Authorization: `Bearer EAAVkwxL5JawBRf7ZA1GwnBkwjw251CET5TLHIbRCZCzlGDefgjM4wrlWyB4MMZB0m5BJzjHUjcK1t534I775DCXPVxP0cs6KwkkcUZCsPvCXytc9MsNzBwZAg6ZBN6OCZAMUJFAptXgABQZAVYk6QvmNQGhZB57N2QEjGWpoTNtmyJ5l4muhxQCCfW1Stt0QXLtSyyLJ1gZBZAZBc0TOYXTS3lK7K7TxNRH8JYgZCwOCgopqNmb5GoltfRIZBhSOZB3J9R9OnUCAVGfIFHGlZCVp3ZCabrD84m0ji`,
-                    "Content-Type": "application/json"
-                }
-            }
-        );
+  "https://graph.facebook.com/v18.0/1082967508231476/messages",
+  {
+    messaging_product: "whatsapp",
+    to: "919566911472",
+    type: "template",
+    template: {
+      name: "hello_world",
+      language: { code: "en_US" }
+    }
+  },
+  {
+    headers: {
+      Authorization: `Bearer EAAVkwxL5JawBRf7ZA1GwnBkwjw251CET5TLHIbRCZCzlGDefgjM4wrlWyB4MMZB0m5BJzjHUjcK1t534I775DCXPVxP0cs6KwkkcUZCsPvCXytc9MsNzBwZAg6ZBN6OCZAMUJFAptXgABQZAVYk6QvmNQGhZB57N2QEjGWpoTNtmyJ5l4muhxQCCfW1Stt0QXLtSyyLJ1gZBZAZBc0TOYXTS3lK7K7TxNRH8JYgZCwOCgopqNmb5GoltfRIZBhSOZB3J9R9OnUCAVGfIFHGlZCVp3ZCabrD84m0ji`,
+      "Content-Type": "application/json"
+    }
+  }
+);
 
         res.status(200).json({ message: "Saved + WhatsApp Sent" });
 
