@@ -132,31 +132,34 @@ button{
 
 <script>
 document.getElementById("teacherForm").addEventListener("submit", async function(e){
-
     e.preventDefault();
 
     const file = document.querySelector('input[name="resume"]').files[0];
 
-    // 1️⃣ Upload file to Cloudinary
-    const cloudData = new FormData();
-cloudData.append("file", file);
-cloudData.append("upload_preset", "teacher_upload");
+    if(!file){
+        alert("Please select file");
+        return;
+    }
 
-const cloudRes = await fetch("https://api.cloudinary.com/v1_1/dlrpncn8k/raw/upload", {
-    method: "POST",
-    body: cloudData
-});
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "teacher_upload");
 
-const cloudResult = await cloudRes.json();
+    const uploadRes = await fetch("https://api.cloudinary.com/v1_1/dlrpcn8k/auto/upload", {
+        method: "POST",
+        body: formData
+    });
 
-console.log("Cloudinary response:", cloudResult); // 🔥 VERY IMPORTANT
+    const uploadData = await uploadRes.json();
 
-if (!cloudRes.ok) {
-    alert("Cloudinary Error: " + (cloudResult.error?.message || "Upload failed"));
-    return;
-}
+    console.log("UPLOAD RESPONSE:", uploadData);
 
-    // 2️⃣ Send data to backend
+    if(!uploadData.secure_url){
+        alert("Upload failed");
+        return;
+    }
+
+    // send to backend
     const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/teacher-application", {
         method: "POST",
         headers: {
@@ -171,7 +174,7 @@ if (!cloudRes.ok) {
             experience: this.experience.value,
             presentJob: this.presentJob.value,
             timing: this.timing.value,
-            resume: cloudResult.secure_url
+            resume: uploadData.secure_url
         })
     });
 
@@ -183,7 +186,6 @@ if (!cloudRes.ok) {
     } else {
         alert("Failed");
     }
-
 });
 </script>
 
