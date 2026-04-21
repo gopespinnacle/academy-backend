@@ -16,6 +16,7 @@
 <th>Mobile</th>
 <th>Email</th>
 <th>Experience</th>
+<th>Resume</th>
 <th>Action</th>
 </tr>
 </thead>
@@ -44,6 +45,13 @@ table.innerHTML += `
 <td>${app.mobile}</td>
 <td>${app.email}</td>
 <td>${app.experience}</td>
+
+<td>
+<a href="https://academy-backend-eatl.onrender.com/uploads/${app.resume}" target="_blank">
+View
+</a>
+</td>
+
 <td>
 <button onclick="deleteApp('${app._id}')">Delete</button>
 </td>
