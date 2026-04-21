@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -48,6 +49,90 @@ table.innerHTML += `
 
 <td>
 <a href="https://academy-backend-eatl.onrender.com/uploads/${app.resume}" target="_blank">
+View
+</a>
+</td>
+
+<td>
+<button onclick="deleteApp('${app._id}')">Delete</button>
+</td>
+</tr>
+`;
+
+});
+
+}
+
+async function deleteApp(id){
+
+const confirmDelete = confirm("Delete this application?");
+
+if(!confirmDelete) return;
+
+await fetch("https://academy-backend-eatl.onrender.com/api/founder/teacher-application/" + id, {
+method: "DELETE"
+});
+
+loadApplications();
+
+}
+
+loadApplications();
+
+</script>
+
+</body>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Teacher Applications</title>
+</head>
+
+<body>
+
+<h2>Teacher Applications</h2>
+
+<table border="1" width="100%">
+<thead>
+<tr>
+<th>Name</th>
+<th>Mobile</th>
+<th>Email</th>
+<th>Experience</th>
+<th>Resume</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="appTable"></tbody>
+
+</table>
+
+<script>
+
+async function loadApplications(){
+
+const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/teacher-applications");
+
+const data = await res.json();
+
+const table = document.getElementById("appTable");
+
+table.innerHTML = "";
+
+data.applications.forEach(app => {
+
+table.innerHTML += `
+<tr>
+<td>${app.teacherName}</td>
+<td>${app.mobile}</td>
+<td>${app.email}</td>
+<td>${app.experience}</td>
+
+<td>
+<a href="${app.resume}" target="_blank">
 View
 </a>
 </td>
