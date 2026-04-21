@@ -141,7 +141,6 @@ document.getElementById("teacherForm").addEventListener("submit", async function
     const cloudData = new FormData();
 cloudData.append("file", file);
 cloudData.append("upload_preset", "teacher_upload");
-cloudData.append("resource_type", "raw");
 
 const cloudRes = await fetch("https://api.cloudinary.com/v1_1/dlrpncn8k/raw/upload", {
     method: "POST",
