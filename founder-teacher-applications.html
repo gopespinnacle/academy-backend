@@ -26,10 +26,6 @@
 </table>
 
 <!-- ✅ PDF VIEWER -->
-<div id="resumeViewer" style="margin-top:20px;">
-    <embed id="pdfFrame" width="100%" height="600px" type="application/pdf">
-</div>
-
 <script>
 
 async function loadApplications(){
@@ -50,9 +46,9 @@ table.innerHTML += `
 <td>${app.experience}</td>
 
 <td>
-<button onclick="viewResume('${app.resume}')">
-View Resume
-</button>
+<a href="${app.resume}" download target="_blank">
+    <button>Download Resume</button>
+</a>
 </td>
 
 <td>
@@ -64,10 +60,6 @@ View Resume
 
 });
 
-}
-
-function viewResume(url){
-    document.getElementById("pdfFrame").src = url;
 }
 
 async function deleteApp(id){
