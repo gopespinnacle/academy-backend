@@ -577,7 +577,7 @@ router.post("/teacher-application", upload.single("resume"), async (req, res) =>
         res.json({ success: true });
 
     } catch (err) {
-        console.error(err);
+        console.error("UPLOAD ERROR:", err); 
         res.status(500).json({ error: "failed" });
     }
 
