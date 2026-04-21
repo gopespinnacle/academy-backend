@@ -885,7 +885,7 @@ document.getElementById("admissionForm").addEventListener("submit", async functi
         mobile: document.getElementById("mobile").value
     };
 
-    const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/admission", {
+    const res = await fetch("https://academy-backend-eatl.onrender.com/api/admission", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
