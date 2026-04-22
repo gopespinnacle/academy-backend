@@ -102,7 +102,46 @@ button{
 
 <label>Your Working Time For Gopes Pinnacle</label>
 <input type="text" name="timing" placeholder="10AM - 11AM" required>
+<div class="section-title">Professional Profile</div>
 
+<!-- Academic Specialization -->
+<label>Academic Specialization</label>
+<div class="checkbox-group">
+<label><input type="checkbox" name="subjects" value="Maths (Grade 1-5)"> Maths (Grade 1-5)</label>
+<label><input type="checkbox" name="subjects" value="Maths (Grade 6-8)"> Maths (Grade 6-8)</label>
+<label><input type="checkbox" name="subjects" value="Maths (Grade 9-12)"> Maths (Grade 9-12)</label>
+<label><input type="checkbox" name="subjects" value="Science (Grade 1-5)"> Science (Grade 1-5)</label>
+<label><input type="checkbox" name="subjects" value="Science (Grade 6-8)"> Science (Grade 6-8)</label>
+<label><input type="checkbox" name="subjects" value="Science (Grade 9-12)"> Science (Grade 9-12)</label>
+<label><input type="checkbox" name="subjects" value="Social Studies"> Social Studies</label>
+<label><input type="checkbox" name="subjects" value="None"> None</label>
+</div>
+
+<!-- Extra Skills -->
+<label>Extra Skills & Activities</label>
+<div class="checkbox-group">
+<label><input type="checkbox" name="skills" value="Vocal Singing"> Vocal Singing</label>
+<label><input type="checkbox" name="skills" value="Yoga"> Yoga</label>
+<label><input type="checkbox" name="skills" value="Rubik's"> Rubik's</label>
+<label><input type="checkbox" name="skills" value="Keyboard"> Music (Keyboard)</label>
+<label><input type="checkbox" name="skills" value="Drawing"> Drawing & Shading</label>
+<label><input type="checkbox" name="skills" value="Abacus"> Abacus</label>
+<label><input type="checkbox" name="skills" value="Vedic Maths"> Vedic Maths</label>
+<label><input type="checkbox" name="skills" value="None"> None</label>
+</div>
+
+<!-- Languages -->
+<label>Language Proficiency</label>
+<div class="checkbox-group">
+<label><input type="checkbox" name="languages" value="Phonics"> Phonics</label>
+<label><input type="checkbox" name="languages" value="English (General)"> English (General)</label>
+<label><input type="checkbox" name="languages" value="English (Spoken)"> English (Spoken)</label>
+<label><input type="checkbox" name="languages" value="Tamil (General)"> Tamil (General)</label>
+<label><input type="checkbox" name="languages" value="Tamil (Spoken)"> Tamil (Spoken)</label>
+<label><input type="checkbox" name="languages" value="French"> French</label>
+<label><input type="checkbox" name="languages" value="Hindi"> Hindi</label>
+<label><input type="checkbox" name="languages" value="None"> None</label>
+</div>
 <div class="section-title">Terms & Conditions</div>
 
 <div class="checkbox-group">
@@ -159,6 +198,10 @@ document.getElementById("teacherForm").addEventListener("submit", async function
         return;
     }
 
+    const subjects = Array.from(document.querySelectorAll('input[name="subjects"]:checked')).map(el => el.value);
+const skills = Array.from(document.querySelectorAll('input[name="skills"]:checked')).map(el => el.value);
+const languages = Array.from(document.querySelectorAll('input[name="languages"]:checked')).map(el => el.value);
+
     // send to backend
     const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/teacher-application", {
         method: "POST",
@@ -166,16 +209,20 @@ document.getElementById("teacherForm").addEventListener("submit", async function
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
-            teacherName: this.teacherName.value,
-            whatsapp: this.whatsapp.value,
-            mobile: this.mobile.value,
-            email: this.email.value,
-            education: this.education.value,
-            experience: this.experience.value,
-            presentJob: this.presentJob.value,
-            timing: this.timing.value,
-            resume: uploadData.secure_url
-        })
+    teacherName: this.teacherName.value,
+    whatsapp: this.whatsapp.value,
+    mobile: this.mobile.value,
+    email: this.email.value,
+    education: this.education.value,
+    experience: this.experience.value,
+    presentJob: this.presentJob.value,
+    timing: this.timing.value,
+    resume: uploadData.secure_url,
+
+    subjects: subjects,
+    skills: skills,
+    languages: languages
+})
     });
 
     const data = await res.json();

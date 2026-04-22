@@ -10,6 +10,9 @@ const teacherApplicationSchema = new mongoose.Schema({
     presentJob: String,
     timing: String,
     resume: String,
+    subjects: [String],
+skills: [String],
+languages: [String],
     createdAt: {
         type: Date,
         default: Date.now
