@@ -16,6 +16,9 @@
 <th>Mobile</th>
 <th>Email</th>
 <th>Experience</th>
+<th>Subjects</th>
+<th>Skills</th>
+<th>Languages</th>
 <th>Resume</th>
 <th>Action</th>
 </tr>
@@ -45,9 +48,13 @@ table.innerHTML += `
 <td>${app.email}</td>
 <td>${app.experience}</td>
 
+<td>${(app.subjects || []).join(", ")}</td>
+<td>${(app.skills || []).join(", ")}</td>
+<td>${(app.languages || []).join(", ")}</td>
+
 <td>
-<a href="${app.resume}?fl_attachment=true" target="_blank">
-    <button>Download Resume</button>
+<a href="${app.resume}" target="_blank">
+<button>Download Resume</button>
 </a>
 </td>
 
