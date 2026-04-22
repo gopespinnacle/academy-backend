@@ -3,13 +3,89 @@
 <head>
 <meta charset="UTF-8">
 <title>Teacher Applications</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f4f7fb;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: #0d1b2a;
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+}
+
+tr:hover {
+    background: #f9fbff;
+}
+
+/* BUTTONS */
+button {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.download-btn {
+    background: green;
+    color: white;
+}
+
+.delete-btn {
+    background: red;
+    color: white;
+}
+
+/* TAG STYLE */
+.tag {
+    display: inline-block;
+    background: #e3f2fd;
+    color: #0d47a1;
+    padding: 3px 8px;
+    border-radius: 5px;
+    margin: 2px;
+    font-size: 12px;
+}
+</style>
+
 </head>
 
 <body>
 
+<div class="container">
+
 <h2>Teacher Applications</h2>
 
-<table border="1" width="100%">
+<table>
 <thead>
 <tr>
 <th>Name</th>
@@ -25,11 +101,16 @@
 </thead>
 
 <tbody id="appTable"></tbody>
-
 </table>
 
-<!-- ✅ PDF VIEWER -->
+</div>
+
 <script>
+
+function createTags(arr){
+    if(!arr || arr.length === 0) return "-";
+    return arr.map(item => `<span class="tag">${item}</span>`).join("");
+}
 
 async function loadApplications(){
 
@@ -48,18 +129,18 @@ table.innerHTML += `
 <td>${app.email}</td>
 <td>${app.experience}</td>
 
-<td>${(app.subjects || []).join(", ")}</td>
-<td>${(app.skills || []).join(", ")}</td>
-<td>${(app.languages || []).join(", ")}</td>
+<td>${createTags(app.subjects)}</td>
+<td>${createTags(app.skills)}</td>
+<td>${createTags(app.languages)}</td>
 
 <td>
 <a href="${app.resume}" target="_blank">
-<button>Download Resume</button>
+<button class="download-btn">Download</button>
 </a>
 </td>
 
 <td>
-<button onclick="deleteApp('${app._id}')">Delete</button>
+<button class="delete-btn" onclick="deleteApp('${app._id}')">Delete</button>
 </td>
 
 </tr>
