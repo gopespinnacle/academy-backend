@@ -551,16 +551,21 @@ router.post("/teacher-application", async (req, res) => {
     try {
 
         const data = {
-            teacherName: req.body.teacherName,
-            whatsapp: req.body.whatsapp,
-            mobile: req.body.mobile,
-            email: req.body.email,
-            education: req.body.education,
-            experience: req.body.experience,
-            presentJob: req.body.presentJob,
-            timing: req.body.timing,
-            resume: req.body.resume
-        };
+    teacherName: req.body.teacherName,
+    whatsapp: req.body.whatsapp,
+    mobile: req.body.mobile,
+    email: req.body.email,
+    education: req.body.education,
+    experience: req.body.experience,
+    presentJob: req.body.presentJob,
+    timing: req.body.timing,
+    resume: req.body.resume,
+
+    // ✅ ADD THESE 3 LINES
+    subjects: req.body.subjects,
+    skills: req.body.skills,
+    languages: req.body.languages
+};
 
         await TeacherApplication.create(data);
 
