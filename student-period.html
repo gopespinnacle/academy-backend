@@ -123,7 +123,7 @@ document.getElementById("classInfo").innerHTML = `
 <b>🏫 ${className}</b><br>
 📘 ${subject}<br>
 📅 ${day}<br>
-⏰ ${startTime} - ${endTime}
+⏰ ${formatTime(startTime)} - ${formatTime(endTime)}
 `;
 
 /* ================= JOIN CLASS ================= */
@@ -181,7 +181,7 @@ async function loadAttendance(){
         data.data.forEach(a=>{
             html += `
             <div>
-            ✅ ${a.subject} | ${a.day} | ${a.startTime} - ${a.endTime}
+            ✅ ${a.subject} | ${a.day} | ${formatTime(a.startTime)} - ${formatTime(a.endTime)}
             </div>
             `;
         });
@@ -207,7 +207,19 @@ function go(page){
 
 /* AUTO LOAD */
 loadAttendance();
+function formatTime(time){
 
+    let [hour, minute] = time.split(":");
+
+    hour = parseInt(hour);
+
+    let ampm = hour >= 12 ? "PM" : "AM";
+
+    hour = hour % 12;
+    hour = hour ? hour : 12; // 0 → 12
+
+    return hour + ":" + minute + " " + ampm;
+}
 </script>
 
 </body>
