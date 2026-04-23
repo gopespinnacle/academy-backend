@@ -13,44 +13,23 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 
 router.post("/reset-password", async (req,res)=>{
-try{
 
-// 🔥 GET DATA
-const email = req.body.email.trim();
-const oldPassword = req.body.oldPassword.trim();
-const newPassword = req.body.newPassword.trim();
+    const { email, newPassword } = req.body;
 
-// 🔥 DEBUG (YOU WILL SEE IN RENDER LOGS)
-console.log("EMAIL:", email);
-console.log("OLD PASSWORD:", oldPassword);
+    const bcrypt = require("bcryptjs");
 
-// 🔥 FIND USER
-const user = await User.findOne({ email });
+    const user = await User.findOne({ email });
 
-if(!user){
-return res.json({ message:"User not found ❌" });
-}
+    if(!user){
+        return res.status(404).json({ message:"User not found ❌" });
+    }
 
-// 🔥 CHECK PASSWORD
-const isMatch = await bcrypt.compare(oldPassword, user.password);
+    const hashed = await bcrypt.hash(newPassword, 10);
 
-console.log("MATCH RESULT:", isMatch); // 👈 VERY IMPORTANT
+    user.password = hashed;
+    await user.save();
 
-if(!isMatch){
-return res.json({ message:"Old password incorrect ❌" });
-}
+    res.json({ message:"Password reset success ✅" });
 
-// 🔥 SAVE NEW PASSWORD
-const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-user.password = hashedPassword;
-await user.save();
-
-res.json({ message:"Password updated successfully ✅" });
-
-}catch(err){
-console.log("RESET ERROR:", err);
-res.status(500).json({ message:"Server error ❌" });
-}
 });
 module.exports = router;
