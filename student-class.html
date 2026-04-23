@@ -211,7 +211,7 @@ window.location.href =
 div.innerHTML = `
 <div><b>${s.className}</b></div>
 <div>📘 ${s.subject || "General"}</div>
-<div>⏰ ${s.startTime} - ${s.endTime}</div>
+<div>⏰ ${formatTime(s.startTime)} - ${formatTime(s.endTime)}</div>
 `;
 
 col.appendChild(div);
@@ -239,7 +239,19 @@ window.location.href = page;
 setInterval(loadTimetable, 10000);
 
 loadTimetable();
+function formatTime(time){
 
+    let [hour, minute] = time.split(":");
+
+    hour = parseInt(hour);
+
+    let ampm = hour >= 12 ? "PM" : "AM";
+
+    hour = hour % 12;
+    hour = hour ? hour : 12;
+
+    return hour + ":" + minute + " " + ampm;
+}
 </script>
 
 </body>
