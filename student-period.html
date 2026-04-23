@@ -112,13 +112,12 @@ window.location.href = "student-login.html";
 
 /* GET PARAMS */
 const params = new URLSearchParams(window.location.search);
-
 const className = params.get("className");
 const subject = params.get("subject");
 const day = params.get("day");
 const startTime = params.get("startTime");
 const endTime = params.get("endTime");
-
+const sessionId = params.get("sessionId");
 /* DISPLAY */
 document.getElementById("classInfo").innerHTML = `
 <b>🏫 ${className}</b><br>
@@ -149,30 +148,24 @@ return now >= start && now <= end;
 
 document.getElementById("joinBtn").onclick = async () => {
 
-if(!isLive()){
-alert("Class not live ❌");
-return;
-}
-
 const res = await fetch(
 "https://academy-backend-eatl.onrender.com/api/student/join-class",
 {
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer " + token
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+"Authorization": "Bearer " + token
 },
 body: JSON.stringify({
-sessionId: null   // 🔥 next phase we connect real session
+sessionId: sessionId
 })
-}
-);
+});
 
 const data = await res.json();
 
 if(data.allowed){
-alert("Joining class...");
-window.open(data.meetingLink, "_blank");
+document.getElementById("attendance").innerText = "Present ✅";
+window.location.href = data.meetingLink;
 }else{
 alert(data.message);
 }
