@@ -78,6 +78,21 @@ app.get("/api/founder/periodassignments", async (req, res) => {
     }
 
 });
+
+app.delete("/api/founder/periodassignments/:id", async (req, res) => {
+
+    try{
+
+        await PeriodAssignment.findByIdAndDelete(req.params.id);
+
+        res.json({ message: "Period deleted successfully ✅" });
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message: "Delete failed ❌" });
+    }
+
+});
 /* ================= DB ================= */
 
 mongoose.connect(process.env.MONGO_URI)

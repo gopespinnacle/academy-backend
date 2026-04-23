@@ -111,8 +111,17 @@ data.data.forEach(p=>{
 if(p.student && p.student.toString() === studentId){
 
 html += `
-<div style="padding:8px;border-bottom:1px solid #ddd;">
-📘 ${p.subject} | ${p.day} | ⏰ ${p.startTime} - ${p.endTime}
+<div style="padding:8px;border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
+    
+    <span>
+    📘 ${p.subject} | ${p.day} | ⏰ ${p.startTime} - ${p.endTime}
+    </span>
+
+    <button onclick="deletePeriod('${p._id}')" 
+    style="background:red;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">
+    Delete
+    </button>
+
 </div>
 `;
 
@@ -129,7 +138,27 @@ document.getElementById("periods").innerText = "Error loading periods";
 }
 
 }
+async function deletePeriod(id){
 
+if(!confirm("Delete this period?")) return;
+
+const token = localStorage.getItem("token");
+
+await fetch(
+"https://academy-backend-eatl.onrender.com/api/founder/periodassignments/" + id,
+{
+method:"DELETE",
+headers:{
+"Authorization":"Bearer " + token
+}
+}
+);
+
+alert("Deleted ✅");
+
+/* reload list */
+
+}
 /* LOAD */
 loadStudent();
 loadPeriods();
