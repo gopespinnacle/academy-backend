@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-
+const User = require("../models/User");
 const { registerUser, loginUser } = require("../controllers/authController");
 
 /* REGISTER */
@@ -10,28 +10,39 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 
 
+const bcrypt = require("bcrypt");
+
 router.post("/reset-password", async (req,res)=>{
 try{
 
 const { email, oldPassword, newPassword } = req.body;
 
-const user = await User.findOne({ loginEmail: email });
+/* FIND USER */
+const user = await User.findOne({ email });
 
 if(!user){
 return res.json({ message:"User not found ❌" });
 }
 
-if(user.loginPassword !== oldPassword){
-return res.json({ message:"Old password wrong ❌" });
+/* CHECK OLD PASSWORD */
+const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+if(!isMatch){
+return res.json({ message:"Old password incorrect ❌" });
 }
 
-user.loginPassword = newPassword;
+/* HASH NEW PASSWORD */
+const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+/* SAVE */
+user.password = hashedPassword;
 await user.save();
 
 res.json({ message:"Password updated successfully ✅" });
 
 }catch(err){
-res.status(500).json({ message:"Error" });
+console.log(err);
+res.status(500).json({ message:"Server error ❌" });
 }
 });
 module.exports = router;
