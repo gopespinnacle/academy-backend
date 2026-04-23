@@ -179,11 +179,17 @@ async function loadAttendance(){
         let html = "";
 
         data.data.forEach(a=>{
-            html += `
-            <div>
-            ✅ ${a.subject} | ${a.day} | ${formatTime(a.startTime)} - ${formatTime(a.endTime)}
-            </div>
-            `;
+            const exitTime = a.exitAt 
+? formatTime12(new Date(a.exitAt)) 
+: "Auto closing...";
+
+html += `
+<div>
+✅ ${a.subject} | ${a.day} | ${formatTime(a.startTime)} - ${formatTime(a.endTime)} <br>
+🕒 Joined: ${formatTime12(new Date(a.joinedAt))} <br>
+🚪 Exit: ${exitTime}
+</div>
+`;
         });
 
         document.getElementById("attendanceStatus").innerHTML =

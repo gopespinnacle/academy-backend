@@ -7,7 +7,22 @@ const attendanceSchema = new mongoose.Schema({
     day: String,
     startTime: String,
     endTime: String,
-    date: { type: Date, default: Date.now }
+
+    date: { type: Date, default: Date.now },
+
+    // ✅ NEW FIELDS (ADD THIS)
+    joinedAt: {
+        type: Date,
+        default: Date.now
+    },
+
+    exitAt: Date,
+
+    status: {
+        type: String,
+        default: "ongoing"
+    }
+
 });
 
 module.exports = mongoose.model("Attendance", attendanceSchema);

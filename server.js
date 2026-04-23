@@ -15,7 +15,7 @@ const admissionRoutes = require("./routes/admissionRoutes");
 // CRON JOBS
 require("./cron/sessionCron");
 require("./cron/attendanceCron");
-
+require("./cron/attendanceAutoExit");
 const app = express();
 app.use(cors({
     origin: ["https://www.gopespinnacle.com"],
