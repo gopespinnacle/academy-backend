@@ -92,12 +92,12 @@ body {
 <div class="card" id="classInfo"></div>
 
 <div class="card">
-<button id="joinBtn" class="btn join">Join Class</button>
+<button class="join-btn" onclick="joinClass()">Join Class</button>
 </div>
 
 <div class="card">
 <h3>Attendance Status</h3>
-<p id="attendance">Checking...</p>
+<div id="attendanceStatus">Checking...</div>
 </div>
 
 </div>
@@ -107,7 +107,7 @@ body {
 const token = localStorage.getItem("token");
 
 if(!token){
-window.location.href = "student-login.html";
+    window.location.href = "student-login.html";
 }
 
 /* GET PARAMS */
@@ -117,8 +117,8 @@ const subject = params.get("subject");
 const day = params.get("day");
 const startTime = params.get("startTime");
 const endTime = params.get("endTime");
-const sessionId = params.get("sessionId");
-/* DISPLAY */
+
+/* DISPLAY CLASS INFO */
 document.getElementById("classInfo").innerHTML = `
 <b>🏫 ${className}</b><br>
 📘 ${subject}<br>
@@ -126,86 +126,75 @@ document.getElementById("classInfo").innerHTML = `
 ⏰ ${startTime} - ${endTime}
 `;
 
-/* ================= STATUS ================= */
+/* ================= JOIN CLASS ================= */
 
-function isLive(){
+async function joinClass(){
 
-const now = new Date();
+        const studentId = localStorage.getItem("studentId");
 
-const [sh, sm] = startTime.split(":");
-const [eh, em] = endTime.split(":");
+    const res = await fetch(
+    "https://academy-backend-eatl.onrender.com/api/student-attendance/mark",
+    {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json",
+            "Authorization":"Bearer " + token
+        },
+        body: JSON.stringify({
+            studentId,
+            className,
+            subject,
+            day,
+            startTime,
+            endTime
+        })
+    });
 
-const start = new Date();
-start.setHours(sh, sm, 0);
+    const data = await res.json();
 
-const end = new Date();
-end.setHours(eh, em, 0);
+    alert(data.message);
 
-return now >= start && now <= end;
+    loadAttendance();
 }
 
-/* ================= JOIN ================= */
-
-document.getElementById("joinBtn").onclick = async () => {
-
-const res = await fetch(
-"https://academy-backend-eatl.onrender.com/api/student/join-class",
-{
-method: "POST",
-headers: {
-"Content-Type": "application/json",
-"Authorization": "Bearer " + token
-},
-body: JSON.stringify({
-sessionId: sessionId
-})
-});
-
-const data = await res.json();
-
-if(data.allowed){
-document.getElementById("attendance").innerText = "Present ✅";
-window.location.href = data.meetingLink;
-}else{
-alert(data.message);
-}
-
-};
-
-/* ================= ATTENDANCE ================= */
+/* ================= LOAD ATTENDANCE ================= */
 
 async function loadAttendance(){
 
-const res = await fetch(
-"https://academy-backend-eatl.onrender.com/api/student/my-attendance",
-{
-headers:{ "Authorization":"Bearer " + token }
+    const studentId = localStorage.getItem("studentId");
+
+    const res = await fetch(
+    "https://academy-backend-eatl.onrender.com/api/student-attendance/" + studentId
+    );
+
+    const data = await res.json();
+
+    let html = "";
+
+    data.data.forEach(a=>{
+        html += `
+        <div>
+        ✅ ${a.subject} | ${a.day} | ${a.startTime} - ${a.endTime}
+        </div>
+        `;
+    });
+
+    document.getElementById("attendanceStatus").innerHTML =
+    html || "No attendance yet";
 }
-);
 
-const data = await res.json();
-
-const today = new Date().toISOString().split("T")[0];
-
-const record = data.data.find(a =>
-a.className === className &&
-a.subject === subject
-);
-
-document.getElementById("attendance").innerText =
-record ? record.status : "Not marked";
-
-}
+/* ================= NAV ================= */
 
 function logout(){
-localStorage.clear();
-window.location.href = "student-login.html";
+    localStorage.clear();
+    window.location.href = "student-login.html";
 }
 
 function go(page){
-window.location.href = page;
+    window.location.href = page;
 }
 
+/* AUTO LOAD */
 loadAttendance();
 
 </script>

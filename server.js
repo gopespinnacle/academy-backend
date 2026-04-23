@@ -5,6 +5,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 // ROUTES
+const studentAttendanceRoutes = require("./routes/studentattendanceRoutes");
 const founderTimeClashRoutes = require("./routes/founderTimeClashRoutes");
 const authRoutes = require("./routes/authRoutes");
 const teacherRoutes = require("./routes/teacherRoutes");
@@ -49,7 +50,7 @@ app.use("/api", admissionRoutes);
 
 app.use("/api/auth", authRoutes);
 
-
+app.use("/api/student-attendance", studentAttendanceRoutes);
 /* ================= PERIOD ASSIGNMENTS ================= */
 
 const PeriodAssignment = require("./models/PeriodAssignment");  // adjust if path different
