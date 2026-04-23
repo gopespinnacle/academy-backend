@@ -45,18 +45,24 @@ body{
 
 const params = new URLSearchParams(window.location.search);
 const studentId = params.get("id");
+const token = localStorage.getItem("token");
 
 /* ================= STUDENT INFO ================= */
 
 async function loadStudent(){
 
 const res = await fetch(
-"https://academy-backend-eatl.onrender.com/api/founder/students"
+"https://academy-backend-eatl.onrender.com/api/founder/students",
+{
+headers:{
+"Authorization":"Bearer " + token
+}
+}
 );
 
 const data = await res.json();
 
-/* FIND THIS STUDENT */
+/* FIND ONE STUDENT */
 const s = data.students.find(st => st._id === studentId);
 
 if(!s){
@@ -83,16 +89,25 @@ async function loadPeriods(){
 try{
 
 const res = await fetch(
-"https://academy-backend-eatl.onrender.com/api/founder/schedules"
+"https://academy-backend-eatl.onrender.com/api/founder/periodassignments",
+{
+headers:{
+"Authorization":"Bearer " + token
+}
+}
 );
 
 const data = await res.json();
 
 let html = "";
 
+if(!data.data){
+document.getElementById("periods").innerText = "No data";
+return;
+}
+
 data.data.forEach(p=>{
 
-// 🔥 IMPORTANT FIX
 if(p.student && p.student.toString() === studentId){
 
 html += `
