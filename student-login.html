@@ -64,7 +64,11 @@ async function loginStudent() {
             }
 
             localStorage.setItem("token", data.token);
-            window.location.href = "student-dashboard.html";
+
+// 🔥 ADD THIS LINE (MOST IMPORTANT)
+localStorage.setItem("studentId", data.studentId);
+
+window.location.href = "student-dashboard.html";
 
         } else {
             alert(data.message || "Login failed");

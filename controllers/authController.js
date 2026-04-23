@@ -101,7 +101,7 @@ exports.loginUser = async (req, res) => {
     message: "Login successful",
     token,
     role: user.role,
-    user: user   // ✅ ADD THIS LINE
+    studentId: user._id   // ✅ ADD THIS
 });
 
     } catch (error) {
