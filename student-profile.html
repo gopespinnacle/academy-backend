@@ -51,21 +51,27 @@ const studentId = params.get("id");
 async function loadStudent(){
 
 const res = await fetch(
-"https://academy-backend-eatl.onrender.com/api/founder/student/" + studentId
+"https://academy-backend-eatl.onrender.com/api/founder/students"
 );
 
 const data = await res.json();
 
-const s = data.data;
+/* FIND THIS STUDENT */
+const s = data.students.find(st => st._id === studentId);
+
+if(!s){
+document.getElementById("studentInfo").innerText = "Student not found";
+return;
+}
 
 document.getElementById("studentInfo").innerHTML = `
 <b>Name:</b> ${s.name}<br>
 <b>Grade:</b> ${s.grade}<br>
 <b>Board:</b> ${s.board}<br>
-<b>Parent Mobile:</b> ${s.parentMobile}<br><br>
+<b>Mobile:</b> ${s.mobile}<br><br>
 
-<b>Login ID:</b> ${s.loginId}<br>
-<b>Password:</b> ${s.password}
+<b>Login ID:</b> ${s.loginEmail}<br>
+<b>Password:</b> ${s.loginPassword}
 `;
 
 }
@@ -74,8 +80,10 @@ document.getElementById("studentInfo").innerHTML = `
 
 async function loadPeriods(){
 
+try{
+
 const res = await fetch(
-"https://academy-backend-eatl.onrender.com/api/founder/student-periods/" + studentId
+"https://academy-backend-eatl.onrender.com/api/founder/schedules"
 );
 
 const data = await res.json();
@@ -83,14 +91,27 @@ const data = await res.json();
 let html = "";
 
 data.data.forEach(p=>{
+
+// 🔥 IMPORTANT FIX
+if(p.student && p.student.toString() === studentId){
+
 html += `
-<div style="padding:8px; border-bottom:1px solid #ddd;">
+<div style="padding:8px;border-bottom:1px solid #ddd;">
 📘 ${p.subject} | ${p.day} | ⏰ ${p.startTime} - ${p.endTime}
 </div>
 `;
+
+}
+
 });
 
-document.getElementById("periods").innerHTML = html || "No periods assigned";
+document.getElementById("periods").innerHTML =
+html || "No periods assigned";
+
+}catch(err){
+console.log(err);
+document.getElementById("periods").innerText = "Error loading periods";
+}
 
 }
 
