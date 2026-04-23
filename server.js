@@ -57,7 +57,27 @@ app.use("/api/student", studentRoutes);
 app.use("/api", admissionRoutes);
 
 
+app.use("/api/auth", authRoutes);
 
+
+/* ================= PERIOD ASSIGNMENTS ================= */
+
+const PeriodAssignment = require("./models/PeriodAssignment");  // adjust if path different
+
+app.get("/api/founder/periodassignments", async (req, res) => {
+
+    try{
+
+        const data = await PeriodAssignment.find();
+
+        res.json({ data });
+
+    }catch(err){
+        console.log(err);
+        res.status(500).json({ message:"Error fetching periods" });
+    }
+
+});
 /* ================= DB ================= */
 
 mongoose.connect(process.env.MONGO_URI)
