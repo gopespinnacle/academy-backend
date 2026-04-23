@@ -595,5 +595,21 @@ router.delete("/teacher-application/:id", async (req, res) => {
         res.status(500).json({ message: "Error deleting application" });
     }
 });
+router.delete("/delete-teacher/:id", async (req,res)=>{
+    try{
 
+        const User = require("../models/User");
+
+        const teacher = await User.findByIdAndDelete(req.params.id);
+
+        if(!teacher){
+            return res.status(404).json({ message:"Teacher not found ❌" });
+        }
+
+        res.json({ message:"Teacher deleted ✅" });
+
+    }catch(err){
+        res.status(500).json({ message:"Server error ❌" });
+    }
+});
 module.exports = router;
