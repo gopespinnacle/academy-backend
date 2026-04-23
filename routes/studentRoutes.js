@@ -249,4 +249,49 @@ router.post("/upload-camera", protect, authorize("student"), async(req,res)=>{
     }
 });
 
+
+/* ================= STUDENT DASHBOARD ================= */
+
+router.get("/dashboard", protect, authorize("student"), async (req,res)=>{
+try{
+
+const studentId = req.user.id;
+
+/* STUDENT */
+const student = await User.findById(studentId);
+
+/* CLASSES */
+const classes = await PeriodAssignment.find({
+    student: studentId
+});
+
+/* HOMEWORK */
+const homework = await Homework.find({
+    assignedTo: studentId
+});
+
+/* ASSESSMENTS */
+const assessments = await Assessment.find();
+
+/* UNIQUE SUBJECTS */
+let subjectsSet = new Set();
+
+classes.forEach(c=>{
+    if(c.subject) subjectsSet.add(c.subject);
+});
+
+res.json({
+    name: student.name,
+    totalClasses: classes.length,
+    totalSubjects: subjectsSet.size,
+    homeworkCount: homework.length,
+    assessmentCount: assessments.length,
+    classes
+});
+
+}catch(err){
+console.log(err);
+res.status(500).json({message:"Dashboard error"});
+}
+});
 module.exports = router;

@@ -3,500 +3,210 @@
 <head>
 <meta charset="UTF-8">
 <title>Student Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
 
-body{
-margin:0;
-font-family:Segoe UI;
-background:#f4f6f9;
+body {
+    margin:0;
+    font-family: 'Segoe UI';
+    background:#f1f5f9;
 }
 
 /* SIDEBAR */
-
-.sidebar{
-position:fixed;
-width:240px;
-height:100%;
-background:#1f2d3d;
-color:white;
-padding-top:20px;
+.sidebar {
+    width:240px;
+    height:100vh;
+    background:#0f172a;
+    color:white;
+    position:fixed;
 }
 
-.sidebar h2{
-text-align:center;
-margin-bottom:30px;
+.sidebar h2 {
+    text-align:center;
+    padding:20px;
 }
 
-.sidebar ul{
-list-style:none;
-padding:0;
+.sidebar ul {
+    list-style:none;
+    padding:0;
 }
 
-.sidebar li{
-padding:14px 20px;
-cursor:pointer;
-border-left:4px solid transparent;
+.sidebar ul li {
+    padding:15px;
+    cursor:pointer;
+    transition:0.3s;
 }
 
-.sidebar li:hover{
-background:#32465a;
-border-left:4px solid #4CAF50;
+.sidebar ul li:hover {
+    background:#1e293b;
 }
 
 /* MAIN */
-
-.main{
-margin-left:240px;
-padding:30px;
+.main {
+    margin-left:240px;
+    padding:20px;
 }
 
-/* HEADER */
-
-.header{
-font-size:26px;
-font-weight:bold;
-margin-bottom:20px;
-}
-
-/* LIVE CLASS */
-
-.live-box{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-margin-bottom:20px;
-}
-
-.live{
-color:red;
-font-weight:bold;
+/* TOPBAR */
+.topbar {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
 }
 
 /* CARDS */
-
-.cards{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:20px;
-margin-bottom:30px;
+.cards {
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:20px;
 }
 
-.card{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+.card {
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    text-align:center;
+    box-shadow:0 5px 15px rgba(0,0,0,0.08);
+    transition:0.3s;
 }
 
-.card h3{
-margin:0;
-font-size:16px;
-color:#777;
+.card:hover {
+    transform:translateY(-5px);
 }
 
-.card p{
-font-size:22px;
-font-weight:bold;
-margin-top:8px;
+.card i {
+    font-size:28px;
+    color:#2563eb;
 }
 
-/* SECTION */
-
-.section{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-margin-bottom:25px;
+/* CLASS SECTION */
+.class-box {
+    margin-top:30px;
 }
 
-/* TABLE */
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th,td{
-padding:10px;
-border-bottom:1px solid #ddd;
-}
-
-th{
-background:#f1f1f1;
-}
-
-/* BUTTON */
-
-.btn{
-background:#4CAF50;
-color:white;
-border:none;
-padding:8px 14px;
-border-radius:6px;
-cursor:pointer;
-}
-
-.btn:hover{
-background:#45a049;
+.class-item {
+    background:white;
+    padding:12px;
+    border-radius:8px;
+    margin-bottom:10px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08);
 }
 
 </style>
-
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
-
 <div class="sidebar">
-
-<h2>Student Panel</h2>
-
-<ul>
-
-<li>Dashboard</li>
-<li>My Classes</li>
-<li>Attendance</li>
-<li>Results</li>
-<li>Weekly Assessment</li>
-<li>Monthly Assessment</li>
-<li>Homework</li>
-<li>Timetable</li>
-<li>Announcements</li>
-<li>Profile</li>
-<li onclick="logout()">Logout</li>
-
-</ul>
-
+    <h2>Student ERP</h2>
+    <ul>
+        <li>🏠 Dashboard</li>
+        <li onclick="go('student-class.html')">📅 My Classes</li>
+        <li onclick="go('student-homework.html')">📘 Homework</li>
+        <li onclick="go('student-results.html')">📊 Results</li>
+        <li onclick="logout()">🚪 Logout</li>
+    </ul>
 </div>
-
-<!-- MAIN -->
 
 <div class="main">
 
-<div class="header">
-Welcome Student
+<div class="topbar">
+    <h2>Welcome, <span id="studentName"></span></h2>
 </div>
-
-<!-- LIVE CLASS -->
-
-<div class="live-box">
-
-<span class="live">🔴 LIVE NOW</span>
-
-<p>Science Class - Grade 8</p>
-
-<button class="btn">Join Class</button>
-
-</div>
-
-<!-- DASHBOARD CARDS -->
 
 <div class="cards">
 
 <div class="card">
-<h3>Today's Classes</h3>
-<p>2</p>
+<i class="fa fa-book"></i>
+<h4>Classes</h4>
+<p id="classes">0</p>
 </div>
 
 <div class="card">
-<h3>Attendance</h3>
-<p>92%</p>
+<i class="fa fa-layer-group"></i>
+<h4>Subjects</h4>
+<p id="subjects">0</p>
 </div>
 
 <div class="card">
-<h3>Total Assessments</h3>
-<p>6</p>
+<i class="fa fa-tasks"></i>
+<h4>Homework</h4>
+<p id="homework">0</p>
 </div>
 
 <div class="card">
-<h3>Average Marks</h3>
-<p>78%</p>
+<i class="fa fa-clipboard"></i>
+<h4>Assessments</h4>
+<p id="assessments">0</p>
 </div>
 
 </div>
 
-<!-- TODAY CLASSES -->
-
-<div class="section">
-
-<h3>Today's Classes</h3>
-
-<table>
-
-<thead>
-<tr>
-<th>Subject</th>
-<th>Teacher</th>
-<th>Time</th>
-<th>Action</th>
-</tr>
-</thead>
-
-<tbody id="todayClasses"></tbody>
-
-</table>
-
-</div>
-
-<!-- ATTENDANCE HISTORY -->
-
-<div class="section">
-
-<h3>Attendance History</h3>
-
-<table>
-
-<tr>
-<th>Date</th>
-<th>Subject</th>
-<th>Status</th>
-</tr>
-
-<tr>
-<td>12 Mar</td>
-<td>Science</td>
-<td style="color:green;">Present</td>
-</tr>
-
-<tr>
-<td>13 Mar</td>
-<td>Maths</td>
-<td style="color:red;">Absent</td>
-</tr>
-
-</table>
-
-</div>
-
-<!-- HOMEWORK -->
-
-<div class="section">
-
-<h3>Homework Tracker</h3>
-
-<table>
-
-<tr>
-<th>Subject</th>
-<th>Homework</th>
-<th>Status</th>
-</tr>
-
-<tbody id="homeworkTable"></tbody>
-
-</table>
-
-</div>
-
-<!-- TIMETABLE -->
-
-<div class="section">
-
-<h3>Weekly Timetable</h3>
-
-<table>
-
-<thead>
-<tr>
-<th>Day</th>
-<th>Subject</th>
-<th>Time</th>
-</tr>
-</thead>
-
-<tbody id="weeklyTimetable"></tbody>
-
-</table>
-
-</div>
-
-
-<!-- ANNOUNCEMENTS -->
-
-<div class="section">
-
-<h3>Announcements</h3>
-
-<ul>
-
-<li>📢 Monthly exam on Friday</li>
-<li>📢 Holiday on March 20</li>
-
-</ul>
-
+<div class="class-box">
+<h3>My Classes</h3>
+<div id="classList"></div>
 </div>
 
 </div>
 
 <script>
 
+const token = localStorage.getItem("token");
+
+if(!token){
+window.location.href = "student-login.html";
+}
+
+async function loadDashboard(){
+
+const res = await fetch(
+"https://academy-backend-eatl.onrender.com/api/student/dashboard",
+{
+headers:{
+"Authorization":"Bearer " + token
+}
+}
+);
+
+const data = await res.json();
+
+document.getElementById("studentName").innerText = data.name;
+document.getElementById("classes").innerText = data.totalClasses;
+document.getElementById("subjects").innerText = data.totalSubjects;
+document.getElementById("homework").innerText = data.homeworkCount;
+document.getElementById("assessments").innerText = data.assessmentCount;
+
+/* CLASS LIST */
+
+const container = document.getElementById("classList");
+container.innerHTML = "";
+
+data.classes.forEach(c=>{
+container.innerHTML += `
+<div class="class-item">
+📘 ${c.subject || "General"} |
+🏫 ${c.className} |
+📅 ${c.day} |
+⏰ ${c.startTime} - ${c.endTime}
+</div>
+`;
+});
+
+}
+
 function logout(){
-
-localStorage.removeItem("token");
-
-window.location.href="student-login.html";
-
-}
-async function loadTodayClasses(){
-
-const token = localStorage.getItem("token");
-
-const res = await fetch(
-"https://academy-backend-eatl.onrender.com/api/auth/student/today-sessions",
-{
-headers:{
-"Authorization":"Bearer " + token
-}
-}
-);
-
-const data = await res.json();
-
-const table = document.getElementById("todayClasses");
-
-table.innerHTML="";
-
-data.sessions.forEach(s=>{
-
-table.innerHTML += `
-<tr>
-<td>${s.subject}</td>
-<td>${s.teacher?.name}</td>
-<td>${s.startTime} - ${s.endTime}</td>
-<td>
-<button class="btn" onclick="joinClass('${s.meetingLink}')">
-Join
-</button>
-</td>
-</tr>
-`;
-
-});
-
+localStorage.clear();
+window.location.href = "student-login.html";
 }
 
-loadTodayClasses();
-
-function joinClass(link){
-
-window.open(link,"_blank");
-
-}
-/* ================= WEEKLY TIMETABLE ================= */
-
-async function loadTimetable(){
-
-const token = localStorage.getItem("token");
-
-const res = await fetch(
-"https://academy-backend-eatl.onrender.com/api/auth/student/timetable",
-{
-headers:{
-"Authorization":"Bearer "+token
-}
-});
-
-const data = await res.json();
-console.log("Timetable API:", data);
-
-const table = document.getElementById("weeklyTimetable");
-
-table.innerHTML="";
-
-if(!data.schedules){
-return;
+function go(page){
+window.location.href = page;
 }
 
-data.schedules.forEach(s=>{
+loadDashboard();
 
-table.innerHTML += `
-<tr>
-<td>${s.day}</td>
-<td>${s.subject}</td>
-<td>${s.startTime} - ${s.endTime}</td>
-</tr>
-`;
-
-});
-
-}
-
-loadTimetable();
-/* ================= LOAD HOMEWORK ================= */
-
-async function loadHomework(){
-
-const token = localStorage.getItem("token");
-
-const res = await fetch(
-"https://academy-backend-eatl.onrender.com/api/auth/student/homework",
-{
-headers:{
-"Authorization":"Bearer "+token
-}
-});
-
-const data = await res.json();
-
-const table = document.getElementById("homeworkTable");
-
-table.innerHTML="";
-
-data.homework.forEach(h=>{
-
-table.innerHTML += `
-<tr>
-<td>${h.subject}</td>
-<td>${h.homework}</td>
-<td>${h.status}</td>
-</tr>
-`;
-
-});
-
-}
-
-loadHomework();
-/* ================= STUDENT HOMEWORK ================= */
-
-async function loadHomework(){
-
-const token = localStorage.getItem("token");
-
-const res = await fetch(
-"https://academy-backend-eatl.onrender.com/api/auth/student/homework",
-{
-headers:{
-"Authorization":"Bearer " + token
-}
-}
-);
-
-const data = await res.json();
-
-const table = document.getElementById("homeworkTable");
-
-table.innerHTML="";
-
-data.homework.forEach(h=>{
-
-table.innerHTML += `
-<tr>
-<td>${h.subject}</td>
-<td>${h.homework}</td>
-<td>${new Date(h.dueDate).toLocaleDateString()}</td>
-</tr>
-`;
-
-});
-
-}
-
-loadHomework();
 </script>
 
 </body>

@@ -2,425 +2,243 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>My Class</title>
+<title>My Classes</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
+
 body {
-font-family: Arial;
-padding:20px;
+    margin:0;
+    font-family: 'Segoe UI';
+    background:#f1f5f9;
 }
 
-.card {
-background:#fff;
-padding:20px;
-border-radius:10px;
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
-max-width:500px;
-margin:auto;
-}
-
-button {
-background:#4CAF50;
-color:white;
-padding:10px 15px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-margin-top:15px;
-}
+/* SIDEBAR */
 .sidebar {
-position: fixed;
-left: 0;
-top: 0;
-width: 220px;
-height: 100vh;
-background: #1f3a5f;
-color: white;
-padding: 15px;
+    width:240px;
+    height:100vh;
+    background:#0f172a;
+    color:white;
+    position:fixed;
+}
+
+.sidebar h2 {
+    text-align:center;
+    padding:20px;
 }
 
 .sidebar ul {
-list-style: none;
-padding: 0;
-margin-top: 15px;
+    list-style:none;
+    padding:0;
 }
 
 .sidebar ul li {
-padding: 10px;
-margin: 6px 0;
-cursor: pointer;
-border-radius: 6px;
-transition: 0.2s;
+    padding:15px;
+    cursor:pointer;
 }
 
 .sidebar ul li:hover {
-background: #2c4a73;
+    background:#1e293b;
 }
+
+/* MAIN */
+.main {
+    margin-left:240px;
+    padding:20px;
+}
+
+.timetable-container {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+gap: 15px;
+}
+
+.day-column {
+background: #f8fafc;
+border-radius: 12px;
+padding: 10px;
+}
+
+.day-header {
+background: #2c3e50;
+color: white;
+padding: 6px;
+text-align:center;
+border-radius: 6px;
+margin-bottom: 8px;
+}
+
+.period-card {
+background: linear-gradient(135deg, #4f46e5, #3b82f6);
+color: white;
+padding: 10px;
+border-radius: 10px;
+margin-bottom: 10px;
+cursor:pointer;
+}
+
+/* STATUS COLORS */
+.live { border-left:4px solid #00e676; }
+.upcoming { border-left:4px solid #ffeb3b; }
+.completed { border-left:4px solid #9e9e9e; }
+.disabled { opacity:0.4; }
+
 </style>
 </head>
 
 <body>
+
 <div class="sidebar">
-
-<h2 style="color:white; text-align:center;">Academy ERP</h2>
-
-<ul style="list-style:none; padding:0; margin-top:10px;">
-
-<li onclick="go('student-dashboard.html')">Dashboard</li>
-<li onclick="go('student-periods.html')">My Timetable</li>
-<li onclick="go('student-class.html')">My Classes</li>
-<li onclick="go('student-assessments.html')">Assessments</li>
-<li onclick="go('student-results.html')">Results</li>
-<li onclick="go('student-attendance.html')">Attendance</li>
-<li onclick="logout()">Logout</li>
-
+<h2>Student ERP</h2>
+<ul>
+<li onclick="go('student-dashboard.html')">🏠 Dashboard</li>
+<li>📅 My Classes</li>
+<li onclick="go('student-homework.html')">📘 Homework</li>
+<li onclick="go('student-results.html')">📊 Results</li>
+<li onclick="logout()">🚪 Logout</li>
 </ul>
-
 </div>
-<div class="card">
 
-<h2 id="title">Class</h2>
+<div class="main">
 
-<p><b>Class:</b> <span id="className"></span></p>
-<p><b>Subject:</b> <span id="subject"></span></p>
-<p><b>Day:</b> <span id="day"></span></p>
-<p><b>Time:</b> <span id="time"></span></p>
-<!-- 🔥 ADD THESE 3 LINES -->
-<p id="status"></p>
-<p id="countdown"></p>
-<p id="students"></p>
-<button id="joinBtn">Join Class 🎥</button>
-<hr style="margin:20px 0;">
+<h2>My Timetable</h2>
 
-<h3>My Attendance</h3>
-<h4 id="percent"></h4>
+<div id="timetable"></div>
 
-<table style="width:100%;border-collapse:collapse;">
-<thead>
-<tr>
-<th>Date</th>
-<th>Class</th>
-<th>Status</th>
-<th>Join Time</th>
-</tr>
-</thead>
-
-<tbody id="table"></tbody>
-</table>
 </div>
 
 <script>
 
-const params = new URLSearchParams(window.location.search);
-
-const className = params.get("className") || "N/A";
-const subject = params.get("subject") || params.get("eca") || params.get("language") || "N/A";
-const day = params.get("day") || "N/A";
-const startTime = params.get("startTime") || "00:00";
-
 const token = localStorage.getItem("token");
 
-/* ================= FORMAT TIME ================= */
-function formatTime(time){
-let [h, m] = time.split(":");
-h = parseInt(h);
-
-let ampm = h >= 12 ? "PM" : "AM";
-h = h % 12 || 12;
-
-return `${h}:${m} ${ampm}`;
+if(!token){
+window.location.href = "student-login.html";
 }
 
+/* ================= LOAD TIMETABLE ================= */
 
-
-function getClassDateTime(){
-
-const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-
-const now = new Date();
-
-const todayIndex = now.getDay();
-const classIndex = days.indexOf(day);
-
-/* CALCULATE NEXT CLASS DAY */
-let diff = classIndex - todayIndex;
-
-if(diff < 0){
-diff += 7;
-}
-
-const classDate = new Date();
-classDate.setDate(now.getDate() + diff);
-
-const [h, m] = startTime.split(":");
-
-classDate.setHours(h, m, 0);
-
-return classDate;
-}
-/* ================= SET BASIC INFO ================= */
-
-document.getElementById("className").innerText = className;
-document.getElementById("subject").innerText = subject;
-document.getElementById("day").innerText = day;
-document.getElementById("time").innerText = formatTime(startTime);
-
-/* ================= STATUS + COUNTDOWN ================= */
-
-function getStatus(){
-
-const now = new Date();
-
-const start = getClassDateTime();
-
-const end = new Date(start.getTime() + (40 * 60000)); // 40 mins class
-
-if(now >= start && now <= end){
-return "live";
-}
-
-if(now < start){
-return "upcoming";
-}
-
-return "completed";
-
-}
-
-/* ================= UPDATE UI ================= */
-
-function updateUI(){
-
-const status = getStatus();
-
-const statusDiv = document.getElementById("status");
-const joinBtn = document.getElementById("joinBtn");
-const countdown = document.getElementById("countdown");
-
-const now = new Date();
-
-const start = getClassDateTime();
-
-if(status === "live"){
-
-statusDiv.innerHTML = "🟢 LIVE NOW";
-statusDiv.style.color = "green";
-
-// ❌ DON'T re-enable if already joined
-if(!window.joinedOnce){
-    joinBtn.disabled = false;
-}
-
-countdown.innerHTML = "";
-
-}
-
-else if(status === "upcoming"){
-
-statusDiv.innerHTML = "🟡 Upcoming";
-statusDiv.style.color = "orange";
-
-joinBtn.disabled = true;
-
-/* COUNTDOWN */
-const diff = start - now;
-
-let totalSeconds = Math.floor(diff / 1000);
-
-const days = Math.floor(totalSeconds / (24 * 3600));
-totalSeconds %= (24 * 3600);
-
-const hours = Math.floor(totalSeconds / 3600);
-totalSeconds %= 3600;
-
-const minutes = Math.floor(totalSeconds / 60);
-const seconds = totalSeconds % 60;
-
-/* SMART DISPLAY */
-
-if(days === 0){
-  countdown.innerHTML = `Starts in ${hours}h ${minutes}m ${seconds}s`;
-}
-else if(days === 1){
-  countdown.innerHTML = `Tomorrow at ${formatTime(startTime)}`;
-}
-else{
-  countdown.innerHTML = `${day} at ${formatTime(startTime)}`;
-}
-}
-
-else{
-
-statusDiv.innerHTML = "⚪ Completed";
-statusDiv.style.color = "gray";
-
-joinBtn.disabled = true;
-countdown.innerHTML = "";
-
-}
-
-}
-
-/* ================= JOIN CLASS ================= */
-
-document.getElementById("joinBtn").onclick = async () => {
-
-// 🔒 PREVENT MULTIPLE CLICKS (IMPORTANT)
-if(window.joinedOnce) return;
-window.joinedOnce = true;
-
-const btn = document.getElementById("joinBtn");
-btn.disabled = true;
-
-try{
-
-const res = await fetch("https://academy-backend-eatl.onrender.com/api/student/join-class",{
-method:"POST",
-headers:{
-  "Content-Type":"application/json",
-  "Authorization":"Bearer "+token
-},
-body: JSON.stringify({
-  className,
-  subject
-})
-});
-
-const data = await res.json();
-
-/* 🔥 SHOW STATUS */
-if(data.status === "Present"){
-  alert("✅ You are marked PRESENT");
-}
-else if(data.status === "Late"){
-  alert("🟡 You joined LATE");
-}
-else if(data.message === "Already joined"){
-  alert("⚠️ Already joined this class");
-}
-
-/* 🎥 OPEN CLASS */
-if(data.meetingLink){
-  window.open(data.meetingLink, "_blank");
-}
-
-}catch(err){
-
-console.log(err);
-alert("Error joining class");
-
-// ❌ UNLOCK if error happens
-window.joinedOnce = false;
-btn.disabled = false;
-
-}
-
-};
-/* ================= LOAD CLASSMATES ================= */
-
-async function loadStudents(){
-
-try{
+async function loadTimetable(){
 
 const res = await fetch(
-`https://academy-backend-eatl.onrender.com/api/teacher/period-students?className=${className}&subject=${subject}&day=${day}&startTime=${startTime}`,
+"https://academy-backend-eatl.onrender.com/api/student/my-timetable",
 {
-headers:{ "Authorization":"Bearer "+token }
+headers:{
+"Authorization":"Bearer " + token
+}
 }
 );
 
 const data = await res.json();
-if(!data || !data.data){
-document.getElementById("students").innerText = "👥 0 students";
-return;
-}
-const count = data.data?.length || 0;
 
-document.getElementById("students").innerText =
-`👥 ${count} students`;
-
-}catch(err){
-console.log(err);
-}
+renderGrid(data.data || []);
 
 }
 
-/* ================= SIDEBAR ACTIVE ================= */
+/* ================= STATUS ================= */
 
-document.querySelectorAll(".sidebar ul li").forEach(li=>{
-li.style.background = "";
+function getStatus(day, startTime, endTime){
+
+const now = new Date();
+
+const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const today = days[now.getDay()];
+
+if(day !== today) return "disabled";
+
+const [sh, sm] = startTime.split(":");
+const [eh, em] = endTime.split(":");
+
+const start = new Date();
+start.setHours(sh, sm, 0);
+
+const end = new Date();
+end.setHours(eh, em, 0);
+
+if(now >= start && now <= end) return "live";
+if(now < start) return "upcoming";
+
+return "completed";
+}
+
+/* ================= UI ================= */
+
+function renderGrid(schedule){
+
+const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+
+const container = document.getElementById("timetable");
+container.innerHTML = "";
+container.className = "timetable-container";
+
+/* GROUP */
+const grouped = {};
+days.forEach(d => grouped[d] = []);
+
+schedule.forEach(s=>{
+grouped[s.day].push(s);
 });
 
-document.querySelector(".sidebar ul li:nth-child(3)").style.background = "#2c4a73";
+/* BUILD */
+days.forEach(day=>{
 
-/* ================= START ================= */
+const col = document.createElement("div");
+col.className = "day-column";
 
-setInterval(updateUI, 1000);
-loadStudents(); 
-loadAttendance(); // 🔥 ADD THIS LINE
-async function loadAttendance(){
+col.innerHTML = `<div class="day-header">${day}</div>`;
 
-try{
+grouped[day].forEach(s=>{
 
-const res = await fetch(`https://academy-backend-eatl.onrender.com/api/student/my-attendance?className=${className}`,{
-headers:{ "Authorization":"Bearer "+token }
-});
+const status = getStatus(s.day, s.startTime, s.endTime);
 
-const data = await res.json();
+const div = document.createElement("div");
+div.className = "period-card " + status;
 
-const table = document.getElementById("table");
-table.innerHTML = "";
+/* CLICK JOIN */
+div.onclick = () => {
 
-if(!data.data || data.data.length === 0){
-table.innerHTML = "<tr><td colspan='4'>No attendance data ❌</td></tr>";
+if(status !== "live"){
+alert("Class not active ❌");
 return;
 }
 
-let present = 0;
-let late = 0;
-let total = data.data.length;
+/* OPTIONAL: join class API */
+alert("Joining class... (next step we will connect live meeting)");
 
-data.data.forEach(a=>{
+};
 
-if(a.status === "Present") present++;
-if(a.status === "Late") late++;
-
-const date = new Date(a.date).toLocaleDateString();
-const time = a.joinTime ? new Date(a.joinTime).toLocaleTimeString() : "-";
-
-table.innerHTML += `
-<tr>
-<td>${date}</td>
-<td>${a.className}</td>
-<td style="
-color:
-${a.status==='Present' ? 'green' :
-a.status==='Late' ? 'orange' : 'red'}
-">
-${a.status === "Present" ? "🟢 Present" :
-a.status === "Late" ? "🟡 Late" : "🔴 Absent"}
-</td>
-<td>${time}</td>
-</tr>
+div.innerHTML = `
+<div><b>${s.className}</b></div>
+<div>📘 ${s.subject || "General"}</div>
+<div>⏰ ${s.startTime} - ${s.endTime}</div>
 `;
 
+col.appendChild(div);
+
 });
 
-let percent = 0;
-if(total > 0){
-percent = Math.round(((present + late)/total)*100);
-}
+container.appendChild(col);
 
-document.getElementById("percent").innerText =
-`Attendance: ${percent}%`;
-
-}catch(err){
-console.log(err);
-document.getElementById("table").innerHTML =
-"<tr><td colspan='4'>Error loading data ❌</td></tr>";
-}
+});
 
 }
+
+/* ================= NAV ================= */
+
+function logout(){
+localStorage.clear();
+window.location.href = "student-login.html";
+}
+
+function go(page){
+window.location.href = page;
+}
+
+/* AUTO REFRESH */
+setInterval(loadTimetable, 10000);
+
+loadTimetable();
+
 </script>
 
 </body>
