@@ -23,13 +23,35 @@
         <i class="fa fa-lock"></i>
         <input type="password" id="password" placeholder="Password">
     </div>
-<div class="remember">
-    <input type="checkbox"> Remember Me
-</div>
-<button type="button" class="login-btn" onclick="loginTeacher()">Login</button>
+
+    <div class="remember">
+        <input type="checkbox"> Remember Me
+    </div>
+
+    <button type="button" class="login-btn" onclick="loginTeacher()">Login</button>
+
+    <!-- 🔥 RESET PASSWORD LINK -->
+    <p style="text-align:center; margin-top:10px;">
+        <a href="#" onclick="showReset()">Reset Password</a>
+    </p>
+
+    <!-- 🔥 RESET FORM -->
+    <div id="resetBox" style="display:none; margin-top:15px;">
+
+        <input type="password" id="oldPass" placeholder="Old Password"><br><br>
+
+        <input type="password" id="newPass" placeholder="New Password"><br><br>
+
+        <input type="password" id="confirmPass" placeholder="Confirm Password"><br><br>
+
+        <button onclick="resetPassword()">Submit</button>
+
+    </div>
 
 </div>
+
 <script>
+
 async function loginTeacher() {
 
     const email = document.getElementById("email").value;
@@ -57,20 +79,17 @@ async function loginTeacher() {
 
         if (response.ok) {
 
-            // 🔐 ROLE CHECK
             if (data.role !== "teacher") {
                 alert("Access denied. Not a Teacher account.");
                 return;
             }
 
-         localStorage.setItem("token", data.token);
-localStorage.setItem("role", data.role);
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("role", data.role);
+            localStorage.setItem("teacherId", data.user._id);
+            localStorage.setItem("teacherName", data.user.name);
 
-// ✅ FIX STARTS HERE
-localStorage.setItem("teacherId", data.user._id);
-localStorage.setItem("teacherName", data.user.name);
-
-window.location.href = "teacher-dashboard.html";
+            window.location.href = "teacher-dashboard.html";
 
         } else {
             alert(data.message || "Login failed");
@@ -80,6 +99,54 @@ window.location.href = "teacher-dashboard.html";
         alert("Server not running");
     }
 }
+
+/* 🔥 SHOW RESET FORM */
+function showReset(){
+    document.getElementById("resetBox").style.display = "block";
+}
+
+/* 🔥 RESET PASSWORD */
+async function resetPassword(){
+
+    const email = document.getElementById("email").value;
+    const oldPass = document.getElementById("oldPass").value;
+    const newPass = document.getElementById("newPass").value;
+    const confirmPass = document.getElementById("confirmPass").value;
+
+    if(!email){
+        alert("Enter email first ❌");
+        return;
+    }
+
+    if(newPass !== confirmPass){
+        alert("Passwords do not match ❌");
+        return;
+    }
+
+    try{
+
+        const res = await fetch(
+        "https://academy-backend-eatl.onrender.com/api/auth/reset-password",
+        {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({
+                email,
+                oldPassword: oldPass,
+                newPassword: newPass
+            })
+        });
+
+        const data = await res.json();
+
+        alert(data.message);
+
+    }catch(err){
+        alert("Error resetting password");
+    }
+}
+
 </script>
+
 </body>
 </html>
