@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Student Profile</title>
+
+<style>
+body{
+    font-family:Segoe UI;
+    background:#f1f5f9;
+    margin:0;
+}
+
+.container{
+    padding:20px;
+}
+
+.card{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Student Profile</h2>
+
+<div class="card" id="studentInfo">Loading...</div>
+
+<div class="card">
+<h3>Assigned Periods</h3>
+<div id="periods">Loading...</div>
+</div>
+
+</div>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+const studentId = params.get("id");
+
+/* ================= STUDENT INFO ================= */
+
+async function loadStudent(){
+
+const res = await fetch(
+"https://academy-backend-eatl.onrender.com/api/founder/student/" + studentId
+);
+
+const data = await res.json();
+
+const s = data.data;
+
+document.getElementById("studentInfo").innerHTML = `
+<b>Name:</b> ${s.name}<br>
+<b>Grade:</b> ${s.grade}<br>
+<b>Board:</b> ${s.board}<br>
+<b>Parent Mobile:</b> ${s.parentMobile}<br><br>
+
+<b>Login ID:</b> ${s.loginId}<br>
+<b>Password:</b> ${s.password}
+`;
+
+}
+
+/* ================= PERIODS ================= */
+
+async function loadPeriods(){
+
+const res = await fetch(
+"https://academy-backend-eatl.onrender.com/api/founder/student-periods/" + studentId
+);
+
+const data = await res.json();
+
+let html = "";
+
+data.data.forEach(p=>{
+html += `
+<div style="padding:8px; border-bottom:1px solid #ddd;">
+📘 ${p.subject} | ${p.day} | ⏰ ${p.startTime} - ${p.endTime}
+</div>
+`;
+});
+
+document.getElementById("periods").innerHTML = html || "No periods assigned";
+
+}
+
+/* LOAD */
+loadStudent();
+loadPeriods();
+
+</script>
+
+</body>
+</html>

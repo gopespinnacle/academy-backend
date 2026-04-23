@@ -176,7 +176,7 @@ Gopes Pinnacle Academy`
 tbody.innerHTML += `
 <tr>
 <td style="cursor:pointer;color:#007bff;font-weight:600"
-onclick="showStudentProfile(${index})">
+onclick="openStudentPage('${student._id}')">
 ${student.name}
 </td>
 <td>${student.grade}</td>
@@ -573,6 +573,10 @@ async function saveScheduleEdit(){
     closeSchedulePopup();
     loadSchedules();
 }*/
+
+function openStudentPage(id){
+    window.location.href = "student-profile.html?id=" + id;
+}
 </script>
 
 
