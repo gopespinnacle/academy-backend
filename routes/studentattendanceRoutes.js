@@ -56,9 +56,10 @@ router.get("/:studentId", async (req, res) => {
         res.json({ data });
 
     }catch(err){
-        console.log(err);
-        res.status(500).json({ message: "Error fetching attendance ❌" });
+        console.log("ERROR:", err);  // 👈 ADD THIS
+        res.status(500).json({ message:"Error" });
     }
+
 });
 
 module.exports = router;

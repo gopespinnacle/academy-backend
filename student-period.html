@@ -163,24 +163,35 @@ async function loadAttendance(){
 
     const studentId = localStorage.getItem("studentId");
 
-    const res = await fetch(
-    "https://academy-backend-eatl.onrender.com/api/student-attendance/" + studentId
-    );
+    try{
 
-    const data = await res.json();
+        const res = await fetch(
+        "https://academy-backend-eatl.onrender.com/api/student-attendance/" + studentId
+        );
 
-    let html = "";
+        const data = await res.json();
 
-    data.data.forEach(a=>{
-        html += `
-        <div>
-        ✅ ${a.subject} | ${a.day} | ${a.startTime} - ${a.endTime}
-        </div>
-        `;
-    });
+        if(!data || !data.data){
+            document.getElementById("attendanceStatus").innerText = "No data";
+            return;
+        }
 
-    document.getElementById("attendanceStatus").innerHTML =
-    html || "No attendance yet";
+        let html = "";
+
+        data.data.forEach(a=>{
+            html += `
+            <div>
+            ✅ ${a.subject} | ${a.day} | ${a.startTime} - ${a.endTime}
+            </div>
+            `;
+        });
+
+        document.getElementById("attendanceStatus").innerHTML =
+        html || "No attendance yet";
+
+    }catch(err){
+        document.getElementById("attendanceStatus").innerText = "Server error ❌";
+    }
 }
 
 /* ================= NAV ================= */
