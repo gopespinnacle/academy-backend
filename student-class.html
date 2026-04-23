@@ -197,13 +197,13 @@ div.className = "period-card " + status;
 /* CLICK JOIN */
 div.onclick = () => {
 
-if(status !== "live"){
-alert("Class not active ❌");
-return;
-}
-
-/* OPTIONAL: join class API */
-alert("Joining class... (next step we will connect live meeting)");
+window.location.href =
+"student-period.html?" +
+"className=" + encodeURIComponent(s.className) +
+"&subject=" + encodeURIComponent(s.subject || "") +
+"&day=" + encodeURIComponent(s.day) +
+"&startTime=" + encodeURIComponent(s.startTime) +
+"&endTime=" + encodeURIComponent(s.endTime);
 
 };
 
