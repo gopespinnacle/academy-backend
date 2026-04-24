@@ -45,19 +45,21 @@ router.post("/mark", async (req, res) => {
 
 
 // ✅ GET ATTENDANCE
+const Attendance = require("../models/Attendance");
+
 router.get("/:studentId", async (req, res) => {
 
-    try{
+    try {
 
-        const data = await Attendance.find({
-            studentId: req.params.studentId
-        });
+        const studentId = req.params.studentId;
+
+        const data = await Attendance.find({ studentId });
 
         res.json({ data });
 
-    }catch(err){
-        console.log("ERROR:", err);  // 👈 ADD THIS
-        res.status(500).json({ message:"Error" });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Error fetching attendance" });
     }
 
 });
