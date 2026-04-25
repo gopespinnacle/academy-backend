@@ -55,7 +55,7 @@ await axios.post(
   `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
   {
     messaging_product: "whatsapp",
-    to: mobile, // dynamic number
+    to: "91" + mobile, // dynamic number
     type: "template",
     template: {
       name: "parent_confirmation",
