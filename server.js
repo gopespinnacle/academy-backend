@@ -46,6 +46,35 @@ app.use("/api/founder", founderTimeClashRoutes);
 app.use("/api/student", studentRoutes);
 
 app.use("/api", admissionRoutes);
+
+app.get("/test-whatsapp", async (req, res) => {
+  const axios = require("axios");
+
+  try {
+    await axios.post(
+      `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+      {
+        messaging_product: "whatsapp",
+        to: "919566911472",
+        type: "text",
+        text: {
+          body: "🔥 Test message working!"
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    res.send("✅ WhatsApp sent");
+  } catch (err) {
+    console.log(err.response?.data || err.message);
+    res.send("❌ Failed");
+  }
+});
 const webhookRoutes = require("./routes/webhook");
 app.use("/api", webhookRoutes);
 
