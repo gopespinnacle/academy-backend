@@ -655,7 +655,7 @@ footer{
 }
 
 .course-option{
-    padding:12px;
+    padding:10px 16px;
     background:#ffffff;
     border:2px solid #ddd;
     border-radius:8px;
@@ -663,6 +663,7 @@ footer{
     text-align:center;
     font-size:14px;
     transition:0.2s;
+    min-width:120px;
 }
 
 .course-option:hover{
@@ -678,6 +679,7 @@ footer{
 
 .course-group{
     margin-bottom:20px;
+    text-align:left;
 }
 
 .selection-title{
@@ -687,8 +689,8 @@ footer{
 }
 
 .selection-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    display:flex;
+    flex-wrap:wrap;
     gap:10px;
 }
 </style>
