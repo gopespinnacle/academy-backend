@@ -5,14 +5,15 @@ const axios = require("axios");
 
 router.post("/admission", async (req, res) => {
     try {
-        const { parentName, studentName, grade, mobile } = req.body;
+        const { parentName, studentName, grade, mobile, courses } = req.body;
 
         const newAdmission = new Admission({
-            parentName,
-            studentName,
-            grade,
-            mobile
-        });
+    parentName,
+    studentName,
+    grade,
+    mobile,
+    courses   // 🔥 ADD THIS
+});
 
         await newAdmission.save();
 
@@ -33,7 +34,8 @@ await axios.post(
             { type: "text", text: parentName },
             { type: "text", text: studentName },
             { type: "text", text: grade },
-            { type: "text", text: mobile }
+            { type: "text", text: mobile },
+            { type: "text", text: courses.join(", ") }
           ]
         }
       ]

@@ -7,6 +7,16 @@
     table { width:100%; border-collapse: collapse; }
     th, td { padding:10px; border:1px solid #ccc; text-align:left; }
     th { background:#333; color:#fff; }
+
+    .course-badge{
+  display:inline-block;
+  background:#e6ecf5;
+  color:#123a63;
+  padding:4px 8px;
+  margin:2px;
+  border-radius:6px;
+  font-size:12px;
+}
   </style>
 </head>
 
@@ -22,47 +32,13 @@
       <th>Grade</th>
       <th>Mobile</th>
       <th>Date</th>
+      <th>Courses</th>
       <th>Action</th>
     </tr>
   </thead>
   <tbody id="dataTable"></tbody>
 </table>
 
-<script>
-async function loadData() {
-  try {
-    const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/admissions");
-    const result = await res.json();
-    const data = result.admissions;
-    const table = document.getElementById("dataTable");
-    table.innerHTML = "";
-
-    data.forEach(item => {
-      const tr = document.createElement("tr");
-
-      const date = new Date(item.createdAt);
-
-      tr.innerHTML = `
-  <td>${item.studentName}</td>
-  <td>${item.parentName}</td>
-  <td>${item.grade}</td>
-  <td>${item.mobile}</td>
-  <td>${date.toLocaleString()}</td>
-  <td>
-    <button onclick="deleteItem('${item._id}')">Delete</button>
-  </td>
-`;
-
-      table.appendChild(tr);
-    });
-
-  } catch (err) {
-    console.log(err);
-  }
-}
-
-loadData();
-</script>
 <script>
 async function loadData() {
   try {
