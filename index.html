@@ -934,38 +934,56 @@ function toggleMenu(){
 <script>
 window.onload = function(){
 
+let isSubmitting = false;
+
 document.getElementById("admissionForm").addEventListener("submit", async function(e){
 
     e.preventDefault();
-if(selectedCourses.length === 0){
-    alert("Please select at least one course");
-    return;
-}
+
+    // 🚨 STOP DOUBLE SUBMIT
+    if(isSubmitting) return;
+    isSubmitting = true;
+
+    const btn = document.querySelector("#admissionForm button");
+    btn.disabled = true;
+
+    if(selectedCourses.length === 0){
+        alert("Please select at least one course");
+        isSubmitting = false;
+        btn.disabled = false;
+        return;
+    }
+
     const data = {
-    parentName: document.getElementById("parentName").value,
-    studentName: document.getElementById("studentName").value,
-    grade: document.getElementById("grade").value,
-    mobile: document.getElementById("mobile").value,
-    courses: selectedCourses   // 🔥 ADD THIS
-};
+        parentName: document.getElementById("parentName").value,
+        studentName: document.getElementById("studentName").value,
+        grade: document.getElementById("grade").value,
+        mobile: document.getElementById("mobile").value,
+        courses: selectedCourses
+    };
 
-    const res = await fetch("https://academy-backend-eatl.onrender.com/api/admission", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-    });
+    try {
+        const res = await fetch("https://academy-backend-eatl.onrender.com/api/admission", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
 
-    if (!res.ok) {
-    alert("❌ Failed to submit");
-    return;
-}
+        if (!res.ok) {
+            alert("❌ Failed to submit");
+        } else {
+            alert("✅ Admission Request Sent!");
+        }
 
-const result = await res.json();
-console.log(result);
+    } catch (err) {
+        alert("❌ Error");
+    }
 
-alert("✅ Admission Request Sent!");
+    // ✅ RESET
+    isSubmitting = false;
+    btn.disabled = false;
 
 });
 };
