@@ -17,34 +17,6 @@ router.post("/admission", async (req, res) => {
 
         await newAdmission.save();
 
-        // 📲 1. SEND TO ADMIN (YOU)
-await axios.post(
-  `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
-  {
-    messaging_product: "whatsapp",
-    to: "919566911472",
-    type: "text",
-    text: {
-      body: `📥 New Admission
-
-Parent: ${parentName}
-Student: ${studentName}
-Grade: ${grade}
-Mobile: ${mobile}
-Courses: ${courses.join(", ")}`
-    }
-  },
-  {
-    headers: {
-      Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-      "Content-Type": "application/json"
-    }
-  }
-);
-
-
-// 📲 2. SEND TO PARENT
-// 📲 SEND TEST MESSAGE
 // 📲 1. SEND TO ADMIN (YOU)
 await axios.post(
   `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
