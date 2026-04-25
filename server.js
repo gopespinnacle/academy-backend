@@ -46,7 +46,8 @@ app.use("/api/founder", founderTimeClashRoutes);
 app.use("/api/student", studentRoutes);
 
 app.use("/api", admissionRoutes);
-
+const webhookRoutes = require("./routes/webhook");
+app.use("/api", webhookRoutes);
 
 app.use("/api/auth", authRoutes);
 
