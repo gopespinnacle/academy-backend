@@ -638,6 +638,43 @@ footer{
         display:block;
     }
 }
+
+/* ===== COURSE SELECTION UI ===== */
+
+.selection-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:12px;
+    margin-top:10px;
+}
+
+.selection-title{
+    margin-top:15px;
+    font-weight:bold;
+    color:#0d1b2a;
+}
+
+.course-option{
+    padding:12px;
+    background:#ffffff;
+    border:2px solid #ddd;
+    border-radius:8px;
+    cursor:pointer;
+    text-align:center;
+    font-size:14px;
+    transition:0.2s;
+}
+
+.course-option:hover{
+    border-color:#ffc300;
+    transform:translateY(-2px);
+}
+
+.course-option.active{
+    background:#0d1b2a;
+    color:white;
+    border-color:#0d1b2a;
+}
 </style>
 </head>
 
@@ -851,8 +888,8 @@ footer{
 <input type="tel" id="mobile" placeholder="Mobile Number" required>
 <!-- 🔥 COURSE SELECTION -->
 <div style="text-align:left;margin-top:10px;">
-    <label><b>Select Courses</b></label>
-    <div id="selectionBox"></div>
+    <h3>Select Courses</h3>
+    <div id="selectionBox" class="selection-grid"></div>
 </div>
         <button type="submit">Request Admission Call</button>
     </form>
@@ -936,27 +973,31 @@ async function loadCourses(){
             continue;
         }
 
-        html += `<h4 style="margin-top:10px;">${type.toUpperCase()}</h4>`;
+        html += `<div class="selection-title">${type.toUpperCase()}</div>`;
 
-        data.data.forEach(item=>{
-            html += `
-                <label style="display:block;">
-                    <input type="checkbox" value="${item.name}" onchange="handleSelect(this)">
-                    ${item.name}
-                </label>
-            `;
-        });
+data.data.forEach(item=>{
+    html += `
+        <div class="course-option" onclick="toggleCourse(this,'${item.name}')">
+            ${item.name}
+        </div>
+    `;
+});
     }
 
     document.getElementById("selectionBox").innerHTML = html;
 }
 
-function handleSelect(el){
-    if(el.checked){
-        selectedCourses.push(el.value);
+function toggleCourse(el, name){
+
+    if(el.classList.contains("active")){
+        el.classList.remove("active");
+        selectedCourses = selectedCourses.filter(i => i !== name);
     }else{
-        selectedCourses = selectedCourses.filter(i => i !== el.value);
+        el.classList.add("active");
+        selectedCourses.push(name);
     }
+
+    console.log(selectedCourses);
 }
 
 loadCourses();
