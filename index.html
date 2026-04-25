@@ -849,6 +849,11 @@ footer{
 <input type="text" id="studentName" placeholder="Student Name" required>
 <input type="text" id="grade" placeholder="Grade (1 – 12)" required>
 <input type="tel" id="mobile" placeholder="Mobile Number" required>
+<!-- 🔥 COURSE SELECTION -->
+<div style="text-align:left;margin-top:10px;">
+    <label><b>Select Courses</b></label>
+    <div id="selectionBox"></div>
+</div>
         <button type="submit">Request Admission Call</button>
     </form>
 </section>
@@ -877,13 +882,17 @@ window.onload = function(){
 document.getElementById("admissionForm").addEventListener("submit", async function(e){
 
     e.preventDefault();
-
+if(selectedCourses.length === 0){
+    alert("Please select at least one course");
+    return;
+}
     const data = {
-        parentName: document.getElementById("parentName").value,
-        studentName: document.getElementById("studentName").value,
-        grade: document.getElementById("grade").value,
-        mobile: document.getElementById("mobile").value
-    };
+    parentName: document.getElementById("parentName").value,
+    studentName: document.getElementById("studentName").value,
+    grade: document.getElementById("grade").value,
+    mobile: document.getElementById("mobile").value,
+    courses: selectedCourses   // 🔥 ADD THIS
+};
 
     const res = await fetch("https://academy-backend-eatl.onrender.com/api/admission", {
         method: "POST",
@@ -906,6 +915,52 @@ alert("✅ Admission Request Sent!");
 });
 };
 </script>
+</script>
+<script>
+
+let selectedCourses = [];
+
+async function loadCourses(){
+
+    const types = ["subject","eca","language"];
+    let html = "";
+
+    for(let type of types){
+
+        const res = await fetch(`https://academy-backend-eatl.onrender.com/api/founder/categories/${type}`);
+
+        let data;
+        try{
+            data = await res.json();
+        }catch{
+            continue;
+        }
+
+        html += `<h4 style="margin-top:10px;">${type.toUpperCase()}</h4>`;
+
+        data.data.forEach(item=>{
+            html += `
+                <label style="display:block;">
+                    <input type="checkbox" value="${item.name}" onchange="handleSelect(this)">
+                    ${item.name}
+                </label>
+            `;
+        });
+    }
+
+    document.getElementById("selectionBox").innerHTML = html;
+}
+
+function handleSelect(el){
+    if(el.checked){
+        selectedCourses.push(el.value);
+    }else{
+        selectedCourses = selectedCourses.filter(i => i !== el.value);
+    }
+}
+
+loadCourses();
+
 </script>
 </body>
 </html>
