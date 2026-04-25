@@ -51,25 +51,15 @@ await axios.post(
 
 
 // 📲 2. SEND TO PARENT
+// 📲 SEND TEST MESSAGE
 await axios.post(
   `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
   {
     messaging_product: "whatsapp",
-    to: "91" + mobile, // dynamic number
-    type: "template",
-    template: {
-      name: "parent_confirmation",
-      language: { code: "en" },
-      components: [
-        {
-          type: "body",
-          parameters: [
-            { type: "text", text: parentName },
-            { type: "text", text: studentName },
-            { type: "text", text: grade }
-          ]
-        }
-      ]
+    to: "919566911472",
+    type: "text",
+    text: {
+      body: "🚀 Website working! Admission received."
     }
   },
   {
