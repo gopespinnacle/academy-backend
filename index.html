@@ -675,6 +675,22 @@ footer{
     color:white;
     border-color:#0d1b2a;
 }
+
+.course-group{
+    margin-bottom:20px;
+}
+
+.selection-title{
+    font-weight:bold;
+    margin-bottom:8px;
+    color:#0d1b2a;
+}
+
+.selection-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:10px;
+}
 </style>
 </head>
 
@@ -973,15 +989,20 @@ async function loadCourses(){
             continue;
         }
 
+        // GROUP WRAPPER
+        html += `<div class="course-group">`;
         html += `<div class="selection-title">${type.toUpperCase()}</div>`;
+        html += `<div class="selection-grid">`;
 
-data.data.forEach(item=>{
-    html += `
-        <div class="course-option" onclick="toggleCourse(this,'${item.name}')">
-            ${item.name}
-        </div>
-    `;
-});
+        data.data.forEach(item=>{
+            html += `
+                <div class="course-option" onclick="toggleCourse(this,'${item.name}')">
+                    ${item.name}
+                </div>
+            `;
+        });
+
+        html += `</div></div>`;
     }
 
     document.getElementById("selectionBox").innerHTML = html;
@@ -996,8 +1017,6 @@ function toggleCourse(el, name){
         el.classList.add("active");
         selectedCourses.push(name);
     }
-
-    console.log(selectedCourses);
 }
 
 loadCourses();
