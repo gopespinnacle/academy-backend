@@ -22,23 +22,16 @@ await axios.post(
   `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
   {
     messaging_product: "whatsapp",
-    to: "919566911472", // your number
-    type: "template",
-    template: {
-      name: "admission_alert",
-      language: { code: "en" },
-      components: [
-        {
-          type: "body",
-          parameters: [
-            { type: "text", text: parentName },
-            { type: "text", text: studentName },
-            { type: "text", text: grade },
-            { type: "text", text: mobile },
-            { type: "text", text: courses.join(", ") }
-          ]
-        }
-      ]
+    to: "919566911472",
+    type: "text",
+    text: {
+      body: `📥 New Admission
+
+Parent: ${parentName}
+Student: ${studentName}
+Grade: ${grade}
+Mobile: ${mobile}
+Courses: ${courses.join(", ")}`
     }
   },
   {
@@ -52,6 +45,7 @@ await axios.post(
 
 // 📲 2. SEND TO PARENT
 // 📲 SEND TEST MESSAGE
+// 📲 1. SEND TO ADMIN (YOU)
 await axios.post(
   `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
   {
@@ -59,7 +53,13 @@ await axios.post(
     to: "919566911472",
     type: "text",
     text: {
-      body: "🚀 Website working! Admission received."
+      body: `📥 New Admission
+
+Parent: ${parentName}
+Student: ${studentName}
+Grade: ${grade}
+Mobile: ${mobile}
+Courses: ${courses.join(", ")}`
     }
   },
   {
@@ -70,6 +70,33 @@ await axios.post(
   }
 );
 
+
+// 📲 2. SEND CONFIRMATION (TEMP → ALSO TO YOU)
+await axios.post(
+  `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+  {
+    messaging_product: "whatsapp",
+    to: "919566911472",   // 👈 SAME NUMBER (IMPORTANT)
+    type: "text",
+    text: {
+      body: `Hi ${parentName},
+
+Thank you for contacting Gopes Pinnacle Academy.
+
+Your admission request for ${studentName} (Grade ${grade}) has been received.
+
+Our team will contact you shortly.
+
+– Gopes Pinnacle Academy`
+    }
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
         res.status(200).json({ message: "Saved + WhatsApp Sent" });
 
     } catch (err) {
