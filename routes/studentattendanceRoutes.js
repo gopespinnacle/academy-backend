@@ -45,8 +45,6 @@ router.post("/mark", async (req, res) => {
 
 
 // ✅ GET ATTENDANCE
-const Attendance = require("../models/Attendance");
-
 router.get("/:studentId", async (req, res) => {
 
     try {
