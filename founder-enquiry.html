@@ -55,15 +55,25 @@ async function loadData() {
       const date = new Date(item.createdAt);
 
       tr.innerHTML = `
-        <td>${item.studentName}</td>
-        <td>${item.parentName}</td>
-        <td>${item.grade}</td>
-        <td>${item.mobile}</td>
-        <td>${date.toLocaleString()}</td>
-        <td>
-          <button onclick="deleteItem('${item._id}')">Delete</button>
-        </td>
-      `;
+  <td>${item.studentName}</td>
+  <td>${item.parentName}</td>
+  <td>${item.grade}</td>
+  <td>${item.mobile}</td>
+
+  <td>${date.toLocaleString()}</td>
+
+  <td>
+    ${
+      item.courses && item.courses.length > 0
+        ? item.courses.map(c => `<span class="course-badge">${c}</span>`).join("")
+        : "-"
+    }
+  </td>
+
+  <td>
+    <button onclick="deleteItem('${item._id}')">Delete</button>
+  </td>
+`;
 
       table.appendChild(tr);
     });
