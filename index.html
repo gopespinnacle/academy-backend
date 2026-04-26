@@ -47,7 +47,7 @@
     color:gray;
 }
 
-/*.leader-img{
+.leader-img{
     position:absolute;
     top:-20px;
     right:20px;
@@ -55,25 +55,25 @@
     height:80px;
     border-radius:50%;
     border:4px solid white;
-}*/
-/* Founder specific layout */
-.founder-layout{
-    display:flex;
-    align-items:center;
-    gap:15px;
-    margin-bottom:15px;
 }
-
-.founder-layout h3{
-    color:#2c5cff;
-    font-size:18px;
-}
-
-/* Keep image clean */
-.leader-img{
-    width:60px;
-    height:60px;
+/* ONLY for founder */
+.founder-card .leader-img{
+     position:absolute;
+    top:-20px;
+    right:auto;
+    left:20px;
+    width:80px;
+    height:80px;
     border-radius:50%;
+    border:4px solid white;
+    
+}
+.founder-card h3{
+    margin-left:215px;
+}
+
+.leader-img{
+    box-shadow: 0 6px 15px rgba(44, 42, 138, 0.3);
 }
 /* MOBILE */
 @media (max-width:768px){
@@ -765,6 +765,56 @@ footer{
     flex-wrap:wrap;
     gap:10px;
 }
+
+/* ONLY for founder change */
+.founder-header{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    margin-bottom:15px;
+}
+
+/* override position ONLY for founder image */
+.founder-img{
+    position:relative;
+    top:-20px;   /* this matches director image level */
+}
+
+@media (max-width:768px){
+
+    /* SAME for both cards */
+    .leader-card{
+        text-align:center;
+        padding:25px 20px;
+    }
+
+    /* SAME image style */
+    .leader-img{
+        position:static !important;
+        display:block;
+        margin:0 auto 12px;
+        width:70px;
+        height:70px;
+    }
+
+    /* SAME heading */
+    .leader-card h3{
+        margin:10px 0 15px;
+        font-size:18px;
+        text-align:center;
+    }
+
+    /* REMOVE founder special shift */
+    .founder-card h3{
+        margin-left:0 !important;
+    }
+
+    /* SAME paragraph alignment */
+    .leader-card p{
+        text-align:center;
+    }
+
+}
 </style>
 </head>
 
@@ -949,29 +999,28 @@ footer{
 <section class="leadership-section">
 
   <!-- Founder -->
-  <div class="leader-card">
+  <div class="leader-card founder-card">
 
-  <div class="leader-header founder-layout">
-    <img src="images/founder.jpg" class="leader-img">
+    <div class="founder-header">
+        <img src="images/founder.jpg" class="leader-img founder-img">
+        <h3>Message From The Founder</h3>
+    </div>
 
-    <h3>Message From The Founder</h3>
-  </div>
+    <p>
+    At Gopes Pinnacle Academy, we believe education is not about completing syllabus —
+    it is about building strong foundations and confident thinkers.
+    <br><br>
+    Every student here is guided with personal attention, clarity in concepts,
+    and consistent monitoring to ensure real progress.
+    <br><br>
+    We don’t focus only on marks —
+    we focus on understanding, discipline, and long-term success.
+    <br><br>
+    Because when the foundation is right, results follow naturally.
+    </p>
 
-  <p>
-  At Gopes Pinnacle Academy, we believe education is not about completing syllabus —
-  it is about building strong foundations and confident thinkers.
-  <br><br>
-  Every student here is guided with personal attention, clarity in concepts,
-  and consistent monitoring to ensure real progress.
-  <br><br>
-  We don’t focus only on marks —
-  we focus on understanding, discipline, and long-term success.
-  <br><br>
-  Because when the foundation is right, results follow naturally.
-  </p>
-
-  <h4>– Mrs. Vishnu Gopeka S, M.E.</h4>
-  <span>Founder & Mentor</span>
+    <h4>– Mrs. Vishnu Gopeka S, M.E.</h4>
+    <span>Founder & Mentor</span>
 
 </div>
 
