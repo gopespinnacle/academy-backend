@@ -68,6 +68,14 @@ body {
 <input type="file" id="pdfUpload" accept="application/pdf">
 </div>
 
+<div style="height:300px; margin-bottom:10px;">
+    <iframe 
+        id="jitsiFrame"
+        width="100%" 
+        height="100%"
+        allow="camera; microphone; fullscreen">
+    </iframe>
+</div>
 <div id="pdfContainer" style="position:relative;">
     <canvas id="pdfCanvas"></canvas>
     <canvas id="board" style="position:absolute; top:0; left:0;"></canvas>
@@ -95,6 +103,12 @@ const role = localStorage.getItem("role");
 
 // ROOM
 const params = new URLSearchParams(window.location.search);
+const cleanRoom = room.replace(/[^a-zA-Z0-9]/g, "");
+
+// 🔥 SET VIDEO LINK
+document.getElementById("jitsiFrame").src =
+    "https://meet.jit.si/" + cleanRoom +
+    "#config.startWithAudioMuted=true&config.startWithVideoMuted=true";
 const room = params.get("room");
 
 // JOIN ROOM
