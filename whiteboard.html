@@ -127,13 +127,15 @@ window.onload = function(){
 
     const iframe = document.getElementById("jitsiFrame");
 
+    const name = studentName || "Student";
+
     iframe.src =
         "https://meet.jit.si/" + cleanRoom +
         "#config.prejoinPageEnabled=false" +
         "&config.requireDisplayName=false" +
         "&config.startWithAudioMuted=false" +
         "&config.startWithVideoMuted=false" +
-        "&userInfo.displayName=" + (studentName || "Student");
+        "&userInfo.displayName=" + encodeURIComponent(name);
 };
 // JOIN ROOM
 socket.emit("joinRoom", room);
