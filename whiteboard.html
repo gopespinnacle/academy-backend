@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Whiteboard</title>
+
+<style>
+body {
+    margin:0;
+    font-family: 'Segoe UI';
+}
+
+/* TOP BAR */
+.toolbar {
+    background:#0f172a;
+    padding:10px;
+    display:flex;
+    gap:10px;
+}
+
+.toolbar button {
+    padding:8px 12px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.pen { background:green; color:white; }
+.eraser { background:orange; color:white; }
+.clear { background:red; color:white; }
+
+/* CANVAS */
+#board {
+    display:block;
+    background:white;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="toolbar">
+<button class="pen" onclick="setTool('pen')">✏️ Pen</button>
+<button class="eraser" onclick="setTool('eraser')">🧽 Eraser</button>
+<button class="clear" onclick="clearBoard()">🗑 Clear</button>
+</div>
+
+<canvas id="board"></canvas>
+
+<script>
+
+const canvas = document.getElementById("board");
+const ctx = canvas.getContext("2d");
+
+/* FULL SCREEN CANVAS */
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight - 50;
+
+let drawing = false;
+let tool = "pen";
+
+/* START DRAW */
+canvas.addEventListener("mousedown", () => {
+    drawing = true;
+});
+
+/* STOP DRAW */
+canvas.addEventListener("mouseup", () => {
+    drawing = false;
+    ctx.beginPath();
+});
+
+/* DRAW */
+canvas.addEventListener("mousemove", draw);
+
+function draw(e){
+    if(!drawing) return;
+
+    ctx.lineWidth = tool === "eraser" ? 20 : 3;
+    ctx.lineCap = "round";
+
+    ctx.strokeStyle = tool === "eraser" ? "#ffffff" : "#000000";
+
+    ctx.lineTo(e.clientX, e.clientY - 50);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(e.clientX, e.clientY - 50);
+}
+
+/* TOOLS */
+function setTool(selected){
+    tool = selected;
+}
+
+/* CLEAR */
+function clearBoard(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+</script>
+
+</body>
+</html>

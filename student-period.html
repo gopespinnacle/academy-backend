@@ -125,31 +125,36 @@ document.getElementById("classInfo").innerHTML = `
 
 async function joinClass(){
 
+    try {
         const studentId = localStorage.getItem("studentId");
 
-    const res = await fetch(
-    "https://academy-backend-eatl.onrender.com/api/student-attendance/mark",
-    {
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json",
-            "Authorization":"Bearer " + token
-        },
-        body: JSON.stringify({
-            studentId,
-            className,
-            subject,
-            day,
-            startTime,
-            endTime
-        })
-    });
+        await fetch(
+        "https://academy-backend-eatl.onrender.com/api/student-attendance/mark",
+        {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "Authorization":"Bearer " + token
+            },
+            body: JSON.stringify({
+                studentId,
+                className,
+                subject,
+                day,
+                startTime,
+                endTime
+            })
+        });
 
-    const data = await res.json();
+    } catch(e){
+        console.log("Attendance failed");
+    }
 
-    alert(data.message);
+    const roomName = `${className}-${subject}-${day}-${startTime}`
+        .replace(/\s+/g, "")
+        .replace(/:/g, "");
 
-    
+    window.open(`meeting.html?room=${roomName}`, "_blank");
 }
 
 /* ================= NAV ================= */
