@@ -128,11 +128,12 @@ window.onload = function(){
     const iframe = document.getElementById("jitsiFrame");
 
     iframe.src =
-        "https://meet.jit.si/" + cleanRoom +
-        "#config.prejoinPageEnabled=false" +
-        "&config.requireDisplayName=false" +
-        "&config.startWithAudioMuted=false" +
-        "&config.startWithVideoMuted=false";
+    "https://meet.jit.si/" + cleanRoom +
+    "#config.prejoinPageEnabled=false" +
+    "&config.requireDisplayName=false" +
+    "&config.startWithAudioMuted=false" +
+    "&config.startWithVideoMuted=false" +
+    "&config.disableDeepLinking=true";
 };
 // JOIN ROOM
 socket.emit("joinRoom", room);
