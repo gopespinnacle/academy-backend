@@ -96,6 +96,20 @@ body {
 <div id="classList"></div>
 </div>
 
+<!-- ✅ ADD HERE -->
+<div class="class-box">
+<h3>📂 Class Recordings</h3>
+
+<!-- ✅ MOVE FILTER HERE -->
+<select id="subjectFilter" onchange="loadRecordings()">
+<option value="">All Subjects</option>
+<option value="Maths">Maths</option>
+<option value="Science">Science</option>
+</select>
+
+<div id="recordingList"></div>
+</div>
+
 </div>
 
 <script>
@@ -149,6 +163,36 @@ window.location.href = page;
 
 loadDashboard();
 
+async function loadRecordings(){
+    const subject = document.getElementById("subjectFilter").value;
+
+    const className = localStorage.getItem("className");
+
+    const res = await fetch(
+    `https://academy-backend-eatl.onrender.com/api/recordings/${className}?subject=${subject}`,
+    {
+        headers:{
+            "Authorization": "Bearer " + token
+        }
+    }
+);
+    const data = await res.json();
+
+    let html = "";
+
+    data.data.forEach(r => {
+        html += `
+        <div style="background:white; padding:10px; margin-bottom:10px;">
+            📘 ${r.subject}<br>
+            📅 ${new Date(r.createdAt).toLocaleString()}<br>
+            <video width="300" controls src="${r.videoUrl}"></video>
+        </div>
+        `;
+    });
+
+    document.getElementById("recordingList").innerHTML = html;
+}
+loadRecordings();
 </script>
 
 </body>

@@ -34,6 +34,15 @@ body {
     display:block;
     background:white;
 }
+#pdfCanvas {
+    display:block;
+}
+
+#board {
+    position:absolute;
+    top:0;
+    left:0;
+}
 </style>
 
 </head>
@@ -44,13 +53,56 @@ body {
 <button class="pen" onclick="setTool('pen')">✏️ Pen</button>
 <button class="eraser" onclick="setTool('eraser')">🧽 Eraser</button>
 <button class="clear" onclick="clearBoard()">🗑 Clear</button>
+
+<button onclick="raiseHand()">✋ Raise Hand</button>
+
+<button onclick="lockBoard()">🔒 Lock</button>
+<button onclick="unlockBoard()">🔓 Unlock</button>
+<button onclick="prevPage()">⬅ Prev</button>
+<button onclick="nextPage()">Next ➡</button>
+<button onclick="downloadPDF()">💾 Save PDF</button>
+<button onclick="startRecording()">🎥 Start</button>
+<button onclick="stopRecording()">⏹ Stop</button>
+<!-- 🎨 NEW -->
+<input type="color" id="colorPicker" value="#000000">
+<input type="file" id="pdfUpload" accept="application/pdf">
 </div>
 
-<canvas id="board"></canvas>
+<div id="pdfContainer" style="position:relative;">
+    <canvas id="pdfCanvas"></canvas>
+    <canvas id="board" style="position:absolute; top:0; left:0;"></canvas>
+</div>
 
+<!-- ✅ ADD THIS -->
+<div id="handListBox" style="background:#eee; padding:10px;"></div>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+    let mediaRecorder;
+let recordedChunks = [];
+let stream;
+    let currentColor = "#000000";
+    let pdfDoc = null;
+let currentPage = 1;
+    let isBoardLocked = false;
+const socket = io("https://academy-backend-eatl.onrender.com");
 
+// USER INFO
+const userId = localStorage.getItem("studentId");
+const studentName = localStorage.getItem("studentName");
+const role = localStorage.getItem("role");
+
+// ROOM
+const params = new URLSearchParams(window.location.search);
+const room = params.get("room");
+
+// JOIN ROOM
+socket.emit("joinRoom", room);
 const canvas = document.getElementById("board");
+const pdfUpload = document.getElementById("pdfUpload");
+const pdfCanvas = document.getElementById("pdfCanvas");
+const pdfCtx = pdfCanvas.getContext("2d");
 const ctx = canvas.getContext("2d");
 
 /* FULL SCREEN CANVAS */
@@ -77,15 +129,32 @@ canvas.addEventListener("mousemove", draw);
 function draw(e){
     if(!drawing) return;
 
+// 🔒 LOCK CHECK
+if(isBoardLocked && role !== "teacher"){
+    return;
+}
+
+// 🎯 CONTROL CHECK
+if(role !== "teacher" && userId !== allowedStudentId){
+    return;
+}
+
     ctx.lineWidth = tool === "eraser" ? 20 : 3;
     ctx.lineCap = "round";
 
-    ctx.strokeStyle = tool === "eraser" ? "#ffffff" : "#000000";
+    ctx.strokeStyle = tool === "eraser" ? "#ffffff" : currentColor;
 
-    ctx.lineTo(e.clientX, e.clientY - 50);
+    ctx.lineTo(e.offsetX, e.offsetY);
     ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(e.clientX, e.clientY - 50);
+   ctx.moveTo(e.offsetX, e.offsetY);
+    socket.emit("draw", {
+    room,
+    x: e.offsetX,
+y: e.offsetY,
+    tool,
+    color: currentColor
+});
 }
 
 /* TOOLS */
@@ -97,7 +166,301 @@ function setTool(selected){
 function clearBoard(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
+// ✅ RAISE HAND
+function raiseHand(){
+    socket.emit("raiseHand", {
+        room,
+        studentId: userId,
+        name: studentName
+    });
+}
 
+// ✅ SHOW HAND LIST (TEACHER)
+socket.on("handList", (list) => {
+
+    if(role !== "teacher") return;
+
+    let html = "<h4>Raised Hands</h4>";
+
+    list.forEach(student => {
+        html += `
+        <div>
+            ${student.name}
+            <button onclick="allowStudent('${student.studentId}')">Allow</button>
+        </div>
+        `;
+    });
+
+    document.getElementById("handListBox").innerHTML = html;
+});
+
+// ✅ ALLOW STUDENT
+function allowStudent(studentId){
+
+    socket.emit("giveControl", {
+        room,
+        studentId
+    });
+
+    socket.emit("lowerHand", {
+        room,
+        studentId
+    });
+}
+let allowedStudentId = null;
+
+socket.on("controlChanged", (data) => {
+    allowedStudentId = data.studentId;
+});
+
+socket.on("boardLocked", (status) => {
+    isBoardLocked = status;
+});
+
+function lockBoard(){
+    if(role !== "teacher") return;
+    socket.emit("lockBoard", room);
+}
+
+function unlockBoard(){
+    if(role !== "teacher") return;
+    socket.emit("unlockBoard", room);
+}
+
+document.getElementById("colorPicker").addEventListener("input", (e) => {
+    currentColor = e.target.value;
+});
+
+socket.on("draw", (data) => {
+
+    ctx.lineWidth = data.tool === "eraser" ? 20 : 3;
+    ctx.lineCap = "round";
+
+    ctx.strokeStyle = data.tool === "eraser" ? "#ffffff" : data.color;
+
+    ctx.lineTo(data.x, data.y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(data.x, data.y);
+});
+
+pdfUpload.addEventListener("change", function(e){
+
+    if(role !== "teacher"){
+        alert("Only teacher can upload PDF");
+        return;
+    }
+
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(){
+
+        const base64 = reader.result;
+
+        // 🔥 SEND TO ALL USERS
+        socket.emit("pdfUpload", {
+            room,
+            pdfData: base64
+        });
+
+        // also load locally
+        loadPDF(base64);
+    };
+
+    reader.readAsDataURL(file);
+});
+function loadPDF(base64){
+
+    const pdfData = atob(base64.split(",")[1]);
+    const typedArray = new Uint8Array([...pdfData].map(c => c.charCodeAt(0)));
+
+    pdfjsLib.getDocument(typedArray).promise.then(pdf => {
+
+        pdfDoc = pdf;       // 🔥 IMPORTANT
+        currentPage = 1;    // 🔥 IMPORTANT
+
+        renderPage(currentPage); // 🔥 USE THIS
+    });
+}
+socket.on("pdfReceive", (data) => {
+    loadPDF(data.pdfData);
+});
+
+function renderPage(pageNum){
+
+    pdfDoc.getPage(pageNum).then(page => {
+
+        const viewport = page.getViewport({ scale: 1.5 });
+
+        pdfCanvas.width = viewport.width;
+        pdfCanvas.height = viewport.height;
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const renderContext = {
+            canvasContext: pdfCtx,
+            viewport: viewport
+        };
+
+        page.render(renderContext);
+    });
+}
+
+function nextPage(){
+
+    if(!pdfDoc) return;
+    if(currentPage >= pdfDoc.numPages) return;
+
+    currentPage++;
+
+    renderPage(currentPage);
+
+    socket.emit("pageChange", {
+        room,
+        page: currentPage
+    });
+}
+
+function prevPage(){
+
+    if(!pdfDoc) return;
+    if(currentPage <= 1) return;
+
+    currentPage--;
+
+    renderPage(currentPage);
+
+    socket.emit("pageChange", {
+        room,
+        page: currentPage
+    });
+}
+socket.on("pageChanged", (data) => {
+    currentPage = data.page;
+    renderPage(currentPage);
+});
+
+async function downloadPDF(){
+
+    // 1. Create temp canvas (merge both layers)
+    const mergedCanvas = document.createElement("canvas");
+    const mergedCtx = mergedCanvas.getContext("2d");
+
+    mergedCanvas.width = canvas.width;
+    mergedCanvas.height = canvas.height;
+
+    // 2. Draw PDF (background)
+    mergedCtx.drawImage(pdfCanvas, 0, 0);
+
+    // 3. Draw annotations (top)
+    mergedCtx.drawImage(canvas, 0, 0);
+
+    // 4. Convert to image
+    const imgData = mergedCanvas.toDataURL("image/png");
+
+    // 5. Create PDF
+    const { jsPDF } = window.jspdf;
+
+    const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "px",
+        format: [mergedCanvas.width, mergedCanvas.height]
+    });
+
+    pdf.addImage(imgData, "PNG", 0, 0, mergedCanvas.width, mergedCanvas.height);
+
+    // 6. Download
+    pdf.save("Annotated-Class.pdf");
+}
+
+async function startRecording(){
+
+    try{
+
+        // Capture screen
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true
+        });
+
+        // Capture mic audio
+        const audioStream = await navigator.mediaDevices.getUserMedia({
+            audio: true
+        });
+
+        // Combine streams
+        stream = new MediaStream([
+            ...screenStream.getTracks(),
+            ...audioStream.getTracks()
+        ]);
+
+        mediaRecorder = new MediaRecorder(stream);
+
+        recordedChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            if(event.data.size > 0){
+                recordedChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.onstop = saveRecording;
+
+        mediaRecorder.start();
+
+        alert("Recording started 🎥");
+
+    }catch(err){
+        console.log(err);
+        alert("Permission denied ❌");
+    }
+}
+
+function stopRecording(){
+
+    if(mediaRecorder){
+        mediaRecorder.stop();
+    }
+
+    if(stream){
+        stream.getTracks().forEach(track => track.stop());
+    }
+}
+
+async function saveRecording(){
+
+    const blob = new Blob(recordedChunks, {
+        type: "video/webm"
+    });
+
+    const formData = new FormData();
+    formData.append("video", blob, "class.webm");
+    formData.append("className", className);
+formData.append("subject", subject);
+formData.append("teacherId", userId);
+
+    try{
+
+        const res = await fetch(
+            "https://academy-backend-eatl.onrender.com/api/upload-recording",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
+
+        const data = await res.json();
+
+        alert("✅ Uploaded: " + data.url);
+
+    }catch(err){
+        console.log(err);
+        alert("❌ Upload failed");
+    }
+}
 </script>
 
 </body>
