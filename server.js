@@ -3,7 +3,8 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-
+const http = require("http");
+const { Server } = require("socket.io");
 // ROUTES
 const studentAttendanceRoutes = require("./routes/studentattendanceRoutes");
 const founderTimeClashRoutes = require("./routes/founderTimeClashRoutes");
@@ -17,6 +18,13 @@ require("./cron/sessionCron");
 require("./cron/attendanceCron");
 require("./cron/attendanceAutoExit");
 const app = express();
+const server = http.createServer(app);
+
+const io = new Server(server, {
+    cors: {
+        origin: ["https://www.gopespinnacle.com"]
+    }
+});
 app.use(cors({
     origin: ["https://www.gopespinnacle.com"],
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -114,6 +122,25 @@ app.delete("/api/founder/periodassignments/:id", async (req, res) => {
     }
 
 });
+/* ================= SOCKET ================= */
+
+io.on("connection", (socket) => {
+
+    console.log("User connected:", socket.id);
+
+    socket.on("joinRoom", (room) => {
+        socket.join(room);
+    });
+
+    socket.on("draw", (data) => {
+        socket.to(data.room).emit("draw", data);
+    });
+
+    socket.on("clear", (room) => {
+        socket.to(room).emit("clear");
+    });
+
+});
 /* ================= DB ================= */
 
 mongoose.connect(process.env.MONGO_URI)
@@ -123,7 +150,6 @@ mongoose.connect(process.env.MONGO_URI)
 /* ================= START ================= */
 
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`🔥 Server running on port ${PORT}`);
 });
