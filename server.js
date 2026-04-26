@@ -30,6 +30,10 @@ require("./cron/sessionCron");
 require("./cron/attendanceCron");
 require("./cron/attendanceAutoExit");
 const app = express();
+app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"]
+}));
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -152,15 +156,7 @@ if(boardLock[room]){
         }
 
         // 2. Fallback to DB
-        
-        if(control){
-            roomControl[room] = control.allowedStudentId;
-
-            socket.emit("controlChanged", {
-                studentId: control.allowedStudentId
-            });
-        }
-    });
+        });
 
     /* DRAW */
     socket.on("draw", (data) => {
@@ -189,6 +185,16 @@ socket.on("pageChange", (data) => {
         });
 
     });
+
+    socket.on("lockBoard", (room) => {
+    boardLock[room] = true;
+    io.to(room).emit("boardLocked", true);
+});
+
+socket.on("unlockBoard", (room) => {
+    boardLock[room] = false;
+    io.to(room).emit("boardLocked", false);
+});
     /* ================= PDF SYNC ================= */
 
 socket.on("pdfUpload", (data) => {
