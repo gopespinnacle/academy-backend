@@ -8,7 +8,61 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <style>
+/* ===== LEADERSHIP SECTION ===== */
 
+.leadership-section{
+    display:flex;
+    gap:30px;
+    padding:90px 10%;
+    background:#ffffff;
+}
+
+.leader-card{
+    flex:1;
+    background:white;
+    padding:30px;
+    border-radius:12px;
+    position:relative;
+    box-shadow:0 8px 25px rgba(0,0,0,0.08);
+}
+
+.leader-card h3{
+    color:#2c5cff;
+    margin-bottom:15px;
+}
+
+.leader-card p{
+    font-size:16px;
+    line-height:1.7;
+    color:#333;
+}
+
+.leader-card h4{
+    margin-top:20px;
+    font-weight:600;
+}
+
+.leader-card span{
+    font-size:13px;
+    color:gray;
+}
+
+.leader-img{
+    position:absolute;
+    top:-20px;
+    right:20px;
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    border:4px solid white;
+}
+
+/* MOBILE */
+@media (max-width:768px){
+    .leadership-section{
+        flex-direction:column;
+    }
+}
 /* ===== RESET ===== */
 *{
     margin:0;
@@ -870,25 +924,58 @@ footer{
     <p>Live Interactive Classes with Complete Academic Monitoring & Performance Tracking.</p>
     <p>One-on-One & Group Classes (Maximum 4 Students Only)</p>
 </section>
-<section class="founder-section">
-    <div class="founder-content">
-         
-        <h2>Message From The Founder</h2>
-        <p>
-            At Gopes Pinnacle Academy, our mission is not just to complete syllabus,
-            but to build strong academic foundations.
-            We believe every child deserves structured guidance,
-            concept clarity, and consistent monitoring.
-        </p>
-        <p>
-            Our system is designed to prepare students not just for exams,
-            but for real academic excellence.
-        </p>
-        <h3 class="founder-name">
-            Mrs. Vishnu Gopeka S, M.E.
-        </h3>
-        <h4>– Founder & Mentor, Gopes Pinnacle </h4>
-    </div>
+</section>  <!-- online-section ends -->
+
+<!-- 🔥 PASTE HERE -->
+
+<section class="leadership-section">
+
+  <!-- Founder -->
+  <div class="leader-card">
+    <img src="images/founder.jpg" class="leader-img">
+
+    <h3>Message From The Founder</h3>
+
+    <p>
+    At Gopes Pinnacle Academy, we believe education is not about completing syllabus —
+    it is about building strong foundations and confident thinkers.
+    <br><br>
+    Every student here is guided with personal attention, clarity in concepts,
+    and consistent monitoring to ensure real progress.
+    <br><br>
+    We don’t focus only on marks —
+    we focus on understanding, discipline, and long-term success.
+    <br><br>
+    Because when the foundation is right, results follow naturally.
+    </p>
+
+    <h4>– Mrs. Vishnu Gopeka S, M.E.</h4>
+    <span>Founder & Mentor</span>
+  </div>
+
+  <!-- Director -->
+  <div class="leader-card">
+    <img src="images/director.jpg" class="leader-img">
+
+    <h3>Message From The Chief Director</h3>
+
+    <p>
+    At Gopes Pinnacle Academy, our focus is simple — quality over quantity.
+    <br><br>
+    With small batch sizes and structured learning,
+    we ensure every student receives the attention they deserve.
+    <br><br>
+    Our system is built on precision, consistency, and measurable growth —
+    not shortcuts.
+    <br><br>
+    We are committed to creating disciplined learners and strong performers
+    who succeed beyond exams.
+    </p>
+
+    <h4>– Mr. Sowbarnik S, B.E.</h4>
+    <span>Chief Director</span>
+  </div>
+
 </section>
 <section class="urgent-cta">
     <h2>Admissions Open – Limited Seats Per Batch</h2>
