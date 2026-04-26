@@ -1,7 +1,15 @@
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
+const WhiteboardControl = require("./models/WhiteboardControl");
 const Recording = require("./models/Recording");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
+
+// 🔥 CREATE recordings FOLDER IF NOT EXISTS
+if (!fs.existsSync("recordings")) {
+    fs.mkdirSync("recordings");
+}
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -91,8 +99,6 @@ app.get("/test-whatsapp", async (req, res) => {
 const webhookRoutes = require("./routes/webhook");
 app.use("/api", webhookRoutes);
 
-app.use("/api/auth", authRoutes);
-
 app.use("/api/student-attendance", studentAttendanceRoutes);
 /* ================= PERIOD ASSIGNMENTS ================= */
 
@@ -137,7 +143,10 @@ io.on("connection", (socket) => {
     /* JOIN ROOM */
     socket.on("joinRoom", async (room) => {
         socket.join(room);
-
+// 🔥 SEND BOARD LOCK STATUS
+if(boardLock[room]){
+    socket.emit("boardLocked", true);
+}
         // 1. Check memory first (FAST)
         if(roomControl[room]){
             socket.emit("controlChanged", {
@@ -228,19 +237,6 @@ socket.on("lowerHand", (data) => {
 
     io.to(data.room).emit("handList", raisedHands[data.room] || []);
 });
-});
-/* ================= DB ================= */
-
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => console.log("❌ MongoDB Error:", err));
-
-/* ================= START ================= */
-
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-    console.log(`🔥 Server running on port ${PORT}`);
-});
 /* ================= LOCK BOARD ================= */
 
 socket.on("lockBoard", (room) => {
@@ -256,7 +252,7 @@ socket.on("unlockBoard", (room) => {
 
     io.to(room).emit("boardLocked", false);
 });
-
+});
 const storage = multer.diskStorage({
     destination: function(req, file, cb){
         cb(null, "recordings/");
@@ -274,6 +270,9 @@ app.post("/api/upload-recording", upload.single("video"), async (req, res) => {
     const { className, subject, teacherId } = req.body;
 
     const fileUrl = `https://academy-backend-eatl.onrender.com/recordings/${req.file.filename}`;
+    if(!req.file){
+    return res.status(400).json({ message: "No file uploaded" });
+}
 
     // 🔥 SAVE IN DB
     await Recording.create({
@@ -295,34 +294,44 @@ app.get("/api/recordings/:className", async (req, res) => {
         return res.status(401).json({ message: "No token" });
     }
 
-    const jwt = require("jsonwebtoken");
+    
 
     try{
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // 🔥 Only allow student access
         if(decoded.role !== "student"){
             return res.status(403).json({ message: "Access denied" });
         }
 
-        const data = await Recording.find({
+        const { subject } = req.query;
+
+        let filter = {
             className: req.params.className
-        });
+        };
+
+        if(subject){
+            filter.subject = subject;
+        }
+
+        const data = await Recording.find(filter).sort({ createdAt: -1 });
 
         res.json({ data });
 
     }catch(err){
         res.status(401).json({ message: "Invalid token" });
     }
-    const { subject } = req.query;
-
-let filter = {
-    className: req.params.className
-};
-
-if(subject){
-    filter.subject = subject;
-}
-
-const data = await Recording.find(filter).sort({ createdAt: -1 });
 });
+/* ================= DB ================= */
+
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("✅ MongoDB Connected"))
+.catch(err => console.log("❌ MongoDB Error:", err));
+
+/* ================= START ================= */
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+    console.log(`🔥 Server running on port ${PORT}`);
+});
+
+
