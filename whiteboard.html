@@ -77,6 +77,7 @@ body {
 <button onclick="downloadPDF()">💾 Save PDF</button>
 <button onclick="startRecording()">🎥 Start</button>
 <button onclick="stopRecording()">⏹ Stop</button>
+<button onclick="toggleVideo()">🎥 Toggle Video</button>
 <!-- 🎨 NEW -->
 <input type="color" id="colorPicker" value="#000000">
 <input type="file" id="pdfUpload" accept="application/pdf">
@@ -500,6 +501,29 @@ formData.append("teacherId", userId);
     }catch(err){
         console.log(err);
         alert("❌ Upload failed");
+    }
+}
+
+function toggleVideo(){
+    const box = document.getElementById("videoBox");
+    const btn = event.target;
+
+    if(box.style.width === "100vw"){
+        box.style.width = "300px";
+        box.style.height = "200px";
+        box.style.top = "70px";
+        box.style.right = "10px";
+        box.style.left = "auto";
+
+        btn.innerText = "🎥 Full Screen";
+    } else {
+        box.style.width = "100vw";
+        box.style.height = "100vh";
+        box.style.top = "0";
+        box.style.left = "0";
+        box.style.right = "0";
+
+        btn.innerText = "🔙 Minimize";
     }
 }
 </script>
