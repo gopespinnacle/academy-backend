@@ -103,13 +103,14 @@ const role = localStorage.getItem("role");
 
 // ROOM
 const params = new URLSearchParams(window.location.search);
-const cleanRoom = room.replace(/[^a-zA-Z0-9]/g, "");
+const room = params.get("room");   // ✅ FIRST
+
+const cleanRoom = room.replace(/[^a-zA-Z0-9]/g, "");  // ✅ AFTER
 
 // 🔥 SET VIDEO LINK
 document.getElementById("jitsiFrame").src =
     "https://meet.jit.si/" + cleanRoom +
     "#config.startWithAudioMuted=true&config.startWithVideoMuted=true";
-const room = params.get("room");
 
 // JOIN ROOM
 socket.emit("joinRoom", room);
