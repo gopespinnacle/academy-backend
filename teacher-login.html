@@ -58,6 +58,7 @@ async function loginTeacher() {
 });
 
 console.log("Response received:", response);
+console.log("DATA:", data);
         const data = await response.json();
 
         if (response.ok) {
@@ -69,8 +70,14 @@ console.log("Response received:", response);
 
             localStorage.setItem("token", data.token);
             localStorage.setItem("role", data.role);
-            localStorage.setItem("teacherId", data.user._id);
-            localStorage.setItem("teacherName", data.user.name);
+            if (!data.user) {
+    alert("Login failed - user data missing");
+    console.log("FULL RESPONSE:", data);
+    return;
+}
+
+localStorage.setItem("teacherId", data.user._id);
+localStorage.setItem("teacherName", data.user.name);
 
             window.location.href = "teacher-dashboard.html";
 
