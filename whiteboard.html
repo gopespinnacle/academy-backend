@@ -86,9 +86,7 @@ let stream;
     let pdfDoc = null;
 let currentPage = 1;
     let isBoardLocked = false;
-const socket = io("https://academy-backend-eatl.onrender.com", {
-    transports: ["websocket"]
-});
+const socket = io("https://academy-backend-eatl.onrender.com");
 
 // USER INFO
 const userId = localStorage.getItem("studentId");
