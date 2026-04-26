@@ -55,32 +55,6 @@ body {
     align-items:center;
     margin-bottom:20px;
 }
-
-/* CARDS */
-.cards {
-    display:grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap:20px;
-}
-
-.card {
-    background:white;
-    padding:20px;
-    border-radius:12px;
-    text-align:center;
-    box-shadow:0 5px 15px rgba(0,0,0,0.08);
-    transition:0.3s;
-}
-
-.card:hover {
-    transform:translateY(-5px);
-}
-
-.card i {
-    font-size:28px;
-    color:#2563eb;
-}
-
 /* CLASS SECTION */
 .class-box {
     margin-top:30px;
@@ -117,35 +91,6 @@ body {
 <div class="topbar">
     <h2>Welcome, <span id="studentName"></span></h2>
 </div>
-
-<div class="cards">
-
-<div class="card">
-<i class="fa fa-book"></i>
-<h4>Classes</h4>
-<p id="classes">0</p>
-</div>
-
-<div class="card">
-<i class="fa fa-layer-group"></i>
-<h4>Subjects</h4>
-<p id="subjects">0</p>
-</div>
-
-<div class="card">
-<i class="fa fa-tasks"></i>
-<h4>Homework</h4>
-<p id="homework">0</p>
-</div>
-
-<div class="card">
-<i class="fa fa-clipboard"></i>
-<h4>Assessments</h4>
-<p id="assessments">0</p>
-</div>
-
-</div>
-
 <div class="class-box">
 <h3>My Classes</h3>
 <div id="classList"></div>
@@ -175,11 +120,6 @@ headers:{
 const data = await res.json();
 
 document.getElementById("studentName").innerText = data.name;
-document.getElementById("classes").innerText = data.totalClasses;
-document.getElementById("subjects").innerText = data.totalSubjects;
-document.getElementById("homework").innerText = data.homeworkCount;
-document.getElementById("assessments").innerText = data.assessmentCount;
-
 /* CLASS LIST */
 
 const container = document.getElementById("classList");
