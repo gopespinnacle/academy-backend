@@ -1,6 +1,5 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const WhiteboardControl = require("./models/WhiteboardControl");
 const Recording = require("./models/Recording");
 const multer = require("multer");
 const path = require("path");
@@ -156,8 +155,7 @@ if(boardLock[room]){
         }
 
         // 2. Fallback to DB
-        const control = await WhiteboardControl.findOne({ room });
-
+        
         if(control){
             roomControl[room] = control.allowedStudentId;
 
@@ -188,13 +186,7 @@ socket.on("pageChange", (data) => {
         roomControl[data.room] = data.studentId;
 
         // 🔥 2. Update DATABASE (backup)
-        await WhiteboardControl.findOneAndUpdate(
-            { room: data.room },
-            { allowedStudentId: data.studentId, updatedAt: new Date() },
-            { upsert: true }
-        );
-
-        // 🔥 3. Notify all users
+                // 🔥 3. Notify all users
         io.to(data.room).emit("controlChanged", {
             studentId: data.studentId
         });
@@ -238,20 +230,6 @@ socket.on("lowerHand", (data) => {
     io.to(data.room).emit("handList", raisedHands[data.room] || []);
 });
 /* ================= LOCK BOARD ================= */
-
-socket.on("lockBoard", (room) => {
-
-    boardLock[room] = true;
-
-    io.to(room).emit("boardLocked", true);
-});
-
-socket.on("unlockBoard", (room) => {
-
-    boardLock[room] = false;
-
-    io.to(room).emit("boardLocked", false);
-});
 });
 const storage = multer.diskStorage({
     destination: function(req, file, cb){
