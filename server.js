@@ -34,11 +34,11 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: ["https://www.gopespinnacle.com"]
+        origin: "*"
     }
 });
 app.use(cors({
-    origin: ["https://www.gopespinnacle.com"],
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
 }));
 
