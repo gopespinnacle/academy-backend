@@ -92,12 +92,7 @@ body {
 <div class="card" id="classInfo"></div>
 
 <div class="card">
-<button class="join-btn" onclick="joinClass()">Join Class</button>
-</div>
-
-<div class="card">
-<h3>Attendance Status</h3>
-<div id="attendanceStatus">Checking...</div>
+<button class="btn join" onclick="joinClass()">Join Class</button>
 </div>
 
 </div>
@@ -154,50 +149,7 @@ async function joinClass(){
 
     alert(data.message);
 
-    loadAttendance();
-}
-
-/* ================= LOAD ATTENDANCE ================= */
-
-async function loadAttendance(){
-
-    const studentId = localStorage.getItem("studentId");
-
-    try{
-
-        const res = await fetch(
-        "https://academy-backend-eatl.onrender.com/api/student-attendance/" + studentId
-        );
-
-        const data = await res.json();
-
-        if(!data || !data.data){
-            document.getElementById("attendanceStatus").innerText = "No data";
-            return;
-        }
-
-        let html = "";
-
-        data.data.forEach(a=>{
-            const exitTime = a.exitAt 
-? formatTime12(new Date(a.exitAt)) 
-: "Auto closing...";
-
-html += `
-<div>
-✅ ${a.subject} | ${a.day} | ${formatTime(a.startTime)} - ${formatTime(a.endTime)} <br>
-🕒 Joined: ${formatTime12(new Date(a.joinedAt))} <br>
-🚪 Exit: ${exitTime}
-</div>
-`;
-        });
-
-        document.getElementById("attendanceStatus").innerHTML =
-        html || "No attendance yet";
-
-    }catch(err){
-        document.getElementById("attendanceStatus").innerText = "Server error ❌";
-    }
+    
 }
 
 /* ================= NAV ================= */
@@ -212,7 +164,7 @@ function go(page){
 }
 
 /* AUTO LOAD */
-loadAttendance();
+
 function formatTime(time){
 
     let [hour, minute] = time.split(":");
