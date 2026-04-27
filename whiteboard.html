@@ -49,7 +49,36 @@ canvas {
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 <input type="file" id="fileInput">
-<canvas id="board"></canvas>
+<div id="pdfWindow" style="
+    position:absolute;
+    top:60px;
+    left:60px;
+    width:80%;
+    height:80%;
+    background:white;
+    border:2px solid black;
+    display:none;
+">
+
+    <!-- HEADER -->
+    <div style="
+        height:40px;
+        background:#1e293b;
+        display:flex;
+        justify-content:flex-end;
+        align-items:center;
+        gap:10px;
+        padding:5px;
+    ">
+        <button onclick="minimizePDF()">🗕</button>
+        <button onclick="maximizePDF()">🗖</button>
+        <button onclick="closePDF()">❌</button>
+    </div>
+
+    <!-- CANVAS -->
+    <canvas id="board"></canvas>
+
+</div>
 
 <!-- SOCKET.IO -->
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -279,7 +308,7 @@ socket.on("loadPDF", (data) => {
     loadPDFToCanvas(data.url);
 });
 document.body.appendChild(container);
-
+document.getElementById("pdfWindow").style.display = "block";
 async function loadPDFToCanvas(url){
 
     const loadingTask = pdfjsLib.getDocument(url);
@@ -289,8 +318,8 @@ async function loadPDFToCanvas(url){
 
     const viewport = page.getViewport({ scale: 1.5 });
 
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
+    canvas.width = canvas.parentElement.clientWidth;
+canvas.height = canvas.parentElement.clientHeight - 40;
 
     // 🔥 DRAW PDF INTO SAME CANVAS
     await page.render({
@@ -298,6 +327,26 @@ async function loadPDFToCanvas(url){
         viewport: viewport
     }).promise;
 
+}
+
+function minimizePDF(){
+    const win = document.getElementById("pdfWindow");
+    win.style.height = "40px";
+}
+
+function maximizePDF(){
+    const win = document.getElementById("pdfWindow");
+    win.style.top = "0";
+    win.style.left = "0";
+    win.style.width = "100%";
+    win.style.height = "100%";
+}
+
+function closePDF(){
+    const win = document.getElementById("pdfWindow");
+    win.style.display = "none";
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 }
 </script>
 
