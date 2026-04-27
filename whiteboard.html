@@ -55,7 +55,7 @@ body {
 }
 
 #pdfContainer {
-    width: 60%;
+    width: 70%;
 }
 </style>
 
@@ -92,12 +92,13 @@ Waiting for Teacher...
     top: 60px;
     width: 30%;
     height: calc(100vh - 60px);
-    background: #000;
+    background: black;
     display: flex;
     flex-direction: column;
+    z-index: 9999;
 ">
-    <video id="localVideo" autoplay muted style="width:100%; height:50%;"></video>
-    <video id="remoteVideo" autoplay style="width:100%; height:50%;"></video>
+    <video id="localVideo" autoplay muted style="width:100%; height:50%; object-fit:cover;"></video>
+<video id="remoteVideo" autoplay style="width:100%; height:50%; object-fit:cover;"></video>
 </div>
     <div id="pdfContainer" style="position:relative;">
     <canvas id="pdfCanvas"></canvas>
@@ -156,26 +157,7 @@ const startTime = params.get("startTime");
 const room = `${className}-${subject}-${day}-${startTime}`;
     const cleanRoom = room.replace(/[^a-zA-Z0-9]/g, "");
 
-    const domain = "meet.jit.si";
-
-    const options = {
-        roomName: cleanRoom,
-        width: "100%",
-        height: "100%",
-        parentNode: document.getElementById("videoBox"),
-
-        userInfo: {
-            displayName: localStorage.getItem("studentName") || "Student"
-        },
-
-        configOverwrite: {
-            prejoinPageEnabled: false,
-            startWithAudioMuted: false,
-            startWithVideoMuted: false
-        }
-    };
-
-    
+        
 });
 // JOIN ROOM
 // JOIN ROOM
@@ -188,8 +170,18 @@ const pdfCtx = pdfCanvas.getContext("2d");
 const ctx = canvas.getContext("2d");
 
 /* FULL SCREEN CANVAS */
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight - 50;
+function resizeCanvas(){
+    const container = document.getElementById("pdfContainer");
+
+    canvas.width = container.clientWidth;
+    canvas.height = window.innerHeight - 60;
+
+    pdfCanvas.width = canvas.width;
+    pdfCanvas.height = canvas.height;
+}
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 let drawing = false;
 let tool = "pen";
@@ -545,7 +537,7 @@ formData.append("teacherId", userId);
 }
 
 function toggleVideo(){
-    const box = document.getElementById("videoBox");
+    const box = document.getElementById("videoSection");
     const btn = event.target;
 
     if(box.style.width === "100vw"){
