@@ -86,7 +86,19 @@ Waiting for Teacher...
 <input type="file" id="pdfUpload" accept="application/pdf">
 </div>
 
-<div id="videoBox"></div>
+<div id="videoSection" style="
+    position: fixed;
+    right: 0;
+    top: 60px;
+    width: 30%;
+    height: calc(100vh - 60px);
+    background: #000;
+    display: flex;
+    flex-direction: column;
+">
+    <video id="localVideo" autoplay muted style="width:100%; height:50%;"></video>
+    <video id="remoteVideo" autoplay style="width:100%; height:50%;"></video>
+</div>
     <div id="pdfContainer" style="position:relative;">
     <canvas id="pdfCanvas"></canvas>
     <canvas id="board" style="position:absolute; top:0; left:0;"></canvas>
@@ -97,7 +109,6 @@ Waiting for Teacher...
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://meet.jit.si/external_api.js"></script>
 <script>
     let mediaRecorder;
 let recordedChunks = [];
@@ -551,36 +562,78 @@ function toggleVideo(){
     }
 }
 
-function startMeeting(){
+// ================= WEBRTC =================
 
-    const room = new URLSearchParams(window.location.search).get("room") || "DefaultRoom";
-    const cleanRoom = room.replace(/[^a-zA-Z0-9]/g, "");
+let localStream;
+let peerConnection;
 
-    const domain = "meet.jit.si";
+const localVideo = document.getElementById("localVideo");
+const remoteVideo = document.getElementById("remoteVideo");
 
-    const options = {
-        roomName: cleanRoom,
-        width: "100%",
-        height: "100%",
-        parentNode: document.getElementById("videoBox"),
+// START CAMERA
+async function startVideo(){
+    localStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+    });
 
-        userInfo: {
-            displayName: localStorage.getItem("studentName") || "Student"
-        },
-
-        configOverwrite: {
-            prejoinPageEnabled: false,
-            startWithAudioMuted: false,
-            startWithVideoMuted: false
-        }
-    };
-
-    new JitsiMeetExternalAPI(domain, options);
+    localVideo.srcObject = localStream;
 }
 
-joinBtn.onclick = function(){
-    startMeeting();
-};
+// CREATE CONNECTION
+function createPeer(){
+
+    peerConnection = new RTCPeerConnection({
+        iceServers: [
+            { urls: "stun:stun.l.google.com:19302" }
+        ]
+    });
+
+    localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+    });
+
+    peerConnection.ontrack = (event) => {
+        remoteVideo.srcObject = event.streams[0];
+    };
+
+    peerConnection.onicecandidate = (event) => {
+        if(event.candidate){
+            socket.emit("ice-candidate", {
+                room,
+                candidate: event.candidate
+            });
+        }
+    };
+}
+
+// STUDENT RECEIVE OFFER
+socket.on("offer", async (data) => {
+
+    createPeer();
+
+    await peerConnection.setRemoteDescription(data.offer);
+
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+
+    socket.emit("answer", {
+        room,
+        answer
+    });
+});
+
+// RECEIVE ICE
+socket.on("ice-candidate", async (data) => {
+    if(peerConnection){
+        await peerConnection.addIceCandidate(data.candidate);
+    }
+});
+
+// START CAMERA ONLY (NO CALL START)
+document.addEventListener("DOMContentLoaded", async () => {
+    await startVideo();
+});
 </script>
 
 </body>
