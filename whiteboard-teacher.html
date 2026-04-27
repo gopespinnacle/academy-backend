@@ -34,16 +34,6 @@ body {
     display:block;
     background:white;
 }
-#videoBox {
-    position: fixed;
-    top: 60px;
-    right: 0;
-    width: 40%;
-    height: calc(100vh - 60px);
-    z-index: 1000;
-    background: black;
-    pointer-events: auto; /* ✅ ADD THIS */
-}
 
 #pdfContainer {
     width: 60%;
@@ -91,7 +81,7 @@ body {
 <input type="file" id="pdfUpload" accept="application/pdf">
 </div>
 
-<div id="videoBox"></div>
+
     <div id="pdfContainer" style="position:relative;">
     <canvas id="pdfCanvas"></canvas>
     <canvas id="board" style="position:absolute; top:0; left:0;"></canvas>
