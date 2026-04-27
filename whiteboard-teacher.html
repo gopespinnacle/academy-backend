@@ -101,7 +101,7 @@ body {
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://meet.jit.si/external_api.js"></script>
+
 <script>
     let mediaRecorder;
 let recordedChunks = [];
@@ -122,41 +122,19 @@ const params = new URLSearchParams(window.location.search);
 
 document.addEventListener("DOMContentLoaded", function(){
 
-    const room = new URLSearchParams(window.location.search).get("room") || "DefaultRoom";
-    const cleanRoom = room.replace(/[^a-zA-Z0-9]/g, "");
+    const meetingLink = localStorage.getItem("meetingLink");
 
-    const domain = "meet.jit.si";
-
-    const options = {
-    roomName: cleanRoom,
-    width: "100%",
-    height: "100%",
-    parentNode: document.getElementById("videoBox"),
-
-    userInfo: {
-        displayName: localStorage.getItem("teacherName") || "Teacher"
-    },
-
-    configOverwrite: {
-    prejoinPageEnabled: false,
-    startWithAudioMuted: false,
-    startWithVideoMuted: false,
-    enableWelcomePage: false,
-
-    enableLobby: false,
-
-    // 🔥 ADD THESE
-    enableUserRolesBasedOnToken: false,
-    requireDisplayName: false,
-    enableClosePage: false
-},
-
-    interfaceConfigOverwrite: {
-        DISABLE_JOIN_LEAVE_NOTIFICATIONS: true
+    if(!meetingLink){
+        alert("Meeting link missing");
+        return;
     }
-};
 
-    window.open("https://meet.jit.si/" + cleanRoom, "_blank");
+    window.open(
+        meetingLink,
+        "_blank",
+        "width=900,height=600"
+    );
+
 });
 // JOIN ROOM
 
@@ -543,6 +521,8 @@ function toggleVideo(){
         btn.innerText = "🔙 Minimize";
     }
 }
+
+
 </script>
 
 </body>
