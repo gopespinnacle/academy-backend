@@ -17,6 +17,7 @@ const { Server } = require("socket.io");
 let roomControl = {};
 let raisedHands = {};
 let boardLock = {};
+let boardData = {}; // 🔥 STORE DRAWINGS
 // ROUTES
 const studentAttendanceRoutes = require("./routes/studentattendanceRoutes");
 const founderTimeClashRoutes = require("./routes/founderTimeClashRoutes");
@@ -145,7 +146,16 @@ io.on("connection", (socket) => {
 
     /* JOIN ROOM */
     socket.on("joinRoom", async (room) => {
-        socket.join(room);
+
+    socket.join(room);
+
+    // 🔥 SEND OLD DRAWINGS
+    if(boardData[room]){
+        socket.emit("loadBoard", boardData[room]);
+    }
+
+    // existing code...
+});
 // 🔥 SEND BOARD LOCK STATUS
 if(boardLock[room]){
     socket.emit("boardLocked", true);
@@ -195,8 +205,16 @@ socket.on("teacherJoined", (room) => {
 });
     /* DRAW */
     socket.on("draw", (data) => {
-        socket.to(data.room).emit("draw", data);
-    });
+
+    // 🔥 STORE DRAW DATA
+    if(!boardData[data.room]){
+        boardData[data.room] = [];
+    }
+
+    boardData[data.room].push(data);
+
+    socket.to(data.room).emit("draw", data);
+});
 
     /* CLEAR */
     socket.on("clear", (room) => {

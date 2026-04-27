@@ -151,7 +151,13 @@ function drawLine(x1, y1, x2, y2, tool){
 socket.on("draw", (data) => {
     drawLine(data.prevX, data.prevY, data.x, data.y, data.tool);
 });
+socket.on("loadBoard", (dataArray) => {
 
+    dataArray.forEach(d => {
+        drawLine(d.prevX, d.prevY, d.x, d.y, d.tool);
+    });
+
+});
 /* CLEAR */
 function clearBoard(){
     if(role !== "teacher") return;
