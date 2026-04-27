@@ -71,8 +71,12 @@ app.get("/", (req, res) => {
 app.use(express.json());
 app.use("/uploads", express.static("uploads", {
     setHeaders: (res, filePath) => {
+
         if (filePath.endsWith(".pdf")) {
             res.setHeader("Content-Type", "application/pdf");
+
+            // 🔥 VERY IMPORTANT LINE
+            res.setHeader("Content-Disposition", "inline");
         }
     }
 }));
