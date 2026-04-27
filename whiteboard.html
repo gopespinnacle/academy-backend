@@ -54,15 +54,12 @@ canvas {
 <script>
 
 const params = new URLSearchParams(window.location.search);
-
 const room = params.get("room");
 const role = params.get("role");
 
 const socket = io("https://academy-backend-eatl.onrender.com", {
     transports: ["websocket"]
 });
-
-/* ================= CANVAS ================= */
 
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
@@ -71,79 +68,73 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight - 50;
 
 let drawing = false;
+let prevX = 0;
+let prevY = 0;
 
-/* ================= ROLE ================= */
-
+/* ROLE */
 if(role === "teacher"){
     document.getElementById("teacherTools").style.display = "block";
 }
 
-/* ================= SOCKET JOIN ================= */
-
+/* JOIN */
 socket.emit("joinRoom", room);
 
-/* ================= DRAW ================= */
-
+/* DRAW START */
 canvas.addEventListener("mousedown", (e) => {
-
     if(role !== "teacher") return;
 
     drawing = true;
-    draw(e);
+    prevX = e.clientX;
+    prevY = e.clientY;
 });
 
+/* DRAW END */
 canvas.addEventListener("mouseup", () => {
     drawing = false;
-    ctx.beginPath();
 });
 
-canvas.addEventListener("mousemove", draw);
-
-function draw(e){
+/* DRAW MOVE */
+canvas.addEventListener("mousemove", (e) => {
 
     if(!drawing || role !== "teacher") return;
 
     const x = e.clientX;
     const y = e.clientY;
 
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "black";
-
-    ctx.lineTo(x,y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(x,y);
+    drawLine(prevX, prevY, x, y);
 
     socket.emit("draw", {
         room,
+        prevX,
+        prevY,
         x,
         y
     });
-}
 
-/* ================= RECEIVE DRAW ================= */
-
-socket.on("draw", (data) => {
-
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    ctx.strokeStyle = "black";
-
-    ctx.lineTo(data.x, data.y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(data.x, data.y);
+    prevX = x;
+    prevY = y;
 });
 
-/* ================= CLEAR ================= */
+/* DRAW FUNCTION */
+function drawLine(x1, y1, x2, y2){
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+}
 
+/* RECEIVE DRAW */
+socket.on("draw", (data) => {
+    drawLine(data.prevX, data.prevY, data.x, data.y);
+});
+
+/* CLEAR */
 function clearBoard(){
-
     if(role !== "teacher") return;
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
-
     socket.emit("clear", room);
 }
 
@@ -151,8 +142,7 @@ socket.on("clear", () => {
     ctx.clearRect(0,0,canvas.width,canvas.height);
 });
 
-/* ================= LEAVE ================= */
-
+/* LEAVE */
 function leaveClass(){
     window.close();
 }
