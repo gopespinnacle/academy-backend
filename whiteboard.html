@@ -94,13 +94,16 @@ canvas.addEventListener("mousedown", (e) => {
 
     const rect = canvas.getBoundingClientRect();
 
-    drawing = true;
+   
 
     prevX = e.clientX - rect.left;
     prevY = e.clientY - rect.top;
 
+     drawing = true;
+
     // ✅ VERY IMPORTANT (reset path)
     ctx.beginPath();
+    ctx.moveTo(prevX, prevY);
 });
 canvas.addEventListener("mouseleave", () => {
     drawing = false;
@@ -115,10 +118,11 @@ canvas.addEventListener("mousemove", (e) => {
 
     if(!drawing || role !== "teacher") return;
 
-  const rect = canvas.getBoundingClientRect();
+    const rect = canvas.getBoundingClientRect();
 
-const x = e.clientX - rect.left;
-const y = e.clientY - rect.top;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
     drawLine(prevX, prevY, x, y, currentTool);
 
     socket.emit("draw", {
@@ -137,7 +141,7 @@ const y = e.clientY - rect.top;
 /* 🔥 DRAW FUNCTION WITH ERASER */
 function drawLine(x1, y1, x2, y2, tool){
 
-    ctx.beginPath();
+    ctx.beginPath(); // ✅ ALWAYS start fresh
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
 
