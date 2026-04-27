@@ -286,7 +286,7 @@ socket.on("lowerHand", (data) => {
     io.to(data.room).emit("handList", raisedHands[data.room] || []);
 });
 /* ================= LOCK BOARD ================= */
-});
+
 const storage = multer.diskStorage({
     destination: function(req, file, cb){
         cb(null, "recordings/");
