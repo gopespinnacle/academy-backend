@@ -80,8 +80,9 @@ localStorage.setItem("token", data.token);
 localStorage.setItem("role", data.role);
 
 // 🔥 IMPORTANT CHANGE
-localStorage.setItem("teacherId", data.studentId);   // ← FIXED
-localStorage.setItem("teacherName", "Teacher");      // ← temporary
+localStorage.setItem("teacherId", data.user._id);
+localStorage.setItem("teacherName", data.user.name);
+localStorage.setItem("meetingLink", data.user.meetingLink);
 
 // ✅ REDIRECT
 window.location.href = "teacher-dashboard.html";
