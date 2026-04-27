@@ -161,7 +161,15 @@ const room = `${className}-${subject}-${day}-${startTime}`;
 });
 // JOIN ROOM
 // JOIN ROOM
-const room = new URLSearchParams(window.location.search).get("room") || "DefaultRoom";
+const params = new URLSearchParams(window.location.search);
+
+const className = params.get("className");
+const subject = params.get("subject");
+const day = params.get("day");
+const startTime = params.get("startTime");
+
+const room = `${className}-${subject}-${day}-${startTime}`;
+
 socket.emit("joinRoom", room);
 const canvas = document.getElementById("board");
 const pdfUpload = document.getElementById("pdfUpload");

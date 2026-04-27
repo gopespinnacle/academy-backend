@@ -124,17 +124,11 @@ const role = "teacher";
 // JOIN ROOM
 
 const params = new URLSearchParams(window.location.search);
+const room = params.get("room");
 
-const className = params.get("className");
-const subject = params.get("subject");
-const day = params.get("day");
-const startTime = params.get("startTime");
-
-const room = `${className}-${subject}-${day}-${startTime}`;
-
-
-
-
+if(!room){
+    alert("Room missing ❌");
+}
 socket.emit("joinRoom", room);
 socket.emit("teacherJoined", room);
 const canvas = document.getElementById("board");
