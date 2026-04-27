@@ -51,6 +51,10 @@ whatsapp: {
     type: String
 },
 
+meetingLink: {
+    type: String,
+    default: ""
+},
 experience: {
     type: Number,
     default: 0

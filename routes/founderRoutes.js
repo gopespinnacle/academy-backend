@@ -43,7 +43,8 @@ router.post("/add-teacher", async (req, res) => {
         const {
             name, email, password, subject, eca, language,
             mobile, whatsapp, experience,
-            salaryMonth, sessionsWeek, salarySession
+            salaryMonth, sessionsWeek, salarySession,
+            
         } = req.body;
 
         const existing = await User.findOne({ email });
@@ -56,7 +57,8 @@ router.post("/add-teacher", async (req, res) => {
             role: "teacher",
             subject, eca, language,
             mobile, whatsapp, experience,
-            salaryMonth, sessionsWeek, salarySession
+            salaryMonth, sessionsWeek, salarySession,
+             meetingLink: req.body.meetingLink
         });
 
         await teacher.save();

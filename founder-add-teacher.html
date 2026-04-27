@@ -118,6 +118,8 @@ window.location.href = page;
 
     <input type="password" id="password" placeholder="Password" required>
 
+    <input type="text" id="meetingLink" placeholder="Google Meet / Zoom Link">
+
     <label>Select Subjects</label>
 <div id="subjects" class="tag-container"></div>
 
@@ -312,7 +314,8 @@ function submitTeacher(){
            experience: Number(document.getElementById("experience").value) || 0,
 salaryMonth: Number(document.getElementById("salaryMonth").value) || 0,
 sessionsWeek: Number(document.getElementById("sessionsWeek").value) || 0,
-salarySession: Number(document.getElementById("salarySession").value) || 0
+salarySession: Number(document.getElementById("salarySession").value) || 0,
+meetingLink: document.getElementById("meetingLink").value.trim()
         })
     })
     .then(res => res.json())
