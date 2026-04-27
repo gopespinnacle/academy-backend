@@ -135,7 +135,7 @@ canvas.addEventListener("mousemove", (e) => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    drawLine(prevX, prevY, x, y, currentTool);
+    drawLine(prevX, prevY, x, y, currentTool,currentColor);
 
     socket.emit("draw", {
         room,
