@@ -235,8 +235,8 @@ displayFile({
     const container = document.createElement("div");
 
     container.style.position = "absolute";
-    container.style.top = "60px";
-    container.style.left = "20px";
+    container.style.top = "10%";
+container.style.left = "17%";
     container.style.background = "white";
     container.style.padding = "10px";
     container.style.zIndex = "999";
@@ -264,22 +264,76 @@ displayFile({
         container.appendChild(img);
     }
     else if(data.type === "application/pdf"){
-        const iframe = document.createElement("iframe");
-        iframe.src = data.fileUrl;
-        iframe.style.width = "500px";
-        iframe.style.height = "400px";
-        container.appendChild(iframe);
-    }
-    else{
-        const link = document.createElement("a");
-        link.href = data.fileUrl;
-        link.innerText = "Download File";
-        link.target = "_blank";
-        container.appendChild(link);
-    }
 
-    document.body.appendChild(container);
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "relative";
+    wrapper.style.width = "65vw";
+    wrapper.style.height = "75vh";
+
+    const iframe = document.createElement("iframe");
+    iframe.src = data.fileUrl;
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+
+    wrapper.appendChild(iframe);
+
+    // ✅ OVERLAY CANVAS (FIXED)
+    const overlayCanvas = document.createElement("canvas");
+
+    overlayCanvas.width = window.innerWidth * 0.65;
+    overlayCanvas.height = window.innerHeight * 0.75;
+
+    overlayCanvas.style.width = "100%";
+    overlayCanvas.style.height = "100%";
+
+    overlayCanvas.style.position = "absolute";
+    overlayCanvas.style.top = "0";
+    overlayCanvas.style.left = "0";
+    overlayCanvas.style.zIndex = "10";
+    overlayCanvas.style.cursor = "crosshair";
+
+    wrapper.appendChild(overlayCanvas);
+
+    // ✅ DRAW LOGIC
+    const octx = overlayCanvas.getContext("2d");
+
+    let drawingOverlay = false;
+
+    overlayCanvas.addEventListener("mousedown", () => {
+        drawingOverlay = true;
+    });
+
+    overlayCanvas.addEventListener("mouseup", () => {
+        drawingOverlay = false;
+    });
+
+    overlayCanvas.addEventListener("mousemove", (e) => {
+
+        if(!drawingOverlay) return;
+
+        const rect = overlayCanvas.getBoundingClientRect();
+
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        octx.fillStyle = currentColor;
+        octx.lineWidth = 2;
+octx.lineCap = "round";
+octx.strokeStyle = currentColor;
+
+octx.beginPath();
+octx.moveTo(prevX, prevY);
+octx.lineTo(x, y);
+octx.stroke();
+
+prevX = x;
+prevY = y;
+    });
+
+    container.appendChild(wrapper);
 }
+    }
+// ✅ DRAW LAYER ABOVE PDF
 
 // ================= RECEIVE =================
 socket.on("fileShare", (data) => {
