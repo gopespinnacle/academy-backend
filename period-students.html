@@ -408,7 +408,7 @@ let roomName = "academy-" + className + "-" + day + "-" + startTime;
 
 roomName = roomName.replace(/\s+/g, "").replace(/[^a-zA-Z0-9\-]/g,"");
 
-window.open("https://meet.jit.si/" + roomName, "_blank");
+window.location.href = `whiteboard-teacher.html?room=${roomName}&className=${className}&subject=${subject}`;
 attendanceMarked = true;
 }
 async function endClass(){
