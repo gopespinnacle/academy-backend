@@ -142,10 +142,7 @@ app.delete("/api/founder/periodassignments/:id", async (req, res) => {
 io.on("connection", (socket) => {
 
 
-    console.log("User connected:", socket.id);
-
-    /* JOIN ROOM */
-    socket.on("joinRoom", async (room) => {
+    socket.on("joinRoom", (room) => {
 
     socket.join(room);
 
@@ -154,22 +151,21 @@ io.on("connection", (socket) => {
         socket.emit("loadBoard", boardData[room]);
     }
 
-    // existing code...
-});
-// 🔥 SEND BOARD LOCK STATUS
-if(boardLock[room]){
-    socket.emit("boardLocked", true);
-}
-        // 1. Check memory first (FAST)
-        if(roomControl[room]){
-            socket.emit("controlChanged", {
-                studentId: roomControl[room]
-            });
-            return;
-        }
+    // 🔥 SEND BOARD LOCK STATUS
+    if(boardLock[room]){
+        socket.emit("boardLocked", true);
+    }
 
-        // 2. Fallback to DB
+    // 🔥 SEND CONTROL STATUS
+    if(roomControl[room]){
+        socket.emit("controlChanged", {
+            studentId: roomControl[room]
         });
+    }
+
+
+});
+
 
         // ================= WEBRTC =================
 
@@ -218,8 +214,12 @@ socket.on("teacherJoined", (room) => {
 
     /* CLEAR */
     socket.on("clear", (room) => {
-        socket.to(room).emit("clear");
-    });
+
+    // 🔥 CLEAR MEMORY ALSO
+    boardData[room] = [];
+
+    socket.to(room).emit("clear");
+});
 socket.on("pageChange", (data) => {
     socket.to(data.room).emit("pageChanged", {
         page: data.page
@@ -285,8 +285,9 @@ socket.on("lowerHand", (data) => {
 
     io.to(data.room).emit("handList", raisedHands[data.room] || []);
 });
-/* ================= LOCK BOARD ================= */
 
+/* ================= LOCK BOARD ================= */
+}); 
 const storage = multer.diskStorage({
     destination: function(req, file, cb){
         cb(null, "recordings/");
