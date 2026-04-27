@@ -182,10 +182,11 @@ drawCanvas.addEventListener("mousedown", (e) => {
 
     const rect = drawCanvas.getBoundingClientRect();
 
-   
+const scaleX = drawCanvas.width / rect.width;
+const scaleY = drawCanvas.height / rect.height;
 
-    prevX = e.clientX - rect.left;
-    prevY = e.clientY - rect.top;
+const x = (e.clientX - rect.left) * scaleX;
+const y = (e.clientY - rect.top) * scaleY;
 
      drawing = true;
 
