@@ -71,6 +71,7 @@ body {
 <body>
 
 <div class="toolbar">
+    <button onclick="openMeet()">🎥 Join Class</button>
 <button class="pen" onclick="setTool('pen')">✏️ Pen</button>
 <button class="eraser" onclick="setTool('eraser')">🧽 Eraser</button>
 <button class="clear" onclick="clearBoard()">🗑 Clear</button>
@@ -120,22 +121,6 @@ const role = "teacher";
 // ROOM
 const params = new URLSearchParams(window.location.search);
 
-document.addEventListener("DOMContentLoaded", function(){
-
-    const meetingLink = localStorage.getItem("meetingLink");
-
-    if(!meetingLink){
-        alert("Meeting link missing");
-        return;
-    }
-
-    window.open(
-        meetingLink,
-        "_blank",
-        "width=900,height=600"
-    );
-
-});
 // JOIN ROOM
 
 const room = new URLSearchParams(window.location.search).get("room") || "DefaultRoom";
@@ -522,7 +507,18 @@ function toggleVideo(){
     }
 }
 
+function openMeet(){
 
+    const meetingLink = localStorage.getItem("meetingLink");
+
+    if(!meetingLink){
+        alert("Meeting link missing");
+        return;
+    }
+
+    window.open(meetingLink, "_blank");
+
+}
 </script>
 
 </body>
