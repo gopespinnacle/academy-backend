@@ -2,7 +2,20 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const Recording = require("./models/Recording");
 const multer = require("multer");
-const uploadFile = multer({ dest: "uploads/" });
+
+// ✅ FIX: KEEP FILE EXTENSION
+const storageFile = multer.diskStorage({
+    destination: function(req, file, cb){
+        cb(null, "uploads/");
+    },
+    filename: function(req, file, cb){
+        const ext = file.originalname.split(".").pop(); // get extension
+        const fileName = Date.now() + "." + ext; // keep extension
+        cb(null, fileName);
+    }
+});
+
+const uploadFile = multer({ storage: storageFile });
 const path = require("path");
 const fs = require("fs");
 
