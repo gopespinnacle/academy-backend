@@ -240,7 +240,23 @@ displayFile({
     container.style.background = "white";
     container.style.padding = "10px";
     container.style.zIndex = "999";
+    container.style.border = "2px solid black";
 
+    // ✅ CLOSE BUTTON
+    const closeBtn = document.createElement("button");
+    closeBtn.innerText = "❌";
+    closeBtn.style.position = "absolute";
+    closeBtn.style.top = "5px";
+    closeBtn.style.right = "5px";
+    closeBtn.style.cursor = "pointer";
+
+    closeBtn.onclick = () => {
+        container.remove();
+    };
+
+    container.appendChild(closeBtn);
+
+    // ✅ FILE DISPLAY
     if(data.type.startsWith("image")){
         const img = document.createElement("img");
         img.src = data.fileUrl;
