@@ -279,6 +279,7 @@ window.location.href = page;
 
 <input id="editWhatsapp" placeholder="Whatsapp">
 
+<input id="editMeetingLink" placeholder="Meeting Link">
 <br><br>
 
 <button onclick="updateTeacher()">Save Teacher</button>
@@ -311,7 +312,7 @@ document.getElementById("editSessionsWeek").value = t.sessionsWeek || "";
 document.getElementById("editSalarySession").value = t.salarySession || "";
 document.getElementById("editMobile").value = t.mobile || "";
 document.getElementById("editWhatsapp").value = t.whatsapp || "";
-
+document.getElementById("editMeetingLink").value = t.meetingLink || "";
 document.getElementById("editModal").style.display = "block";
 document.getElementById("editSalaryMonth").oninput = calculateSession;
 document.getElementById("editSalarySession").oninput = calculateMonth;
@@ -360,7 +361,8 @@ salaryMonth: document.getElementById("editSalaryMonth").value,
 sessionsWeek: document.getElementById("editSessionsWeek").value,
 salarySession: document.getElementById("editSalarySession").value,
 mobile: document.getElementById("editMobile").value,
-whatsapp: document.getElementById("editWhatsapp").value
+whatsapp: document.getElementById("editWhatsapp").value,
+meetingLink: document.getElementById("editMeetingLink").value
 
 })
 
