@@ -144,11 +144,16 @@ const studentName = localStorage.getItem("studentName");
 const role = localStorage.getItem("role");
 
 // ROOM
-const params = new URLSearchParams(window.location.search);
-
 document.addEventListener("DOMContentLoaded", function(){
 
-    const room = new URLSearchParams(window.location.search).get("room") || "DefaultRoom";
+    const params = new URLSearchParams(window.location.search);
+
+const className = params.get("className");
+const subject = params.get("subject");
+const day = params.get("day");
+const startTime = params.get("startTime");
+
+const room = `${className}-${subject}-${day}-${startTime}`;
     const cleanRoom = room.replace(/[^a-zA-Z0-9]/g, "");
 
     const domain = "meet.jit.si";
@@ -610,6 +615,10 @@ function createPeer(){
 // STUDENT RECEIVE OFFER
 socket.on("offer", async (data) => {
 
+    if(!localStream){
+        await startVideo();   // 🔥 MUST START CAMERA FIRST
+    }
+
     createPeer();
 
     await peerConnection.setRemoteDescription(data.offer);
@@ -621,6 +630,7 @@ socket.on("offer", async (data) => {
         room,
         answer
     });
+
 });
 
 // RECEIVE ICE
@@ -634,6 +644,8 @@ socket.on("ice-candidate", async (data) => {
 document.addEventListener("DOMContentLoaded", async () => {
     await startVideo();
 });
+
+
 </script>
 
 </body>
