@@ -162,17 +162,23 @@ if(boardLock[room]){
 
 // TEACHER SEND OFFER
 socket.on("offer", (data) => {
-    socket.to(data.room).emit("offer", data);
+    socket.to(data.room).emit("offer", {
+        offer: data.offer
+    });
 });
 
 // STUDENT SEND ANSWER
 socket.on("answer", (data) => {
-    socket.to(data.room).emit("answer", data);
+    socket.to(data.room).emit("answer", {
+        answer: data.answer
+    });
 });
 
-// ICE CANDIDATES (VERY IMPORTANT)
+// ICE CANDIDATES
 socket.on("ice-candidate", (data) => {
-    socket.to(data.room).emit("ice-candidate", data);
+    socket.to(data.room).emit("ice-candidate", {
+        candidate: data.candidate
+    });
 });
 /* ================= TEACHER JOIN ================= */
 
