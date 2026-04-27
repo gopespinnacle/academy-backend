@@ -222,11 +222,15 @@ console.log("UPLOAD RESPONSE:", data);
         fileUrl: data.url,
         type: file.type
     });
+displayFile({
+    fileUrl: data.url,
+    type: file.type
+});
 
 });
 
 // ================= DISPLAY FILE =================
-socket.on("fileShare", (data) => {
+    function displayFile(data){
 
     const container = document.createElement("div");
 
@@ -259,6 +263,11 @@ socket.on("fileShare", (data) => {
     }
 
     document.body.appendChild(container);
+}
+
+// ================= RECEIVE =================
+socket.on("fileShare", (data) => {
+    displayFile(data);
 
 });
 
