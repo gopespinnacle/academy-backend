@@ -215,7 +215,7 @@ document.getElementById("fileInput").addEventListener("change", async (e) => {
     });
 
     const data = await res.json();
-
+console.log("UPLOAD RESPONSE:", data);
     // 🔥 send to students
     socket.emit("fileShare", {
         room,
