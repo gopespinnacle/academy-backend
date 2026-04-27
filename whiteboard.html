@@ -40,6 +40,7 @@ canvas {
 
 <div class="toolbar">
     <button onclick="setTool('pen')">✏️ Pen</button>
+<input type="color" id="colorPicker" value="#000000">
 <button onclick="setTool('eraser')">🧽 Eraser</button>
     <div class="teacher-tools" id="teacherTools">
         <button onclick="clearBoard()">🧹 Clear</button>
@@ -75,6 +76,10 @@ let prevY = 0;
 
 /* ✅ TOOL */
 let currentTool = "pen";
+let currentColor = "#000000";
+document.getElementById("colorPicker").addEventListener("input", (e) => {
+    currentColor = e.target.value;
+});
 
 function setTool(tool){
     currentTool = tool;
@@ -138,7 +143,8 @@ canvas.addEventListener("mousemove", (e) => {
         prevY,
         x,
         y,
-        tool: currentTool
+        tool: currentTool,
+         color: currentColor 
     });
 
     prevX = x;
@@ -146,9 +152,9 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 /* 🔥 DRAW FUNCTION WITH ERASER */
-function drawLine(x1, y1, x2, y2, tool){
+function drawLine(x1, y1, x2, y2, tool, color){
 
-    ctx.beginPath(); // ✅ ALWAYS start fresh
+    ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
 
@@ -159,7 +165,7 @@ function drawLine(x1, y1, x2, y2, tool){
         ctx.lineWidth = 20;
     } else {
         ctx.globalCompositeOperation = "source-over";
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = color || "black"; // ✅ USE COLOR
         ctx.lineWidth = 2;
     }
 
@@ -168,12 +174,12 @@ function drawLine(x1, y1, x2, y2, tool){
 
 /* RECEIVE DRAW */
 socket.on("draw", (data) => {
-    drawLine(data.prevX, data.prevY, data.x, data.y, data.tool);
+    drawLine(data.prevX, data.prevY, data.x, data.y, data.tool,data.color);
 });
 socket.on("loadBoard", (dataArray) => {
 
     dataArray.forEach(d => {
-        drawLine(d.prevX, d.prevY, d.x, d.y, d.tool);
+        drawLine(d.prevX, d.prevY, d.x, d.y, d.tool,d.color);
     });
 
 });
