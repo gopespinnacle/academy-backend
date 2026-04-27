@@ -58,7 +58,7 @@ router.post("/add-teacher", async (req, res) => {
             subject, eca, language,
             mobile, whatsapp, experience,
             salaryMonth, sessionsWeek, salarySession,
-             meetingLink: req.body.meetingLink
+             meetingLink
         });
 
         await teacher.save();
