@@ -58,32 +58,36 @@ async function loginTeacher() {
 });
 
 console.log("Response received:", response);
-console.log("DATA:", data);
+
         const data = await response.json();
-
-        if (response.ok) {
-
-            if (data.role !== "teacher") {
-                alert("Access denied. Not a Teacher account.");
-                return;
-            }
-
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("role", data.role);
-            if (!data.user) {
-    alert("Login failed - user data missing");
-    console.log("FULL RESPONSE:", data);
+console.log("DATA:", data);
+       
+// ❌ if response failed
+if (!response.ok) {
+    alert(data.message || "Login failed");
     return;
 }
 
-localStorage.setItem("teacherId", data.user._id);
-localStorage.setItem("teacherName", data.user.name);
+// ❌ if user missing
+// ❌ if not teacher
+if (data.role !== "teacher") {
+    alert("Access denied. Not a Teacher account.");
+    return;
+}
 
-            window.location.href = "teacher-dashboard.html";
+// ✅ SAVE DATA (BASED ON YOUR BACKEND)
+localStorage.setItem("token", data.token);
+localStorage.setItem("role", data.role);
 
-        } else {
-            alert(data.message || "Login failed");
-        }
+// 🔥 IMPORTANT CHANGE
+localStorage.setItem("teacherId", data.studentId);   // ← FIXED
+localStorage.setItem("teacherName", "Teacher");      // ← temporary
+
+// ✅ REDIRECT
+window.location.href = "teacher-dashboard.html";
+
+// ✅ REDIRECT
+window.location.href = "teacher-dashboard.html";
 
     } catch (error) {
     console.error(error);

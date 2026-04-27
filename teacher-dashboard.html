@@ -60,11 +60,12 @@
 </div>
 
 <script>
-
+const name = localStorage.getItem("teacherName");
 const token = localStorage.getItem("token");
-const name = localStorage.getItem("name");
+const role = localStorage.getItem("role");
 
-if (!token) {
+if (!token || role !== "teacher") {
+    alert("Please login first");
     window.location.href = "teacher-login.html";
 }
 
