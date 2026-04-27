@@ -43,7 +43,7 @@ router.post("/add-teacher", async (req, res) => {
         const {
             name, email, password, subject, eca, language,
             mobile, whatsapp, experience,
-            salaryMonth, sessionsWeek, salarySession,
+            salaryMonth, sessionsWeek, salarySession, meetingLink
             
         } = req.body;
 

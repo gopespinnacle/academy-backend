@@ -227,8 +227,10 @@ window.location.href = page;
 <th>Sessions / Week</th>
 <th>Salary / Session</th>
 <th>Attendance</th>
+<th>Meeting Link</th>
 <th>Date</th>
 <th>Actions</th>
+
 </tr>
 </thead>
 <tbody></tbody>
@@ -464,7 +466,15 @@ function renderTeachers(){
             <td>${t.sessionsWeek || "-"}</td>
 <td>${t.salarySession ? "₹ " + Number(t.salarySession).toLocaleString() : "-"}</td>
 <td>${t.attendanceDays || 0}</td>
-            <td>${new Date(t.createdAt).toLocaleDateString()}</td>
+
+<!-- ✅ ADD THIS -->
+<td>
+    ${t.meetingLink 
+        ? `<a href="${t.meetingLink}" target="_blank">Join</a>` 
+        : "-"}
+</td>
+
+<td>${new Date(t.createdAt).toLocaleDateString()}</td>
             <td>
     <button class="action-btn" onclick="viewDetails('${t._id}')">Details</button>
     <button class="action-btn edit-btn" onclick="editTeacher('${t._id}')">Edit</button>
