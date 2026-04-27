@@ -157,6 +157,23 @@ if(boardLock[room]){
 
         // 2. Fallback to DB
         });
+
+        // ================= WEBRTC =================
+
+// TEACHER SEND OFFER
+socket.on("offer", (data) => {
+    socket.to(data.room).emit("offer", data);
+});
+
+// STUDENT SEND ANSWER
+socket.on("answer", (data) => {
+    socket.to(data.room).emit("answer", data);
+});
+
+// ICE CANDIDATES (VERY IMPORTANT)
+socket.on("ice-candidate", (data) => {
+    socket.to(data.room).emit("ice-candidate", data);
+});
 /* ================= TEACHER JOIN ================= */
 
 socket.on("teacherJoined", (room) => {
