@@ -39,6 +39,8 @@ canvas {
 <body>
 
 <div class="toolbar">
+    <button onclick="setTool('pen')">✏️ Pen</button>
+<button onclick="setTool('eraser')">🧽 Eraser</button>
     <div class="teacher-tools" id="teacherTools">
         <button onclick="clearBoard()">🧹 Clear</button>
     </div>
@@ -71,6 +73,13 @@ let drawing = false;
 let prevX = 0;
 let prevY = 0;
 
+/* ✅ TOOL */
+let currentTool = "pen";
+
+function setTool(tool){
+    currentTool = tool;
+}
+
 /* ROLE */
 if(role === "teacher"){
     document.getElementById("teacherTools").style.display = "block";
@@ -101,33 +110,45 @@ canvas.addEventListener("mousemove", (e) => {
     const x = e.clientX;
     const y = e.clientY;
 
-    drawLine(prevX, prevY, x, y);
+    drawLine(prevX, prevY, x, y, currentTool);
 
     socket.emit("draw", {
         room,
         prevX,
         prevY,
         x,
-        y
+        y,
+        tool: currentTool
     });
 
     prevX = x;
     prevY = y;
 });
 
-/* DRAW FUNCTION */
-function drawLine(x1, y1, x2, y2){
+/* 🔥 DRAW FUNCTION WITH ERASER */
+function drawLine(x1, y1, x2, y2, tool){
+
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 2;
+
+    ctx.lineCap = "round";
+
+    if(tool === "eraser"){
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.lineWidth = 20;
+    } else {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 2;
+    }
+
     ctx.stroke();
 }
 
 /* RECEIVE DRAW */
 socket.on("draw", (data) => {
-    drawLine(data.prevX, data.prevY, data.x, data.y);
+    drawLine(data.prevX, data.prevY, data.x, data.y, data.tool);
 });
 
 /* CLEAR */
