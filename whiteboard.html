@@ -97,9 +97,9 @@ const socket = io("https://academy-backend-eatl.onrender.com", {
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight - 50;
 
+canvas.width = canvas.parentElement.clientWidth;
+canvas.height = canvas.parentElement.clientHeight - 40;
 let drawing = false;
 let prevX = 0;
 let prevY = 0;
@@ -258,58 +258,20 @@ loadPDFToCanvas(data.url);
 });
 
 // ================= DISPLAY FILE =================
-    function displayFile(data){
-
-    const container = document.createElement("div");
-
-    container.style.position = "absolute";
-    container.style.top = "10%";
-container.style.left = "17%";
-    container.style.background = "white";
-    container.style.padding = "10px";
-    container.style.zIndex = "999";
-    container.style.border = "2px solid black";
-
-    // ✅ CLOSE BUTTON
-    const closeBtn = document.createElement("button");
-    closeBtn.innerText = "❌";
-    closeBtn.style.position = "absolute";
-    closeBtn.style.top = "5px";
-    closeBtn.style.right = "5px";
-    closeBtn.style.cursor = "pointer";
-
-    closeBtn.onclick = () => {
-        container.remove();
-    };
-
-    container.appendChild(closeBtn);
-
-    // ✅ FILE DISPLAY
-    if(data.type.startsWith("image")){
-        const img = document.createElement("img");
-        img.src = data.fileUrl;
-        img.style.width = "400px";
-        container.appendChild(img);
-    }
-    else if(data.fileUrl.endsWith(".pdf")){
-
-    loadPDFToCanvas(data.fileUrl);
-
-}
-    }
+    
 // ✅ DRAW LAYER ABOVE PDF
 
 // ================= RECEIVE =================
-socket.on("fileShare", (data) => {
-    displayFile(data);
-});
+
 
 socket.on("loadPDF", (data) => {
     loadPDFToCanvas(data.url);
 });
-document.body.appendChild(container);
-document.getElementById("pdfWindow").style.display = "block";
+
 async function loadPDFToCanvas(url){
+
+    // ✅ SHOW WINDOW ONLY WHEN PDF LOADS
+    document.getElementById("pdfWindow").style.display = "block";
 
     const loadingTask = pdfjsLib.getDocument(url);
     const pdf = await loadingTask.promise;
@@ -319,14 +281,15 @@ async function loadPDFToCanvas(url){
     const viewport = page.getViewport({ scale: 1.5 });
 
     canvas.width = canvas.parentElement.clientWidth;
-canvas.height = canvas.parentElement.clientHeight - 40;
+    canvas.height = canvas.parentElement.clientHeight - 40;
 
-    // 🔥 DRAW PDF INTO SAME CANVAS
+    // 🔥 CLEAR BEFORE DRAW (VERY IMPORTANT)
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
     await page.render({
         canvasContext: ctx,
         viewport: viewport
     }).promise;
-
 }
 
 function minimizePDF(){
@@ -348,6 +311,8 @@ function closePDF(){
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 }
+
+
 </script>
 
 </body>
