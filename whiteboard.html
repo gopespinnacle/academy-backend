@@ -72,6 +72,7 @@ canvas {
     background:white;
     border:2px solid black;
     display:none;
+    overflow:auto;
 ">
 
     <!-- HEADER -->
@@ -284,28 +285,39 @@ socket.on("loadPDF", (data) => {
 
 async function loadPDFToCanvas(url){
 
-    document.getElementById("pdfTab").style.display = "none";
     document.getElementById("pdfWindow").style.display = "block";
+    document.getElementById("pdfTab").style.display = "none";
 
     const loadingTask = pdfjsLib.getDocument(url);
     const pdf = await loadingTask.promise;
 
-    const page = await pdf.getPage(1);
+    const container = document.getElementById("pdfWindow");
 
-    const viewport = page.getViewport({ scale: 1.5 });
+    // 🔥 REMOVE OLD PAGES
+    const oldCanvases = container.querySelectorAll("canvas.pdfPage");
+    oldCanvases.forEach(c => c.remove());
 
-    canvas.width = canvas.parentElement.clientWidth;
-    canvas.height = canvas.parentElement.clientHeight - 40;
+    for(let i = 1; i <= pdf.numPages; i++){
 
-    // 🔥 CLEAR BEFORE DRAW (VERY IMPORTANT)
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 1.2 });
 
-    await page.render({
-        canvasContext: ctx,
-        viewport: viewport
-    }).promise;
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.className = "pdfPage";
+
+        pageCanvas.width = viewport.width;
+        pageCanvas.height = viewport.height;
+
+        const pageCtx = pageCanvas.getContext("2d");
+
+        await page.render({
+            canvasContext: pageCtx,
+            viewport: viewport
+        }).promise;
+
+        container.appendChild(pageCanvas);
+    }
 }
-
 function minimizePDF(){
     document.getElementById("pdfWindow").style.display = "none";
     document.getElementById("pdfTab").style.display = "block";
