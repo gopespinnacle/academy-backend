@@ -96,6 +96,14 @@ canvas {
 
     <!-- CANVAS -->
     <canvas id="board"></canvas>
+    <canvas id="drawLayer" style="
+    position:absolute;
+    top:40px;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:50;
+"></canvas>
 
 </div>
 
@@ -115,6 +123,15 @@ const socket = io("https://academy-backend-eatl.onrender.com", {
 
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
+const drawCanvas = document.getElementById("drawLayer");
+const dctx = drawCanvas.getContext("2d");
+
+// match size
+drawCanvas.width = canvas.width;
+drawCanvas.height = canvas.height;
+
+// ✅ allow scroll by default
+drawCanvas.style.pointerEvents = "none";
 
 
 canvas.width = canvas.parentElement.clientWidth;
@@ -135,9 +152,14 @@ function setTool(tool){
 
     if(tool === "pen"){
         canvas.style.cursor = "url('https://www.gopespinnacle.com/images/pen.png') 2 30, auto";
+        drawCanvas.style.pointerEvents = "auto";   // draw ON
     }
     else if(tool === "eraser"){
         canvas.style.cursor = "url('https://www.gopespinnacle.com/images/eraser.png') 10 10, auto";
+        drawCanvas.style.pointerEvents = "auto";   // draw ON
+    }
+    else{
+        drawCanvas.style.pointerEvents = "none";   // scroll ON
     }
 }
 
@@ -150,7 +172,7 @@ if(role === "teacher"){
 socket.emit("joinRoom", room);
 
 /* DRAW START */
-canvas.addEventListener("mousedown", (e) => {
+drawCanvas.addEventListener("mousedown", (e) => {
     if(role !== "teacher") return;
 
     const rect = canvas.getBoundingClientRect();
@@ -166,16 +188,16 @@ canvas.addEventListener("mousedown", (e) => {
     ctx.beginPath();
     ctx.moveTo(prevX, prevY);
 });
-canvas.addEventListener("mouseleave", () => {
+drawCanvas.addEventListener("mouseleave", () => {
     drawing = false;
 });
 /* DRAW END */
-canvas.addEventListener("mouseup", () => {
+drawCanvas.addEventListener("mouseup", () => {
     drawing = false;
 });
 
 /* DRAW MOVE */
-canvas.addEventListener("mousemove", (e) => {
+drawCanvas.addEventListener("mousemove", (e) => {
 
     if(!drawing || role !== "teacher") return;
 
@@ -203,22 +225,22 @@ canvas.addEventListener("mousemove", (e) => {
 /* 🔥 DRAW FUNCTION WITH ERASER */
 function drawLine(x1, y1, x2, y2, tool, color){
 
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
+    dctx.beginPath();
+    dctx.moveTo(x1, y1);
+    dctx.lineTo(x2, y2);
 
-    ctx.lineCap = "round";
+    dctx.lineCap = "round";
 
     if(tool === "eraser"){
-        ctx.globalCompositeOperation = "destination-out";
-        ctx.lineWidth = 20;
+        dctx.globalCompositeOperation = "destination-out";
+        dctx.lineWidth = 20;
     } else {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.strokeStyle = color || "black"; // ✅ USE COLOR
-        ctx.lineWidth = 2;
+        dctx.globalCompositeOperation = "source-over";
+        dctx.strokeStyle = color || "black";
+        dctx.lineWidth = 2;
     }
 
-    ctx.stroke();
+    dctx.stroke();
 }
 
 /* RECEIVE DRAW */
@@ -236,12 +258,12 @@ socket.on("loadBoard", (dataArray) => {
 function clearBoard(){
     if(role !== "teacher") return;
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
     socket.emit("clear", room);
 }
 
 socket.on("clear", () => {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
 });
 
 /* LEAVE */
@@ -340,7 +362,7 @@ function closePDF(){
     document.getElementById("pdfWindow").style.display = "none";
     document.getElementById("pdfTab").style.display = "none";
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
 }
 
 document.getElementById("pdfTab").onclick = function(){
