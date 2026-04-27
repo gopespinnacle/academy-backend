@@ -53,6 +53,7 @@ canvas {
 
 <!-- SOCKET.IO -->
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
 
@@ -263,74 +264,10 @@ container.style.left = "17%";
         img.style.width = "400px";
         container.appendChild(img);
     }
-    else if(data.type === "application/pdf"){
+    else if(data.fileUrl.endsWith(".pdf")){
 
-    const wrapper = document.createElement("div");
-    wrapper.style.position = "relative";
-    wrapper.style.width = "65vw";
-    wrapper.style.height = "75vh";
+    loadPDFToCanvas(data.fileUrl);
 
-    const iframe = document.createElement("iframe");
-    iframe.src = data.fileUrl;
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-
-    wrapper.appendChild(iframe);
-
-    // ✅ OVERLAY CANVAS (FIXED)
-    const overlayCanvas = document.createElement("canvas");
-
-    overlayCanvas.width = window.innerWidth * 0.65;
-    overlayCanvas.height = window.innerHeight * 0.75;
-
-    overlayCanvas.style.width = "100%";
-    overlayCanvas.style.height = "100%";
-
-    overlayCanvas.style.position = "absolute";
-    overlayCanvas.style.top = "0";
-    overlayCanvas.style.left = "0";
-    overlayCanvas.style.zIndex = "10";
-    overlayCanvas.style.cursor = "crosshair";
-
-    wrapper.appendChild(overlayCanvas);
-
-    // ✅ DRAW LOGIC
-    const octx = overlayCanvas.getContext("2d");
-
-    let drawingOverlay = false;
-
-    overlayCanvas.addEventListener("mousedown", () => {
-        drawingOverlay = true;
-    });
-
-    overlayCanvas.addEventListener("mouseup", () => {
-        drawingOverlay = false;
-    });
-
-    overlayCanvas.addEventListener("mousemove", (e) => {
-
-        if(!drawingOverlay) return;
-
-        const rect = overlayCanvas.getBoundingClientRect();
-
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        octx.fillStyle = currentColor;
-        octx.lineWidth = 2;
-octx.lineCap = "round";
-octx.strokeStyle = currentColor;
-
-octx.beginPath();
-octx.moveTo(prevX, prevY);
-octx.lineTo(x, y);
-octx.stroke();
-
-prevX = x;
-prevY = y;
-    });
-
-    container.appendChild(wrapper);
 }
     }
 // ✅ DRAW LAYER ABOVE PDF
@@ -340,7 +277,27 @@ socket.on("fileShare", (data) => {
     displayFile(data);
 
 });
+document.body.appendChild(container);
 
+async function loadPDFToCanvas(url){
+
+    const loadingTask = pdfjsLib.getDocument(url);
+    const pdf = await loadingTask.promise;
+
+    const page = await pdf.getPage(1);
+
+    const viewport = page.getViewport({ scale: 1.5 });
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    // 🔥 DRAW PDF INTO SAME CANVAS
+    await page.render({
+        canvasContext: ctx,
+        viewport: viewport
+    }).promise;
+
+}
 </script>
 
 </body>
