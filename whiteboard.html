@@ -78,6 +78,13 @@ let currentTool = "pen";
 
 function setTool(tool){
     currentTool = tool;
+
+    if(tool === "pen"){
+        canvas.style.cursor = "url('images/pen.png') 0 24, auto";
+    }
+    else if(tool === "eraser"){
+        canvas.style.cursor = "url('images/eraser.png') 10 10, auto";
+    }
 }
 
 /* ROLE */
