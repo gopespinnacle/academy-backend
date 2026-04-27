@@ -31,11 +31,9 @@ canvas {
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 <script>
-const socket = io("https://academy-backend-eatl.onrender.com", {
-    transports: ["websocket"]
-});
+const socket = io("https://academy-backend-eatl.onrender.com");
 
-// ROOM
+// ✅ SAME ROOM
 const params = new URLSearchParams(window.location.search);
 const room = params.get("room");
 
@@ -58,10 +56,10 @@ socket.on("draw", (data) => {
     ctx.lineWidth = data.tool === "eraser" ? 20 : 3;
     ctx.strokeStyle = data.tool === "eraser" ? "#ffffff" : "#000";
 
-    ctx.lineTo(data.x, data.y);
-    ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(data.x, data.y);
+    ctx.moveTo(data.x1, data.y1);
+    ctx.lineTo(data.x2, data.y2);
+    ctx.stroke();
 });
 
 // RECEIVE CLEAR

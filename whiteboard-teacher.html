@@ -38,11 +38,9 @@ canvas {
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 
 <script>
-const socket = io("https://academy-backend-eatl.onrender.com", {
-    transports: ["websocket"]
-});
+const socket = io("https://academy-backend-eatl.onrender.com");
 
-// ROOM
+// ✅ SAME ROOM FOR BOTH
 const params = new URLSearchParams(window.location.search);
 const room = params.get("room");
 
@@ -61,14 +59,19 @@ canvas.height = window.innerHeight - 50;
 
 let drawing = false;
 let tool = "pen";
+let lastX = 0;
+let lastY = 0;
 
 // START
-canvas.addEventListener("mousedown", () => drawing = true);
+canvas.addEventListener("mousedown", (e) => {
+    drawing = true;
+    lastX = e.offsetX;
+    lastY = e.offsetY;
+});
 
 // STOP
 canvas.addEventListener("mouseup", () => {
     drawing = false;
-    ctx.beginPath();
 });
 
 // DRAW
@@ -78,28 +81,33 @@ canvas.addEventListener("mousemove", (e) => {
     ctx.lineWidth = tool === "eraser" ? 20 : 3;
     ctx.strokeStyle = tool === "eraser" ? "#ffffff" : "#000";
 
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
     ctx.lineTo(e.offsetX, e.offsetY);
     ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(e.offsetX, e.offsetY);
 
     socket.emit("draw", {
         room,
-        x: e.offsetX,
-        y: e.offsetY,
+        x1: lastX,
+        y1: lastY,
+        x2: e.offsetX,
+        y2: e.offsetY,
         tool
     });
+
+    lastX = e.offsetX;
+    lastY = e.offsetY;
 });
 
-// RECEIVE (if multiple teachers)
+// RECEIVE (optional multi-teacher)
 socket.on("draw", (data) => {
     ctx.lineWidth = data.tool === "eraser" ? 20 : 3;
     ctx.strokeStyle = data.tool === "eraser" ? "#ffffff" : "#000";
 
-    ctx.lineTo(data.x, data.y);
-    ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(data.x, data.y);
+    ctx.moveTo(data.x1, data.y1);
+    ctx.lineTo(data.x2, data.y2);
+    ctx.stroke();
 });
 
 function setTool(t){
