@@ -69,7 +69,13 @@ app.get("/", (req, res) => {
 /* ================= Close TEST ================= */
 
 app.use(express.json());
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static("uploads", {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith(".pdf")) {
+            res.setHeader("Content-Type", "application/pdf");
+        }
+    }
+}));
 
 /* ================= ROUTES ================= */
 
@@ -86,6 +92,11 @@ app.use("/api/student", studentRoutes);
 
 app.use("/api", admissionRoutes);
 app.post("/upload-file", uploadFile.single("file"), (req, res) => {
+
+    const filePath = path.join(__dirname, "uploads", req.file.filename);
+
+    // 🔥 FORCE correct content-type
+    res.setHeader("Content-Type", req.file.mimetype);
 
     const fileUrl = `https://academy-backend-eatl.onrender.com/uploads/${req.file.filename}`;
 
