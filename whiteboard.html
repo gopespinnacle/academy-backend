@@ -2,15 +2,31 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Student Whiteboard</title>
+<title>Live Whiteboard</title>
 
 <style>
-body { margin:0; font-family:sans-serif; }
+body {
+    margin:0;
+    font-family:sans-serif;
+    background:#0f172a;
+}
 
 .toolbar {
-    background:#0f172a;
+    background:#1e293b;
     padding:10px;
-    color:white;
+    display:flex;
+    gap:10px;
+}
+
+button {
+    padding:8px 12px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.teacher-tools {
+    display:none;
 }
 
 canvas {
@@ -23,49 +39,124 @@ canvas {
 <body>
 
 <div class="toolbar">
-    Live Class (View Only)
+    <div class="teacher-tools" id="teacherTools">
+        <button onclick="clearBoard()">🧹 Clear</button>
+    </div>
+
+    <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 
 <canvas id="board"></canvas>
 
-<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<!-- SOCKET.IO -->
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <script>
-const socket = io("https://academy-backend-eatl.onrender.com");
 
-// ✅ SAME ROOM
 const params = new URLSearchParams(window.location.search);
+
 const room = params.get("room");
+const role = params.get("role");
 
-if(!room){
-    alert("Room missing ❌");
-}
+const socket = io("https://academy-backend-eatl.onrender.com", {
+    transports: ["websocket"]
+});
 
-socket.emit("joinRoom", room);
+/* ================= CANVAS ================= */
 
-// CANVAS
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight - 50;
 
-// RECEIVE DRAW
-socket.on("draw", (data) => {
+let drawing = false;
 
-    ctx.lineWidth = data.tool === "eraser" ? 20 : 3;
-    ctx.strokeStyle = data.tool === "eraser" ? "#ffffff" : "#000";
+/* ================= ROLE ================= */
 
-    ctx.beginPath();
-    ctx.moveTo(data.x1, data.y1);
-    ctx.lineTo(data.x2, data.y2);
-    ctx.stroke();
+if(role === "teacher"){
+    document.getElementById("teacherTools").style.display = "block";
+}
+
+/* ================= SOCKET JOIN ================= */
+
+socket.emit("joinRoom", room);
+
+/* ================= DRAW ================= */
+
+canvas.addEventListener("mousedown", (e) => {
+
+    if(role !== "teacher") return;
+
+    drawing = true;
+    draw(e);
 });
 
-// RECEIVE CLEAR
+canvas.addEventListener("mouseup", () => {
+    drawing = false;
+    ctx.beginPath();
+});
+
+canvas.addEventListener("mousemove", draw);
+
+function draw(e){
+
+    if(!drawing || role !== "teacher") return;
+
+    const x = e.clientX;
+    const y = e.clientY;
+
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "black";
+
+    ctx.lineTo(x,y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x,y);
+
+    socket.emit("draw", {
+        room,
+        x,
+        y
+    });
+}
+
+/* ================= RECEIVE DRAW ================= */
+
+socket.on("draw", (data) => {
+
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "black";
+
+    ctx.lineTo(data.x, data.y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(data.x, data.y);
+});
+
+/* ================= CLEAR ================= */
+
+function clearBoard(){
+
+    if(role !== "teacher") return;
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    socket.emit("clear", room);
+}
+
 socket.on("clear", () => {
     ctx.clearRect(0,0,canvas.width,canvas.height);
 });
+
+/* ================= LEAVE ================= */
+
+function leaveClass(){
+    window.close();
+}
+
 </script>
 
 </body>

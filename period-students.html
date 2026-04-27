@@ -408,7 +408,7 @@ let roomName = "academy-" + className + "-" + day + "-" + startTime;
 
 roomName = roomName.replace(/\s+/g, "").replace(/[^a-zA-Z0-9\-]/g,"");
 
-window.location.href = `whiteboard-teacher.html?room=${roomName}&className=${className}&subject=${subject}`;
+window.location.href = `whiteboard.html?room=${roomName}&role=teacher`;
 attendanceMarked = true;
 }
 async function endClass(){

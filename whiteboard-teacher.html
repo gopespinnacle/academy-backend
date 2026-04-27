@@ -47,8 +47,8 @@ const room = params.get("room");
 if(!room){
     alert("Room missing ❌");
 }
-
 socket.emit("joinRoom", room);
+socket.emit("teacherJoined", room);
 
 // CANVAS
 const canvas = document.getElementById("board");
