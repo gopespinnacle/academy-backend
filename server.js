@@ -252,6 +252,10 @@ socket.on("teacherJoined", (room) => {
 socket.on("fileShare", (data) => {
     socket.to(data.room).emit("fileShare", data);
 });
+
+socket.on("loadPDF", (data) => {
+    socket.to(data.room).emit("loadPDF", data);
+});
     /* CLEAR */
     socket.on("clear", (room) => {
 

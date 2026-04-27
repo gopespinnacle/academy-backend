@@ -218,15 +218,13 @@ document.getElementById("fileInput").addEventListener("change", async (e) => {
     const data = await res.json();
 console.log("UPLOAD RESPONSE:", data);
     // 🔥 send to students
-    socket.emit("fileShare", {
-        room,
-        fileUrl: data.url,
-        type: file.type
-    });
-displayFile({
-    fileUrl: data.url,
-    type: file.type
+    socket.emit("loadPDF", {
+    room,
+    url: data.url
 });
+loadPDFToCanvas(data.url);
+
+
 
 });
 
@@ -275,7 +273,10 @@ container.style.left = "17%";
 // ================= RECEIVE =================
 socket.on("fileShare", (data) => {
     displayFile(data);
+});
 
+socket.on("loadPDF", (data) => {
+    loadPDFToCanvas(data.url);
 });
 document.body.appendChild(container);
 
