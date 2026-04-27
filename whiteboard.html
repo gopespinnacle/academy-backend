@@ -48,7 +48,7 @@ canvas {
 
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
-
+<input type="file" id="fileInput">
 <canvas id="board"></canvas>
 
 <!-- SOCKET.IO -->
@@ -199,6 +199,68 @@ socket.on("clear", () => {
 function leaveClass(){
     window.close();
 }
+
+// ================= FILE UPLOAD =================
+document.getElementById("fileInput").addEventListener("change", async (e) => {
+
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("https://academy-backend-eatl.onrender.com/upload-file", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+
+    // 🔥 send to students
+    socket.emit("fileShare", {
+        room,
+        fileUrl: data.url,
+        type: file.type
+    });
+
+});
+
+// ================= DISPLAY FILE =================
+socket.on("fileShare", (data) => {
+
+    const container = document.createElement("div");
+
+    container.style.position = "absolute";
+    container.style.top = "60px";
+    container.style.left = "20px";
+    container.style.background = "white";
+    container.style.padding = "10px";
+    container.style.zIndex = "999";
+
+    if(data.type.startsWith("image")){
+        const img = document.createElement("img");
+        img.src = data.fileUrl;
+        img.style.width = "400px";
+        container.appendChild(img);
+    }
+    else if(data.type === "application/pdf"){
+        const iframe = document.createElement("iframe");
+        iframe.src = data.fileUrl;
+        iframe.style.width = "500px";
+        iframe.style.height = "400px";
+        container.appendChild(iframe);
+    }
+    else{
+        const link = document.createElement("a");
+        link.href = data.fileUrl;
+        link.innerText = "Download File";
+        link.target = "_blank";
+        container.appendChild(link);
+    }
+
+    document.body.appendChild(container);
+
+});
 
 </script>
 

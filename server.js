@@ -2,6 +2,7 @@ require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const Recording = require("./models/Recording");
 const multer = require("multer");
+const uploadFile = multer({ dest: "uploads/" });
 const path = require("path");
 const fs = require("fs");
 
@@ -71,6 +72,15 @@ app.use("/api/founder", founderTimeClashRoutes);
 app.use("/api/student", studentRoutes);
 
 app.use("/api", admissionRoutes);
+app.post("/upload-file", uploadFile.single("file"), (req, res) => {
+
+    const fileUrl = `https://academy-backend-eatl.onrender.com/uploads/${req.file.filename}`;
+
+    res.json({
+        url: fileUrl
+    });
+
+});
 
 app.get("/test-whatsapp", async (req, res) => {
   const axios = require("axios");
@@ -211,7 +221,9 @@ socket.on("teacherJoined", (room) => {
 
     socket.to(data.room).emit("draw", data);
 });
-
+socket.on("fileShare", (data) => {
+    socket.to(data.room).emit("fileShare", data);
+});
     /* CLEAR */
     socket.on("clear", (room) => {
 
