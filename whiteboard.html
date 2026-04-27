@@ -92,11 +92,19 @@ socket.emit("joinRoom", room);
 canvas.addEventListener("mousedown", (e) => {
     if(role !== "teacher") return;
 
-    drawing = true;
-    prevX = e.clientX;
-    prevY = e.clientY;
-});
+    const rect = canvas.getBoundingClientRect();
 
+    drawing = true;
+
+    prevX = e.clientX - rect.left;
+    prevY = e.clientY - rect.top;
+
+    // ✅ VERY IMPORTANT (reset path)
+    ctx.beginPath();
+});
+canvas.addEventListener("mouseleave", () => {
+    drawing = false;
+});
 /* DRAW END */
 canvas.addEventListener("mouseup", () => {
     drawing = false;
