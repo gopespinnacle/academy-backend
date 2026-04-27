@@ -64,6 +64,9 @@ body {
 <body>
 
 <div class="toolbar">
+    <button id="joinBtn" disabled style="background:gray;color:white;">
+Waiting for Teacher...
+</button>
 <button class="pen" onclick="setTool('pen')">✏️ Pen</button>
 <button class="eraser" onclick="setTool('eraser')">🧽 Eraser</button>
 <button class="clear" onclick="clearBoard()">🗑 Clear</button>
@@ -105,6 +108,25 @@ let currentPage = 1;
     let isBoardLocked = false;
 const socket = io("https://academy-backend-eatl.onrender.com");
 
+const joinBtn = document.getElementById("joinBtn");
+
+// initially disabled
+joinBtn.disabled = true;
+joinBtn.innerText = "Waiting for Teacher...";
+
+// listen for teacher signal
+socket.on("teacherIsLive", () => {
+
+    console.log("Teacher is live");
+
+    joinBtn.disabled = false;
+    joinBtn.innerText = "Join Class";
+
+    // 🔔 sound notification
+    const audio = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
+    audio.play();
+});
+
 // USER INFO
 const userId = localStorage.getItem("studentId");
 const studentName = localStorage.getItem("studentName");
@@ -137,9 +159,11 @@ document.addEventListener("DOMContentLoaded", function(){
         }
     };
 
-    new JitsiMeetExternalAPI(domain, options);
+    
 });
 // JOIN ROOM
+// JOIN ROOM
+const room = new URLSearchParams(window.location.search).get("room") || "DefaultRoom";
 socket.emit("joinRoom", room);
 const canvas = document.getElementById("board");
 const pdfUpload = document.getElementById("pdfUpload");
@@ -526,6 +550,37 @@ function toggleVideo(){
         btn.innerText = "🔙 Minimize";
     }
 }
+
+function startMeeting(){
+
+    const room = new URLSearchParams(window.location.search).get("room") || "DefaultRoom";
+    const cleanRoom = room.replace(/[^a-zA-Z0-9]/g, "");
+
+    const domain = "meet.jit.si";
+
+    const options = {
+        roomName: cleanRoom,
+        width: "100%",
+        height: "100%",
+        parentNode: document.getElementById("videoBox"),
+
+        userInfo: {
+            displayName: localStorage.getItem("studentName") || "Student"
+        },
+
+        configOverwrite: {
+            prejoinPageEnabled: false,
+            startWithAudioMuted: false,
+            startWithVideoMuted: false
+        }
+    };
+
+    new JitsiMeetExternalAPI(domain, options);
+}
+
+joinBtn.onclick = function(){
+    startMeeting();
+};
 </script>
 
 </body>

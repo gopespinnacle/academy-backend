@@ -157,7 +157,16 @@ if(boardLock[room]){
 
         // 2. Fallback to DB
         });
+/* ================= TEACHER JOIN ================= */
 
+socket.on("teacherJoined", (room) => {
+
+    console.log("🔥 Teacher joined room:", room);
+
+    // send signal to all students in same room
+    io.to(room).emit("teacherIsLive");
+
+});
     /* DRAW */
     socket.on("draw", (data) => {
         socket.to(data.room).emit("draw", data);
