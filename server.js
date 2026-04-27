@@ -31,16 +31,19 @@ require("./cron/attendanceCron");
 require("./cron/attendanceAutoExit");
 const app = express();
 app.use(cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    origin: ["https://www.gopespinnacle.com"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
 }));
 const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "*"
+        origin: ["https://www.gopespinnacle.com"],
+        methods: ["GET", "POST"],
+        credentials: true
     },
-    transports: ["websocket", "polling"]
+    transports: ["websocket"] // 🔥 IMPORTANT: remove polling
 });
 
 /* ================= TEST ================= */
