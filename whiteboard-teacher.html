@@ -138,12 +138,15 @@ document.addEventListener("DOMContentLoaded", function(){
     },
 
     configOverwrite: {
-        prejoinPageEnabled: false,
-        startWithAudioMuted: false,
-        startWithVideoMuted: false,
-        startWithVideoMuted: false,
-        enableWelcomePage: false
-    },
+    prejoinPageEnabled: false,
+    startWithAudioMuted: false,
+    startWithVideoMuted: false,
+    enableWelcomePage: false,
+
+    // 🔥 IMPORTANT FIX
+    enableLobby: false,
+    disableModeratorIndicator: true
+},
 
     interfaceConfigOverwrite: {
         DISABLE_JOIN_LEAVE_NOTIFICATIONS: true
