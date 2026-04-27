@@ -150,9 +150,10 @@ async function joinClass(){
         console.log("Attendance failed");
     }
 
-    const roomName = `${className}-${subject}-${day}-${startTime}`
-        .replace(/\s+/g, "")
-        .replace(/:/g, "");
+    let roomName = `academy-${className}-${day}-${startTime}`;
+
+// ✅ ADD THIS LINE
+roomName = roomName.replace(/\s+/g, "").replace(/[^a-zA-Z0-9\-]/g,"");
 
     window.open(`whiteboard.html?room=${roomName}&role=student`, "_blank");
 }
