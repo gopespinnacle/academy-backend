@@ -259,6 +259,17 @@ if(role === "teacher"){
 /* JOIN */
 socket.emit("joinRoom", room);
 
+// 🔥 LOAD HISTORY AFTER REFRESH
+window.addEventListener("load", () => {
+
+    let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
+
+    history.forEach(d => {
+        drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
+    });
+
+});
+
 /* DRAW START */
 drawCanvas.addEventListener("mousedown", (e) => {
     if(role !== "teacher") return;
@@ -334,6 +345,12 @@ function drawLine(x1, y1, x2, y2, tool, color){
     }
 
     activeCtx.stroke();
+    // 🔥 SAVE TO LOCAL STORAGE
+let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
+
+history.push({ x1, y1, x2, y2, tool, color });
+
+localStorage.setItem("boardHistory", JSON.stringify(history));
 }
 
 /* RECEIVE DRAW */
@@ -357,7 +374,9 @@ function clearBoard(){
     // 🔥 ADD THIS (main whiteboard clear)
     mainCtx.clearRect(0,0,mainBoard.width,mainBoard.height);
 
+    localStorage.removeItem("boardHistory");
     socket.emit("clear", room);
+
 }
 socket.on("clear", () => {
     dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
