@@ -143,7 +143,16 @@ const dctx = drawCanvas.getContext("2d");
 // 🔥 ADD HERE (exactly here)
 const mainBoard = document.getElementById("mainBoard");
 const mainCtx = mainBoard.getContext("2d");
-
+// 🔥 ADD THIS (important)
+mainBoard.addEventListener("mousedown", (e) => {
+    drawCanvas.dispatchEvent(new MouseEvent("mousedown", e));
+});
+mainBoard.addEventListener("mousemove", (e) => {
+    drawCanvas.dispatchEvent(new MouseEvent("mousemove", e));
+});
+mainBoard.addEventListener("mouseup", (e) => {
+    drawCanvas.dispatchEvent(new MouseEvent("mouseup", e));
+});
 // full screen size
 mainBoard.width = window.innerWidth;
 mainBoard.height = window.innerHeight - 60;
