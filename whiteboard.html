@@ -143,6 +143,59 @@ const dctx = drawCanvas.getContext("2d");
 // 🔥 ADD HERE (exactly here)
 const mainBoard = document.getElementById("mainBoard");
 const mainCtx = mainBoard.getContext("2d");
+// ✅ DRAW ONLY ON MAIN BOARD (NEW ADDITION)
+
+let mainDrawing = false;
+
+mainBoard.addEventListener("mousedown", (e) => {
+    if(role !== "teacher") return;
+
+    mainDrawing = true;
+
+    const rect = mainBoard.getBoundingClientRect();
+
+    prevX = e.clientX - rect.left;
+    prevY = e.clientY - rect.top;
+});
+
+mainBoard.addEventListener("mouseup", () => {
+    mainDrawing = false;
+});
+
+mainBoard.addEventListener("mouseleave", () => {
+    mainDrawing = false;
+});
+
+mainBoard.addEventListener("mousemove", (e) => {
+
+    if(!mainDrawing || role !== "teacher") return;
+
+    const rect = mainBoard.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    // 🔥 draw on mainBoard ONLY
+    mainCtx.beginPath();
+    mainCtx.moveTo(prevX, prevY);
+    mainCtx.lineTo(x, y);
+
+    mainCtx.lineCap = "round";
+
+    if(currentTool === "eraser"){
+        mainCtx.globalCompositeOperation = "destination-out";
+        mainCtx.lineWidth = 20;
+    } else {
+        mainCtx.globalCompositeOperation = "source-over";
+        mainCtx.strokeStyle = currentColor;
+        mainCtx.lineWidth = 2;
+    }
+
+    mainCtx.stroke();
+
+    prevX = x;
+    prevY = y;
+});
 // 🔥 ADD THIS (important)
 mainBoard.addEventListener("mousedown", (e) => {
     drawCanvas.dispatchEvent(new MouseEvent("mousedown", e));
