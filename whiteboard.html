@@ -351,14 +351,18 @@ socket.on("loadBoard", (dataArray) => {
 function clearBoard(){
     if(role !== "teacher") return;
 
+    // clear PDF drawing
     dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+
+    // 🔥 ADD THIS (main whiteboard clear)
+    mainCtx.clearRect(0,0,mainBoard.width,mainBoard.height);
+
     socket.emit("clear", room);
 }
-
 socket.on("clear", () => {
     dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+    mainCtx.clearRect(0,0,mainBoard.width,mainBoard.height);
 });
-
 /* LEAVE */
 function leaveClass(){
     window.close();
