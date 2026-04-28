@@ -55,7 +55,7 @@ canvas {
     <div class="teacher-tools" id="teacherTools">
         <button onclick="clearBoard()">🧹 Clear</button>
     </div>
-
+<button onclick="setTool('eraseDraw')">🧽 Erase</button>
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 <input type="file" id="fileInput">
@@ -154,18 +154,24 @@ document.getElementById("colorPicker").addEventListener("input", (e) => {
 });
 
 function setTool(tool){
-    currentTool = tool;
 
     if(tool === "pen"){
+        currentTool = "pen";
         canvas.style.cursor = "url('https://www.gopespinnacle.com/images/pen.png') 2 30, auto";
-        drawCanvas.style.pointerEvents = "auto";   // draw ON
+        drawCanvas.style.pointerEvents = "auto";
     }
-    else if(tool === "eraser"){
+
+    else if(tool === "eraseDraw"){
+        // 👉 REAL ERASER
+        currentTool = "eraser";
         canvas.style.cursor = "url('https://www.gopespinnacle.com/images/eraser.png') 10 10, auto";
-        drawCanvas.style.pointerEvents = "auto";   // draw ON
+        drawCanvas.style.pointerEvents = "auto";
     }
-    else{
-        drawCanvas.style.pointerEvents = "none";   // scroll ON
+
+    else if(tool === "eraser"){
+        // 👉 BACK TO DOC (SCROLL MODE)
+        currentTool = "pen"; // (important: avoid erase mode)
+        drawCanvas.style.pointerEvents = "none";
     }
 }
 
