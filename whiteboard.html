@@ -179,8 +179,10 @@ mainBoard.addEventListener("mousemove", (e) => {
     const y = e.clientY - rect.top;
 
     // 🔥 draw on mainBoard ONLY
-    mainCtx.lineTo(x, y);
-    mainCtx.stroke();
+    mainCtx.beginPath();        // ✅ reset path each move
+mainCtx.moveTo(prevX, prevY);
+mainCtx.lineTo(x, y);
+mainCtx.stroke();
 
     mainCtx.lineCap = "round";
     mainCtx.lineWidth = 3; 
