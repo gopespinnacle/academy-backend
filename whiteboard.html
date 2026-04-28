@@ -183,7 +183,19 @@ mainBoard.addEventListener("mousemove", (e) => {
 mainCtx.moveTo(prevX, prevY);
 mainCtx.lineTo(x, y);
 mainCtx.stroke();
+// 🔥 SAVE MAIN BOARD DRAWING ALSO
+let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
 
+history.push({
+    x1: prevX,
+    y1: prevY,
+    x2: x,
+    y2: y,
+    tool: currentTool,
+    color: currentColor
+});
+
+localStorage.setItem("boardHistory", JSON.stringify(history));
     mainCtx.lineCap = "round";
     mainCtx.lineWidth = 3; 
 
@@ -262,14 +274,17 @@ socket.emit("joinRoom", room);
 // 🔥 LOAD HISTORY AFTER REFRESH
 window.addEventListener("load", () => {
 
+    window.isLoadingHistory = true;   // 🔥 ADD THIS
+
     let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
 
     history.forEach(d => {
         drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
     });
 
-});
+    window.isLoadingHistory = false;  // 🔥 ADD THIS
 
+});
 /* DRAW START */
 drawCanvas.addEventListener("mousedown", (e) => {
     if(role !== "teacher") return;
@@ -345,12 +360,12 @@ function drawLine(x1, y1, x2, y2, tool, color){
     }
 
     activeCtx.stroke();
-    // 🔥 SAVE TO LOCAL STORAGE
-let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
+    if(!window.isLoadingHistory){
+    let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
 
-history.push({ x1, y1, x2, y2, tool, color });
+    history.push({ x1, y1, x2, y2, tool, color });
 
-localStorage.setItem("boardHistory", JSON.stringify(history));
+    localStorage.setItem("boardHistory", JSON.stringify(history));
 }
 
 /* RECEIVE DRAW */
