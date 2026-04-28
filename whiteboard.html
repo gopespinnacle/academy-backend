@@ -154,11 +154,18 @@ mainBoard.addEventListener("mousedown", (e) => {
 
     const rect = mainBoard.getBoundingClientRect();
 
-    prevX = e.clientX - rect.left;
-    prevY = e.clientY - rect.top;
+const scaleX = mainBoard.width / rect.width;
+const scaleY = mainBoard.height / rect.height;
+
+const x = (e.clientX - rect.left) * scaleX;
+const y = (e.clientY - rect.top) * scaleY;
 
     mainCtx.beginPath();           // ✅ ADD THIS
-mainCtx.moveTo(prevX, prevY);  // ✅ ADD THIS
+prevX = x;
+prevY = y;
+
+mainCtx.beginPath();
+mainCtx.moveTo(x, y); // ✅ ADD THIS
 });
 
 mainBoard.addEventListener("mouseup", () => {
@@ -175,14 +182,18 @@ mainBoard.addEventListener("mousemove", (e) => {
 
     const rect = mainBoard.getBoundingClientRect();
 
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    
 
+const scaleX = mainBoard.width / rect.width;
+const scaleY = mainBoard.height / rect.height;
+
+const x = (e.clientX - rect.left) * scaleX;
+const y = (e.clientY - rect.top) * scaleY;
     // 🔥 draw on mainBoard ONLY
     mainCtx.beginPath();        // ✅ reset path each move
 mainCtx.moveTo(prevX, prevY);
 mainCtx.lineTo(x, y);
-mainCtx.stroke();
+
 // 🔥 SAVE MAIN BOARD DRAWING ALSO
 let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
 
