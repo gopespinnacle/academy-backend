@@ -349,15 +349,10 @@ const y = (e.clientY - rect.top) * scaleY;
 /* 🔥 DRAW FUNCTION WITH ERASER */
 function drawLine(x1, y1, x2, y2, tool, color){
 
-    // 🔥 choose where to draw
     const activeCtx =
         document.getElementById("pdfWindow").style.display === "block"
-        ? dctx      // PDF mode
-        : mainCtx;  // Whiteboard mode
-
-    activeCtx.beginPath();
-    activeCtx.moveTo(x1, y1);
-    activeCtx.lineTo(x2, y2);
+        ? dctx
+        : mainCtx;
 
     activeCtx.lineCap = "round";
 
@@ -370,6 +365,10 @@ function drawLine(x1, y1, x2, y2, tool, color){
         activeCtx.lineWidth = 2;
     }
 
+    // 🔥 KEY FIX (smooth continuous drawing)
+    activeCtx.beginPath();
+    activeCtx.moveTo(x1, y1);
+    activeCtx.lineTo(x2, y2);
     activeCtx.stroke();
 }
     
