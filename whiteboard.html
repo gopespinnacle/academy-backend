@@ -156,6 +156,9 @@ mainBoard.addEventListener("mousedown", (e) => {
 
     prevX = e.clientX - rect.left;
     prevY = e.clientY - rect.top;
+
+    mainCtx.beginPath();           // ✅ ADD THIS
+mainCtx.moveTo(prevX, prevY);  // ✅ ADD THIS
 });
 
 mainBoard.addEventListener("mouseup", () => {
@@ -176,11 +179,11 @@ mainBoard.addEventListener("mousemove", (e) => {
     const y = e.clientY - rect.top;
 
     // 🔥 draw on mainBoard ONLY
-    mainCtx.beginPath();
-    mainCtx.moveTo(prevX, prevY);
     mainCtx.lineTo(x, y);
+    mainCtx.stroke();
 
     mainCtx.lineCap = "round";
+    mainCtx.lineWidth = 3; 
 
     if(currentTool === "eraser"){
         mainCtx.globalCompositeOperation = "destination-out";
@@ -197,15 +200,7 @@ mainBoard.addEventListener("mousemove", (e) => {
     prevY = y;
 });
 // 🔥 ADD THIS (important)
-mainBoard.addEventListener("mousedown", (e) => {
-    drawCanvas.dispatchEvent(new MouseEvent("mousedown", e));
-});
-mainBoard.addEventListener("mousemove", (e) => {
-    drawCanvas.dispatchEvent(new MouseEvent("mousemove", e));
-});
-mainBoard.addEventListener("mouseup", (e) => {
-    drawCanvas.dispatchEvent(new MouseEvent("mouseup", e));
-});
+
 // full screen size
 mainBoard.width = window.innerWidth;
 mainBoard.height = window.innerHeight - 60;
