@@ -73,6 +73,15 @@ canvas {
 ">
     📄 PDF
 </div>
+<canvas id="mainBoard" style="
+    position:absolute;
+    top:60px;
+    left:0;
+    width:100%;
+    height:calc(100% - 60px);
+    background:white;
+    z-index:1;
+"></canvas>
 <div id="pdfWindow" style="
     position:absolute;
     top:60px;
@@ -130,6 +139,14 @@ const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
 const drawCanvas = document.getElementById("drawLayer");
 const dctx = drawCanvas.getContext("2d");
+
+// 🔥 ADD HERE (exactly here)
+const mainBoard = document.getElementById("mainBoard");
+const mainCtx = mainBoard.getContext("2d");
+
+// full screen size
+mainBoard.width = window.innerWidth;
+mainBoard.height = window.innerHeight - 60;
 
 // match size
 
@@ -197,7 +214,23 @@ prevY = (e.clientY - rect.top) * scaleY;
 
 drawing = true;
 
-dctx.beginPath();
+const activeCtx = document.getElementById("pdfWindow").style.display === "block" ? dctx : mainCtx;
+
+activeCtx.beginPath();
+activeCtx.moveTo(x1, y1);
+activeCtx.lineTo(x2, y2);
+activeCtx.lineCap = "round";
+
+if(tool === "eraser"){
+    activeCtx.globalCompositeOperation = "destination-out";
+    activeCtx.lineWidth = 20;
+} else {
+    activeCtx.globalCompositeOperation = "source-over";
+    activeCtx.strokeStyle = color || "black";
+    activeCtx.lineWidth = 2;
+}
+
+activeCtx.stroke();
 dctx.moveTo(prevX, prevY);
 });
 drawCanvas.addEventListener("mouseleave", () => {
