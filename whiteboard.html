@@ -49,6 +49,11 @@ canvas {
 <body>
 
 <div class="toolbar">
+    <select onchange="changeCanvasType(this.value)">
+    <option value="white">White Canvas</option>
+    <option value="four">Four Line Canvas</option>
+    <option value="one">One Line Canvas</option>
+</select>
     <button onclick="setTool('pen')">✏️ Pen</button>
 <input type="color" id="colorPicker" value="#000000">
 <button onclick="setTool('eraser')">Back to DOC</button>
@@ -220,7 +225,12 @@ localStorage.setItem("boardHistory", JSON.stringify(history));
     }
 
     mainCtx.stroke();
+mainCtx.stroke();
 
+// 🔥 redraw background after drawing
+const selected = document.querySelector("select").value;
+if(selected === "four") drawFourLines();
+if(selected === "one") drawOneLines();
     prevX = x;
     prevY = y;
 });
@@ -508,6 +518,74 @@ document.getElementById("pdfTab").onclick = function(){
     document.getElementById("pdfTab").style.display = "none";
 };
 
+function changeCanvasType(type){
+
+    // clear existing board
+    mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
+
+    if(type === "white"){
+        mainBoard.style.background = "white";
+    }
+
+    else if(type === "four"){
+        drawFourLines();
+    }
+
+    else if(type === "one"){
+        drawOneLines();
+    }
+}
+
+function drawFourLines(){
+
+    mainBoard.style.background = "white";
+
+    const gap = 60;  // space between each set
+
+    for(let y = 0; y < mainBoard.height; y += gap){
+
+        // top thin line
+        mainCtx.beginPath();
+        mainCtx.moveTo(0, y);
+        mainCtx.lineTo(mainBoard.width, y);
+        mainCtx.strokeStyle = "#ccc";
+        mainCtx.lineWidth = 1;
+        mainCtx.stroke();
+
+        // middle thick line
+        mainCtx.beginPath();
+        mainCtx.moveTo(0, y + 20);
+        mainCtx.lineTo(mainBoard.width, y + 20);
+        mainCtx.strokeStyle = "#000";
+        mainCtx.lineWidth = 1.5;
+        mainCtx.stroke();
+
+        // bottom thin line
+        mainCtx.beginPath();
+        mainCtx.moveTo(0, y + 40);
+        mainCtx.lineTo(mainBoard.width, y + 40);
+        mainCtx.strokeStyle = "#ccc";
+        mainCtx.lineWidth = 1;
+        mainCtx.stroke();
+    }
+}
+
+function drawOneLines(){
+
+    mainBoard.style.background = "white";
+
+    const gap = 40;
+
+    for(let y = 0; y < mainBoard.height; y += gap){
+
+        mainCtx.beginPath();
+        mainCtx.moveTo(0, y);
+        mainCtx.lineTo(mainBoard.width, y);
+        mainCtx.strokeStyle = "#888";
+        mainCtx.lineWidth = 1;
+        mainCtx.stroke();
+    }
+}
 </script>
 
 </body>
