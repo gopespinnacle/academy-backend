@@ -206,41 +206,18 @@ drawCanvas.addEventListener("mousedown", (e) => {
 
     const rect = drawCanvas.getBoundingClientRect();
 
-const scaleX = drawCanvas.width / rect.width;
-const scaleY = drawCanvas.height / rect.height;
+    const scaleX = drawCanvas.width / rect.width;
+    const scaleY = drawCanvas.height / rect.height;
 
-prevX = (e.clientX - rect.left) * scaleX;
-prevY = (e.clientY - rect.top) * scaleY;
+    prevX = (e.clientX - rect.left) * scaleX;
+    prevY = (e.clientY - rect.top) * scaleY;
 
-drawing = true;
+    drawing = true;
 
-const activeCtx = document.getElementById("pdfWindow").style.display === "block" ? dctx : mainCtx;
-
-activeCtx.beginPath();
-activeCtx.moveTo(x1, y1);
-activeCtx.lineTo(x2, y2);
-activeCtx.lineCap = "round";
-
-if(tool === "eraser"){
-    activeCtx.globalCompositeOperation = "destination-out";
-    activeCtx.lineWidth = 20;
-} else {
-    activeCtx.globalCompositeOperation = "source-over";
-    activeCtx.strokeStyle = color || "black";
-    activeCtx.lineWidth = 2;
-}
-
-activeCtx.stroke();
-dctx.moveTo(prevX, prevY);
+    // ✅ ONLY start path (no drawing here)
+    dctx.beginPath();
+    dctx.moveTo(prevX, prevY);
 });
-drawCanvas.addEventListener("mouseleave", () => {
-    drawing = false;
-});
-/* DRAW END */
-drawCanvas.addEventListener("mouseup", () => {
-    drawing = false;
-});
-
 /* DRAW MOVE */
 drawCanvas.addEventListener("mousemove", (e) => {
 
@@ -273,22 +250,28 @@ const y = (e.clientY - rect.top) * scaleY;
 /* 🔥 DRAW FUNCTION WITH ERASER */
 function drawLine(x1, y1, x2, y2, tool, color){
 
-    dctx.beginPath();
-    dctx.moveTo(x1, y1);
-    dctx.lineTo(x2, y2);
+    // 🔥 choose where to draw
+    const activeCtx =
+        document.getElementById("pdfWindow").style.display === "block"
+        ? dctx      // PDF mode
+        : mainCtx;  // Whiteboard mode
 
-    dctx.lineCap = "round";
+    activeCtx.beginPath();
+    activeCtx.moveTo(x1, y1);
+    activeCtx.lineTo(x2, y2);
+
+    activeCtx.lineCap = "round";
 
     if(tool === "eraser"){
-        dctx.globalCompositeOperation = "destination-out";
-        dctx.lineWidth = 20;
+        activeCtx.globalCompositeOperation = "destination-out";
+        activeCtx.lineWidth = 20;
     } else {
-        dctx.globalCompositeOperation = "source-over";
-        dctx.strokeStyle = color || "black";
-        dctx.lineWidth = 2;
+        activeCtx.globalCompositeOperation = "source-over";
+        activeCtx.strokeStyle = color || "black";
+        activeCtx.lineWidth = 2;
     }
 
-    dctx.stroke();
+    activeCtx.stroke();
 }
 
 /* RECEIVE DRAW */
