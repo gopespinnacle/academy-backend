@@ -231,6 +231,14 @@ localStorage.setItem(key, JSON.stringify(history));
     }
 
     mainCtx.stroke();
+
+    // 🔥 redraw background after erasing
+if(currentTool === "eraser"){
+    const type = localStorage.getItem("canvasType");
+
+    if(type === "four") drawFourLines();
+    else if(type === "one") drawOneLines();
+}
 // 🔥 redraw background after drawing
     prevX = x;
     prevY = y;
@@ -397,15 +405,19 @@ socket.on("loadBoard", (dataArray) => {
 function clearBoard(){
     if(role !== "teacher") return;
 
-    // clear PDF drawing
-    dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
-
-    // 🔥 ADD THIS (main whiteboard clear)
+    // clear drawing
     mainCtx.clearRect(0,0,mainBoard.width,mainBoard.height);
 
+    // clear only current canvas history
     localStorage.removeItem(getHistoryKey());
-    socket.emit("clear", room);
 
+    // 🔥 redraw background lines
+    const type = localStorage.getItem("canvasType") || "white";
+
+    if(type === "four") drawFourLines();
+    else if(type === "one") drawOneLines();
+
+    socket.emit("clear", room);
 }
 socket.on("clear", () => {
     dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
