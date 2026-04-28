@@ -274,7 +274,7 @@ socket.emit("joinRoom", room);
 // 🔥 LOAD HISTORY AFTER REFRESH
 window.addEventListener("load", () => {
 
-    window.isLoadingHistory = true;   // 🔥 ADD THIS
+    
 
     let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
 
@@ -282,7 +282,7 @@ window.addEventListener("load", () => {
         drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
     });
 
-    window.isLoadingHistory = false;  // 🔥 ADD THIS
+    
 
 });
 /* DRAW START */
@@ -360,13 +360,8 @@ function drawLine(x1, y1, x2, y2, tool, color){
     }
 
     activeCtx.stroke();
-    if(!window.isLoadingHistory){
-    let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
-
-    history.push({ x1, y1, x2, y2, tool, color });
-
-    localStorage.setItem("boardHistory", JSON.stringify(history));
 }
+    
 
 /* RECEIVE DRAW */
 socket.on("draw", (data) => {
