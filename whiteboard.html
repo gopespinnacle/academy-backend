@@ -148,6 +148,11 @@ const dctx = drawCanvas.getContext("2d");
 // 🔥 ADD HERE (exactly here)
 const mainBoard = document.getElementById("mainBoard");
 const mainCtx = mainBoard.getContext("2d");
+
+function getHistoryKey(){
+    const type = localStorage.getItem("canvasType") || "white";
+    return "boardHistory_" + type;
+}
 // ✅ DRAW ONLY ON MAIN BOARD (NEW ADDITION)
 
 let mainDrawing = false;
@@ -200,7 +205,8 @@ mainCtx.moveTo(prevX, prevY);
 mainCtx.lineTo(x, y);
 
 // 🔥 SAVE MAIN BOARD DRAWING ALSO
-let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
+let key = getHistoryKey();
+let history = JSON.parse(localStorage.getItem(key) || "[]");
 
 history.push({
     x1: prevX,
@@ -211,7 +217,7 @@ history.push({
     color: currentColor
 });
 
-localStorage.setItem("boardHistory", JSON.stringify(history));
+localStorage.setItem(key, JSON.stringify(history));
     mainCtx.lineCap = "round";
     mainCtx.lineWidth = 3; 
 
@@ -225,12 +231,7 @@ localStorage.setItem("boardHistory", JSON.stringify(history));
     }
 
     mainCtx.stroke();
-mainCtx.stroke();
-
 // 🔥 redraw background after drawing
-const selected = document.querySelector("select").value;
-if(selected === "four") drawFourLines();
-if(selected === "one") drawOneLines();
     prevX = x;
     prevY = y;
 });
@@ -295,15 +296,13 @@ socket.emit("joinRoom", room);
 // 🔥 LOAD HISTORY AFTER REFRESH
 window.addEventListener("load", () => {
 
-    
+    const type = localStorage.getItem("canvasType") || "white";
 
-    let history = JSON.parse(localStorage.getItem("boardHistory") || "[]");
+    // set dropdown
+    document.querySelector("select").value = type;
 
-    history.forEach(d => {
-        drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
-    });
-
-    
+    // draw background + drawing
+    changeCanvasType(type);   
 
 });
 /* DRAW START */
@@ -404,7 +403,7 @@ function clearBoard(){
     // 🔥 ADD THIS (main whiteboard clear)
     mainCtx.clearRect(0,0,mainBoard.width,mainBoard.height);
 
-    localStorage.removeItem("boardHistory");
+    localStorage.removeItem(getHistoryKey());
     socket.emit("clear", room);
 
 }
@@ -520,20 +519,23 @@ document.getElementById("pdfTab").onclick = function(){
 
 function changeCanvasType(type){
 
-    // clear existing board
+    // 🔥 SAVE SELECTED TYPE
+    localStorage.setItem("canvasType", type);
+
     mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
 
     if(type === "white"){
         mainBoard.style.background = "white";
     }
-
     else if(type === "four"){
         drawFourLines();
     }
-
     else if(type === "one"){
         drawOneLines();
     }
+
+    // 🔥 LOAD THAT CANVAS DRAWING
+    loadCanvasHistory(type);
 }
 
 function drawFourLines(){
@@ -585,6 +587,28 @@ function drawOneLines(){
         mainCtx.lineWidth = 1;
         mainCtx.stroke();
     }
+}
+
+function loadCanvasHistory(type){
+
+    const key = "boardHistory_" + type;
+    let history = JSON.parse(localStorage.getItem(key) || "[]");
+
+    mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
+
+    if(type === "white"){
+        mainBoard.style.background = "white";
+    }
+    else if(type === "four"){
+        drawFourLines();
+    }
+    else if(type === "one"){
+        drawOneLines();
+    }
+
+    history.forEach(d => {
+        drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
+    });
 }
 </script>
 
