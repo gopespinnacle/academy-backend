@@ -230,6 +230,9 @@ drawCanvas.addEventListener("mousedown", (e) => {
 /* DRAW MOVE */
 drawCanvas.addEventListener("mousemove", (e) => {
 
+    if(e.buttons !== 1) return;   // 🔥 ADD THIS LINE
+    if(!drawing || role !== "teacher") return;
+
     if(!drawing || role !== "teacher") return;
 
     const rect = drawCanvas.getBoundingClientRect();
