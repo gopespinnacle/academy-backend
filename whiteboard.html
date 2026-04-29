@@ -222,9 +222,8 @@ localStorage.setItem(key, JSON.stringify(history));
     mainCtx.lineWidth = 3; 
 
     if(currentTool === "eraser"){
-        mainCtx.globalCompositeOperation = "destination-out";
-        mainCtx.lineWidth = 20;
-    } else {
+    return;   // 🔥 STOP ERASER ON MAIN BOARD
+} else {
         mainCtx.globalCompositeOperation = "source-over";
         mainCtx.strokeStyle = currentColor;
         mainCtx.lineWidth = 2;
