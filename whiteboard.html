@@ -221,8 +221,12 @@ localStorage.setItem(key, JSON.stringify(history));
     mainCtx.lineCap = "round";
     mainCtx.lineWidth = 3; 
 
-    if(currentTool === "eraser"){
-    return;   // 🔥 STOP ERASER ON MAIN BOARD
+   if(currentTool === "eraser"){
+
+    mainCtx.globalCompositeOperation = "source-over";  // normal draw
+    mainCtx.strokeStyle = "white";  // 🔥 erase using white color
+    mainCtx.lineWidth = 20;
+
 } else {
         mainCtx.globalCompositeOperation = "source-over";
         mainCtx.strokeStyle = currentColor;
