@@ -321,10 +321,11 @@ window.addEventListener("load", () => {
 
     // ✅ ADD THIS PART (PDF RESTORE)
     const savedPDF = localStorage.getItem("currentPDF");
+const pdfOpen = localStorage.getItem("pdfOpen");
 
-    if(savedPDF){
-        loadPDFToCanvas(savedPDF);
-    }
+if(savedPDF && pdfOpen === "true"){
+    loadPDFToCanvas(savedPDF);
+}
 
 });
 /* DRAW START */
@@ -498,7 +499,7 @@ socket.on("loadPDF", (data) => {
 });
 
 async function loadPDFToCanvas(url){
-
+localStorage.setItem("pdfOpen", "true");
     document.getElementById("pdfWindow").style.display = "block";
     dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
     document.getElementById("pdfTab").style.display = "none";
@@ -559,6 +560,7 @@ function maximizePDF(){
 }
 
 function closePDF(){
+    localStorage.setItem("pdfOpen", "false");
     document.getElementById("pdfWindow").style.display = "none";
     document.getElementById("pdfTab").style.display = "none";
 
