@@ -371,9 +371,9 @@ const y = (e.clientY - rect.top) * scaleY;
 function drawLine(x1, y1, x2, y2, tool, color){
 
     const activeCtx =
-        document.getElementById("pdfWindow").style.display === "block"
-        ? dctx
-        : mainCtx;
+    document.getElementById("pdfWindow").style.display === "block"
+    ? dctx
+    : dctx;   // 🔥 ALWAYS DRAW ON TRANSPARENT LAYER
 
     activeCtx.lineCap = "round";
 
