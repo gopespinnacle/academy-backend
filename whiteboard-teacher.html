@@ -50,8 +50,8 @@ if(!room){
 socket.emit("joinRoom", room);
 socket.emit("teacherJoined", room);
 
-// CANVAS
 const canvas = document.getElementById("board");
+
 const ctx = canvas.getContext("2d");
 
 canvas.width = window.innerWidth;
