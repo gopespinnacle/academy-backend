@@ -342,9 +342,14 @@ socket.emit("joinRoom", room);
 
 // ✅ START VIDEO CALL
 (async () => {
+
     await initMedia();
     setupPeer();
-    createOffer();
+
+    if(role === "teacher"){
+        createOffer();
+    }
+
 })();
 
 // 🔥 LOAD HISTORY AFTER REFRESH
@@ -481,6 +486,14 @@ socket.on("offer", async (data) => {
 // RECEIVE ANSWER
 socket.on("answer", async (data) => {
     await pc.setRemoteDescription(data.answer);
+});
+
+socket.on("ice-candidate", async (data) => {
+    try{
+        await pc.addIceCandidate(data.candidate);
+    } catch(e){
+        console.error(e);
+    }
 });
 
 /* RECEIVE DRAW */
@@ -852,7 +865,36 @@ async function initMedia(){
     document.getElementById("localVideo").srcObject = localStream;
 }
 
-let pc = new RTCPeerConnection();
+let pc;
+
+function setupPeer(){
+
+    pc = new RTCPeerConnection({
+        iceServers: [
+            { urls: "stun:stun.l.google.com:19302" }
+        ]
+    });
+
+    // send your video/audio
+    localStream.getTracks().forEach(track => {
+        pc.addTrack(track, localStream);
+    });
+
+    // receive other person video
+    pc.ontrack = (event) => {
+        document.getElementById("remoteVideo").srcObject = event.streams[0];
+    };
+
+    // 🔥 VERY IMPORTANT (send ICE)
+    pc.onicecandidate = (event) => {
+        if(event.candidate){
+            socket.emit("ice-candidate", {
+                room,
+                candidate: event.candidate
+            });
+        }
+    };
+}
 
 function setupPeer(){
 
