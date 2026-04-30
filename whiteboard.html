@@ -314,7 +314,14 @@ window.addEventListener("load", () => {
     document.querySelector("select").value = type;
 
     // draw background + drawing
-    changeCanvasType(type);   
+    changeCanvasType(type);
+
+    // ✅ ADD THIS PART (PDF RESTORE)
+    const savedPDF = localStorage.getItem("currentPDF");
+
+    if(savedPDF){
+        loadPDFToCanvas(savedPDF);
+    }
 
 });
 /* DRAW START */
@@ -453,6 +460,7 @@ console.log("UPLOAD RESPONSE:", data);
     room,
     url: data.url
 });
+localStorage.setItem("currentPDF", data.url);
 loadPDFToCanvas(data.url);
 
 
@@ -467,6 +475,7 @@ loadPDFToCanvas(data.url);
 
 
 socket.on("loadPDF", (data) => {
+    localStorage.setItem("currentPDF", data.url);  // ✅ ADD THIS
     loadPDFToCanvas(data.url);
 });
 
