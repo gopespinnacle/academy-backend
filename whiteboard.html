@@ -623,8 +623,12 @@ function loadCanvasHistory(type){
     }
 
     history.forEach(d => {
-        drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
-    });
+
+    // ❌ Skip erase strokes while rebuilding
+    if(d.tool === "eraser") return;
+
+    drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
+});
 }
 
 function redrawCanvas(){
