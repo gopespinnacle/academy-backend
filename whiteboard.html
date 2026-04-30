@@ -767,7 +767,18 @@ async function saveAsPDF(){
         tempCtx.drawImage(pageCanvas, 0, 0);
 
         // draw annotations
-        tempCtx.drawImage(drawCanvas, 0, 0);
+        // calculate page position inside scroll
+const pageTop = pageCanvas.offsetTop;
+const pageHeight = pageCanvas.height;
+
+// crop only that part from drawCanvas
+tempCtx.drawImage(
+    drawCanvas,
+    0, pageTop,                        // source Y
+    drawCanvas.width, pageHeight,      // source height
+    0, 0,                              // destination
+    pageCanvas.width, pageCanvas.height
+);
 
         const imgData = tempCanvas.toDataURL("image/png");
 
