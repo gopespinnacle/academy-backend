@@ -64,6 +64,11 @@ canvas {
 <button onclick="saveAsPDF()">💾 Save PDF</button>
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
+<!-- VIDEO SECTION -->
+<div style="position:absolute; top:80px; right:10px; z-index:200;">
+    <video id="localVideo" autoplay muted style="width:120px; border:2px solid white;"></video>
+    <video id="remoteVideo" autoplay style="width:200px; border:2px solid white;"></video>
+</div>
 <input type="file" id="fileInput">
 
 <div id="pdfTab" style="
@@ -309,6 +314,13 @@ if(role === "teacher"){
 /* JOIN */
 socket.emit("joinRoom", room);
 
+// ✅ START VIDEO CALL
+(async () => {
+    await initMedia();
+    setupPeer();
+    createOffer();
+})();
+
 // 🔥 LOAD HISTORY AFTER REFRESH
 window.addEventListener("load", () => {
 
@@ -419,7 +431,31 @@ activeCtx.miterLimit = 1;         // ✅ prevents sharp edges
 } 
 
 }
-   // ✅ SAVE PDF DRAWING
+
+// SEND OFFER
+async function createOffer(){
+
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+
+    socket.emit("offer", { room, offer });
+}
+
+// RECEIVE OFFER
+socket.on("offer", async (data) => {
+
+    await pc.setRemoteDescription(data.offer);
+
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    socket.emit("answer", { room, answer });
+});
+
+// RECEIVE ANSWER
+socket.on("answer", async (data) => {
+    await pc.setRemoteDescription(data.answer);
+});
 
 /* RECEIVE DRAW */
 socket.on("draw", (data) => {
@@ -777,6 +813,30 @@ async function saveAsPDF(){
     }
 
     pdf.save("annotated.pdf");
+}
+
+let localStream;
+
+async function initMedia(){
+    localStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true
+    });
+
+    document.getElementById("localVideo").srcObject = localStream;
+}
+
+let pc = new RTCPeerConnection();
+
+function setupPeer(){
+
+    localStream.getTracks().forEach(track => {
+        pc.addTrack(track, localStream);
+    });
+
+    pc.ontrack = (event) => {
+        document.getElementById("remoteVideo").srcObject = event.streams[0];
+    };
 }
 </script>
 
