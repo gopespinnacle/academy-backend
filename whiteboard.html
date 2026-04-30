@@ -43,6 +43,10 @@ canvas {
 #drawLayer {
     background:transparent;   /* 🔥 IMPORTANT */
 }
+
+video {
+    background: black;
+}
 </style>
 </head>
 
@@ -76,8 +80,9 @@ canvas {
 ">
     <video id="remoteVideo" autoplay style="
     width:220px;
-    border:2px solid white;
-    border-radius:8px;
+    border-radius:10px;
+    background:black;
+    object-fit:cover;
 "></video>
 
 <video id="localVideo" autoplay muted style="
@@ -85,8 +90,9 @@ canvas {
     position:absolute;
     bottom:5px;
     right:5px;
-    border:2px solid white;
-    border-radius:8px;
+    border-radius:10px;
+    background:black;
+    object-fit:cover;
 "></video>
 </div>
 <input type="file" id="fileInput">
