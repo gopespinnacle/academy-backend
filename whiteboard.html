@@ -622,11 +622,28 @@ function loadCanvasHistory(type){
         drawOneLines();
     }
 
-    history.forEach(d => {
+    let cleaned = [];
 
-    // ❌ Skip erase strokes while rebuilding
-    if(d.tool === "eraser") return;
+// build clean drawing list
+history.forEach(d => {
 
+    if(d.tool === "eraser"){
+
+        // remove nearby strokes
+        cleaned = cleaned.filter(line => {
+            return !(
+                Math.abs(line.x2 - d.x2) < 20 &&
+                Math.abs(line.y2 - d.y2) < 20
+            );
+        });
+
+    } else {
+        cleaned.push(d);
+    }
+});
+
+// draw only cleaned strokes
+cleaned.forEach(d => {
     drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
 });
 }
