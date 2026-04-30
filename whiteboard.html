@@ -18,7 +18,7 @@ body {
     gap:10px;
 
     position:relative;
-    z-index:1000;  
+    z-index:1000;   /* 🔥 ADD THIS */
 }
 
 button {
@@ -222,13 +222,17 @@ localStorage.setItem(key, JSON.stringify(history));
     mainCtx.lineWidth = 3; 
 
     if(currentTool === "eraser"){
-        mainCtx.globalCompositeOperation = "destination-out";
-        mainCtx.lineWidth = 20;
-    } else {
-        mainCtx.globalCompositeOperation = "source-over";
-        mainCtx.strokeStyle = currentColor;
-        mainCtx.lineWidth = 2;
-    }
+
+    mainCtx.globalCompositeOperation = "source-over";
+    mainCtx.strokeStyle = "white";   // 🔥 FAKE ERASER
+    mainCtx.lineWidth = 20;
+
+} else {
+    mainCtx.globalCompositeOperation = "source-over";
+    mainCtx.strokeStyle = currentColor;
+    mainCtx.lineWidth = 2;
+}
+
 
     mainCtx.stroke();
 
@@ -620,6 +624,28 @@ function loadCanvasHistory(type){
 
     history.forEach(d => {
         drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
+    });
+}
+
+function redrawCanvas(){
+    const type = localStorage.getItem("canvasType") || "white";
+
+    mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
+
+    if(type === "four") drawFourLines();
+    else if(type === "one") drawOneLines();
+
+    // redraw all drawing
+    const key = getHistoryKey();
+    let history = JSON.parse(localStorage.getItem(key) || "[]");
+
+    history.forEach(d => {
+        mainCtx.beginPath();
+        mainCtx.moveTo(d.x1, d.y1);
+        mainCtx.lineTo(d.x2, d.y2);
+        mainCtx.strokeStyle = d.color;
+        mainCtx.lineWidth = 2;
+        mainCtx.stroke();
     });
 }
 </script>
