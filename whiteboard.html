@@ -896,7 +896,9 @@ function setupPeer(){
     pc.ontrack = (event) => {
         document.getElementById("remoteVideo").srcObject = event.streams[0];
     };
-
+pc.onconnectionstatechange = () => {
+    console.log("STATE:", pc.connectionState);
+};
     // 🔥 VERY IMPORTANT (send ICE)
     pc.onicecandidate = (event) => {
         if(event.candidate){
@@ -908,16 +910,6 @@ function setupPeer(){
     };
 }
 
-function setupPeer(){
-
-    localStream.getTracks().forEach(track => {
-        pc.addTrack(track, localStream);
-    });
-
-    pc.ontrack = (event) => {
-        document.getElementById("remoteVideo").srcObject = event.streams[0];
-    };
-}
 </script>
 
 </body>
