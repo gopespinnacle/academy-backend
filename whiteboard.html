@@ -61,6 +61,7 @@ canvas {
         <button onclick="clearBoard()">🧹 Clear</button>
     </div>
 <button onclick="setTool('eraseDraw')">🧽 Erase</button>
+<button onclick="saveAsPDF()">💾 Save PDF</button>
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 <input type="file" id="fileInput">
@@ -129,7 +130,7 @@ canvas {
 <!-- SOCKET.IO -->
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 
 const params = new URLSearchParams(window.location.search);
@@ -726,6 +727,56 @@ function redrawCanvas(){
 
     mainCtx.stroke();
 });
+}
+
+async function saveAsPDF(){
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+
+    const isPDFOpen = document.getElementById("pdfWindow").style.display === "block";
+
+    // ================= CASE 1 & 2 (WHITE / LINES) =================
+    if(!isPDFOpen){
+
+        // convert mainBoard to image
+        const imgData = mainBoard.toDataURL("image/png");
+
+        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+        pdf.save("whiteboard.pdf");
+
+        return;
+    }
+
+    // ================= CASE 3 (UPLOADED PDF + DRAWING) =================
+
+    const pages = document.querySelectorAll(".pdfPage");
+
+    for(let i = 0; i < pages.length; i++){
+
+        const pageCanvas = pages[i];
+
+        // create temp canvas
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = pageCanvas.width;
+        tempCanvas.height = pageCanvas.height;
+
+        const tempCtx = tempCanvas.getContext("2d");
+
+        // draw PDF page
+        tempCtx.drawImage(pageCanvas, 0, 0);
+
+        // draw annotations
+        tempCtx.drawImage(drawCanvas, 0, 0);
+
+        const imgData = tempCanvas.toDataURL("image/png");
+
+        if(i > 0) pdf.addPage();
+
+        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+    }
+
+    pdf.save("annotated.pdf");
 }
 </script>
 
