@@ -214,7 +214,7 @@ history.push({
     x2: x,
     y2: y,
     tool: currentTool,
-    color: currentColor
+    color: currentTool === "eraser" ? "erase" : currentColor
 });
 
 localStorage.setItem(key, JSON.stringify(history));
@@ -223,17 +223,11 @@ localStorage.setItem(key, JSON.stringify(history));
 
     if(currentTool === "eraser"){
 
-    let key = getHistoryKey();
-    let history = JSON.parse(localStorage.getItem(key) || "[]");
+    mainCtx.globalCompositeOperation = "source-over";
+    mainCtx.strokeStyle = "white";   // 🔥 FAKE ERASER
+    mainCtx.lineWidth = 20;
 
-    history.pop(); // remove last stroke
-
-    localStorage.setItem(key, JSON.stringify(history));
-
-    redrawCanvas(); // redraw clean
-
-    return;
-}else {
+} else {
     mainCtx.globalCompositeOperation = "source-over";
     mainCtx.strokeStyle = currentColor;
     mainCtx.lineWidth = 2;
@@ -646,13 +640,22 @@ function redrawCanvas(){
     let history = JSON.parse(localStorage.getItem(key) || "[]");
 
     history.forEach(d => {
-        mainCtx.beginPath();
-        mainCtx.moveTo(d.x1, d.y1);
-        mainCtx.lineTo(d.x2, d.y2);
+
+    mainCtx.beginPath();
+    mainCtx.moveTo(d.x1, d.y1);
+    mainCtx.lineTo(d.x2, d.y2);
+
+    if(d.tool === "eraser"){
+        mainCtx.globalCompositeOperation = "destination-out";
+        mainCtx.lineWidth = 20;
+    } else {
+        mainCtx.globalCompositeOperation = "source-over";
         mainCtx.strokeStyle = d.color;
         mainCtx.lineWidth = 2;
-        mainCtx.stroke();
-    });
+    }
+
+    mainCtx.stroke();
+});
 }
 </script>
 
