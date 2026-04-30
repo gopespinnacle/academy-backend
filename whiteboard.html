@@ -65,9 +65,29 @@ canvas {
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 <!-- VIDEO SECTION -->
-<div style="position:absolute; top:80px; right:10px; z-index:200;">
-    <video id="localVideo" autoplay muted style="width:120px; border:2px solid white;"></video>
-    <video id="remoteVideo" autoplay style="width:200px; border:2px solid white;"></video>
+<div style="
+    position:fixed;
+    top:70px;
+    right:10px;
+    z-index:9999;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+">
+    <video id="remoteVideo" autoplay style="
+    width:220px;
+    border:2px solid white;
+    border-radius:8px;
+"></video>
+
+<video id="localVideo" autoplay muted style="
+    width:100px;
+    position:absolute;
+    bottom:5px;
+    right:5px;
+    border:2px solid white;
+    border-radius:8px;
+"></video>
 </div>
 <input type="file" id="fileInput">
 
