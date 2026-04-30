@@ -78,14 +78,14 @@ video {
     flex-direction:column;
     gap:5px;
 ">
-    <video id="remoteVideo" autoplay style="
+    <video id="remoteVideo" autoplay playsinline style="
     width:220px;
     height:150px;
     object-fit:cover;
     border-radius:10px;
 "></video>
 
-<video id="localVideo" autoplay muted style="
+<video id="localVideo" autoplay muted playsinline style="
     width:100px;
     height:70px;
     position:absolute;
@@ -477,6 +477,7 @@ async function createOffer(){
 // RECEIVE OFFER
 socket.on("offer", async (data) => {
 
+    // ALWAYS ensure peer exists
     if(!pc){
         setupPeer();
     }
@@ -905,10 +906,21 @@ function setupPeer(){
 
     // receive other person video
     pc.ontrack = (event) => {
-        document.getElementById("remoteVideo").srcObject = event.streams[0];
-    };
+    const remoteVideo = document.getElementById("remoteVideo");
+
+    remoteVideo.srcObject = event.streams[0];
+
+    remoteVideo.play().catch(e => {
+        console.log("Play blocked:", e);
+    });
+
+    console.log("REMOTE STREAM RECEIVED ✅");
+};
 pc.onconnectionstatechange = () => {
     console.log("STATE:", pc.connectionState);
+};
+pc.oniceconnectionstatechange = () => {
+    console.log("ICE:", pc.iceConnectionState);
 };
     // 🔥 VERY IMPORTANT (send ICE)
     pc.onicecandidate = (event) => {
