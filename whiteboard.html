@@ -347,7 +347,9 @@ socket.emit("joinRoom", room);
     setupPeer();
 
     if(role === "teacher"){
-        createOffer();
+        setTimeout(() => {
+            createOffer();
+        }, 1000); // 🔥 delay important
     }
 
 })();
@@ -475,7 +477,11 @@ async function createOffer(){
 // RECEIVE OFFER
 socket.on("offer", async (data) => {
 
-    await pc.setRemoteDescription(data.offer);
+    if(!pc){
+        setupPeer();
+    }
+
+    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
 
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
@@ -485,14 +491,20 @@ socket.on("offer", async (data) => {
 
 // RECEIVE ANSWER
 socket.on("answer", async (data) => {
-    await pc.setRemoteDescription(data.answer);
+
+    if(!pc) return;
+
+    await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
 });
 
 socket.on("ice-candidate", async (data) => {
+
+    if(!pc) return;
+
     try{
-        await pc.addIceCandidate(data.candidate);
+        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
     } catch(e){
-        console.error(e);
+        console.error("ICE ERROR:", e);
     }
 });
 
