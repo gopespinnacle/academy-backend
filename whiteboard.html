@@ -386,6 +386,8 @@ function drawLine(x1, y1, x2, y2, tool, color){
         : mainCtx;
 
     activeCtx.lineCap = "round";
+    activeCtx.lineJoin = "round";     // ✅ smooth corners
+activeCtx.miterLimit = 1;         // ✅ prevents sharp edges
 
     if(tool === "eraser"){
         activeCtx.globalCompositeOperation = "destination-out";
@@ -393,7 +395,7 @@ function drawLine(x1, y1, x2, y2, tool, color){
     } else {
         activeCtx.globalCompositeOperation = "source-over";
         activeCtx.strokeStyle = color || "black";
-        activeCtx.lineWidth = 2;
+        activeCtx.lineWidth = 3;
     }
 
     // 🔥 KEY FIX (smooth continuous drawing)
