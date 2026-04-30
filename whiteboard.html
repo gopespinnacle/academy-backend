@@ -499,6 +499,7 @@ socket.on("loadPDF", (data) => {
 });
 
 async function loadPDFToCanvas(url){
+    drawCanvas.style.pointerEvents = "auto";
 localStorage.setItem("pdfOpen", "true");
     document.getElementById("pdfWindow").style.display = "block";
     dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
@@ -560,13 +561,22 @@ function maximizePDF(){
 }
 
 function closePDF(){
-    localStorage.setItem("pdfOpen", "false");
     document.getElementById("pdfWindow").style.display = "none";
     document.getElementById("pdfTab").style.display = "none";
 
+    // ✅ clear drawing
     dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
-}
 
+    // ✅ disable drawing layer interaction
+    drawCanvas.style.pointerEvents = "none";
+
+    // ✅ OPTIONAL: reset size (prevents ghost area)
+    drawCanvas.width = 0;
+    drawCanvas.height = 0;
+
+    // ✅ mark PDF closed
+    localStorage.setItem("pdfOpen", "false");
+}
 document.getElementById("pdfTab").onclick = function(){
     document.getElementById("pdfWindow").style.display = "block";
     document.getElementById("pdfTab").style.display = "none";
