@@ -223,11 +223,17 @@ localStorage.setItem(key, JSON.stringify(history));
 
     if(currentTool === "eraser"){
 
-    mainCtx.globalCompositeOperation = "source-over";
-    mainCtx.strokeStyle = "white";   // 🔥 FAKE ERASER
-    mainCtx.lineWidth = 20;
+    let key = getHistoryKey();
+    let history = JSON.parse(localStorage.getItem(key) || "[]");
 
-} else {
+    history.pop(); // remove last stroke
+
+    localStorage.setItem(key, JSON.stringify(history));
+
+    redrawCanvas(); // redraw clean
+
+    return;
+}else {
     mainCtx.globalCompositeOperation = "source-over";
     mainCtx.strokeStyle = currentColor;
     mainCtx.lineWidth = 2;
