@@ -148,7 +148,10 @@ const dctx = drawCanvas.getContext("2d");
 // 🔥 ADD HERE (exactly here)
 const mainBoard = document.getElementById("mainBoard");
 const mainCtx = mainBoard.getContext("2d");
-
+function getPDFHistoryKey(){
+    const pdf = localStorage.getItem("currentPDF") || "default";
+    return "pdfHistory_" + pdf;
+}
 function getHistoryKey(){
     const type = localStorage.getItem("canvasType") || "white";
     return "boardHistory_" + type;
@@ -398,8 +401,21 @@ function drawLine(x1, y1, x2, y2, tool, color){
     activeCtx.moveTo(x1, y1);
     activeCtx.lineTo(x2, y2);
     activeCtx.stroke();
+
+    if(document.getElementById("pdfWindow").style.display === "block"){
+
+    let key = getPDFHistoryKey();
+    let history = JSON.parse(localStorage.getItem(key) || "[]");
+
+    history.push({
+        x1, y1, x2, y2, tool, color
+    });
+
+    localStorage.setItem(key, JSON.stringify(history));
+} 
+
 }
-    
+   // ✅ SAVE PDF DRAWING
 
 /* RECEIVE DRAW */
 socket.on("draw", (data) => {
@@ -482,6 +498,7 @@ socket.on("loadPDF", (data) => {
 async function loadPDFToCanvas(url){
 
     document.getElementById("pdfWindow").style.display = "block";
+    dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
     document.getElementById("pdfTab").style.display = "none";
 
     const loadingTask = pdfjsLib.getDocument(url);
@@ -515,7 +532,16 @@ async function loadPDFToCanvas(url){
     }
     drawCanvas.width = container.scrollWidth;
 drawCanvas.height = container.scrollHeight;
+
+// ✅ LOAD SAVED PDF DRAWING
+let key = getPDFHistoryKey();
+let history = JSON.parse(localStorage.getItem(key) || "[]");
+
+history.forEach(d => {
+    drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
+});
 }
+
 function minimizePDF(){
     document.getElementById("pdfWindow").style.display = "none";
     document.getElementById("pdfTab").style.display = "block";
