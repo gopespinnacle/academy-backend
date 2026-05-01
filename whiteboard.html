@@ -296,7 +296,7 @@ if(currentTool === "eraser"){
 
 // full screen size
 mainBoard.width = window.innerWidth;
-mainBoard.height = window.innerHeight - 80;
+mainBoard.height = window.innerHeight - 90;
 
 // match size
 
@@ -625,6 +625,20 @@ socket.on("loadPDF", (data) => {
     loadPDFToCanvas(data.url);
 });
 
+socket.on("closePDF", () => {
+
+    document.getElementById("pdfWindow").style.display = "none";
+    document.getElementById("pdfTab").style.display = "none";
+
+    dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+
+    drawCanvas.style.pointerEvents = "none";
+
+    drawCanvas.width = 0;
+    drawCanvas.height = 0;
+
+    localStorage.setItem("pdfOpen", "false");
+});
 async function loadPDFToCanvas(url){
     drawCanvas.style.pointerEvents = "auto";
 localStorage.setItem("pdfOpen", "true");
@@ -703,6 +717,7 @@ function closePDF(){
 
     // ✅ mark PDF closed
     localStorage.setItem("pdfOpen", "false");
+    socket.emit("closePDF", { room });
 }
 document.getElementById("pdfTab").onclick = function(){
     document.getElementById("pdfWindow").style.display = "block";
