@@ -178,6 +178,8 @@ const drawCanvas = document.getElementById("drawLayer");
 const dctx = drawCanvas.getContext("2d");
 
 // 🔥 ADD HERE (exactly here)
+let lastEmitTime = 0;
+let drawBuffer = [];
 const mainBoard = document.getElementById("mainBoard");
 const mainCtx = mainBoard.getContext("2d");
 function getPDFHistoryKey(){
@@ -271,16 +273,23 @@ localStorage.setItem(key, JSON.stringify(history));
 
     mainCtx.stroke();
 
-    socket.emit("draw", {
-    room,
+    const now = Date.now();
+
+if(!window.lastEmitTime) window.lastEmitTime = 0;
+
+if(now - window.lastEmitTime > 30){
+
+    drawBuffer.push({
     prevX,
     prevY,
     x,
     y,
     tool: currentTool,
-    color: currentTool === "eraser" ? "erase" : currentColor,
-    sender: socket.id
+    color: currentTool === "eraser" ? "erase" : currentColor
 });
+
+    window.lastEmitTime = now;
+}
     // 🔥 redraw background after erasing
 if(currentTool === "eraser"){
     const type = localStorage.getItem("canvasType");
@@ -422,16 +431,18 @@ const y = (e.clientY - rect.top) * scaleY;
 
     drawLine(prevX, prevY, x, y, currentTool,currentColor);
 
-    socket.emit("draw", {
-    room,
-    prevX,
-    prevY,
-    x,
-    y,
-    tool: currentTool,
-    color: currentColor,
-    sender: socket.id
-});
+    if(document.getElementById("pdfWindow").style.display === "block"){
+
+    drawBuffer.push({
+        prevX,
+        prevY,
+        x,
+        y,
+        tool: currentTool,
+        color: currentColor
+    });
+
+}
     prevX = x;
     prevY = y;
 });
@@ -460,7 +471,10 @@ activeCtx.miterLimit = 1;         // ✅ prevents sharp edges
     // 🔥 KEY FIX (smooth continuous drawing)
     activeCtx.beginPath();
     activeCtx.moveTo(x1, y1);
-    activeCtx.lineTo(x2, y2);
+    const midX = (x1 + x2) / 2;
+const midY = (y1 + y2) / 2;
+
+activeCtx.quadraticCurveTo(x1, y1, midX, midY);
     activeCtx.stroke();
 
     if(document.getElementById("pdfWindow").style.display === "block"){
@@ -522,42 +536,12 @@ socket.on("ice-candidate", async (data) => {
 });
 
 /* RECEIVE DRAW */
-socket.on("draw", (data) => {
-
-    // 🔥 prevent drawing your own data again
-    if(data.sender === socket.id) return;
-
-    // PDF open → draw on drawLayer
-    if(document.getElementById("pdfWindow").style.display === "block"){
-        drawLine(data.prevX, data.prevY, data.x, data.y, data.tool, data.color);
-        return;
-    }
-
-    // main board → draw here
-    mainCtx.beginPath();
-    mainCtx.moveTo(data.prevX, data.prevY);
-    mainCtx.lineTo(data.x, data.y);
-
-    mainCtx.lineCap = "round";
-
-    if(data.tool === "eraser" || data.color === "erase"){
-        mainCtx.globalCompositeOperation = "destination-out";
-        mainCtx.lineWidth = 20;
-    } else {
-        mainCtx.globalCompositeOperation = "source-over";
-        mainCtx.strokeStyle = data.color;
-        mainCtx.lineWidth = 2;
-    }
-
-    mainCtx.stroke();
-});
-socket.on("loadBoard", (dataArray) => {
 
     dataArray.forEach(d => {
         drawLine(d.prevX, d.prevY, d.x, d.y, d.tool,d.color);
     });
 
-});
+
 /* CLEAR */
 function clearBoard(){
     if(role !== "teacher") return;
@@ -992,7 +976,7 @@ window.addEventListener("resize", handleResize);
 function handleResize(){
 
     mainBoard.width = mainBoard.offsetWidth;
-    mainBoard.height = mainBoard.offsetHeight;
+    mainBoard.height = window.innerHeight - 90;
 
     redrawCanvas();
 }
