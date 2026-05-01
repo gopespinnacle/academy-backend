@@ -244,10 +244,10 @@ let key = getHistoryKey();
 let history = JSON.parse(localStorage.getItem(key) || "[]");
 
 history.push({
-    x1: prevX,
-    y1: prevY,
-    x2: x,
-    y2: y,
+    x1: prevX / mainBoard.width,
+    y1: prevY / mainBoard.height,
+    x2: x / mainBoard.width,
+    y2: y / mainBoard.height,
     tool: currentTool,
     color: currentTool === "eraser" ? "erase" : currentColor
 });
@@ -839,8 +839,8 @@ function redrawCanvas(){
     history.forEach(d => {
 
     mainCtx.beginPath();
-    mainCtx.moveTo(d.x1, d.y1);
-    mainCtx.lineTo(d.x2, d.y2);
+    mainCtx.moveTo(d.x1 * mainBoard.width, d.y1 * mainBoard.height);
+mainCtx.lineTo(d.x2 * mainBoard.width, d.y2 * mainBoard.height);
 
     if(d.tool === "eraser"){
         mainCtx.globalCompositeOperation = "destination-out";
@@ -970,6 +970,20 @@ pc.oniceconnectionstatechange = () => {
         }
     };
 }
+
+
+window.addEventListener("resize", handleResize);
+
+function handleResize(){
+
+    // update canvas size
+    mainBoard.width = window.innerWidth;
+    mainBoard.height = window.innerHeight - 60;
+
+    // redraw everything
+    redrawCanvas();
+}
+
 
 </script>
 
