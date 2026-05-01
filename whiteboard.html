@@ -115,7 +115,7 @@ video {
     top:80px;
     left:0;
     width:100%;
-    height:calc(100% - 100px);
+    height:calc(100vh - 80px);   /* ✅ FIX */
     background:white;
     z-index:1;
 "></canvas>
@@ -296,7 +296,7 @@ if(currentTool === "eraser"){
 
 // full screen size
 mainBoard.width = window.innerWidth;
-mainBoard.height = window.innerHeight - 60;
+mainBoard.height = mainBoard.offsetHeight;  // ✅ FIX
 
 // match size
 
@@ -976,11 +976,9 @@ window.addEventListener("resize", handleResize);
 
 function handleResize(){
 
-    // update canvas size
     mainBoard.width = window.innerWidth;
-    mainBoard.height = window.innerHeight - 60;
+    mainBoard.height = mainBoard.offsetHeight;
 
-    // redraw everything
     redrawCanvas();
 }
 
