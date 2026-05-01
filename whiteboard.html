@@ -294,7 +294,7 @@ if(currentTool === "eraser"){
 });
 // 🔥 ADD THIS (important)
 
-// full screen size
+setCanvasSize();
 mainBoard.width = window.innerWidth;
 mainBoard.height = mainBoard.offsetHeight;  // ✅ FIX
 
@@ -368,7 +368,7 @@ socket.on("ready", async () => {
 
 // 🔥 LOAD HISTORY AFTER REFRESH
 window.addEventListener("load", () => {
-
+setCanvasSize();
     const type = localStorage.getItem("canvasType") || "white";
 
     // set dropdown
@@ -976,9 +976,7 @@ window.addEventListener("resize", handleResize);
 
 function handleResize(){
 
-    mainBoard.width = mainBoard.offsetWidth;
-    mainBoard.height = mainBoard.offsetHeight;
-
+    setCanvasSize();
     redrawCanvas();
 }
 
