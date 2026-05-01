@@ -201,7 +201,9 @@ io.on("connection", (socket) => {
         });
     }
 
-
+socket.on("ready", (room) => {
+    socket.to(room).emit("ready");
+});
 });
 
 

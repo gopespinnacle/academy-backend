@@ -271,6 +271,16 @@ localStorage.setItem(key, JSON.stringify(history));
 
     mainCtx.stroke();
 
+    socket.emit("draw", {
+    room,
+    prevX,
+    prevY,
+    x,
+    y,
+    tool: currentTool,
+    color: currentTool === "eraser" ? "erase" : currentColor,
+    sender: socket.id
+});
     // 🔥 redraw background after erasing
 if(currentTool === "eraser"){
     const type = localStorage.getItem("canvasType");
@@ -346,11 +356,13 @@ socket.emit("joinRoom", room);
     await initMedia();
     setupPeer();
 
+    socket.emit("ready", room);
+
+socket.on("ready", async () => {
     if(role === "teacher"){
-        setTimeout(() => {
-            createOffer();
-        }, 1000); // 🔥 delay important
+        await createOffer();
     }
+});
 
 })();
 
@@ -411,15 +423,15 @@ const y = (e.clientY - rect.top) * scaleY;
     drawLine(prevX, prevY, x, y, currentTool,currentColor);
 
     socket.emit("draw", {
-        room,
-        prevX,
-        prevY,
-        x,
-        y,
-        tool: currentTool,
-         color: currentColor 
-    });
-
+    room,
+    prevX,
+    prevY,
+    x,
+    y,
+    tool: currentTool,
+    color: currentColor,
+    sender: socket.id
+});
     prevX = x;
     prevY = y;
 });
@@ -511,7 +523,33 @@ socket.on("ice-candidate", async (data) => {
 
 /* RECEIVE DRAW */
 socket.on("draw", (data) => {
-    drawLine(data.prevX, data.prevY, data.x, data.y, data.tool,data.color);
+
+    // 🔥 prevent drawing your own data again
+    if(data.sender === socket.id) return;
+
+    // PDF open → draw on drawLayer
+    if(document.getElementById("pdfWindow").style.display === "block"){
+        drawLine(data.prevX, data.prevY, data.x, data.y, data.tool, data.color);
+        return;
+    }
+
+    // main board → draw here
+    mainCtx.beginPath();
+    mainCtx.moveTo(data.prevX, data.prevY);
+    mainCtx.lineTo(data.x, data.y);
+
+    mainCtx.lineCap = "round";
+
+    if(data.tool === "eraser" || data.color === "erase"){
+        mainCtx.globalCompositeOperation = "destination-out";
+        mainCtx.lineWidth = 20;
+    } else {
+        mainCtx.globalCompositeOperation = "source-over";
+        mainCtx.strokeStyle = data.color;
+        mainCtx.lineWidth = 2;
+    }
+
+    mainCtx.stroke();
 });
 socket.on("loadBoard", (dataArray) => {
 
@@ -905,16 +943,16 @@ function setupPeer(){
     });
 
     // receive other person video
-    pc.ontrack = (event) => {
-    const remoteVideo = document.getElementById("remoteVideo");
+    let remoteStream = new MediaStream();
 
-    remoteVideo.srcObject = event.streams[0];
+pc.ontrack = (event) => {
 
-    remoteVideo.play().catch(e => {
-        console.log("Play blocked:", e);
+    event.streams[0].getTracks().forEach(track => {
+        remoteStream.addTrack(track);
     });
 
-    console.log("REMOTE STREAM RECEIVED ✅");
+    const remoteVideo = document.getElementById("remoteVideo");
+    remoteVideo.srcObject = remoteStream;
 };
 pc.onconnectionstatechange = () => {
     console.log("STATE:", pc.connectionState);
