@@ -115,7 +115,7 @@ video {
     top:80px;
     left:0;
     width:100%;
-    height:calc(100vh - 80px);   /* ✅ FIX */
+    bottom:0;   /* 🔥 THIS IS THE FIX */
     background:white;
     z-index:1;
 "></canvas>
@@ -976,7 +976,7 @@ window.addEventListener("resize", handleResize);
 
 function handleResize(){
 
-    mainBoard.width = window.innerWidth;
+    mainBoard.width = mainBoard.offsetWidth;
     mainBoard.height = mainBoard.offsetHeight;
 
     redrawCanvas();
