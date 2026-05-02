@@ -233,7 +233,7 @@ mainBoard.addEventListener("mouseleave", () => {
 
 mainBoard.addEventListener("mousemove", (e) => {
 let lastEmitTime = 0;
-    if(!mainDrawing || role !== "teacher") return;
+    if(!mainDrawing || role !== "teacher" || currentTool === "none") return;
 
     const rect = mainBoard.getBoundingClientRect();
 
@@ -260,6 +260,81 @@ history.push({
     y2: y / mainBoard.height,
     tool: currentTool,
     color: currentTool === "eraser" ? "erase" : currentColor
+});
+
+// ================= MOBILE TOUCH SUPPORT (MAIN BOARD) =================
+
+// TOUCH START
+mainBoard.addEventListener("touchstart", (e) => {
+    if(role !== "teacher") return;
+    if(drawCanvas.style.pointerEvents === "none") return;
+
+    e.preventDefault();
+
+    mainDrawing = true;
+
+    const rect = mainBoard.getBoundingClientRect();
+    const touch = e.touches[0];
+
+    const scaleX = mainBoard.width / rect.width;
+    const scaleY = mainBoard.height / rect.height;
+
+    const x = (touch.clientX - rect.left) * scaleX;
+    const y = (touch.clientY - rect.top) * scaleY;
+
+    prevX = x;
+    prevY = y;
+});
+
+// TOUCH MOVE
+mainBoard.addEventListener("touchmove", (e) => {
+    if(!mainDrawing || role !== "teacher" || currentTool === "none") return;
+    if(drawCanvas.style.pointerEvents === "none") return;
+
+    e.preventDefault();
+
+    const rect = mainBoard.getBoundingClientRect();
+    const touch = e.touches[0];
+
+    const scaleX = mainBoard.width / rect.width;
+    const scaleY = mainBoard.height / rect.height;
+
+    const x = (touch.clientX - rect.left) * scaleX;
+    const y = (touch.clientY - rect.top) * scaleY;
+
+    mainCtx.beginPath();
+    mainCtx.moveTo(prevX, prevY);
+    mainCtx.lineTo(x, y);
+
+    if(currentTool === "eraser"){
+        mainCtx.globalCompositeOperation = "destination-out";
+        mainCtx.lineWidth = 20;
+    } else {
+        mainCtx.globalCompositeOperation = "source-over";
+        mainCtx.strokeStyle = currentColor;
+        mainCtx.lineWidth = 2;
+    }
+
+    mainCtx.stroke();
+
+    socket.emit("draw", {
+        room,
+        prevX,
+        prevY,
+        x,
+        y,
+        tool: currentTool,
+        color: currentColor,
+        sender: socket.id
+    });
+
+    prevX = x;
+    prevY = y;
+});
+
+// TOUCH END
+mainBoard.addEventListener("touchend", () => {
+    mainDrawing = false;
 });
 
 localStorage.setItem(key, JSON.stringify(history));
@@ -355,10 +430,10 @@ function setTool(tool){
     }
 
     else if(tool === "eraser"){
-        // 👉 BACK TO DOC (SCROLL MODE)
-        currentTool = "pen"; // (important: avoid erase mode)
-        drawCanvas.style.pointerEvents = "none";
-    }
+    currentTool = "none";   // 🔥 disables drawing
+    drawCanvas.style.pointerEvents = "none";
+    mainDrawing = false;
+}
 }
 
 /* ROLE */
