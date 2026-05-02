@@ -202,139 +202,45 @@ function getHistoryKey(){
     return "boardHistory_" + type;
 }
 // ✅ DRAW ONLY ON MAIN BOARD (NEW ADDITION)
+// ===== UNIVERSAL DRAW (MOBILE + MOUSE + STYLUS) =====
 
-let mainDrawing = false;
+let isDrawingPointer = false;
 
-mainBoard.addEventListener("mousedown", (e) => {
-    if(role !== "teacher") return;
-
-    mainDrawing = true;
-
-    const rect = mainBoard.getBoundingClientRect();
-
-const scaleX = mainBoard.width / rect.width;
-const scaleY = mainBoard.height / rect.height;
-
-const x = (e.clientX - rect.left) * scaleX;
-const y = (e.clientY - rect.top) * scaleY;
-
-    mainCtx.beginPath();           // ✅ ADD THIS
-prevX = x;
-prevY = y;
-
-mainCtx.beginPath();
-mainCtx.moveTo(x, y); // ✅ ADD THIS
-});
-
-mainBoard.addEventListener("mouseup", () => {
-    mainDrawing = false;
-});
-
-mainBoard.addEventListener("mouseleave", () => {
-    mainDrawing = false;
-});
-
-mainBoard.addEventListener("mousemove", (e) => {
-let lastEmitTime = 0;
-    if(!mainDrawing || role !== "teacher" || currentTool === "none") return;
-
-    const rect = mainBoard.getBoundingClientRect();
-
-    
-
-const scaleX = mainBoard.width / rect.width;
-const scaleY = mainBoard.height / rect.height;
-
-const x = (e.clientX - rect.left) * scaleX;
-const y = (e.clientY - rect.top) * scaleY;
-    // 🔥 draw on mainBoard ONLY
-    mainCtx.beginPath();        // ✅ reset path each move
-mainCtx.moveTo(prevX, prevY);
-mainCtx.lineTo(x, y);
-
-// 🔥 SAVE MAIN BOARD DRAWING ALSO
-let key = getHistoryKey();
-let history = JSON.parse(localStorage.getItem(key) || "[]");
-
-history.push({
-    x1: prevX / mainBoard.width,
-    y1: prevY / mainBoard.height,
-    x2: x / mainBoard.width,
-    y2: y / mainBoard.height,
-    tool: currentTool,
-    color: currentTool === "eraser" ? "erase" : currentColor
-});
-
-
-// ================= MOBILE TOUCH SUPPORT (MAIN BOARD) =================
-
-// TOUCH START
-mainBoard.addEventListener("touchstart", (e) => {
+mainBoard.addEventListener("pointerdown", (e) => {
     if(role !== "teacher") return;
     if(currentTool === "none") return;
 
-    e.preventDefault();
-    mainDrawing = true;
+    e.preventDefault();   // 🔥 ADD THIS LINE
+
+    isDrawingPointer = true;
 
     const rect = mainBoard.getBoundingClientRect();
-    const touch = e.touches[0];
 
-    prevX = (touch.clientX - rect.left) * (mainBoard.width / rect.width);
-    prevY = (touch.clientY - rect.top) * (mainBoard.height / rect.height);
+    prevX = (e.clientX - rect.left) * (mainBoard.width / rect.width);
+    prevY = (e.clientY - rect.top) * (mainBoard.height / rect.height);
 });
 
-// TOUCH MOVE
-mainBoard.addEventListener("touchmove", (e) => {
-    if(!mainDrawing || role !== "teacher" || currentTool === "none") return;
+mainBoard.addEventListener("pointermove", (e) => {
+    e.preventDefault();   // 🔥 VERY IMPORTANT (mobile fix)
 
-    e.preventDefault();
+    if(!isDrawingPointer) return;
+    if(role !== "teacher") return;
+    if(currentTool === "none") return;
 
     const rect = mainBoard.getBoundingClientRect();
-    const touch = e.touches[0];
 
-    const x = (touch.clientX - rect.left) * (mainBoard.width / rect.width);
-    const y = (touch.clientY - rect.top) * (mainBoard.height / rect.height);
+    const x = (e.clientX - rect.left) * (mainBoard.width / rect.width);
+    const y = (e.clientY - rect.top) * (mainBoard.height / rect.height);
 
     mainCtx.beginPath();
     mainCtx.moveTo(prevX, prevY);
     mainCtx.lineTo(x, y);
+
     mainCtx.strokeStyle = currentColor;
     mainCtx.lineWidth = 2;
+    
+    mainCtx.lineCap = "round";   // 🔥 ADD (smooth line)
     mainCtx.stroke();
-
-    prevX = x;
-    prevY = y;
-});
-
-// TOUCH END
-mainBoard.addEventListener("touchend", () => {
-    mainDrawing = false;
-});
-
-localStorage.setItem(key, JSON.stringify(history));
-    mainCtx.lineCap = "round";
-    mainCtx.lineWidth = 3; 
-
-    if(currentTool === "eraser"){
-
-    mainCtx.globalCompositeOperation = "source-over";
-    mainCtx.strokeStyle = "white";   // 🔥 FAKE ERASER
-    mainCtx.lineWidth = 20;
-
-} else {
-    mainCtx.globalCompositeOperation = "source-over";
-    mainCtx.strokeStyle = currentColor;
-    mainCtx.lineWidth = 2;
-}
-
-
-    mainCtx.stroke();
-
-    const now = Date.now();
-
-if(!window.lastEmitTime) window.lastEmitTime = 0;
-
-if(now - window.lastEmitTime > 30){
 
     socket.emit("draw", {
         room,
@@ -343,22 +249,19 @@ if(now - window.lastEmitTime > 30){
         x,
         y,
         tool: currentTool,
-        color: currentTool === "eraser" ? "erase" : currentColor,
+        color: currentColor,
         sender: socket.id
     });
 
-    window.lastEmitTime = now;
-}
-    // 🔥 redraw background after erasing
-if(currentTool === "eraser"){
-    const type = localStorage.getItem("canvasType");
-
-    if(type === "four") drawFourLines();
-    else if(type === "one") drawOneLines();
-}
-// 🔥 redraw background after drawing
     prevX = x;
     prevY = y;
+});
+mainBoard.addEventListener("pointerup", () => {
+    isDrawingPointer = false;
+});
+
+mainBoard.addEventListener("pointerleave", () => {
+    isDrawingPointer = false;
 });
 // 🔥 ADD THIS (important)
 
