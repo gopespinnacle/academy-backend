@@ -58,7 +58,7 @@ video {
     background: black;
 }
 #mainBoard {
-    touch-action: none;
+    touch-action: auto;
 }
 </style>
 </head>
@@ -295,38 +295,23 @@ function setTool(tool){
 
     if(tool === "pen"){
         currentTool = "pen";
-        canvas.style.cursor = "url('https://www.gopespinnacle.com/images/pen.png') 2 30, auto";
-        drawCanvas.style.pointerEvents = "auto";
-    }
 
-    else if(tool === "eraseDraw"){
-        // 👉 REAL ERASER
-        currentTool = "eraser";
-        canvas.style.cursor = "url('https://www.gopespinnacle.com/images/eraser.png') 10 10, auto";
-        drawCanvas.style.pointerEvents = "auto";
-    }
-
-    function setTool(tool){
-
-    if(tool === "pen"){
-        currentTool = "pen";
-        mainBoard.style.touchAction = "none";   // 🔥 disable scroll
+        mainBoard.style.touchAction = "none";   // disable scroll
     }
 
     else if(tool === "eraseDraw"){
         currentTool = "eraser";
+
         mainBoard.style.touchAction = "none";
     }
 
-    else if(tool === "eraser"){   // 🔴 Back to DOC
+    else if(tool === "eraser"){   // BACK TO DOC
         currentTool = "none";
+
         isDrawingPointer = false;
-        mainBoard.style.touchAction = "auto";   // 🔥 ENABLE SCROLL
+
+        mainBoard.style.touchAction = "auto";   // enable scroll
     }
-  // 🔥 disables drawing
-    drawCanvas.style.pointerEvents = "none";
-    mainDrawing = false;
-}
 }
 
 /* ROLE */
