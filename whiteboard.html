@@ -2,6 +2,7 @@ i can't understand
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta charset="UTF-8">
 <title>Live Whiteboard</title>
 
@@ -35,6 +36,7 @@ button {
 
 canvas {
     display:block;
+    touch-action: none; /* 🔥 ADD THIS */
 }
 
 #board {
@@ -164,7 +166,17 @@ video {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
+function getTouchPos(canvas, touchEvent){
+    const rect = canvas.getBoundingClientRect();
 
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+        x: (touchEvent.touches[0].clientX - rect.left) * scaleX,
+        y: (touchEvent.touches[0].clientY - rect.top) * scaleY
+    };
+}
 const params = new URLSearchParams(window.location.search);
 const room = params.get("room");
 const role = params.get("role");
@@ -181,6 +193,18 @@ const dctx = drawCanvas.getContext("2d");
 // 🔥 ADD HERE (exactly here)
 const mainBoard = document.getElementById("mainBoard");
 const mainCtx = mainBoard.getContext("2d");
+
+function getTouchPos(canvas, touchEvent){
+    const rect = canvas.getBoundingClientRect();
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+        x: (touchEvent.touches[0].clientX - rect.left) * scaleX,
+        y: (touchEvent.touches[0].clientY - rect.top) * scaleY
+    };
+}
 function getPDFHistoryKey(){
     const pdf = localStorage.getItem("currentPDF") || "default";
     return "pdfHistory_" + pdf;
@@ -301,6 +325,69 @@ if(currentTool === "eraser"){
 // 🔥 redraw background after drawing
     prevX = x;
     prevY = y;
+});
+
+// 🔥 TOUCH SUPPORT (MAIN BOARD)
+
+mainBoard.addEventListener("touchstart", (e) => {
+    if(role !== "teacher") return;
+
+    e.preventDefault();
+
+    mainDrawing = true;
+
+    const pos = getTouchPos(mainBoard, e);
+
+    prevX = pos.x;
+    prevY = pos.y;
+
+    mainCtx.beginPath();
+    mainCtx.moveTo(prevX, prevY);
+});
+
+mainBoard.addEventListener("touchmove", (e) => {
+    if(!mainDrawing || role !== "teacher") return;
+
+    e.preventDefault();
+
+    const pos = getTouchPos(mainBoard, e);
+
+    const x = pos.x;
+    const y = pos.y;
+
+    mainCtx.beginPath();
+    mainCtx.moveTo(prevX, prevY);
+    mainCtx.lineTo(x, y);
+
+    if(currentTool === "eraser"){
+        mainCtx.globalCompositeOperation = "source-over";
+        mainCtx.strokeStyle = "white";
+        mainCtx.lineWidth = 20;
+    } else {
+        mainCtx.globalCompositeOperation = "source-over";
+        mainCtx.strokeStyle = currentColor;
+        mainCtx.lineWidth = 2;
+    }
+
+    mainCtx.stroke();
+
+    socket.emit("draw", {
+        room,
+        prevX,
+        prevY,
+        x,
+        y,
+        tool: currentTool,
+        color: currentTool === "eraser" ? "erase" : currentColor,
+        sender: socket.id
+    });
+
+    prevX = x;
+    prevY = y;
+});
+
+mainBoard.addEventListener("touchend", () => {
+    mainDrawing = false;
 });
 // 🔥 ADD THIS (important)
 
@@ -446,6 +533,55 @@ const y = (e.clientY - rect.top) * scaleY;
     prevY = y;
 });
 
+
+// 🔥 TOUCH SUPPORT (PDF DRAW)
+
+drawCanvas.addEventListener("touchstart", (e) => {
+    if(role !== "teacher") return;
+
+    e.preventDefault();
+
+    const pos = getTouchPos(drawCanvas, e);
+
+    prevX = pos.x;
+    prevY = pos.y;
+
+    drawing = true;
+
+    dctx.beginPath();
+    dctx.moveTo(prevX, prevY);
+});
+
+drawCanvas.addEventListener("touchmove", (e) => {
+    if(!drawing || role !== "teacher") return;
+
+    e.preventDefault();
+
+    const pos = getTouchPos(drawCanvas, e);
+
+    const x = pos.x;
+    const y = pos.y;
+
+    drawLine(prevX, prevY, x, y, currentTool, currentColor);
+
+    socket.emit("draw", {
+        room,
+        prevX,
+        prevY,
+        x,
+        y,
+        tool: currentTool,
+        color: currentColor,
+        sender: socket.id
+    });
+
+    prevX = x;
+    prevY = y;
+});
+
+drawCanvas.addEventListener("touchend", () => {
+    drawing = false;
+});
 /* 🔥 DRAW FUNCTION WITH ERASER */
 function drawLine(x1, y1, x2, y2, tool, color){
 
