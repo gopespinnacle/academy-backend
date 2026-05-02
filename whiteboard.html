@@ -36,7 +36,7 @@ button {
 
 canvas {
     display:block;
-    touch-action: none; /* 🔥 ADD THIS */
+     /* 🔥 ADD THIS */
 }
 
 #board {
@@ -193,7 +193,8 @@ const dctx = drawCanvas.getContext("2d");
 // 🔥 ADD HERE (exactly here)
 const mainBoard = document.getElementById("mainBoard");
 const mainCtx = mainBoard.getContext("2d");
-
+mainBoard.style.touchAction = "auto"; // ✅ allow scroll initially
+setTool("eraser");
 function getTouchPos(canvas, touchEvent){
     const rect = canvas.getBoundingClientRect();
 
@@ -412,8 +413,9 @@ let prevY = 0;
 
 /* ✅ TOOL */
 let currentTool = "pen";
-let isDrawingEnabled = true; // 🔥 NEW CONTROL
+let isDrawingEnabled = false; // 🔥 NEW CONTROL
 let currentColor = "#000000";
+setTool("eraser"); // 🔥 start in scroll mode
 document.getElementById("colorPicker").addEventListener("input", (e) => {
     currentColor = e.target.value;
 });
@@ -448,6 +450,7 @@ function setTool(tool){
         drawCanvas.style.pointerEvents = "none";
 
         mainBoard.style.touchAction = "auto"; // ✅ allow scroll
+
     }
 }
 
