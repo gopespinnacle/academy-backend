@@ -241,6 +241,9 @@ socket.on("teacherJoined", (room) => {
 });
     /* DRAW */
     socket.on("draw", (data) => {
+        socket.on("screenDraw", (data) => {
+    socket.to(data.room).emit("screenDraw", data);
+});
 
     // 🔥 STORE DRAW DATA
     if(!boardData[data.room]){

@@ -79,34 +79,50 @@ video {
     </div>
 <button onclick="setTool('eraseDraw')">🧽 Erase</button>
 <button onclick="saveAsPDF()">💾 Save PDF</button>
+
+<button onclick="startScreenShare()">🖥 Share Screen</button>
+<button onclick="stopScreenShare()">❌ Stop Share</button>
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
-<!-- VIDEO SECTION -->
-<div style="
+<!-- 🔥 SCREEN SHARE CONTAINER -->
+<div id="screenContainer" style="
     position:fixed;
     top:70px;
-    right:10px;
+    left:10px;
+    width:70%;
+    height:70%;
     z-index:9999;
-    display:flex;
-    flex-direction:column;
-    gap:5px;
 ">
-    <video id="remoteVideo" autoplay playsinline style="
-    width:220px;
-    height:150px;
-    object-fit:cover;
-    border-radius:10px;
-"></video>
 
-<video id="localVideo" autoplay muted playsinline style="
-    width:100px;
-    height:70px;
-    position:absolute;
-    bottom:5px;
-    right:5px;
-    object-fit:cover;
-    border-radius:10px;
-"></video>
+    <!-- REMOTE (student sees teacher screen) -->
+    <video id="remoteVideo" autoplay playsinline style="
+        width:100%;
+        height:100%;
+        object-fit:contain;
+        background:black;
+    "></video>
+
+    <!-- DRAWING LAYER -->
+    <canvas id="screenDraw" style="
+        position:absolute;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        z-index:5;
+    "></canvas>
+
+    <!-- LOCAL SMALL PREVIEW -->
+    <video id="localVideo" autoplay muted playsinline style="
+        width:120px;
+        height:80px;
+        position:absolute;
+        bottom:10px;
+        right:10px;
+        border-radius:8px;
+        z-index:10;
+    "></video>
+
 </div>
 <input type="file" id="fileInput">
 
@@ -193,6 +209,17 @@ const dctx = drawCanvas.getContext("2d");
 // 🔥 ADD HERE (exactly here)
 const mainBoard = document.getElementById("mainBoard");
 const mainCtx = mainBoard.getContext("2d");
+// 🔥 SCREEN DRAW SETUP
+const screenCanvas = document.getElementById("screenDraw");
+const screenCtx = screenCanvas.getContext("2d");
+
+// match size properly
+function resizeScreenCanvas(){
+    screenCanvas.width = screenCanvas.offsetWidth;
+    screenCanvas.height = screenCanvas.offsetHeight;
+}
+resizeScreenCanvas();
+window.addEventListener("resize", resizeScreenCanvas);
 function getPDFHistoryKey(){
     const pdf = localStorage.getItem("currentPDF") || "default";
     return "pdfHistory_" + pdf;
@@ -261,6 +288,53 @@ mainBoard.addEventListener("pointerup", () => {
 });
 
 mainBoard.addEventListener("pointerleave", () => {
+    isDrawingPointer = false;
+});
+
+// 🔥 SCREEN DRAW POINTER EVENTS
+screenCanvas.addEventListener("pointerdown", (e) => {
+    if(role !== "teacher") return;
+
+    isDrawingPointer = true;
+
+    const rect = screenCanvas.getBoundingClientRect();
+
+    prevX = (e.clientX - rect.left) * (screenCanvas.width / rect.width);
+    prevY = (e.clientY - rect.top) * (screenCanvas.height / rect.height);
+});
+
+screenCanvas.addEventListener("pointermove", (e) => {
+
+    if(!isDrawingPointer) return;
+    if(role !== "teacher") return;
+
+    const rect = screenCanvas.getBoundingClientRect();
+
+    const x = (e.clientX - rect.left) * (screenCanvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (screenCanvas.height / rect.height);
+
+    screenCtx.beginPath();
+    screenCtx.moveTo(prevX, prevY);
+    screenCtx.lineTo(x, y);
+    screenCtx.strokeStyle = currentColor;
+    screenCtx.lineWidth = 3;
+    screenCtx.lineCap = "round";
+    screenCtx.stroke();
+
+    socket.emit("screenDraw", {
+        room,
+        prevX,
+        prevY,
+        x,
+        y,
+        color: currentColor
+    });
+
+    prevX = x;
+    prevY = y;
+});
+
+screenCanvas.addEventListener("pointerup", () => {
     isDrawingPointer = false;
 });
 // 🔥 ADD THIS (important)
@@ -522,6 +596,48 @@ socket.on("draw", (data) => {
     }
 
     mainCtx.stroke();
+});
+
+/* RECEIVE DRAW */
+socket.on("draw", (data) => {
+
+    if(data.sender === socket.id) return;
+
+    if(document.getElementById("pdfWindow").style.display === "block"){
+        drawLine(data.prevX, data.prevY, data.x, data.y, data.tool, data.color);
+        return;
+    }
+
+    mainCtx.beginPath();
+    mainCtx.moveTo(data.prevX, data.prevY);
+    mainCtx.lineTo(data.x, data.y);
+
+    mainCtx.lineCap = "round";
+
+    if(data.tool === "eraser" || data.color === "erase"){
+        mainCtx.globalCompositeOperation = "destination-out";
+        mainCtx.lineWidth = 20;
+    } else {
+        mainCtx.globalCompositeOperation = "source-over";
+        mainCtx.strokeStyle = data.color;
+        mainCtx.lineWidth = 2;
+    }
+
+    mainCtx.stroke();
+});
+
+
+// ✅ ✅ ADD EXACTLY HERE (NEW CODE)
+socket.on("screenDraw", (data) => {
+
+    screenCtx.beginPath();
+    screenCtx.moveTo(data.prevX, data.prevY);
+    screenCtx.lineTo(data.x, data.y);
+
+    screenCtx.strokeStyle = data.color;
+    screenCtx.lineWidth = 3;
+    screenCtx.lineCap = "round";
+    screenCtx.stroke();
 });
 socket.on("loadBoard", (dataArray) => {
 
@@ -983,6 +1099,59 @@ setTimeout(() => {
         }
     });
 }, 500);
+
+
+let screenStream;
+
+async function startScreenShare(){
+
+    if(role !== "teacher") return;
+
+    try{
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: true
+        });
+
+        const screenTrack = screenStream.getVideoTracks()[0];
+
+        // 🔥 Replace camera with screen
+        const sender = pc.getSenders().find(s => s.track.kind === "video");
+
+        if(sender){
+            sender.replaceTrack(screenTrack);
+        }
+
+        // show locally
+        document.getElementById("localVideo").srcObject = screenStream;
+
+        // when user stops share manually
+        screenTrack.onended = () => {
+            stopScreenShare();
+        };
+
+    }catch(err){
+        console.log("Screen share error:", err);
+    }
+}
+
+async function stopScreenShare(){
+
+    if(!screenStream) return;
+
+    const videoTrack = localStream.getVideoTracks()[0];
+
+    const sender = pc.getSenders().find(s => s.track.kind === "video");
+
+    if(sender){
+        sender.replaceTrack(videoTrack);
+    }
+
+    document.getElementById("localVideo").srcObject = localStream;
+
+    screenStream.getTracks().forEach(track => track.stop());
+
+    screenStream = null;
+}
 </script>
 </body>
 </html>
