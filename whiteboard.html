@@ -208,9 +208,9 @@ let isDrawingPointer = false;
 
 mainBoard.addEventListener("pointerdown", (e) => {
     if(role !== "teacher") return;
-    if(currentTool === "none") return;
+    if(currentTool !== "pen") return;   // 🔥 ONLY allow pen
 
-    e.preventDefault();   // 🔥 ADD THIS LINE
+    e.preventDefault();
 
     isDrawingPointer = true;
 
@@ -225,7 +225,7 @@ mainBoard.addEventListener("pointermove", (e) => {
 
     if(!isDrawingPointer) return;
     if(role !== "teacher") return;
-    if(currentTool === "none") return;
+    if(currentTool !== "pen") return;
 
     const rect = mainBoard.getBoundingClientRect();
 
@@ -238,7 +238,7 @@ mainBoard.addEventListener("pointermove", (e) => {
 
     mainCtx.strokeStyle = currentColor;
     mainCtx.lineWidth = 2;
-    
+
     mainCtx.lineCap = "round";   // 🔥 ADD (smooth line)
     mainCtx.stroke();
 
@@ -306,8 +306,24 @@ function setTool(tool){
         drawCanvas.style.pointerEvents = "auto";
     }
 
-    else if(tool === "eraser"){
-    currentTool = "none";   // 🔥 disables drawing
+    function setTool(tool){
+
+    if(tool === "pen"){
+        currentTool = "pen";
+        mainBoard.style.touchAction = "none";   // 🔥 disable scroll
+    }
+
+    else if(tool === "eraseDraw"){
+        currentTool = "eraser";
+        mainBoard.style.touchAction = "none";
+    }
+
+    else if(tool === "eraser"){   // 🔴 Back to DOC
+        currentTool = "none";
+        isDrawingPointer = false;
+        mainBoard.style.touchAction = "auto";   // 🔥 ENABLE SCROLL
+    }
+  // 🔥 disables drawing
     drawCanvas.style.pointerEvents = "none";
     mainDrawing = false;
 }
