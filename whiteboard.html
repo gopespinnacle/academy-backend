@@ -57,6 +57,9 @@ canvas {
 video {
     background: black;
 }
+#mainBoard {
+    touch-action: none;
+}
 </style>
 </head>
 
@@ -262,12 +265,12 @@ history.push({
     color: currentTool === "eraser" ? "erase" : currentColor
 });
 
-// ================= MOBILE TOUCH SUPPORT (MAIN BOARD) =================
+// ================= // ================= MOBILE TOUCH SUPPORT (MAIN BOARD) =================
 
 // TOUCH START
 mainBoard.addEventListener("touchstart", (e) => {
     if(role !== "teacher") return;
-    if(drawCanvas.style.pointerEvents === "none") return;
+    if(currentTool === "none") return;
 
     e.preventDefault();
 
@@ -279,17 +282,13 @@ mainBoard.addEventListener("touchstart", (e) => {
     const scaleX = mainBoard.width / rect.width;
     const scaleY = mainBoard.height / rect.height;
 
-    const x = (touch.clientX - rect.left) * scaleX;
-    const y = (touch.clientY - rect.top) * scaleY;
-
-    prevX = x;
-    prevY = y;
+    prevX = (touch.clientX - rect.left) * scaleX;
+    prevY = (touch.clientY - rect.top) * scaleY;
 });
 
 // TOUCH MOVE
 mainBoard.addEventListener("touchmove", (e) => {
     if(!mainDrawing || role !== "teacher" || currentTool === "none") return;
-    if(drawCanvas.style.pointerEvents === "none") return;
 
     e.preventDefault();
 
@@ -306,15 +305,8 @@ mainBoard.addEventListener("touchmove", (e) => {
     mainCtx.moveTo(prevX, prevY);
     mainCtx.lineTo(x, y);
 
-    if(currentTool === "eraser"){
-        mainCtx.globalCompositeOperation = "destination-out";
-        mainCtx.lineWidth = 20;
-    } else {
-        mainCtx.globalCompositeOperation = "source-over";
-        mainCtx.strokeStyle = currentColor;
-        mainCtx.lineWidth = 2;
-    }
-
+    mainCtx.strokeStyle = currentColor;
+    mainCtx.lineWidth = 2;
     mainCtx.stroke();
 
     socket.emit("draw", {
