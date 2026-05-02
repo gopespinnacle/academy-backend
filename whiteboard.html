@@ -218,7 +218,7 @@ function getHistoryKey(){
 let mainDrawing = false;
 
 mainBoard.addEventListener("mousedown", (e) => {
-    if(role !== "teacher") return;
+    if(role !== "teacher" || !isDrawingEnabled) return;
 
     mainDrawing = true;
 
@@ -248,7 +248,7 @@ mainBoard.addEventListener("mouseleave", () => {
 
 mainBoard.addEventListener("mousemove", (e) => {
 let lastEmitTime = 0;
-    if(!mainDrawing || role !== "teacher") return;
+    if(!mainDrawing || role !== "teacher" || !isDrawingEnabled) return;
 
     const rect = mainBoard.getBoundingClientRect();
 
@@ -330,7 +330,7 @@ if(currentTool === "eraser"){
 // 🔥 TOUCH SUPPORT (MAIN BOARD)
 
 mainBoard.addEventListener("touchstart", (e) => {
-    if(role !== "teacher") return;
+    if(role !== "teacher" || !isDrawingEnabled) return;
 
     e.preventDefault();
 
@@ -346,7 +346,7 @@ mainBoard.addEventListener("touchstart", (e) => {
 });
 
 mainBoard.addEventListener("touchmove", (e) => {
-    if(!mainDrawing || role !== "teacher") return;
+    if(!mainDrawing || role !== "teacher" || !isDrawingEnabled) return;
 
     e.preventDefault();
 
@@ -412,6 +412,7 @@ let prevY = 0;
 
 /* ✅ TOOL */
 let currentTool = "pen";
+let isDrawingEnabled = true; // 🔥 NEW CONTROL
 let currentColor = "#000000";
 document.getElementById("colorPicker").addEventListener("input", (e) => {
     currentColor = e.target.value;
@@ -421,21 +422,32 @@ function setTool(tool){
 
     if(tool === "pen"){
         currentTool = "pen";
+        isDrawingEnabled = true; // ✅ ENABLE DRAW
+
         canvas.style.cursor = "url('https://www.gopespinnacle.com/images/pen.png') 2 30, auto";
         drawCanvas.style.pointerEvents = "auto";
+
+        mainBoard.style.touchAction = "none"; // 🔥 block scroll
     }
 
     else if(tool === "eraseDraw"){
-        // 👉 REAL ERASER
         currentTool = "eraser";
+        isDrawingEnabled = true; // ✅ ENABLE DRAW
+
         canvas.style.cursor = "url('https://www.gopespinnacle.com/images/eraser.png') 10 10, auto";
         drawCanvas.style.pointerEvents = "auto";
+
+        mainBoard.style.touchAction = "none"; // 🔥 block scroll
     }
 
     else if(tool === "eraser"){
         // 👉 BACK TO DOC (SCROLL MODE)
-        currentTool = "pen"; // (important: avoid erase mode)
+        currentTool = "pen";
+        isDrawingEnabled = false; // ❌ DISABLE DRAW
+
         drawCanvas.style.pointerEvents = "none";
+
+        mainBoard.style.touchAction = "auto"; // ✅ allow scroll
     }
 }
 
@@ -485,7 +497,7 @@ if(savedPDF && pdfOpen === "true"){
 });
 /* DRAW START */
 drawCanvas.addEventListener("mousedown", (e) => {
-    if(role !== "teacher") return;
+    if(role !== "teacher" || !isDrawingEnabled) return;
 
     const rect = drawCanvas.getBoundingClientRect();
 
@@ -505,9 +517,7 @@ drawCanvas.addEventListener("mousedown", (e) => {
 drawCanvas.addEventListener("mousemove", (e) => {
 
     if(e.buttons !== 1) return;   // 🔥 ADD THIS LINE
-    if(!drawing || role !== "teacher") return;
-
-    if(!drawing || role !== "teacher") return;
+    if(!drawing || role !== "teacher" || !isDrawingEnabled) return;
 
     const rect = drawCanvas.getBoundingClientRect();
 
@@ -537,7 +547,7 @@ const y = (e.clientY - rect.top) * scaleY;
 // 🔥 TOUCH SUPPORT (PDF DRAW)
 
 drawCanvas.addEventListener("touchstart", (e) => {
-    if(role !== "teacher") return;
+    if(role !== "teacher" || !isDrawingEnabled) return;
 
     e.preventDefault();
 
@@ -553,7 +563,7 @@ drawCanvas.addEventListener("touchstart", (e) => {
 });
 
 drawCanvas.addEventListener("touchmove", (e) => {
-    if(!drawing || role !== "teacher") return;
+    if(!drawing || role !== "teacher" || !isDrawingEnabled) return;
 
     e.preventDefault();
 
