@@ -265,7 +265,8 @@ history.push({
     color: currentTool === "eraser" ? "erase" : currentColor
 });
 
-// ================= // ================= MOBILE TOUCH SUPPORT (MAIN BOARD) =================
+
+// ================= MOBILE TOUCH SUPPORT (MAIN BOARD) =================
 
 // TOUCH START
 mainBoard.addEventListener("touchstart", (e) => {
@@ -273,17 +274,13 @@ mainBoard.addEventListener("touchstart", (e) => {
     if(currentTool === "none") return;
 
     e.preventDefault();
-
     mainDrawing = true;
 
     const rect = mainBoard.getBoundingClientRect();
     const touch = e.touches[0];
 
-    const scaleX = mainBoard.width / rect.width;
-    const scaleY = mainBoard.height / rect.height;
-
-    prevX = (touch.clientX - rect.left) * scaleX;
-    prevY = (touch.clientY - rect.top) * scaleY;
+    prevX = (touch.clientX - rect.left) * (mainBoard.width / rect.width);
+    prevY = (touch.clientY - rect.top) * (mainBoard.height / rect.height);
 });
 
 // TOUCH MOVE
@@ -295,30 +292,15 @@ mainBoard.addEventListener("touchmove", (e) => {
     const rect = mainBoard.getBoundingClientRect();
     const touch = e.touches[0];
 
-    const scaleX = mainBoard.width / rect.width;
-    const scaleY = mainBoard.height / rect.height;
-
-    const x = (touch.clientX - rect.left) * scaleX;
-    const y = (touch.clientY - rect.top) * scaleY;
+    const x = (touch.clientX - rect.left) * (mainBoard.width / rect.width);
+    const y = (touch.clientY - rect.top) * (mainBoard.height / rect.height);
 
     mainCtx.beginPath();
     mainCtx.moveTo(prevX, prevY);
     mainCtx.lineTo(x, y);
-
     mainCtx.strokeStyle = currentColor;
     mainCtx.lineWidth = 2;
     mainCtx.stroke();
-
-    socket.emit("draw", {
-        room,
-        prevX,
-        prevY,
-        x,
-        y,
-        tool: currentTool,
-        color: currentColor,
-        sender: socket.id
-    });
 
     prevX = x;
     prevY = y;
