@@ -1283,7 +1283,12 @@ function toggleVideo(){
 }
 
 async function startPiP() {
-    const video = document.getElementById("localVideo");
+    const video = document.getElementById("remoteVideo"); 
+
+    if (!video.srcObject) {
+        alert("Student video not available yet");
+        return;
+    }
 
     if (!document.pictureInPictureElement) {
         await video.requestPictureInPicture();
@@ -1291,6 +1296,7 @@ async function startPiP() {
         await document.exitPictureInPicture();
     }
 }
+ 
 </script>
 </body>
 </html>
