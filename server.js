@@ -240,12 +240,9 @@ socket.on("teacherJoined", (room) => {
 
 });
     /* DRAW */
-    socket.on("draw", (data) => {
-        socket.on("screenDraw", (data) => {
-    socket.to(data.room).emit("screenDraw", data);
-});
+    // ================= DRAW =================
+socket.on("draw", (data) => {
 
-    // 🔥 STORE DRAW DATA
     if(!boardData[data.room]){
         boardData[data.room] = [];
     }
@@ -253,6 +250,11 @@ socket.on("teacherJoined", (room) => {
     boardData[data.room].push(data);
 
     socket.to(data.room).emit("draw", data);
+});
+
+// ================= SCREEN DRAW =================
+socket.on("screenDraw", (data) => {
+    socket.to(data.room).emit("screenDraw", data);
 });
 socket.on("fileShare", (data) => {
     socket.to(data.room).emit("fileShare", data);

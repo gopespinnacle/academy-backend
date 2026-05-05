@@ -87,13 +87,15 @@ video {
 <!-- 🔥 SCREEN SHARE CONTAINER -->
 <div id="screenContainer" style="
     position:fixed;
-    top:70px;
-    left:10px;
-    width:70%;
-    height:70%;
+    bottom:20px;
+    right:20px;
+    width:300px;
+    height:200px;
     z-index:9999;
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 0 10px rgba(0,0,0,0.5);
 ">
-
     <!-- REMOTE (student sees teacher screen) -->
     <video id="remoteVideo" autoplay playsinline style="
         width:100%;
@@ -1152,6 +1154,28 @@ async function stopScreenShare(){
 
     screenStream = null;
 }
+
+const dragItem = document.getElementById("screenContainer");
+
+let isDragging = false;
+let offsetX, offsetY;
+
+dragItem.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    offsetX = e.clientX - dragItem.offsetLeft;
+    offsetY = e.clientY - dragItem.offsetTop;
+});
+
+document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+
+    dragItem.style.left = (e.clientX - offsetX) + "px";
+    dragItem.style.top = (e.clientY - offsetY) + "px";
+});
+
+document.addEventListener("mouseup", () => {
+    isDragging = false;
+});
 </script>
 </body>
 </html>
