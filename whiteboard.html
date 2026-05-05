@@ -82,6 +82,8 @@ video {
 
 <button onclick="startScreenShare()">🖥 Share Screen</button>
 <button onclick="stopScreenShare()">❌ Stop Share</button>
+<button onclick="toggleAudio()">🎤 Mute</button>
+<button onclick="toggleVideo()">📷 Stop Video</button>
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
@@ -1176,6 +1178,38 @@ document.addEventListener("mousemove", (e) => {
 document.addEventListener("mouseup", () => {
     isDragging = false;
 });
+
+let isAudioOn = true;
+let isVideoOn = true;
+
+// 🎤 TOGGLE AUDIO
+function toggleAudio(){
+
+    if(!localStream) return;
+
+    const audioTrack = localStream.getAudioTracks()[0];
+    if(!audioTrack) return;
+
+    isAudioOn = !isAudioOn;
+    audioTrack.enabled = isAudioOn;
+
+    // change button text
+    event.target.innerText = isAudioOn ? "🎤 Mute" : "🔇 Unmute";
+}
+
+// 📷 TOGGLE VIDEO
+function toggleVideo(){
+
+    if(!localStream) return;
+
+    const videoTrack = localStream.getVideoTracks()[0];
+    if(!videoTrack) return;
+
+    isVideoOn = !isVideoOn;
+    videoTrack.enabled = isVideoOn;
+
+    event.target.innerText = isVideoOn ? "📷 Stop Video" : "📷 Start Video";
+}
 </script>
 </body>
 </html>
