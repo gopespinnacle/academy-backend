@@ -92,6 +92,7 @@ video {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    z-index: 0;
 }
 #screenDraw {
     position: absolute;
@@ -99,7 +100,7 @@ video {
     left: 0;
     width: 100%;
     height: calc(100% - 30px);
-    z-index: 2;   /* middle */
+    z-index: 1;   /* 🔥 LOWER IT */
 }
 
 #localVideo {
@@ -111,6 +112,8 @@ video {
     border-radius: 8px;
     border: 2px solid white;
     object-fit: cover;
+
+    z-index: 99999;   /* 🔥 THIS FIXES EVERYTHING */
 }
 
 #screenContainer {
