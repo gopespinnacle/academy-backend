@@ -71,7 +71,8 @@ video {
     border-radius: 10px;
     overflow: hidden;
     z-index: 9999;
-    resize: both;
+
+    display: block !important;
 }
 
 /* HEADER */
@@ -107,19 +108,23 @@ video {
     position: absolute;
     bottom: 10px;
     right: 10px;
-    width: 90px;
-    height: 60px;
+    width: 100px;
+    height: 70px;
+
+    background: red;   /* 🔥 TEMP DEBUG */
+    
     border-radius: 8px;
     border: 2px solid white;
+
     object-fit: cover;
 
-    z-index: 99999;   /* 🔥 THIS FIXES EVERYTHING */
+    z-index: 99999;
+
+    display: block !important;
+    opacity: 1 !important;
 }
 
-#screenContainer {
-    position: fixed;
-    overflow: hidden;
-}
+
 /* MINIMIZE */
 .minimized {
     height: 40px !important;
@@ -170,7 +175,7 @@ video {
     <canvas id="screenDraw"></canvas>
 
     <!-- LOCAL VIDEO -->
-    <video id="localVideo" autoplay muted playsinline></video>
+    <video id="localVideo" autoplay muted playsinline style="display:block;"></video>
 
     const localVideoEl = document.getElementById("localVideo");
 
