@@ -71,8 +71,7 @@ video {
     border-radius: 10px;
     overflow: hidden;
     z-index: 9999;
-
-    display: block !important;
+    resize: both;
 }
 
 /* HEADER */
@@ -105,22 +104,29 @@ video {
 }
 
 #localVideo {
-    position: fixed;   /* 🔥 CHANGE FROM absolute */
-    bottom: 20px;
-    right: 20px;
-    width: 120px;
-    height: 80px;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 100px;
+    height: 70px;
 
-    border-radius: 10px;
+    background: red;   /* 🔥 TEMP DEBUG */
+    
+    border-radius: 8px;
     border: 2px solid white;
 
     object-fit: cover;
 
-    z-index: 999999;
-    background: black;
+    z-index: 99999;
+
+    display: block !important;
+    opacity: 1 !important;
 }
 
-
+#screenContainer {
+    position: fixed;
+    overflow: hidden;
+}
 /* MINIMIZE */
 .minimized {
     height: 40px !important;
@@ -171,7 +177,13 @@ video {
     <canvas id="screenDraw"></canvas>
 
     <!-- LOCAL VIDEO -->
-    
+    <video id="localVideo" autoplay muted playsinline></video>
+
+    const localVideoEl = document.getElementById("localVideo");
+
+localVideoEl.onloadedmetadata = () => {
+    localVideoEl.play().catch(() => {});
+};
 
 </div>
         <!-- LOCAL SMALL PREVIEW -->
@@ -1282,8 +1294,6 @@ function toggleVideo(){
 
 
 </script>
-
-<video id="localVideo" autoplay muted playsinline></video>
 </body>
 </html>
 
