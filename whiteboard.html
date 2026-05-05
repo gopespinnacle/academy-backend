@@ -92,35 +92,34 @@ video {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: 0;
+    z-index: 1;
 }
 #screenDraw {
-    position: absolute;
-    top: 30px;
-    left: 0;
-    width: 100%;
-    height: calc(100% - 30px);
-    z-index: 1;   /* 🔥 LOWER IT */
+    z-index: 2;
+    pointer-events: none;  /* 🔥 VERY IMPORTANT */
 }
 
+#remoteVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+}
+
+/* 🔥 TEACHER SMALL VIDEO */
 #localVideo {
     position: absolute;
     bottom: 10px;
     right: 10px;
-    width: 100px;
-    height: 70px;
+    width: 120px;
+    height: 90px;
 
-    background: red;   /* 🔥 TEMP DEBUG */
-    
-    border-radius: 8px;
+    border-radius: 10px;
     border: 2px solid white;
 
     object-fit: cover;
 
-    z-index: 99999;
-
-    display: block !important;
-    opacity: 1 !important;
+    z-index: 5;   /* MUST be above everything */
 }
 
 #screenContainer {
