@@ -172,6 +172,12 @@ video {
     <!-- LOCAL VIDEO -->
     <video id="localVideo" autoplay muted playsinline></video>
 
+    const localVideoEl = document.getElementById("localVideo");
+
+localVideoEl.onloadedmetadata = () => {
+    localVideoEl.play().catch(() => {});
+};
+
 </div>
         <!-- LOCAL SMALL PREVIEW -->
     
@@ -1067,7 +1073,13 @@ async function initMedia(){
         audio: true
     });
 
-    document.getElementById("localVideo").srcObject = localStream;
+    console.log("LOCAL STREAM:", localStream);  // ✅ ADD HERE
+
+    const localVideo = document.getElementById("localVideo");
+
+    localVideo.srcObject = localStream;
+    localVideo.muted = true;
+    await localVideo.play();
 }
 
 let pc;
@@ -1167,7 +1179,10 @@ async function startScreenShare(){
 if (sender) {
     sender.replaceTrack(screenTrack);   // 🔥 KEY FIX
 }
-document.getElementById("localVideo").srcObject = localStream;
+const localVideo = document.getElementById("localVideo");
+localVideo.srcObject = localStream;
+localVideo.muted = true;
+await localVideo.play();
         // show locally
         
 
