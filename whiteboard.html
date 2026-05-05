@@ -1159,11 +1159,7 @@ async function startScreenShare(){
         const screenTrack = screenStream.getVideoTracks()[0];
 
         // 🔥 Replace camera with screen
-        const sender = pc.getSenders().find(s => s.track.kind === "video");
-
-        if(sender){
-            sender.replaceTrack(screenTrack);
-        }
+        pc.addTrack(screenTrack, screenStream);
 
         // show locally
         document.getElementById("localVideo").srcObject = screenStream;
