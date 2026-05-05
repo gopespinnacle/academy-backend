@@ -1162,7 +1162,7 @@ async function startScreenShare(){
         pc.addTrack(screenTrack, screenStream);
 
         // show locally
-        document.getElementById("localVideo").srcObject = screenStream;
+        
 
         // when user stops share manually
         screenTrack.onended = () => {
@@ -1180,11 +1180,8 @@ async function stopScreenShare(){
 
     const videoTrack = localStream.getVideoTracks()[0];
 
-    const sender = pc.getSenders().find(s => s.track.kind === "video");
-
-    if(sender){
-        sender.replaceTrack(videoTrack);
-    }
+    screenStream.getTracks().forEach(track => track.stop());
+screenStream = null;
 
     document.getElementById("localVideo").srcObject = localStream;
 
