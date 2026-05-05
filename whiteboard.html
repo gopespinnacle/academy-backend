@@ -156,6 +156,7 @@ video {
 <button onclick="stopScreenShare()">❌ Stop Share</button>
 <button onclick="toggleAudio()">🎤 Mute</button>
 <button onclick="toggleVideo()">📷 Stop Video</button>
+<button onclick="startPiP()">📺 Camera PiP</button>
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
@@ -179,11 +180,7 @@ video {
     <!-- LOCAL VIDEO -->
     <video id="localVideo" autoplay muted playsinline></video>
 
-    const localVideoEl = document.getElementById("localVideo");
-
-localVideoEl.onloadedmetadata = () => {
-    localVideoEl.play().catch(() => {});
-};
+    
 
 </div>
         <!-- LOCAL SMALL PREVIEW -->
@@ -1180,20 +1177,13 @@ async function startScreenShare(){
 
         const screenTrack = screenStream.getVideoTracks()[0];
 
-        // 🔥 Replace camera with screen
+        // 🔥 THIS WAS MISSING (VERY IMPORTANT)
         const sender = pc.getSenders().find(s => s.track.kind === "video");
 
-if (sender) {
-    sender.replaceTrack(screenTrack);   // 🔥 KEY FIX
-}
-const localVideo = document.getElementById("localVideo");
-localVideo.srcObject = localStream;
-localVideo.muted = true;
-await localVideo.play();
-        // show locally
-        
+        if (sender) {
+            sender.replaceTrack(screenTrack);
+        }
 
-        // when user stops share manually
         screenTrack.onended = () => {
             stopScreenShare();
         };
@@ -1292,7 +1282,15 @@ function toggleVideo(){
     event.target.innerText = isVideoOn ? "📷 Stop Video" : "📷 Start Video";
 }
 
+async function startPiP() {
+    const video = document.getElementById("localVideo");
 
+    if (!document.pictureInPictureElement) {
+        await video.requestPictureInPicture();
+    } else {
+        await document.exitPictureInPicture();
+    }
+}
 </script>
 </body>
 </html>
