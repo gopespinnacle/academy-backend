@@ -60,6 +60,64 @@ video {
 #mainBoard {
     touch-action: auto;
 }
+
+#screenContainer {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 350px;
+    height: 220px;
+    background: black;
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 9999;
+    resize: both;
+}
+
+/* HEADER */
+#pipHeader {
+    height: 30px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    cursor: move;
+    font-size: 12px;
+}
+
+/* VIDEO */
+#remoteVideo {
+    width: 100%;
+    height: calc(100% - 30px);
+    object-fit: contain;
+}
+
+/* DRAW */
+#screenDraw {
+    position: absolute;
+    top: 30px;
+    left: 0;
+    width: 100%;
+    height: calc(100% - 30px);
+}
+
+/* LOCAL VIDEO */
+#localVideo {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 90px;
+    height: 60px;
+    border-radius: 6px;
+}
+
+/* MINIMIZE */
+.minimized {
+    height: 40px !important;
+    width: 200px !important;
+}
 </style>
 </head>
 
@@ -87,17 +145,27 @@ video {
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
-<div id="screenContainer" style="
-    position:fixed;
-    bottom:450px;
-    right:10px;
-    width:200px;
-    height:100px;
-    z-index:9999;
-    border-radius:10px;
-    overflow:hidden;
-    box-shadow:0 0 10px rgba(0,0,0,0.5);
-">
+<div id="screenContainer">
+
+    <!-- HEADER -->
+    <div id="pipHeader">
+        <span>📺 Live</span>
+        <div>
+            <button onclick="minimizePiP()">➖</button>
+            <button onclick="resetPiP()">🔲</button>
+        </div>
+    </div>
+
+    <!-- REMOTE VIDEO -->
+    <video id="remoteVideo" autoplay playsinline></video>
+
+    <!-- DRAW -->
+    <canvas id="screenDraw"></canvas>
+
+    <!-- LOCAL VIDEO -->
+    <video id="localVideo" autoplay muted playsinline></video>
+
+</div>
     <!-- REMOTE (student sees teacher screen) -->
     <video id="remoteVideo" autoplay playsinline style="
         width:100%;
@@ -1157,27 +1225,44 @@ async function stopScreenShare(){
     screenStream = null;
 }
 
-const dragItem = document.getElementById("screenContainer");
+const pip = document.getElementById("screenContainer");
+const header = document.getElementById("pipHeader");
 
 let isDragging = false;
 let offsetX, offsetY;
 
-dragItem.addEventListener("mousedown", (e) => {
+header.addEventListener("mousedown", (e) => {
     isDragging = true;
-    offsetX = e.clientX - dragItem.offsetLeft;
-    offsetY = e.clientY - dragItem.offsetTop;
+    offsetX = e.clientX - pip.offsetLeft;
+    offsetY = e.clientY - pip.offsetTop;
 });
 
 document.addEventListener("mousemove", (e) => {
     if (!isDragging) return;
 
-    dragItem.style.left = (e.clientX - offsetX) + "px";
-    dragItem.style.top = (e.clientY - offsetY) + "px";
+    pip.style.left = (e.clientX - offsetX) + "px";
+    pip.style.top = (e.clientY - offsetY) + "px";
+    pip.style.right = "auto";
 });
 
 document.addEventListener("mouseup", () => {
     isDragging = false;
 });
+
+// MINIMIZE
+function minimizePiP(){
+    pip.classList.toggle("minimized");
+}
+
+// RESET
+function resetPiP(){
+    pip.style.top = "80px";
+    pip.style.right = "20px";
+    pip.style.left = "auto";
+    pip.style.width = "350px";
+    pip.style.height = "220px";
+    pip.classList.remove("minimized");
+}
 
 let isAudioOn = true;
 let isVideoOn = true;
@@ -1210,6 +1295,8 @@ function toggleVideo(){
 
     event.target.innerText = isVideoOn ? "📷 Stop Video" : "📷 Start Video";
 }
+
+
 </script>
 </body>
 </html>
