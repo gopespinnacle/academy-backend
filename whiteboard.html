@@ -1098,12 +1098,8 @@ function setupPeer(){
 
 pc.ontrack = (event) => {
 
-    event.streams[0].getTracks().forEach(track => {
-        remoteStream.addTrack(track);
-    });
-
     const remoteVideo = document.getElementById("remoteVideo");
-    remoteVideo.srcObject = remoteStream;
+    remoteVideo.srcObject = event.streams[0];
 };
 pc.onconnectionstatechange = () => {
     console.log("STATE:", pc.connectionState);
@@ -1168,7 +1164,7 @@ async function startScreenShare(){
 if (sender) {
     sender.replaceTrack(screenTrack);   // 🔥 KEY FIX
 }
-
+document.getElementById("localVideo").srcObject = localStream;
         // show locally
         
 
