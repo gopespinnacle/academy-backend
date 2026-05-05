@@ -105,23 +105,19 @@ video {
 }
 
 #localVideo {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    width: 100px;
-    height: 70px;
+    position: fixed;   /* 🔥 CHANGE FROM absolute */
+    bottom: 20px;
+    right: 20px;
+    width: 120px;
+    height: 80px;
 
-    background: red;   /* 🔥 TEMP DEBUG */
-    
-    border-radius: 8px;
+    border-radius: 10px;
     border: 2px solid white;
 
     object-fit: cover;
 
-    z-index: 99999;
-
-    display: block !important;
-    opacity: 1 !important;
+    z-index: 999999;
+    background: black;
 }
 
 
@@ -175,13 +171,7 @@ video {
     <canvas id="screenDraw"></canvas>
 
     <!-- LOCAL VIDEO -->
-    <video id="localVideo" autoplay muted playsinline style="display:block;"></video>
-
-    const localVideoEl = document.getElementById("localVideo");
-
-localVideoEl.onloadedmetadata = () => {
-    localVideoEl.play().catch(() => {});
-};
+    
 
 </div>
         <!-- LOCAL SMALL PREVIEW -->
@@ -1292,6 +1282,8 @@ function toggleVideo(){
 
 
 </script>
+
+<video id="localVideo" autoplay muted playsinline></video>
 </body>
 </html>
 
