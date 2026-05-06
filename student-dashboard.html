@@ -160,15 +160,44 @@ if(todayClasses.length === 0){
 else{
 
     todayClasses.forEach(c=>{
-        container.innerHTML += `
-        <div class="class-item">
+
+    container.innerHTML += `
+    <div class="class-item"
+    style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    ">
+
+        <div>
         📘 ${c.subject || "General"} |
         🏫 ${c.className} |
         📅 ${c.day} |
         ⏰ ${c.startTime} - ${c.endTime}
         </div>
-        `;
-    });
+
+        <button
+        onclick='joinClass(
+            "${c.className}",
+            "${c.subject}",
+            "${c.day}",
+            "${c.startTime}",
+            "${c.endTime}"
+        )'
+        style="
+        background:green;
+        color:white;
+        border:none;
+        padding:8px 14px;
+        border-radius:6px;
+        cursor:pointer;
+        ">
+        Join Class
+        </button>
+
+    </div>
+    `;
+});
 
 }
 
@@ -184,7 +213,51 @@ window.location.href = page;
 }
 
 loadDashboard();
+async function joinClass(
+    className,
+    subject,
+    day,
+    startTime,
+    endTime
+){
 
+    try {
+
+        const studentId = localStorage.getItem("studentId");
+
+        await fetch(
+        "https://academy-backend-eatl.onrender.com/api/student-attendance/mark",
+        {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json",
+                "Authorization":"Bearer " + token
+            },
+            body: JSON.stringify({
+                studentId,
+                className,
+                subject,
+                day,
+                startTime,
+                endTime
+            })
+        });
+
+    } catch(e){
+        console.log("Attendance failed");
+    }
+
+    let roomName = `academy-${className}-${day}-${startTime}`;
+
+    roomName = roomName
+    .replace(/\s+/g, "")
+    .replace(/[^a-zA-Z0-9\-]/g,"");
+
+    window.open(
+    `whiteboard.html?room=${roomName}&role=student`,
+    "_blank"
+    );
+}
 async function loadRecordings(){
     const subject = document.getElementById("subjectFilter").value;
 
