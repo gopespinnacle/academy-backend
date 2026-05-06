@@ -816,6 +816,7 @@ function leaveClass(){
     const student = params.get("student");
 
     const startTime = params.get("startTime");
+    const day = params.get("day");
 
     const teacher =
         localStorage.getItem("teacherName") || "";
@@ -829,6 +830,7 @@ function leaveClass(){
 &className=${encodeURIComponent(className)}
 &student=${encodeURIComponent(student)}
 &startTime=${encodeURIComponent(startTime)}
+&day=${encodeURIComponent(day)}
 &teacher=${encodeURIComponent(teacher)}
 &outTime=${encodeURIComponent(outTime)}`;
 
