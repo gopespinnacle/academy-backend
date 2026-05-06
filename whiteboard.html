@@ -750,10 +750,18 @@ socket.on("draw", (data) => {
 });
 socket.on("textDraw", (data) => {
 
+    // clear old text
+    mainCtx.clearRect(
+        0,
+        0,
+        mainBoard.width,
+        mainBoard.height
+    );
+
+    // draw latest text
     drawBigText(data.text, data.color);
 
 });
-
 /* RECEIVE DRAW */
 // ✅ ✅ ADD EXACTLY HERE (NEW CODE)
 socket.on("screenDraw", (data) => {
@@ -1186,30 +1194,30 @@ function openBigTextBox(){
 
     typingInput.focus();
 
-    // ENTER = DRAW TEXT
-    typingInput.addEventListener("keydown", (event) => {
+    // 🔥 LIVE TYPING SYNC
+typingInput.addEventListener("input", () => {
 
-        if(event.key === "Enter"){
+    const text = typingInput.value;
 
-            event.preventDefault();
+    // clear old text
+    mainCtx.clearRect(
+        0,
+        0,
+        mainBoard.width,
+        mainBoard.height
+    );
 
-            const text = typingInput.value;
+    // redraw live text
+    drawBigText(text, currentColor);
 
-            drawBigText(text, currentColor);
-
-            socket.emit("textDraw", {
-                room,
-                text,
-                x: 80,
-                y: 300,
-                color: currentColor
-            });
-
-            typingInput.remove();
-
-            typingInput = null;
-        }
+    // send to student LIVE
+    socket.emit("textDraw", {
+        room,
+        text,
+        color: currentColor
     });
+
+});
 }
 function createTextInput(x, y){
 
