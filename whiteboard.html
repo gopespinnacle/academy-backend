@@ -722,6 +722,7 @@ socket.on("canvasTypeChanged", (data) => {
     localStorage.setItem("canvasType", data.type);
 
     mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
+    dctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
 
     if(data.type === "white"){
         mainBoard.style.background = "white";
@@ -1065,20 +1066,15 @@ function redrawCanvas(){
 
     history.forEach(d => {
 
-    mainCtx.beginPath();
-    mainCtx.moveTo(d.x1 * mainBoard.width, d.y1 * mainBoard.height);
-mainCtx.lineTo(d.x2 * mainBoard.width, d.y2 * mainBoard.height);
+    drawLine(
+        d.x1,
+        d.y1,
+        d.x2,
+        d.y2,
+        d.tool,
+        d.color
+    );
 
-    if(d.tool === "eraser"){
-        mainCtx.globalCompositeOperation = "destination-out";
-        mainCtx.lineWidth = 20;
-    } else {
-        mainCtx.globalCompositeOperation = "source-over";
-        mainCtx.strokeStyle = d.color;
-        mainCtx.lineWidth = 2;
-    }
-
-    mainCtx.stroke();
 });
 }
 
