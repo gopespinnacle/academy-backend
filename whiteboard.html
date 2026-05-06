@@ -734,13 +734,28 @@ socket.on("screenDraw", (data) => {
     screenCtx.stroke();
 });
 
+
 socket.on("canvasTypeChanged", (data) => {
 
-    // update dropdown
+    // update dropdown only
     document.querySelector("select").value = data.type;
 
-    // apply same canvas
-    changeCanvasType(data.type);
+    // 🔥 STOP LOOP
+    localStorage.setItem("canvasType", data.type);
+
+    mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
+
+    if(data.type === "white"){
+        mainBoard.style.background = "white";
+    }
+    else if(data.type === "four"){
+        drawFourLines();
+    }
+    else if(data.type === "one"){
+        drawOneLines();
+    }
+
+    loadCanvasHistory(data.type);
 });
 socket.on("loadBoard", (dataArray) => {
 
