@@ -811,23 +811,24 @@ function leaveClass(){
 
     const room = params.get("room");
 
-    const className = params.get("className") || "Class";
+    const className = params.get("className");
 
-    const student =
-        params.get("student") || "Student";
+    const student = params.get("student");
 
-    const periodTime =
-        params.get("startTime") || "Time";
+    const startTime = params.get("startTime");
 
     const teacher =
-        localStorage.getItem("teacherName") || "Teacher";
+        localStorage.getItem("teacherName") || "";
+
+    const outTime = new Date().toISOString();
 
     window.location.href =
 `summary.html?room=${encodeURIComponent(room)}
 &className=${encodeURIComponent(className)}
 &student=${encodeURIComponent(student)}
-&periodTime=${encodeURIComponent(periodTime)}
-&teacher=${encodeURIComponent(teacher)}`;
+&startTime=${encodeURIComponent(startTime)}
+&teacher=${encodeURIComponent(teacher)}
+&outTime=${encodeURIComponent(outTime)}`;
 
 }
 
