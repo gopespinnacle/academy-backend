@@ -219,6 +219,7 @@ height: 40px;
 
 <video id="screenVideo"
     autoplay
+     muted
     playsinline
     style="
         position:absolute;
@@ -1152,25 +1153,37 @@ function setupPeer(){
     // receive other person video
     let remoteStream = new MediaStream();
 
-pc.ontrack = async (event) => {
+let remoteStream = new MediaStream();
 
-    // 🔥 ADD TRACK TO SAME STREAM
+pc.ontrack = (event) => {
+
+    console.log("TRACK RECEIVED:", event.track.kind);
+
     remoteStream.addTrack(event.track);
 
     const screenVideo = document.getElementById("screenVideo");
 
-    screenVideo.style.display = "block";
-
-    // 🔥 USE COMBINED STREAM
     screenVideo.srcObject = remoteStream;
 
-    try{
-        await screenVideo.play();
-    }catch(e){
-        console.log(e);
-    }
+    screenVideo.autoplay = true;
+    screenVideo.playsInline = true;
 
-    console.log("TRACK RECEIVED:", event.track.kind);
+    // 🔥 IMPORTANT
+    screenVideo.muted = true;
+
+    screenVideo.style.display = "block";
+
+    screenVideo.onloadedmetadata = () => {
+
+        screenVideo.play()
+        .then(() => {
+            console.log("VIDEO PLAYING");
+        })
+        .catch(err => {
+            console.log("PLAY ERROR:", err);
+        });
+
+    };
 };
 pc.onconnectionstatechange = () => {
     console.log("STATE:", pc.connectionState);
