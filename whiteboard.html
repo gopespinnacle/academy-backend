@@ -321,30 +321,38 @@ function getHistoryKey(){
 let isDrawingPointer = false;
 
 mainBoard.addEventListener("pointerdown", (e) => {
+
     if(role !== "teacher") return;
-       // 🔥 ONLY allow pen
 
     e.preventDefault();
-// 🔥 TEXT TOOL
-if(currentTool === "text"){
 
-    const rect = mainBoard.getBoundingClientRect();
+    // 🔥 TEXT TOOL
+    if(currentTool === "text"){
 
-    const x = (e.clientX - rect.left) * (mainBoard.width / rect.width);
+        const rect = mainBoard.getBoundingClientRect();
 
-    const y = (e.clientY - rect.top) * (mainBoard.height / rect.height);
+        const x = (e.clientX - rect.left) * (mainBoard.width / rect.width);
 
-    createTextInput(x, y);
+        const y = (e.clientY - rect.top) * (mainBoard.height / rect.height);
 
-    return;
-}
-if(currentTool !== "pen") return;
+        createTextInput(x, y);
+
+        return;
+    }
+
+    // 🔥 PEN + ERASER ONLY
+    if(currentTool !== "pen" && currentTool !== "eraser"){
+        return;
+    }
+
     isDrawingPointer = true;
 
     const rect = mainBoard.getBoundingClientRect();
 
     prevX = (e.clientX - rect.left) * (mainBoard.width / rect.width);
+
     prevY = (e.clientY - rect.top) * (mainBoard.height / rect.height);
+
 });
 
 mainBoard.addEventListener("pointermove", (e) => {
@@ -740,7 +748,15 @@ socket.on("draw", (data) => {
 
     mainCtx.stroke();
 });
+socket.on("textDraw", (data) => {
 
+    drawText(
+        data.text,
+        data.x,
+        data.y,
+        data.color
+    );
+});
 /* RECEIVE DRAW */
 // ✅ ✅ ADD EXACTLY HERE (NEW CODE)
 socket.on("screenDraw", (data) => {
@@ -1129,7 +1145,88 @@ cleaned.forEach(d => {
     drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
 });
 }
+function createTextInput(x, y){
 
+    // remove old input
+    if(typingInput){
+        typingInput.remove();
+    }
+
+    typingInput = document.createElement("input");
+
+    typingInput.type = "text";
+    typingInput.placeholder = "Type here...";
+
+    // 🔥 IMPORTANT
+    typingInput.style.position = "fixed";
+
+    typingInput.style.left = x + "px";
+    typingInput.style.top = y + "px";
+
+    typingInput.style.zIndex = "99999";
+
+    typingInput.style.fontSize = "28px";
+    typingInput.style.padding = "5px";
+
+    typingInput.style.border = "2px solid #2563eb";
+    typingInput.style.borderRadius = "6px";
+
+    typingInput.style.outline = "none";
+
+    document.body.appendChild(typingInput);
+
+    typingInput.focus();
+
+    // mobile keyboard support
+    typingInput.setAttribute("autocapitalize", "on");
+
+    typingInput.addEventListener("keydown", (event) => {
+
+        if(event.key === "Enter"){
+
+            const text = typingInput.value;
+
+            drawText(text, x, y, currentColor);
+
+            socket.emit("textDraw", {
+                room,
+                text,
+                x,
+                y,
+                color: currentColor
+            });
+
+            typingInput.remove();
+            typingInput = null;
+        }
+    });
+
+    // remove if clicked outside
+    typingInput.addEventListener("blur", () => {
+
+        setTimeout(() => {
+
+            if(typingInput){
+
+                typingInput.remove();
+                typingInput = null;
+            }
+
+        }, 200);
+
+    });
+}
+
+function drawText(text, x, y, color){
+
+    mainCtx.globalCompositeOperation = "source-over";
+
+    mainCtx.font = "28px Arial";
+
+    mainCtx.fillStyle = color || "black";
+
+    mainCtx.fillText(text, x, y);
+}
 function redrawCanvas(){
     const type = localStorage.getItem("canvasType") || "white";
 
