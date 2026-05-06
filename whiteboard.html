@@ -655,6 +655,24 @@ socket.on("draw", (data) => {
         return;
     }
 
+    if(role === "student"){
+
+    let key = getHistoryKey();
+
+    let history = JSON.parse(localStorage.getItem(key) || "[]");
+
+    history.push({
+        x1: data.prevX,
+        y1: data.prevY,
+        x2: data.x,
+        y2: data.y,
+        tool: data.tool,
+        color: data.color
+    });
+
+    localStorage.setItem(key, JSON.stringify(history));
+}
+
     // main board → draw here
     mainCtx.beginPath();
     mainCtx.moveTo(data.prevX, data.prevY);
@@ -1154,6 +1172,15 @@ pc.oniceconnectionstatechange = () => {
 
 
 window.addEventListener("resize", handleResize);
+window.addEventListener("orientationchange", () => {
+
+    setTimeout(() => {
+
+        handleResize();
+
+    }, 300);
+
+});
 
 function handleResize(){
 
