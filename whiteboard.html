@@ -750,13 +750,10 @@ socket.on("draw", (data) => {
 });
 socket.on("textDraw", (data) => {
 
-    drawText(
-        data.text,
-        data.x,
-        data.y,
-        data.color
-    );
+    drawBigText(data.text, data.color);
+
 });
+
 /* RECEIVE DRAW */
 // ✅ ✅ ADD EXACTLY HERE (NEW CODE)
 socket.on("screenDraw", (data) => {
@@ -1198,7 +1195,7 @@ function openBigTextBox(){
 
             const text = typingInput.value;
 
-            drawBigText(text);
+            drawBigText(text, currentColor);
 
             socket.emit("textDraw", {
                 room,
@@ -1300,13 +1297,13 @@ function drawText(text, x, y, color){
 
     mainCtx.fillText(text, x, y);
 }
-function drawBigText(text){
+function drawBigText(text, color){
 
     mainCtx.globalCompositeOperation = "source-over";
 
     mainCtx.font = "80px Arial";
 
-    mainCtx.fillStyle = currentColor;
+    mainCtx.fillStyle = color || "black";
 
     // multi line support
     const lines = text.split("\n");
