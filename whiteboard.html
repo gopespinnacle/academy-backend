@@ -869,6 +869,15 @@ socket.on("clear", () => {
 /* LEAVE */
 function leaveClass(){
 
+    // ✅ ONLY FOR STUDENT
+    if(role === "student"){
+
+        window.location.href = "student-dashboard.html";
+
+        return;
+    }
+
+    // ✅ TEACHER OLD FLOW (UNCHANGED)
     const params = new URLSearchParams(window.location.search);
 
     const room = params.get("room");
