@@ -495,6 +495,13 @@ if(role === "teacher"){
 
 /* JOIN */
 socket.emit("joinRoom", room);
+if(role === "teacher"){
+
+    socket.emit("teacherJoined", {
+        room
+    });
+
+}
 
 // ✅ START VIDEO CALL
 (async () => {
@@ -800,29 +807,28 @@ socket.on("clear", () => {
 /* LEAVE */
 function leaveClass(){
 
-    // 🔥 stop camera/mic
-    if(localStream){
-        localStream.getTracks().forEach(track => track.stop());
-    }
+    const params = new URLSearchParams(window.location.search);
 
-    // 🔥 stop screen share
-    if(screenStream){
-        screenStream.getTracks().forEach(track => track.stop());
-    }
+    const room = params.get("room");
 
-    // 🔥 close RTC
-    if(pc){
-        pc.close();
-    }
+    const className = params.get("className") || "Class";
 
-    // 🔥 GET ORIGINAL PAGE URL
-    const returnPage = localStorage.getItem("returnPage");
+    const student =
+        params.get("student") || "Student";
 
-    if(returnPage){
-        window.location.href = returnPage;
-    }else{
-        window.location.href = "/period-students.html";
-    }
+    const periodTime =
+        params.get("startTime") || "Time";
+
+    const teacher =
+        localStorage.getItem("teacherName") || "Teacher";
+
+    window.location.href =
+`summary.html?room=${encodeURIComponent(room)}
+&className=${encodeURIComponent(className)}
+&student=${encodeURIComponent(student)}
+&periodTime=${encodeURIComponent(periodTime)}
+&teacher=${encodeURIComponent(teacher)}`;
+
 }
 
 // ================= FILE UPLOAD =================

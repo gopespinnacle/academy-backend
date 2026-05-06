@@ -1,6 +1,7 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const Recording = require("./models/Recording");
+const ClassSummary = require("./models/ClassSummary");
 const multer = require("multer");
 
 // ✅ FIX: KEEP FILE EXTENSION
@@ -32,6 +33,7 @@ let roomControl = {};
 let raisedHands = {};
 let boardLock = {};
 let boardData = {}; // 🔥 STORE DRAWINGS
+let teacherAttendanceMemory = {};
 // ROUTES
 const studentAttendanceRoutes = require("./routes/studentattendanceRoutes");
 const founderTimeClashRoutes = require("./routes/founderTimeClashRoutes");
@@ -231,12 +233,16 @@ socket.on("ice-candidate", (data) => {
 });
 /* ================= TEACHER JOIN ================= */
 
-socket.on("teacherJoined", (room) => {
+socket.on("teacherJoined", (data) => {
 
-    console.log("🔥 Teacher joined room:", room);
+    console.log("🔥 Teacher joined room:", data.room);
 
-    // send signal to all students in same room
-    io.to(room).emit("teacherIsLive");
+    // SAVE IN TIME
+    teacherAttendanceMemory[data.room] = {
+        inTime: new Date()
+    };
+
+    io.to(data.room).emit("teacherIsLive");
 
 });
     /* DRAW */
@@ -415,6 +421,112 @@ app.get("/api/recordings/:className", async (req, res) => {
     }catch(err){
         res.status(401).json({ message: "Invalid token" });
     }
+});
+
+/* ================= CLASS SUMMARY ================= */
+
+app.post("/api/save-class-summary", async (req, res) => {
+
+    try{
+
+        const {
+            room,
+            className,
+            periodTime,
+            studentName,
+            teacherName,
+            homework
+        } = req.body;
+
+        const today = new Date();
+
+        const inData = teacherAttendanceMemory[room];
+
+        let inTime = "";
+        let outTime = "";
+        let totalMinutes = 0;
+
+        if(inData){
+
+            inTime = new Date(inData.inTime).toLocaleTimeString();
+
+            outTime = new Date().toLocaleTimeString();
+
+            totalMinutes =
+                Math.floor(
+                    (new Date() - new Date(inData.inTime))
+                    / 1000 / 60
+                );
+        }
+
+        const summary = await ClassSummary.create({
+
+            className,
+
+            date: today.toLocaleDateString(),
+
+            periodTime,
+
+            studentName,
+
+            teacherName,
+
+            teacherInTime: inTime,
+
+            teacherOutTime: outTime,
+
+            totalMinutes,
+
+            homework
+
+        });
+
+        // CLEAR MEMORY
+        delete teacherAttendanceMemory[room];
+
+        res.json({
+            success: true,
+            data: summary
+        });
+
+    }catch(err){
+
+        console.log(err);
+
+        res.status(500).json({
+            success: false,
+            message: "Error saving summary"
+        });
+
+    }
+
+});
+
+app.get("/api/get-meeting-time", async (req, res) => {
+
+    const room = req.query.room;
+
+    const data = teacherAttendanceMemory[room];
+
+    if(!data){
+
+        return res.json({
+            inTime: "-",
+            outTime: "-"
+        });
+
+    }
+
+    res.json({
+
+        inTime:
+            new Date(data.inTime).toLocaleTimeString(),
+
+        outTime:
+            new Date().toLocaleTimeString()
+
+    });
+
 });
 /* ================= DB ================= */
 
