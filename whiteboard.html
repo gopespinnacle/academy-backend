@@ -783,8 +783,22 @@ function clearBoard(){
     socket.emit("clear", room);
 }
 socket.on("clear", () => {
+
     dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
     mainCtx.clearRect(0,0,mainBoard.width,mainBoard.height);
+
+    // 🔥 REMOVE SAVED DRAWINGS
+    localStorage.removeItem(getHistoryKey());
+
+    // 🔥 REDRAW BACKGROUND
+    const type = localStorage.getItem("canvasType") || "white";
+
+    if(type === "four"){
+        drawFourLines();
+    }
+    else if(type === "one"){
+        drawOneLines();
+    }
 });
 /* LEAVE */
 function leaveClass(){
