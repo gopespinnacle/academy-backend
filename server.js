@@ -260,11 +260,17 @@ socket.on("draw", (data) => {
     socket.to(data.room).emit("draw", data);
 });
 
+
 // ================= SCREEN DRAW =================
 socket.on("screenDraw", (data) => {
     socket.to(data.room).emit("screenDraw", data);
 });
+// ================= TEXT DRAW =================
+socket.on("textDraw", (data) => {
 
+    socket.to(data.room).emit("textDraw", data);
+
+});
 // ================= CANVAS TYPE SYNC =================
 socket.on("canvasTypeChanged", (data) => {
 
