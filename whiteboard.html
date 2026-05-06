@@ -173,7 +173,7 @@ height: 40px;
     </div>
 <button onclick="setTool('eraseDraw')">🧽 Erase</button>
 
-<button onclick="setTool('text')">⌨️ Type Text</button>
+<button onclick="openBigTextBox()">⌨️ Type Text</button>
 <button onclick="saveAsPDF()">💾 Save PDF</button>
 
 <button onclick="startScreenShare()">🖥 Share Screen</button>
@@ -1145,6 +1145,75 @@ cleaned.forEach(d => {
     drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
 });
 }
+
+function openBigTextBox(){
+
+    // remove old
+    if(typingInput){
+        typingInput.remove();
+    }
+
+    typingInput = document.createElement("textarea");
+
+    typingInput.placeholder = "Type here...";
+
+    // 🔥 BIG CLASSROOM STYLE
+    typingInput.style.position = "fixed";
+
+    typingInput.style.top = "160px";
+    typingInput.style.left = "20px";
+
+    typingInput.style.width = "85vw";
+    typingInput.style.height = "500px";
+
+    typingInput.style.zIndex = "99999";
+
+    typingInput.style.fontSize = "80px";
+
+    typingInput.style.padding = "30px";
+
+    typingInput.style.border = "4px solid red";
+
+    typingInput.style.borderRadius = "20px";
+
+    typingInput.style.outline = "none";
+
+    typingInput.style.background = "white";
+
+    typingInput.style.resize = "none";
+
+    typingInput.style.boxShadow =
+        "0 10px 30px rgba(0,0,0,0.3)";
+
+    document.body.appendChild(typingInput);
+
+    typingInput.focus();
+
+    // ENTER = DRAW TEXT
+    typingInput.addEventListener("keydown", (event) => {
+
+        if(event.key === "Enter"){
+
+            event.preventDefault();
+
+            const text = typingInput.value;
+
+            drawBigText(text);
+
+            socket.emit("textDraw", {
+                room,
+                text,
+                x: 80,
+                y: 300,
+                color: currentColor
+            });
+
+            typingInput.remove();
+
+            typingInput = null;
+        }
+    });
+}
 function createTextInput(x, y){
 
     // remove old input
@@ -1230,6 +1299,29 @@ function drawText(text, x, y, color){
     mainCtx.fillStyle = color || "black";
 
     mainCtx.fillText(text, x, y);
+}
+function drawBigText(text){
+
+    mainCtx.globalCompositeOperation = "source-over";
+
+    mainCtx.font = "80px Arial";
+
+    mainCtx.fillStyle = currentColor;
+
+    // multi line support
+    const lines = text.split("\n");
+
+    let startY = 300;
+
+    lines.forEach((line, index) => {
+
+        mainCtx.fillText(
+            line,
+            80,
+            startY + (index * 100)
+        );
+
+    });
 }
 function redrawCanvas(){
     const type = localStorage.getItem("canvasType") || "white";
