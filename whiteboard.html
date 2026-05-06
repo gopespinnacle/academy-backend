@@ -509,12 +509,21 @@ else if(tool === "text"){
     mainBoard.style.touchAction = "none";
 }
     else if(tool === "eraser"){   // BACK TO DOC
-        currentTool = "none";
 
-        isDrawingPointer = false;
+    currentTool = "none";
 
-        mainBoard.style.touchAction = "auto";   // enable scroll
+    isDrawingPointer = false;
+
+    mainBoard.style.touchAction = "auto";
+
+    // 🔥 CLOSE TEXTBOX
+    if(typingInput){
+
+        typingInput.remove();
+
+        typingInput = null;
     }
+}
 }
 
 /* ROLE */
