@@ -1256,15 +1256,39 @@ function minimizePiP(){
 }
 
 // RESET
+let isMaximized = false;
+
 function resetPiP(){
-    pip.style.top = "80px";
-    pip.style.right = "20px";
-    pip.style.left = "auto";
-    pip.style.width = "350px";
-    pip.style.height = "220px";
+
+    if(!isMaximized){
+
+        // 🔥 FULL SCREEN
+        pip.style.top = "60px";
+        pip.style.left = "0";
+        pip.style.right = "0";
+
+        pip.style.width = "100vw";
+        pip.style.height = "calc(100vh - 60px)";
+
+        pip.style.zIndex = "9999";
+
+        isMaximized = true;
+
+    }else{
+
+        // 🔥 BACK TO SMALL SIZE
+        pip.style.top = "90px";
+        pip.style.right = "10px";
+        pip.style.left = "auto";
+
+        pip.style.width = "180px";
+        pip.style.height = "120px";
+
+        isMaximized = false;
+    }
+
     pip.classList.remove("minimized");
 }
-
 let isAudioOn = true;
 let isVideoOn = true;
 
