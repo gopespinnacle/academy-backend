@@ -64,7 +64,8 @@ video {
     left: 0;
     width: 100%;
     height: calc(100% - 80px);
-    z-index: 1;   /* BELOW video */
+   z-index: 2;
+background: transparent;
 }
 
 #screenContainer {
@@ -138,8 +139,7 @@ height: 40px;
 /* 🔥 TEACHER SMALL VIDEO */
 
 #screenContainer {
-    position: fixed;
-    overflow: hidden;
+    display:none;
 }
 /* MINIMIZE */
 .minimized {
@@ -170,7 +170,7 @@ height: 40px;
 <button onclick="stopScreenShare()">❌ Stop Share</button>
 <button onclick="toggleAudio()">🎤 Mute</button>
 <button onclick="toggleVideo()">📷 Stop Video</button>
-<button onclick="startPiP()">📺 Camera PiP</button>
+/*<button onclick="startPiP()">📺 Camera PiP</button>*/
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
@@ -216,6 +216,22 @@ height: 40px;
 ">
     📄 PDF
 </div>
+
+<video id="screenVideo"
+    autoplay
+    playsinline
+    style="
+        position:absolute;
+        top:80px;
+        left:0;
+        width:100%;
+        height:calc(100% - 80px);
+        object-fit:contain;
+        background:black;
+        z-index:0;
+        display:none;
+    ">
+</video>
 <canvas id="mainBoard" style="
     position:absolute;
     top:80px;
@@ -286,6 +302,7 @@ const dctx = drawCanvas.getContext("2d");
 // 🔥 ADD HERE (exactly here)
 const mainBoard = document.getElementById("mainBoard");
 const mainCtx = mainBoard.getContext("2d");
+const screenVideo = document.getElementById("screenVideo");
 // 🔥 SCREEN DRAW SETUP
 const screenCanvas = document.getElementById("screenDraw");
 const screenCtx = screenCanvas.getContext("2d");
@@ -1187,16 +1204,26 @@ async function startScreenShare(){
     if(role !== "teacher") return;
 
     try{
+
         screenStream = await navigator.mediaDevices.getDisplayMedia({
-            video: true
+            video: true,
+            audio: false
         });
+
+        // SHOW SCREEN INSIDE WHITEBOARD
+        screenVideo.style.display = "block";
+        screenVideo.srcObject = screenStream;
+
+        await screenVideo.play();
 
         const screenTrack = screenStream.getVideoTracks()[0];
 
-        // 🔥 THIS WAS MISSING (VERY IMPORTANT)
-        const sender = pc.getSenders().find(s => s.track.kind === "video");
+        // SEND TO STUDENTS
+        const sender = pc.getSenders().find(s =>
+            s.track && s.track.kind === "video"
+        );
 
-        if (sender) {
+        if(sender){
             sender.replaceTrack(screenTrack);
         }
 
@@ -1215,15 +1242,20 @@ async function stopScreenShare(){
 
     const videoTrack = localStream.getVideoTracks()[0];
 
-    const sender = pc.getSenders().find(s => s.track.kind === "video");
+    const sender = pc.getSenders().find(s =>
+        s.track && s.track.kind === "video"
+    );
 
     if(sender){
-        sender.replaceTrack(videoTrack);   // back to camera
+        sender.replaceTrack(videoTrack);
     }
 
-    document.getElementById("localVideo").srcObject = localStream;
+    // HIDE SCREEN
+    screenVideo.style.display = "none";
+    screenVideo.srcObject = null;
 
     screenStream.getTracks().forEach(track => track.stop());
+
     screenStream = null;
 }
 
