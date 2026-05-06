@@ -398,7 +398,7 @@ history.push({
     y1: prevY,
     x2: x,
     y2: y,
-    tool: currentTool === "eraseDraw" ? "eraser" : "pen",
+    tool: currentTool === "eraser" ? "eraser" : "pen",
     color: currentColor
 });
 
@@ -409,7 +409,7 @@ localStorage.setItem(key, JSON.stringify(history));
         prevY,
         x,
         y,
-        tool: currentTool === "eraseDraw" ? "eraser" : "pen",
+        tool: currentTool === "eraser" ? "eraser" : "pen",
         color: currentColor,
         sender: socket.id
     });
