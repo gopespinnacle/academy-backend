@@ -228,7 +228,7 @@ height: 40px;
         height:calc(100% - 80px);
         object-fit:contain;
         background:black;
-        z-index:0;
+        z-index:1;
         display:none;
     ">
 </video>
@@ -1148,10 +1148,19 @@ function setupPeer(){
     // receive other person video
     let remoteStream = new MediaStream();
 
-pc.ontrack = (event) => {
+pc.ontrack = async (event) => {
 
-    const remoteVideo = document.getElementById("remoteVideo");
-    remoteVideo.srcObject = event.streams[0];
+    const screenVideo = document.getElementById("screenVideo");
+
+    screenVideo.style.display = "block";
+
+    screenVideo.srcObject = event.streams[0];
+
+    try{
+        await screenVideo.play();
+    }catch(e){
+        console.log(e);
+    }
 };
 pc.onconnectionstatechange = () => {
     console.log("STATE:", pc.connectionState);
