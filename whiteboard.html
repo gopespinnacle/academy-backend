@@ -63,9 +63,7 @@ video {
     left: 0;
     width: 100%;
     height: calc(100% - 80px);
-   z-index: 2;
-background: transparent;
-pointer-events:none;
+    z-index: 1;   /* BELOW video */
 }
 
 #screenContainer {
@@ -139,7 +137,8 @@ height: 40px;
 /* 🔥 TEACHER SMALL VIDEO */
 
 #screenContainer {
-    display:none;
+    position: fixed;
+    overflow: hidden;
 }
 /* MINIMIZE */
 .minimized {
@@ -170,7 +169,7 @@ height: 40px;
 <button onclick="stopScreenShare()">❌ Stop Share</button>
 <button onclick="toggleAudio()">🎤 Mute</button>
 <button onclick="toggleVideo()">📷 Stop Video</button>
-/*<button onclick="startPiP()">📺 Camera PiP</button>*/
+<button onclick="startPiP()">📺 Camera PiP</button>
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
@@ -216,32 +215,14 @@ height: 40px;
 ">
     📄 PDF
 </div>
-
-<video id="screenVideo"
-    autoplay
-     muted
-    playsinline
-    style="
-        position:absolute;
-        top:80px;
-        left:0;
-        width:100%;
-        height:calc(100% - 80px);
-        object-fit:contain;
-        background:black;
-        z-index:2;
-        display:none;
-    ">
-</video>
 <canvas id="mainBoard" style="
     position:absolute;
     top:80px;
     left:0;
     width:100%;
     bottom:0;   /* 🔥 THIS IS THE FIX */
-  background:transparent;
-z-index:5;
-pointer-events:auto;
+    background:white;
+    z-index:1;
 "></canvas>
 <div id="pdfWindow" style="
     position:absolute;
@@ -304,7 +285,6 @@ const dctx = drawCanvas.getContext("2d");
 // 🔥 ADD HERE (exactly here)
 const mainBoard = document.getElementById("mainBoard");
 const mainCtx = mainBoard.getContext("2d");
-const screenVideo = document.getElementById("screenVideo");
 // 🔥 SCREEN DRAW SETUP
 const screenCanvas = document.getElementById("screenDraw");
 const screenCtx = screenCanvas.getContext("2d");
@@ -328,10 +308,7 @@ function getHistoryKey(){
 // ===== UNIVERSAL DRAW (MOBILE + MOUSE + STYLUS) =====
 
 let isDrawingPointer = false;
-// 🔥 ENABLE DRAW ONLY FOR TEACHER
-if(role === "teacher"){
-    mainBoard.style.pointerEvents = "auto";
-}
+
 mainBoard.addEventListener("pointerdown", (e) => {
     if(role !== "teacher") return;
     if(currentTool !== "pen") return;   // 🔥 ONLY allow pen
@@ -919,8 +896,8 @@ function changeCanvasType(type){
     mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
 
     if(type === "white"){
-    mainBoard.style.background = "transparent";
-}
+        mainBoard.style.background = "white";
+    }
     else if(type === "four"){
         drawFourLines();
     }
@@ -934,7 +911,7 @@ function changeCanvasType(type){
 
 function drawFourLines(){
 
-    mainBoard.style.background = "transparent";
+    mainBoard.style.background = "white";
 
     const gap = 60;  // space between each set
 
@@ -968,7 +945,7 @@ function drawFourLines(){
 
 function drawOneLines(){
 
-    mainBoard.style.background = "transparent";
+    mainBoard.style.background = "white";
 
     const gap = 40;
 
@@ -1151,38 +1128,12 @@ function setupPeer(){
     });
 
     // receive other person video
-    
-let remoteStream = new MediaStream();
+    let remoteStream = new MediaStream();
 
 pc.ontrack = (event) => {
 
-    console.log("TRACK RECEIVED:", event.track.kind);
-
-    remoteStream.addTrack(event.track);
-
-    const screenVideo = document.getElementById("screenVideo");
-
-    screenVideo.srcObject = remoteStream;
-
-    screenVideo.autoplay = true;
-    screenVideo.playsInline = true;
-
-    // 🔥 IMPORTANT
-    screenVideo.muted = true;
-
-    screenVideo.style.display = "block";
-
-    screenVideo.onloadedmetadata = () => {
-
-        screenVideo.play()
-        .then(() => {
-            console.log("VIDEO PLAYING");
-        })
-        .catch(err => {
-            console.log("PLAY ERROR:", err);
-        });
-
-    };
+    const remoteVideo = document.getElementById("remoteVideo");
+    remoteVideo.srcObject = event.streams[0];
 };
 pc.onconnectionstatechange = () => {
     console.log("STATE:", pc.connectionState);
@@ -1235,39 +1186,18 @@ async function startScreenShare(){
     if(role !== "teacher") return;
 
     try{
-
         screenStream = await navigator.mediaDevices.getDisplayMedia({
-            video: true,
-            audio: false
+            video: true
         });
-
-        // SHOW SCREEN INSIDE WHITEBOARD
-        screenVideo.style.display = "block";
-        screenVideo.srcObject = screenStream;
-
-        await screenVideo.play();
 
         const screenTrack = screenStream.getVideoTracks()[0];
 
-        // SEND TO STUDENTS
-        const sender = pc.getSenders().find(s =>
-            s.track && s.track.kind === "video"
-        );
-console.log("VIDEO SENDER:", sender);
-        if(sender){
+        // 🔥 THIS WAS MISSING (VERY IMPORTANT)
+        const sender = pc.getSenders().find(s => s.track.kind === "video");
 
-    await sender.replaceTrack(screenTrack);
-
-    // 🔥 CREATE NEW OFFER
-    const offer = await pc.createOffer();
-
-    await pc.setLocalDescription(offer);
-
-    socket.emit("offer", {
-        room,
-        offer
-    });
-}
+        if (sender) {
+            sender.replaceTrack(screenTrack);
+        }
 
         screenTrack.onended = () => {
             stopScreenShare();
@@ -1284,31 +1214,15 @@ async function stopScreenShare(){
 
     const videoTrack = localStream.getVideoTracks()[0];
 
-    const sender = pc.getSenders().find(s =>
-        s.track && s.track.kind === "video"
-    );
+    const sender = pc.getSenders().find(s => s.track.kind === "video");
 
     if(sender){
+        sender.replaceTrack(videoTrack);   // back to camera
+    }
 
-    await sender.replaceTrack(videoTrack);
-
-    // 🔥 RETURN CAMERA
-    const offer = await pc.createOffer();
-
-    await pc.setLocalDescription(offer);
-
-    socket.emit("offer", {
-        room,
-        offer
-    });
-}
-
-    // HIDE SCREEN
-    screenVideo.style.display = "none";
-    screenVideo.srcObject = null;
+    document.getElementById("localVideo").srcObject = localStream;
 
     screenStream.getTracks().forEach(track => track.stop());
-
     screenStream = null;
 }
 
@@ -1401,3 +1315,5 @@ async function startPiP() {
 </script>
 </body>
 </html>
+
+
