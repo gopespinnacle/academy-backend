@@ -823,7 +823,9 @@ function leaveClass(){
     const outTime = new Date().toISOString();
 
     window.location.href =
-`summary.html?room=${encodeURIComponent(room)}
+`period-students.html
+?showSummary=true
+&room=${encodeURIComponent(room)}
 &className=${encodeURIComponent(className)}
 &student=${encodeURIComponent(student)}
 &startTime=${encodeURIComponent(startTime)}
