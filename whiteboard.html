@@ -953,11 +953,16 @@ function changeCanvasType(type){
 
     // 🔥 SAVE SELECTED TYPE
     localStorage.setItem("canvasType", type);
-    socket.emit("canvasTypeChanged", {
-    room,
-    type
-});
+    // 🔥 ONLY TEACHER SENDS SYNC
+if(role === "teacher"){
 
+    socket.emit("canvasTypeChanged", {
+        room,
+        type
+    });
+
+}
+    
     mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
 
     if(type === "white"){
