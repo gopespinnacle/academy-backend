@@ -361,7 +361,7 @@ mainBoard.addEventListener("pointermove", (e) => {
 
     if(!isDrawingPointer) return;
     if(role !== "teacher") return;
-    if(currentTool !== "pen") return;
+if(currentTool !== "pen" && currentTool !== "eraser") return;
 
     const rect = mainBoard.getBoundingClientRect();
 
@@ -369,14 +369,25 @@ mainBoard.addEventListener("pointermove", (e) => {
     const y = (e.clientY - rect.top) * (mainBoard.height / rect.height);
 
     mainCtx.beginPath();
-    mainCtx.moveTo(prevX, prevY);
-    mainCtx.lineTo(x, y);
+mainCtx.moveTo(prevX, prevY);
+mainCtx.lineTo(x, y);
 
+mainCtx.lineCap = "round";
+
+// 🔥 ERASER
+if(currentTool === "eraser"){
+
+    mainCtx.globalCompositeOperation = "destination-out";
+    mainCtx.lineWidth = 25;
+
+}else{
+
+    mainCtx.globalCompositeOperation = "source-over";
     mainCtx.strokeStyle = currentColor;
     mainCtx.lineWidth = 2;
+}
 
-    mainCtx.lineCap = "round";   // 🔥 ADD (smooth line)
-    mainCtx.stroke();
+mainCtx.stroke();
 // 🔥 SAVE DRAWING HISTORY
 let key = getHistoryKey();
 
