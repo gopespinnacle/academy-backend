@@ -51,7 +51,16 @@ canvas {
 }
 
 #drawLayer {
-    background:transparent;   /* 🔥 IMPORTANT */
+    position:absolute;
+    top:80px;
+    left:0;
+    width:100%;
+    height:calc(100% - 80px);
+
+    background:transparent;
+
+    z-index:5;
+    pointer-events:auto;
 }
 
 video {
@@ -428,8 +437,8 @@ drawCanvas.style.pointerEvents = "none";
 
 canvas.width = canvas.parentElement.clientWidth;
 canvas.height = canvas.parentElement.clientHeight - 40;
-drawCanvas.width = canvas.width;
-drawCanvas.height = canvas.height;
+drawCanvas.width = window.innerWidth;
+drawCanvas.height = window.innerHeight - 90;
 let drawing = false;
 let prevX = 0;
 let prevY = 0;
@@ -561,10 +570,7 @@ const y = (e.clientY - rect.top) * scaleY;
 /* 🔥 DRAW FUNCTION WITH ERASER */
 function drawLine(x1, y1, x2, y2, tool, color){
 
-    const activeCtx =
-        document.getElementById("pdfWindow").style.display === "block"
-        ? dctx
-        : mainCtx;
+    const activeCtx = dctx;
 
     activeCtx.lineCap = "round";
     activeCtx.lineJoin = "round";     // ✅ smooth corners
@@ -693,34 +699,6 @@ socket.on("draw", (data) => {
 });
 
 /* RECEIVE DRAW */
-socket.on("draw", (data) => {
-
-    if(data.sender === socket.id) return;
-
-    if(document.getElementById("pdfWindow").style.display === "block"){
-        drawLine(data.prevX, data.prevY, data.x, data.y, data.tool, data.color);
-        return;
-    }
-
-    mainCtx.beginPath();
-    mainCtx.moveTo(data.prevX, data.prevY);
-    mainCtx.lineTo(data.x, data.y);
-
-    mainCtx.lineCap = "round";
-
-    if(data.tool === "eraser" || data.color === "erase"){
-        mainCtx.globalCompositeOperation = "destination-out";
-        mainCtx.lineWidth = 20;
-    } else {
-        mainCtx.globalCompositeOperation = "source-over";
-        mainCtx.strokeStyle = data.color;
-        mainCtx.lineWidth = 2;
-    }
-
-    mainCtx.stroke();
-});
-
-
 // ✅ ✅ ADD EXACTLY HERE (NEW CODE)
 socket.on("screenDraw", (data) => {
 
