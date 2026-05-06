@@ -65,6 +65,7 @@ video {
     height: calc(100% - 80px);
    z-index: 2;
 background: transparent;
+pointer-events:none;
 }
 
 #screenContainer {
@@ -326,7 +327,10 @@ function getHistoryKey(){
 // ===== UNIVERSAL DRAW (MOBILE + MOUSE + STYLUS) =====
 
 let isDrawingPointer = false;
-
+// 🔥 ENABLE DRAW ONLY FOR TEACHER
+if(role === "teacher"){
+    mainBoard.style.pointerEvents = "auto";
+}
 mainBoard.addEventListener("pointerdown", (e) => {
     if(role !== "teacher") return;
     if(currentTool !== "pen") return;   // 🔥 ONLY allow pen
