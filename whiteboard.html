@@ -1325,16 +1325,27 @@ async function startScreenShare(){
         const screenTrack = screenStream.getVideoTracks()[0];
 
         // 🔥 THIS WAS MISSING (VERY IMPORTANT)
-        const sender = pc.getSenders().find(s => s.track.kind === "video");
+        const videoSender = pc.getSenders().find(
+    s => s.track && s.track.kind === "video"
+);
 
-        if (sender) {
-            sender.replaceTrack(screenTrack);
-        }
+if(videoSender){
+    videoSender.replaceTrack(screenTrack);
+}
 
-        screenTrack.onended = () => {
-            stopScreenShare();
-        };
+// 🔥 ADD AUDIO TRACK ALSO
+const audioTrack = screenStream.getAudioTracks()[0];
 
+if(audioTrack){
+
+    const audioSender = pc.getSenders().find(
+        s => s.track && s.track.kind === "audio"
+    );
+
+    if(audioSender){
+        audioSender.replaceTrack(audioTrack);
+    }
+}
     }catch(err){
         console.log("Screen share error:", err);
     }
