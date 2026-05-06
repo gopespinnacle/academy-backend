@@ -408,7 +408,19 @@ let roomName = "academy-" + className + "-" + day + "-" + startTime;
 
 roomName = roomName.replace(/\s+/g, "").replace(/[^a-zA-Z0-9\-]/g,"");
 
-window.location.href = `whiteboard.html?room=${roomName}&role=teacher`;
+const studentName =
+document.querySelector(".student-card b")
+?.innerText.replace("👤 ","") || "";
+
+window.location.href =
+`whiteboard.html
+?room=${encodeURIComponent(roomName)}
+&role=teacher
+&className=${encodeURIComponent(className)}
+&student=${encodeURIComponent(studentName)}
+&startTime=${encodeURIComponent(startTime)}
+&subject=${encodeURIComponent(subject)}
+&day=${encodeURIComponent(day)}`;
 attendanceMarked = true;
 }
 async function endClass(){

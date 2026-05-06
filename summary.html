@@ -109,17 +109,20 @@ const params = new URLSearchParams(window.location.search);
 const room = params.get("room");
 const className = params.get("className");
 const student = params.get("student");
-const periodTime = params.get("periodTime");
+const periodTime = params.get("startTime");
 const teacher = params.get("teacher");
 
-document.getElementById("className").value = className;
+document.getElementById("className").value =
+className || "-";
 
 document.getElementById("date").value =
 new Date().toLocaleDateString();
 
-document.getElementById("time").value = periodTime;
+document.getElementById("time").value =
+periodTime || "-";
 
-document.getElementById("student").value = student;
+document.getElementById("student").value =
+student || "-";
 
 async function loadMeetingTime(){
 
