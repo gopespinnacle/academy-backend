@@ -172,6 +172,8 @@ height: 40px;
         <button onclick="clearBoard()">🧹 Clear</button>
     </div>
 <button onclick="setTool('eraseDraw')">🧽 Erase</button>
+
+<button onclick="setTool('text')">⌨️ Type Text</button>
 <button onclick="saveAsPDF()">💾 Save PDF</button>
 
 <button onclick="startScreenShare()">🖥 Share Screen</button>
@@ -320,10 +322,23 @@ let isDrawingPointer = false;
 
 mainBoard.addEventListener("pointerdown", (e) => {
     if(role !== "teacher") return;
-    if(currentTool !== "pen") return;   // 🔥 ONLY allow pen
+       // 🔥 ONLY allow pen
 
     e.preventDefault();
+// 🔥 TEXT TOOL
+if(currentTool === "text"){
 
+    const rect = mainBoard.getBoundingClientRect();
+
+    const x = (e.clientX - rect.left) * (mainBoard.width / rect.width);
+
+    const y = (e.clientY - rect.top) * (mainBoard.height / rect.height);
+
+    createTextInput(x, y);
+
+    return;
+}
+if(currentTool !== "pen") return;
     isDrawingPointer = true;
 
     const rect = mainBoard.getBoundingClientRect();
@@ -461,6 +476,7 @@ let prevY = 0;
 /* ✅ TOOL */
 let currentTool = "pen";
 let currentColor = "#000000";
+let typingInput = null;
 document.getElementById("colorPicker").addEventListener("input", (e) => {
     currentColor = e.target.value;
 });
@@ -478,7 +494,12 @@ function setTool(tool){
 
         mainBoard.style.touchAction = "none";
     }
+else if(tool === "text"){
 
+    currentTool = "text";
+
+    mainBoard.style.touchAction = "none";
+}
     else if(tool === "eraser"){   // BACK TO DOC
         currentTool = "none";
 
