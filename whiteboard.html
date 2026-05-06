@@ -1,3 +1,4 @@
+i will past my coding
 <!DOCTYPE html>
 <html>
 <head>
@@ -162,7 +163,6 @@ video {
     <button onclick="leaveClass()">🚪 Leave</button>
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
-<!-- 🔥 SCREEN SHARE CONTAINER -->
 <div id="screenContainer">
 
     <!-- HEADER -->
@@ -182,6 +182,8 @@ video {
 
     <!-- LOCAL VIDEO -->
     <video id="localVideo" autoplay muted playsinline></video>
+
+    
 
 </div>
         <!-- LOCAL SMALL PREVIEW -->
@@ -209,57 +211,6 @@ video {
     bottom:0;   /* 🔥 THIS IS THE FIX */
     background:white;
     z-index:1;
-"></canvas>
-
-<!-- 🔥 FULL SCREEN SHARE -->
-<video id="screenVideo" autoplay playsinline style="
-    position:absolute;
-    top:80px;
-    left:0;
-    width:100%;
-    height:calc(100% - 80px);
-    background:black;
-    object-fit:contain;
-    z-index:2;
-    display:none;
-"></video>
-
-<!-- 🔥 STUDENT CAMERA -->
-<video id="remoteVideo" autoplay playsinline style="
-    position:fixed;
-    top:90px;
-    right:10px;
-    width:140px;
-    height:100px;
-    border-radius:10px;
-    border:2px solid white;
-    background:black;
-    object-fit:cover;
-    z-index:999;
-"></video>
-
-<!-- 🔥 TEACHER CAMERA -->
-<video id="localVideo" autoplay muted playsinline style="
-    position:fixed;
-    bottom:10px;
-    right:10px;
-    width:120px;
-    height:90px;
-    border-radius:10px;
-    border:2px solid white;
-    object-fit:cover;
-    z-index:999;
-"></video>
-
-<!-- 🔥 SCREEN DRAW -->
-<canvas id="screenDraw" style="
-    position:absolute;
-    top:80px;
-    left:0;
-    width:100%;
-    height:calc(100% - 80px);
-    z-index:3;
-    pointer-events:none;
 "></canvas>
 <div id="pdfWindow" style="
     position:absolute;
@@ -1169,31 +1120,8 @@ function setupPeer(){
 
 pc.ontrack = (event) => {
 
-    const track = event.track;
-
-    if(track.kind === "video"){
-
-        const stream = event.streams[0];
-
-        const settings = track.getSettings();
-
-        // 🔥 SCREEN SHARE
-        if(settings.displaySurface){
-
-            const screenVideo = document.getElementById("screenVideo");
-
-            screenVideo.style.display = "block";
-            screenVideo.srcObject = stream;
-        }
-
-        // 🔥 NORMAL CAMERA
-        else{
-
-            const remoteVideo = document.getElementById("remoteVideo");
-
-            remoteVideo.srcObject = stream;
-        }
-    }
+    const remoteVideo = document.getElementById("remoteVideo");
+    remoteVideo.srcObject = event.streams[0];
 };
 pc.onconnectionstatechange = () => {
     console.log("STATE:", pc.connectionState);
@@ -1281,7 +1209,7 @@ async function stopScreenShare(){
     }
 
     document.getElementById("localVideo").srcObject = localStream;
-document.getElementById("screenVideo").style.display = "none";
+
     screenStream.getTracks().forEach(track => track.stop());
     screenStream = null;
 }
@@ -1375,9 +1303,3 @@ async function startPiP() {
 </script>
 </body>
 </html>
-
-
-
-
-
-
