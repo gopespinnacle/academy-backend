@@ -139,16 +139,38 @@ document.getElementById("studentName").innerText = data.name;
 const container = document.getElementById("classList");
 container.innerHTML = "";
 
-data.classes.forEach(c=>{
-container.innerHTML += `
-<div class="class-item">
-📘 ${c.subject || "General"} |
-🏫 ${c.className} |
-📅 ${c.day} |
-⏰ ${c.startTime} - ${c.endTime}
-</div>
-`;
+// ✅ GET TODAY NAME
+const today = new Date().toLocaleDateString('en-US', {
+    weekday: 'long'
 });
+
+// ✅ FILTER ONLY TODAY CLASSES
+const todayClasses = data.classes.filter(c =>
+    c.day.trim().toLowerCase() === today.toLowerCase()
+);
+
+// ✅ SHOW MESSAGE IF NO CLASS
+if(todayClasses.length === 0){
+    container.innerHTML = `
+    <div class="class-item">
+        No classes for today
+    </div>
+    `;
+}
+else{
+
+    todayClasses.forEach(c=>{
+        container.innerHTML += `
+        <div class="class-item">
+        📘 ${c.subject || "General"} |
+        🏫 ${c.className} |
+        📅 ${c.day} |
+        ⏰ ${c.startTime} - ${c.endTime}
+        </div>
+        `;
+    });
+
+}
 
 }
 
