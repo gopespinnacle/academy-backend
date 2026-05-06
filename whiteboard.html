@@ -759,8 +759,11 @@ socket.on("canvasTypeChanged", (data) => {
 });
 socket.on("loadBoard", (dataArray) => {
 
+    // 🔥 TEACHER IGNORE
+    if(role === "teacher") return;
+
     dataArray.forEach(d => {
-        drawLine(d.prevX, d.prevY, d.x, d.y, d.tool,d.color);
+        drawLine(d.prevX, d.prevY, d.x, d.y, d.tool, d.color);
     });
 
 });
