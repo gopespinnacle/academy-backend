@@ -799,7 +799,23 @@ socket.on("clear", () => {
 });
 /* LEAVE */
 function leaveClass(){
-    window.close();
+
+    // 🔥 stop all streams
+    if(localStream){
+        localStream.getTracks().forEach(track => track.stop());
+    }
+
+    if(screenStream){
+        screenStream.getTracks().forEach(track => track.stop());
+    }
+
+    // 🔥 close peer connection
+    if(pc){
+        pc.close();
+    }
+
+    // 🔥 go back to period students page
+    window.location.href = "https://www.gopespinnacle.com/period-students.html";
 }
 
 // ================= FILE UPLOAD =================
