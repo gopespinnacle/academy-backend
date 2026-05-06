@@ -228,7 +228,7 @@ height: 40px;
         height:calc(100% - 80px);
         object-fit:contain;
         background:black;
-        z-index:1;
+        z-index:2;
         display:none;
     ">
 </video>
@@ -238,8 +238,9 @@ height: 40px;
     left:0;
     width:100%;
     bottom:0;   /* 🔥 THIS IS THE FIX */
-    background:transparent;
-z-index:2;
+  background:transparent;
+z-index:5;
+pointer-events:auto;
 "></canvas>
 <div id="pdfWindow" style="
     position:absolute;
@@ -914,8 +915,8 @@ function changeCanvasType(type){
     mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
 
     if(type === "white"){
-        mainBoard.style.background = "white";
-    }
+    mainBoard.style.background = "transparent";
+}
     else if(type === "four"){
         drawFourLines();
     }
@@ -929,7 +930,7 @@ function changeCanvasType(type){
 
 function drawFourLines(){
 
-    mainBoard.style.background = "white";
+    mainBoard.style.background = "transparent";
 
     const gap = 60;  // space between each set
 
@@ -963,7 +964,7 @@ function drawFourLines(){
 
 function drawOneLines(){
 
-    mainBoard.style.background = "white";
+    mainBoard.style.background = "transparent";
 
     const gap = 40;
 
