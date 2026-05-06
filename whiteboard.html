@@ -1182,12 +1182,33 @@ window.addEventListener("orientationchange", () => {
 
 });
 
+
 function handleResize(){
 
-    mainBoard.width = mainBoard.offsetWidth;
-    mainBoard.height = mainBoard.offsetHeight;
+    // 🔥 SAVE CURRENT DRAWING
+    const saved = mainCtx.getImageData(
+        0,
+        0,
+        mainBoard.width,
+        mainBoard.height
+    );
 
-    redrawCanvas();
+    // resize
+    mainBoard.width = window.innerWidth;
+    mainBoard.height = window.innerHeight - 90;
+
+    // 🔥 RESTORE DRAWING
+    mainCtx.putImageData(saved, 0, 0);
+
+    // redraw line background
+    const type = localStorage.getItem("canvasType") || "white";
+
+    if(type === "four"){
+        drawFourLines();
+    }
+    else if(type === "one"){
+        drawOneLines();
+    }
 }
 
 
