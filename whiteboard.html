@@ -238,8 +238,8 @@ height: 40px;
     left:0;
     width:100%;
     bottom:0;   /* 🔥 THIS IS THE FIX */
-    background:white;
-    z-index:1;
+    background:transparent;
+z-index:2;
 "></canvas>
 <div id="pdfWindow" style="
     position:absolute;
@@ -1150,17 +1150,23 @@ function setupPeer(){
 
 pc.ontrack = async (event) => {
 
+    // 🔥 ADD TRACK TO SAME STREAM
+    remoteStream.addTrack(event.track);
+
     const screenVideo = document.getElementById("screenVideo");
 
     screenVideo.style.display = "block";
 
-    screenVideo.srcObject = event.streams[0];
+    // 🔥 USE COMBINED STREAM
+    screenVideo.srcObject = remoteStream;
 
     try{
         await screenVideo.play();
     }catch(e){
         console.log(e);
     }
+
+    console.log("TRACK RECEIVED:", event.track.kind);
 };
 pc.onconnectionstatechange = () => {
     console.log("STATE:", pc.connectionState);
@@ -1231,10 +1237,21 @@ async function startScreenShare(){
         const sender = pc.getSenders().find(s =>
             s.track && s.track.kind === "video"
         );
-
+console.log("VIDEO SENDER:", sender);
         if(sender){
-            sender.replaceTrack(screenTrack);
-        }
+
+    await sender.replaceTrack(screenTrack);
+
+    // 🔥 CREATE NEW OFFER
+    const offer = await pc.createOffer();
+
+    await pc.setLocalDescription(offer);
+
+    socket.emit("offer", {
+        room,
+        offer
+    });
+}
 
         screenTrack.onended = () => {
             stopScreenShare();
@@ -1256,8 +1273,19 @@ async function stopScreenShare(){
     );
 
     if(sender){
-        sender.replaceTrack(videoTrack);
-    }
+
+    await sender.replaceTrack(videoTrack);
+
+    // 🔥 RETURN CAMERA
+    const offer = await pc.createOffer();
+
+    await pc.setLocalDescription(offer);
+
+    socket.emit("offer", {
+        room,
+        offer
+    });
+}
 
     // HIDE SCREEN
     screenVideo.style.display = "none";
