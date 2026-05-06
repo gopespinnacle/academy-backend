@@ -258,6 +258,57 @@ height: 40px;
         height:calc(100vh - 140px) !important;
     }
 }
+
+/* ================= MOBILE MENU ================= */
+
+#mobileMenu{
+    display:flex;
+    gap:10px;
+}
+
+#menuBtn{
+    display:none;
+}
+
+@media(max-width:768px){
+
+    #menuBtn{
+        display:block;
+    }
+
+    #mobileMenu{
+
+        display:none;
+
+        position:fixed;
+
+        top:75px;
+
+        right:10px;
+
+        width:180px;
+
+        background:#1e293b;
+
+        padding:10px;
+
+        border-radius:12px;
+
+        flex-direction:column;
+
+        z-index:999999;
+
+        box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    #mobileMenu button{
+        width:100%;
+    }
+
+    #mobileMenu.show{
+        display:flex;
+    }
+}
 </style>
 </head>
 
@@ -277,15 +328,27 @@ height: 40px;
     </div>
 <button onclick="setTool('eraseDraw')">🧽 Erase</button>
 
+<button id="menuBtn" onclick="toggleMobileMenu()">☰ Menu</button>
+
+<div id="mobileMenu">
+
 <button onclick="openBigTextBox()">⌨️ Type Text</button>
+
 <button onclick="saveAsPDF()">💾 Save PDF</button>
 
 <button onclick="startScreenShare()">🖥 Share Screen</button>
+
 <button onclick="stopScreenShare()">❌ Stop Share</button>
+
 <button onclick="toggleAudio()">🎤 Mute</button>
+
 <button onclick="toggleVideo()">📷 Stop Video</button>
+
 <button onclick="startPiP()">📺 Camera PiP</button>
-    <button onclick="leaveClass()">🚪 Leave</button>
+
+<button onclick="leaveClass()">🚪 Leave</button>
+
+</div>
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
 <div id="screenContainer">
@@ -1831,6 +1894,13 @@ async function startPiP() {
     }
 }
  
+
+ function toggleMobileMenu(){
+
+    document
+        .getElementById("mobileMenu")
+        .classList.toggle("show");
+}
 </script>
 </body>
 </html>
