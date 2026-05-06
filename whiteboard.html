@@ -333,6 +333,7 @@ mainBoard.addEventListener("pointerdown", (e) => {
 });
 
 mainBoard.addEventListener("pointermove", (e) => {
+    
     e.preventDefault();   // 🔥 VERY IMPORTANT (mobile fix)
 
     if(!isDrawingPointer) return;
@@ -353,7 +354,21 @@ mainBoard.addEventListener("pointermove", (e) => {
 
     mainCtx.lineCap = "round";   // 🔥 ADD (smooth line)
     mainCtx.stroke();
+// 🔥 SAVE DRAWING HISTORY
+let key = getHistoryKey();
 
+let history = JSON.parse(localStorage.getItem(key) || "[]");
+
+history.push({
+    x1: prevX,
+    y1: prevY,
+    x2: x,
+    y2: y,
+    tool: currentTool,
+    color: currentColor
+});
+
+localStorage.setItem(key, JSON.stringify(history));
     socket.emit("draw", {
         room,
         prevX,
