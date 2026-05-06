@@ -800,22 +800,29 @@ socket.on("clear", () => {
 /* LEAVE */
 function leaveClass(){
 
-    // 🔥 stop all streams
+    // 🔥 stop camera/mic
     if(localStream){
         localStream.getTracks().forEach(track => track.stop());
     }
 
+    // 🔥 stop screen share
     if(screenStream){
         screenStream.getTracks().forEach(track => track.stop());
     }
 
-    // 🔥 close peer connection
+    // 🔥 close RTC
     if(pc){
         pc.close();
     }
 
-    // 🔥 go back to period students page
-    window.location.href = "https://www.gopespinnacle.com/period-students.html";
+    // 🔥 GET ORIGINAL PAGE URL
+    const returnPage = localStorage.getItem("returnPage");
+
+    if(returnPage){
+        window.location.href = returnPage;
+    }else{
+        window.location.href = "/period-students.html";
+    }
 }
 
 // ================= FILE UPLOAD =================
