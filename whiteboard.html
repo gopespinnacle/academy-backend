@@ -733,6 +733,15 @@ socket.on("screenDraw", (data) => {
     screenCtx.lineCap = "round";
     screenCtx.stroke();
 });
+
+socket.on("canvasTypeChanged", (data) => {
+
+    // update dropdown
+    document.querySelector("select").value = data.type;
+
+    // apply same canvas
+    changeCanvasType(data.type);
+});
 socket.on("loadBoard", (dataArray) => {
 
     dataArray.forEach(d => {
@@ -908,8 +917,14 @@ document.getElementById("pdfTab").onclick = function(){
 
 function changeCanvasType(type){
 
+
+
     // 🔥 SAVE SELECTED TYPE
     localStorage.setItem("canvasType", type);
+    socket.emit("canvasTypeChanged", {
+    room,
+    type
+});
 
     mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
 

@@ -256,6 +256,15 @@ socket.on("draw", (data) => {
 socket.on("screenDraw", (data) => {
     socket.to(data.room).emit("screenDraw", data);
 });
+
+// ================= CANVAS TYPE SYNC =================
+socket.on("canvasTypeChanged", (data) => {
+
+    socket.to(data.room).emit("canvasTypeChanged", {
+        type: data.type
+    });
+
+});
 socket.on("fileShare", (data) => {
     socket.to(data.room).emit("fileShare", data);
 });
