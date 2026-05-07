@@ -273,70 +273,89 @@ height: 40px;
     }
 }
 
-/* ================= MOBILE MENU ================= */
+/* ================= PREMIUM MOBILE MENU ================= */
 
-#mobileMenu{
-    display:flex;
-    gap:10px;
+.menu-overlay{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    display:none;
+    z-index:99998;
 }
 
 #menuBtn{
     display:none;
 }
 
-/* 🔥 MOBILE MENU FIX */
+/* MOBILE */
 @media(max-width:768px){
 
-    /* SHOW MENU BUTTON */
     #menuBtn{
         display:block !important;
 
-        width:65px !important;
-        min-width:65px !important;
+        position:fixed;
 
-        font-size:12px !important;
+        top:10px;
+        right:10px;
+
+        z-index:100000;
+
+        width:55px;
+        height:45px;
+
+        border-radius:8px;
 
         background:white;
+
+        font-size:18px;
     }
 
-    /* HIDE EVERYTHING INSIDE TOOLBAR */
-.toolbar > *:not(#menuBtn):not(#mobileMenu){
-
-    display:none !important;
-}
-    /* HIDE EXTRA BUTTONS */
     #mobileMenu{
-        display:none !important;
-    }
-
-    /* OPEN MENU */
-    #mobileMenu.show{
-
-        display:flex !important;
-
-        flex-direction:column;
 
         position:fixed;
 
-        top:70px;
-        left:0;
+        top:0;
+        right:-100%;
 
-        width:100%;
+        width:260px;
+
+        height:100vh;
 
         background:#1e293b;
 
-        padding:10px;
+        display:flex;
 
-        gap:10px;
+        flex-direction:column;
 
-        z-index:999999;
+        padding:80px 15px 20px;
+
+        gap:12px;
+
+        transition:0.3s ease;
+
+        z-index:99999;
+
+        overflow-y:auto;
     }
 
-    #mobileMenu button{
+    #mobileMenu.show{
+        right:0;
+    }
+
+    .menu-overlay.show{
+        display:block;
+    }
+
+    #mobileMenu button,
+    #mobileMenu select,
+    #mobileMenu input{
 
         width:100%;
 
-        height:50px;
+        min-height:50px;
 
         font-size:14px;
     }
@@ -346,46 +365,56 @@ height: 40px;
 </head>
 
 <body>
-
+<div class="menu-overlay" onclick="toggleMobileMenu()"></div>
 <div class="toolbar">
+
+    <!-- MOBILE MENU BUTTON -->
     <button id="menuBtn" onclick="toggleMobileMenu()">☰ Menu</button>
-    <select onchange="changeCanvasType(this.value)">
-<option value="white">White Canvas</option>
-<option value="four">Four Line Canvas</option>
-<option value="one">One Line Canvas</option>
-</select>
 
-<input type="color" id="colorPicker" value="#000000">
+    <!-- ALL TOOLS INSIDE MENU -->
+    <div id="mobileMenu">
 
-<div id="mobileMenu">
+        <!-- CANVAS -->
+        <select onchange="changeCanvasType(this.value)">
+            <option value="white">White Canvas</option>
+            <option value="four">Four Line Canvas</option>
+            <option value="one">One Line Canvas</option>
+        </select>
 
-<button onclick="setTool('pen')">✏️ Pen</button>
+        <!-- COLOR -->
+        <input type="color" id="colorPicker" value="#000000">
 
-<button onclick="setTool('eraser')">Back to DOC</button>
+        <!-- TOOLS -->
+        <button onclick="setTool('pen')">✏️ Pen</button>
 
-<div class="teacher-tools" id="teacherTools">
-    <button onclick="clearBoard()">🧹 Clear</button>
-</div>
+        <button onclick="setTool('eraser')">
+            Back to DOC
+        </button>
 
-<button onclick="setTool('eraseDraw')">🧽 Erase</button>
+        <div class="teacher-tools" id="teacherTools">
+            <button onclick="clearBoard()">🧹 Clear</button>
+        </div>
 
-<button onclick="openBigTextBox()">⌨️ Type Text</button>
+        <button onclick="setTool('eraseDraw')">🧽 Erase</button>
 
-<button onclick="saveAsPDF()">💾 Save PDF</button>
+        <button onclick="openBigTextBox()">⌨️ Type Text</button>
 
-<button onclick="startScreenShare()">🖥 Share Screen</button>
+        <button onclick="saveAsPDF()">💾 Save PDF</button>
 
-<button onclick="stopScreenShare()">❌ Stop Share</button>
+        <button onclick="startScreenShare()">🖥 Share Screen</button>
 
-<button onclick="toggleAudio()">🎤 Mute</button>
+        <button onclick="stopScreenShare()">❌ Stop Share</button>
 
-<button onclick="toggleVideo()">📷 Stop Video</button>
+        <button onclick="toggleAudio()">🎤 Mute</button>
 
-<button onclick="startPiP()">📺 Camera PiP</button>
+        <button onclick="toggleVideo()">📷 Stop Video</button>
 
-<button onclick="leaveClass()">🚪 Leave</button>
+        <button onclick="startPiP()">📺 Camera PiP</button>
 
-</div>
+        <button onclick="leaveClass()">🚪 Leave</button>
+
+    </div>
+
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
 <div id="screenContainer">
@@ -1934,6 +1963,10 @@ async function startPiP() {
 
     document
         .getElementById("mobileMenu")
+        .classList.toggle("show");
+
+    document
+        .querySelector(".menu-overlay")
         .classList.toggle("show");
 }
 </script>
