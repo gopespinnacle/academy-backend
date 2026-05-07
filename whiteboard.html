@@ -169,7 +169,10 @@ height: 40px;
 
         display:grid;
 
-        grid-template-columns:repeat(4, 1fr);
+        grid-template-columns:repeat(7, auto);
+        overflow-x:auto;
+white-space:nowrap;
+align-items:center;
 
         gap:6px;
 
@@ -188,22 +191,29 @@ height: 40px;
     }
 
     .toolbar button,
-    .toolbar select,
-    .toolbar input{
+.toolbar select,
+.toolbar input{
 
-        width:100%;
+    min-width:45px;
 
-        min-width:0;
+    width:auto;
 
-        font-size:11px;
+    font-size:9px;
 
-        padding:6px 4px;
+    padding:3px;
 
-        height:55px;
+    height:42px;
 
-        box-sizing:border-box;
-    }
+    box-sizing:border-box;
+}
+#menuBtn{
 
+    display:block !important;
+
+    min-width:55px !important;
+
+    background:white;
+}
     /* CANVAS */
     #mainBoard{
 
