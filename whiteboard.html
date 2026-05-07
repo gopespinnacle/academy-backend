@@ -159,36 +159,40 @@ height: 40px;
 /* ================= MOBILE ONLY ================= */
 
 @media screen and (max-width:768px){
+    .toolbar::-webkit-scrollbar{
+    display:none;
+}
 
     body{
         overflow:hidden;
     }
 
     /* TOOLBAR */
-    .toolbar{
+    /* TOOLBAR */
+    
+.toolbar{
 
-        display:grid;
+    display:flex;
 
-        grid-template-columns:repeat(7, auto);
-        overflow-x:auto;
-white-space:nowrap;
-align-items:center;
+    align-items:center;
 
-        gap:6px;
+    gap:6px;
 
-        padding:6px;
+    padding:6px;
 
-        position:fixed;
+    position:fixed;
 
-        top:0;
-        left:0;
+    top:0;
+    left:0;
 
-        width:100%;
+    width:100%;
 
-        background:#1e293b;
+    background:#1e293b;
 
-        z-index:99999;
-    }
+    z-index:99999;
+
+    overflow-x:auto;
+}
 
     .toolbar button,
 .toolbar select,
@@ -272,8 +276,7 @@ align-items:center;
 /* ================= MOBILE MENU ================= */
 
 #mobileMenu{
-    display:flex;
-    gap:10px;
+    display:none;
 }
 
 #menuBtn{
