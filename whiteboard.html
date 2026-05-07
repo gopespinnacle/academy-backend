@@ -345,19 +345,24 @@ height: 40px;
 <div class="toolbar">
     <button id="menuBtn" onclick="toggleMobileMenu()">☰ Menu</button>
     <select onchange="changeCanvasType(this.value)">
-    <option value="white">White Canvas</option>
-    <option value="four">Four Line Canvas</option>
-    <option value="one">One Line Canvas</option>
+<option value="white">White Canvas</option>
+<option value="four">Four Line Canvas</option>
+<option value="one">One Line Canvas</option>
 </select>
-    <button onclick="setTool('pen')">✏️ Pen</button>
+
 <input type="color" id="colorPicker" value="#000000">
-<button onclick="setTool('eraser')">Back to DOC</button>
-    <div class="teacher-tools" id="teacherTools">
-        <button onclick="clearBoard()">🧹 Clear</button>
-    </div>
-<button onclick="setTool('eraseDraw')">🧽 Erase</button>
 
 <div id="mobileMenu">
+
+<button onclick="setTool('pen')">✏️ Pen</button>
+
+<button onclick="setTool('eraser')">Back to DOC</button>
+
+<div class="teacher-tools" id="teacherTools">
+    <button onclick="clearBoard()">🧹 Clear</button>
+</div>
+
+<button onclick="setTool('eraseDraw')">🧽 Erase</button>
 
 <button onclick="openBigTextBox()">⌨️ Type Text</button>
 
