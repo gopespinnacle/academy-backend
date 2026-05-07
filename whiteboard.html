@@ -1384,12 +1384,6 @@ function loadCanvasHistory(type){
 
         mainCtx.stroke();
     });
-
-
-// draw only cleaned strokes
-cleaned.forEach(d => {
-    drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
-});
 }
 
 function openBigTextBox(){
