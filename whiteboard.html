@@ -1658,7 +1658,7 @@ let localStream;
 async function initMedia(){
     localStream = await navigator.mediaDevices.getUserMedia({
         video: true,
-        audio: true
+        audio: false
     });
 
     console.log("LOCAL STREAM:", localStream);  // ✅ ADD HERE
@@ -1964,9 +1964,9 @@ async function testCamera(){
     try{
 
         const stream = await navigator.mediaDevices.getUserMedia({
-            video:true,
-            audio:true
-        });
+    video:true,
+    audio:false
+})
 
         document.getElementById("localVideo").srcObject = stream;
 
