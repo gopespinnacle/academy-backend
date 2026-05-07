@@ -23,19 +23,37 @@ body {
 
 .toolbar {
     background:#1e293b;
-    padding:10px;
+
+    padding:5px 6px;
+
     display:flex;
-    gap:10px;
+
+    gap:5px;
 
     position:relative;
-    z-index:1000;   /* 🔥 ADD THIS */
+
+    z-index:1000;
+
+    align-items:center;
+
+    flex-wrap:wrap;
 }
 
-button {
-    padding:8px 12px;
+button,
+select,
+input {
+
+    height:30px;
+
+    padding:3px 8px;
+
     border:none;
-    border-radius:6px;
+
+    border-radius:5px;
+
     cursor:pointer;
+
+    font-size:12px;
 }
 
 .teacher-tools {
@@ -166,22 +184,85 @@ height: 40px;
     z-index:99998;
 }
 
+/* DESKTOP */
 #menuBtn{
-    display:none;
+    display:none !important;
+}
+
+/* DESKTOP */
+/* DESKTOP */
+/* DESKTOP */
+#mobileMenu{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+
+    #mobileMenu{
+        display:none !important;
+    }
+
+    #mobileMenu.show{
+        display:flex !important;
+        flex-direction:column;
+    }
+
+    .toolbar{
+        justify-content:flex-end;
+    }
+}
+
+/* MOBILE */
+@media(max-width:768px){
+
+    #mobileMenu{
+        display:none;
+    }
+
+    #mobileMenu.show{
+        display:flex;
+    }
+}
+
+
+/* MOBILE ONLY */
+@media(max-width:768px){
+
+    #menuBtn{
+        display:flex !important;
+    }
+
+    #mobileMenu{
+        display:flex;
+        flex-direction:column;
+    }
 }
 
 /* MOBILE ONLY */
 
 
+  /* FULL MOBILE LAYOUT */
+@media(max-width:768px){
+
+    #menuBtn{
+    display:flex !important;
+}
+
+.toolbar{
+    justify-content:flex-end;
+}
+
     body{
         overflow:hidden;
     }
 
-    /* TOP BAR */
     .toolbar{
 
         position:fixed;
-
         top:0;
         left:0;
 
@@ -191,42 +272,16 @@ height: 40px;
         background:#1e293b;
 
         display:flex;
-        align-items:center;
         justify-content:flex-end;
+        align-items:center;
 
         padding:0 10px;
 
         z-index:99999;
     }
 
-    /* HIDE NORMAL TOOLS */
-    .toolbar > *:not(#menuBtn):not(#mobileMenu){
-        display:none !important;
-    }
-
-    /* MENU BUTTON */
-    #menuBtn{
-
-        display:flex !important;
-
-        align-items:center;
-        justify-content:center;
-
-        width:50px;
-        height:42px;
-
-        border:none;
-        border-radius:8px;
-
-        background:white;
-
-        font-size:20px;
-
-        cursor:pointer;
-    }
-
-    /* SIDEBAR */
-    #mobileMenu{
+    /* HIDE NORMAL TOOLBAR */
+    /*#mobileMenu{
 
         position:fixed;
 
@@ -242,16 +297,16 @@ height: 40px;
 
         flex-direction:column;
 
-        gap:12px;
-
         padding:80px 15px 20px;
+
+        gap:12px;
 
         transition:0.3s ease;
 
         z-index:99999;
 
         overflow-y:auto;
-    }
+    }*/
 
     #mobileMenu.show{
         right:0;
@@ -261,28 +316,15 @@ height: 40px;
         display:block;
     }
 
-    /* MENU ITEMS */
     #mobileMenu button,
     #mobileMenu select,
     #mobileMenu input{
 
         width:100%;
-
         min-height:48px;
-
-        font-size:14px;
     }
 
-    /* BOARD */
-    #mainBoard{
-
-        top:60px !important;
-
-        width:100vw !important;
-
-        height:calc(100vh - 60px) !important;
-    }
-
+    #mainBoard,
     #drawLayer{
 
         top:60px !important;
@@ -292,15 +334,12 @@ height: 40px;
         height:calc(100vh - 60px) !important;
     }
 
-    /* VIDEO */
     #screenContainer{
 
         width:110px;
-
         height:80px;
 
         top:70px;
-
         right:5px;
     }
 
@@ -309,19 +348,7 @@ height: 40px;
         width:40px;
         height:28px;
     }
-
-    /* PDF */
-    #pdfWindow{
-
-        top:60px !important;
-
-        left:0 !important;
-
-        width:100vw !important;
-
-        height:calc(100vh - 60px) !important;
-    }
-
+}
 
 </style>
 </head>
@@ -348,7 +375,7 @@ height: 40px;
 
         <!-- TOOLS -->
         <button onclick="setTool('pen')">✏️ Pen</button>
-
+<button onclick="testCamera()">TEST CAMERA</button>
         <button onclick="setTool('eraser')">
             Back to DOC
         </button>
@@ -1931,7 +1958,27 @@ async function startPiP() {
         .querySelector(".menu-overlay")
         .classList.toggle("show");
 }
+
+async function testCamera(){
+
+    try{
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video:true,
+            audio:true
+        });
+
+        document.getElementById("localVideo").srcObject = stream;
+
+        alert("CAMERA WORKING");
+
+    }catch(err){
+
+        alert("CAMERA ERROR: " + err.message);
+
+        console.log(err);
+    }
+}
 </script>
 </body>
 </html>
-
