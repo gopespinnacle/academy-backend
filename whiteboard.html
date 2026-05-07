@@ -503,11 +503,15 @@ const socket = io("https://academy-backend-eatl.onrender.com", {
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext("2d");
 const drawCanvas = document.getElementById("drawLayer");
-const dctx = drawCanvas.getContext("2d");
+const dctx = drawCanvas.getContext("2d", {
+    willReadFrequently: true
+});
 
 // 🔥 ADD HERE (exactly here)
 const mainBoard = document.getElementById("mainBoard");
-const mainCtx = mainBoard.getContext("2d");
+const mainCtx = mainBoard.getContext("2d", {
+    willReadFrequently: true
+});
 // 🔥 SCREEN DRAW SETUP
 const screenCanvas = document.getElementById("screenDraw");
 const screenCtx = screenCanvas.getContext("2d");
