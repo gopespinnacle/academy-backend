@@ -272,6 +272,39 @@ height: 40px;
 
 @media(max-width:768px){
 
+    #menuBtn{
+        display:block;
+        min-width:90px;
+    }
+
+    #mobileMenu{
+        display:none;
+
+        position:fixed;
+
+        top:70px;
+        left:0;
+
+        width:100%;
+
+        background:#1e293b;
+
+        padding:10px;
+
+        z-index:999999;
+
+        flex-direction:column;
+
+        gap:10px;
+    }
+
+    #mobileMenu.show{
+        display:flex;
+    }
+}
+
+@media(max-width:768px){
+
     body{
         overflow:hidden;
     }
