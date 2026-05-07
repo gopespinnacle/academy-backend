@@ -270,42 +270,30 @@ height: 40px;
     display:none;
 }
 
+/* 🔥 MOBILE MENU FIX */
 @media(max-width:768px){
 
-    body{
-        overflow:hidden;
+    /* SHOW MENU BUTTON */
+    #menuBtn{
+        display:block !important;
+
+        width:65px !important;
+        min-width:65px !important;
+
+        font-size:12px !important;
+
+        background:white;
     }
 
-    .toolbar{
-
-        display:flex;
-
-        align-items:center;
-
-        gap:5px;
-
-        padding:5px;
-
-        position:fixed;
-
-        top:0;
-        left:0;
-
-        width:100%;
-
-        background:#1e293b;
-
-        z-index:999999;
-    }
-
-    /* SHOW ONLY MAIN TOOLS */
+    /* HIDE EXTRA BUTTONS */
     #mobileMenu{
-        display:none;
+        display:none !important;
     }
 
+    /* OPEN MENU */
     #mobileMenu.show{
 
-        display:flex;
+        display:flex !important;
 
         flex-direction:column;
 
@@ -325,37 +313,16 @@ height: 40px;
         z-index:999999;
     }
 
-    #menuBtn{
-        display:block;
-    }
+    #mobileMenu button{
 
-    .toolbar button,
-    .toolbar select,
-    .toolbar input{
+        width:100%;
 
-        height:45px;
+        height:50px;
 
-        font-size:12px;
-    }
-
-    #mainBoard{
-
-        top:70px !important;
-
-        width:100vw !important;
-
-        height:calc(100vh - 70px) !important;
-    }
-
-    #screenContainer{
-
-        width:100px;
-        height:75px;
-
-        top:80px;
-        right:5px;
+        font-size:14px;
     }
 }
+
 </style>
 </head>
 
