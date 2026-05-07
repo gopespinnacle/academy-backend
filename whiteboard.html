@@ -1724,9 +1724,7 @@ pc.ontrack = async (event) => {
     const remoteVideo =
         document.getElementById("remoteVideo");
 
-    // REMOVE OLD STREAM
-    remoteVideo.srcObject = null;
-
+   
     // ADD NEW STREAM
     remoteVideo.srcObject = event.streams[0];
 
@@ -1770,17 +1768,11 @@ document.addEventListener("visibilitychange", async () => {
     const remoteVideo =
         document.getElementById("remoteVideo");
 
-    if(document.visibilityState === "visible"){
+    if(remoteVideo.srcObject){
 
         try{
-
-            if(remoteVideo.srcObject){
-
-                await remoteVideo.play();
-            }
-
+            await remoteVideo.play();
         }catch(err){
-
             console.log(err);
         }
     }
@@ -1794,6 +1786,21 @@ window.addEventListener("focus", () => {
 
         remoteVideo.play()
         .catch(err => console.log(err));
+    }
+});
+
+window.addEventListener("pageshow", async () => {
+
+    const remoteVideo =
+        document.getElementById("remoteVideo");
+
+    if(remoteVideo.srcObject){
+
+        try{
+            await remoteVideo.play();
+        }catch(err){
+            console.log(err);
+        }
     }
 });
 window.addEventListener("orientationchange", () => {
