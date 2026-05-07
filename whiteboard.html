@@ -1720,10 +1720,32 @@ function setupPeer(){
     // receive other person video
     let remoteStream = new MediaStream();
 
-pc.ontrack = (event) => {
+pc.ontrack = async (event) => {
 
-    const remoteVideo = document.getElementById("remoteVideo");
+    const remoteVideo =
+        document.getElementById("remoteVideo");
+
+    // REMOVE OLD STREAM
+    remoteVideo.srcObject = null;
+
+    // ADD NEW STREAM
     remoteVideo.srcObject = event.streams[0];
+
+    // IMPORTANT FOR MOBILE
+    remoteVideo.autoplay = true;
+    remoteVideo.playsInline = true;
+    remoteVideo.muted = false;
+
+    try{
+        await remoteVideo.play();
+    }catch(err){
+        console.log("REMOTE VIDEO PLAY ERROR", err);
+    }
+
+    // FORCE VISIBLE
+    remoteVideo.style.display = "block";
+    remoteVideo.style.visibility = "visible";
+    remoteVideo.style.opacity = "1";
 };
 pc.onconnectionstatechange = () => {
     console.log("STATE:", pc.connectionState);
@@ -1744,6 +1766,17 @@ pc.oniceconnectionstatechange = () => {
 
 
 window.addEventListener("resize", handleResize);
+window.addEventListener("focus", () => {
+
+    const remoteVideo =
+        document.getElementById("remoteVideo");
+
+    if(remoteVideo.srcObject){
+
+        remoteVideo.play()
+        .catch(err => console.log(err));
+    }
+});
 window.addEventListener("orientationchange", () => {
 
     setTimeout(() => {
