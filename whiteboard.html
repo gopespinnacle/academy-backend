@@ -350,6 +350,22 @@ height: 40px;
     }
 }
 
+.mobile-share-video{
+
+    position:fixed !important;
+    right:10px !important;
+    bottom:10px !important;
+
+    width:120px !important;
+    height:160px !important;
+
+    border-radius:12px;
+    z-index:999999;
+
+    background:black;
+    object-fit:cover;
+}
+
 </style>
 </head>
 
@@ -391,7 +407,7 @@ height: 40px;
         <button onclick="saveAsPDF()">💾 Save PDF</button>
 
         <button id="shareScreenBtn"
-onclick="Android.startScreenCapture()">
+onclick="startMobileScreenShare()">
 
 🖥️ Share Screen
 
@@ -1983,6 +1999,19 @@ async function testCamera(){
 
         console.log(err);
     }
+}
+
+
+function startMobileScreenShare(){
+
+    // SHOW OTHER PARTICIPANT VIDEO
+
+    document.getElementById("remoteVideo")
+    .classList.add("mobile-share-video");
+
+    // START ANDROID SCREEN SHARE
+
+    Android.startScreenCapture();
 }
 </script>
 </body>
