@@ -182,7 +182,23 @@ height: 40px;
 
 
 /* ================= CLEAN MOBILE LAYOUT ================= */
+#emojiContainer{
 
+    position:fixed;
+
+    top:70px;
+    left:10px;
+
+    z-index:999999;
+
+    display:none;
+}
+
+emoji-picker{
+
+    width:320px;
+    height:420px;
+}
 .menu-overlay{
     position:fixed;
     inset:0;
@@ -413,11 +429,12 @@ onclick="Android.startScreenCapture()">
         <button onclick="toggleVideo()">📷 Stop Video</button>
 
         <button onclick="startPiP()">📺 Camera PiP</button>
+        <button onclick="toggleEmojiPicker()">😀 Emojis</button>
 
         <button onclick="leaveClass()">🚪 Leave</button>
 
     </div>
-
+ <emoji-picker id="emojiPicker"></emoji-picker>
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
 <div id="screenContainer">
@@ -520,6 +537,9 @@ muted>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script type="module"
+src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js">
+</script>
 <script>
 
 const params = new URLSearchParams(window.location.search);
@@ -2042,7 +2062,67 @@ async function testCamera(){
     }
 }
 
+function toggleEmojiPicker(){
 
+    const box =
+        document.getElementById("emojiContainer");
+
+    if(box.style.display === "block"){
+
+        box.style.display = "none";
+
+    }else{
+
+        box.style.display = "block";
+    }
+}
+
+// EMOJI CLICK
+document.addEventListener("emoji-click", (event) => {
+
+    const emoji = event.detail.unicode;
+
+    showEmojiReaction(emoji);
+});
+
+// FLOATING EMOJI
+function showEmojiReaction(emoji){
+
+    const div =
+        document.createElement("div");
+
+    div.innerHTML = emoji;
+
+    div.style.position = "fixed";
+
+    div.style.left =
+        Math.random() * 80 + "%";
+
+    div.style.bottom = "100px";
+
+    div.style.fontSize = "60px";
+
+    div.style.zIndex = "999999";
+
+    div.style.transition = "all 2s ease";
+
+    document.body.appendChild(div);
+
+    setTimeout(()=>{
+
+        div.style.transform =
+            "translateY(-250px)";
+
+        div.style.opacity = "0";
+
+    },100);
+
+    setTimeout(()=>{
+
+        div.remove();
+
+    },2200);
+}
 function startMobileScreenShare(){
 
     // SHOW OTHER PARTICIPANT VIDEO
