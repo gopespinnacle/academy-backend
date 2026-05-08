@@ -265,6 +265,15 @@ socket.on("draw", (data) => {
 socket.on("screenDraw", (data) => {
     socket.to(data.room).emit("screenDraw", data);
 });
+
+// ================= EMOJI REACTION =================
+socket.on("emojiReaction", (data) => {
+
+    socket.to(data.room).emit(
+        "emojiReaction",
+        data
+    );
+});
 // ================= TEXT DRAW =================
 socket.on("textDraw", (data) => {
 

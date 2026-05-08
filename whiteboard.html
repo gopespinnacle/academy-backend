@@ -1063,6 +1063,10 @@ socket.on("textDraw", (data) => {
 });
 /* RECEIVE DRAW */
 // ✅ ✅ ADD EXACTLY HERE (NEW CODE)
+socket.on("emojiReaction", (data) => {
+
+    showFloatingEmoji(data.emoji);
+});
 socket.on("screenDraw", (data) => {
 
     screenCtx.beginPath();
@@ -2102,8 +2106,16 @@ const picker = new EmojiMart.Picker({
 
     onEmojiSelect: (emoji) => {
 
-        showFloatingEmoji(emoji.native);
-    }
+    // SHOW LOCALLY
+    showFloatingEmoji(emoji.native);
+
+    // SEND TO STUDENTS
+    socket.emit("emojiReaction", {
+
+        room,
+        emoji: emoji.native
+    });
+}
 });
 
 document
