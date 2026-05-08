@@ -168,6 +168,22 @@ height: 40px;
     height: 100%;
     object-fit: cover;
 }
+
+#jeeFaceFilterCanvas{
+
+    position:absolute;
+
+    inset:0;
+
+    width:100%;
+    height:100%;
+
+    z-index:100;
+
+    pointer-events:none;
+
+    border-radius:10px;
+}
 /* 🔥 TEACHER SMALL VIDEO */
 
 #screenContainer {
@@ -473,7 +489,14 @@ muted>
 <!-- TEACHER VIDEO INSIDE -->
 <div id="localVideoBox">
 
-    <video id="localVideo" autoplay muted playsinline></video>
+    <video
+    id="localVideo"
+    autoplay
+    muted
+    playsinline></video>
+
+    <!-- AR FILTER CANVAS -->
+    <canvas id="jeeFaceFilterCanvas"></canvas>
 
 </div>
 
@@ -552,6 +575,10 @@ rel="stylesheet"
 href="https://cdn.jsdelivr.net/npm/emoji-mart@latest/css/emoji-mart.css">
 
 <script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script src="https://appstatic.jeeliz.com/faceFilter/jeelizFaceFilter.js"></script>
 
 <script>
 
@@ -1712,6 +1739,50 @@ async function saveAsPDF(){
 
 let localStream;
 
+let ARREADY = false;
+
+async function initARFilter(){
+
+    if(ARREADY) return;
+
+    ARREADY = true;
+
+    JEELIZFACEFILTER.init({
+
+        canvasId: "jeeFaceFilterCanvas",
+
+        NNCPath:
+        "https://appstatic.jeeliz.com/faceFilter/",
+
+        callbackReady: function(errCode){
+
+            if(errCode){
+
+                console.log(
+                    "AR ERROR:",
+                    errCode
+                );
+
+                return;
+            }
+
+            console.log(
+                "✅ AR FILTER READY"
+            );
+        },
+
+        callbackTrack: function(detectState){
+
+            // FACE DETECTED
+
+            if(detectState.detected > 0.6){
+
+                // future filters here
+            }
+        }
+    });
+}
+
 async function initMedia(){
     localStream = await navigator.mediaDevices.getUserMedia({
         video: true,
@@ -1725,6 +1796,7 @@ async function initMedia(){
     localVideo.srcObject = localStream;
     localVideo.muted = true;
     await localVideo.play();
+    await initARFilter();
 }
 
 let pc;
