@@ -357,7 +357,22 @@ height: 40px;
     }
 }
 
+#cartoonCanvas{
 
+    position:absolute;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    z-index:30;
+
+    border-radius:10px;
+
+    object-fit:cover;
+}
 
 </style>
 </head>
@@ -413,6 +428,13 @@ onclick="Android.startScreenCapture()">
         <button onclick="toggleVideo()">📷 Stop Video</button>
 
         <button onclick="startPiP()">📺 Camera PiP</button>
+        <button onclick="showEmoji('😂')">😂</button>
+
+<button onclick="showEmoji('🔥')">🔥</button>
+
+<button onclick="showEmoji('❤️')">❤️</button>
+
+<button onclick="showEmoji('👏')">👏</button>
 
         <button onclick="leaveClass()">🚪 Leave</button>
 
@@ -447,6 +469,8 @@ muted>
 <div id="localVideoBox">
 
     <video id="localVideo" autoplay muted playsinline></video>
+
+    <canvas id="cartoonCanvas"></canvas>
 
 </div>
 
@@ -520,6 +544,11 @@ muted>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/body-pix"></script>
 <script>
 
 const params = new URLSearchParams(window.location.search);
@@ -1675,19 +1704,89 @@ async function saveAsPDF(){
 
 let localStream;
 
+let cartoonCanvas;
+let cartoonCtx;
+
 async function initMedia(){
+
     localStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: false
+        video:true,
+        audio:false
     });
 
-    console.log("LOCAL STREAM:", localStream);  // ✅ ADD HERE
-
-    const localVideo = document.getElementById("localVideo");
+    const localVideo =
+        document.getElementById("localVideo");
 
     localVideo.srcObject = localStream;
-    localVideo.muted = true;
+
     await localVideo.play();
+
+    cartoonCanvas =
+        document.getElementById("cartoonCanvas");
+
+    cartoonCtx =
+        cartoonCanvas.getContext("2d");
+
+    function renderCartoon(){
+
+        cartoonCanvas.width =
+            localVideo.videoWidth;
+
+        cartoonCanvas.height =
+            localVideo.videoHeight;
+
+        // draw video
+        cartoonCtx.drawImage(
+            localVideo,
+            0,
+            0,
+            cartoonCanvas.width,
+            cartoonCanvas.height
+        );
+
+        // cartoon effect
+        let frame =
+            cartoonCtx.getImageData(
+                0,
+                0,
+                cartoonCanvas.width,
+                cartoonCanvas.height
+            );
+
+        let data = frame.data;
+
+        for(let i=0;i<data.length;i+=4){
+
+            data[i] =
+                Math.round(data[i]/32)*32;
+
+            data[i+1] =
+                Math.round(data[i+1]/32)*32;
+
+            data[i+2] =
+                Math.round(data[i+2]/32)*32;
+        }
+
+        cartoonCtx.putImageData(frame,0,0);
+
+        requestAnimationFrame(renderCartoon);
+    }
+
+    renderCartoon();
+
+    // 🔥 SEND FILTERED VIDEO
+    const filteredStream =
+        cartoonCanvas.captureStream(25);
+
+    const audioTrack =
+        localStream.getAudioTracks()[0];
+
+    if(audioTrack){
+
+        filteredStream.addTrack(audioTrack);
+    }
+
+    localStream = filteredStream;
 }
 
 let pc;
@@ -2020,7 +2119,43 @@ async function startPiP() {
         .querySelector(".menu-overlay")
         .classList.toggle("show");
 }
+function showEmoji(emoji){
 
+    const div =
+        document.createElement("div");
+
+    div.innerHTML = emoji;
+
+    div.style.position = "fixed";
+
+    div.style.left =
+        Math.random()*80 + "%";
+
+    div.style.bottom = "100px";
+
+    div.style.fontSize = "50px";
+
+    div.style.zIndex = "999999";
+
+    div.style.transition = "2s";
+
+    document.body.appendChild(div);
+
+    setTimeout(()=>{
+
+        div.style.transform =
+            "translateY(-200px)";
+
+        div.style.opacity = "0";
+
+    },100);
+
+    setTimeout(()=>{
+
+        div.remove();
+
+    },2200);
+}
 async function testCamera(){
 
     try{
