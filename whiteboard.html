@@ -182,23 +182,7 @@ height: 40px;
 
 
 /* ================= CLEAN MOBILE LAYOUT ================= */
-#emojiContainer{
 
-    position:fixed;
-
-    top:70px;
-    left:10px;
-
-    z-index:999999;
-
-    display:none;
-}
-
-emoji-picker{
-
-    width:320px;
-    height:420px;
-}
 .menu-overlay{
     position:fixed;
     inset:0;
@@ -373,7 +357,28 @@ emoji-picker{
     }
 }
 
+#emojiPopup{
 
+    position:fixed;
+
+    top:70px;
+    left:10px;
+
+    width:350px;
+    height:430px;
+
+    background:white;
+
+    border-radius:20px;
+
+    overflow:hidden;
+
+    box-shadow:0 10px 40px rgba(0,0,0,0.3);
+
+    z-index:999999;
+
+    display:none;
+}
 
 </style>
 </head>
@@ -429,12 +434,17 @@ onclick="Android.startScreenCapture()">
         <button onclick="toggleVideo()">📷 Stop Video</button>
 
         <button onclick="startPiP()">📺 Camera PiP</button>
-        <button onclick="toggleEmojiPicker()">😀 Emojis</button>
+        <button onclick="openEmojiPopup()">😀 Emojis</button>
 
         <button onclick="leaveClass()">🚪 Leave</button>
 
     </div>
  
+</div>
+<div id="emojiPopup">
+
+    <div id="emojiPicker"></div>
+
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
 <div id="screenContainer">
@@ -537,6 +547,11 @@ muted>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link
+rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/emoji-mart@latest/css/emoji-mart.css">
+
+<script src="https://cdn.jsdelivr.net/npm/emoji-mart@latest/dist/browser.js"></script>
 
 <script>
 
@@ -2060,31 +2075,43 @@ async function testCamera(){
     }
 }
 
-function toggleEmojiPicker(){
 
-    const box =
-        document.getElementById("emojiContainer");
 
-    if(box.style.display === "block"){
 
-        box.style.display = "none";
+let emojiOpened = false;
 
-    }else{
+function openEmojiPopup(){
 
-        box.style.display = "block";
-    }
+    const popup =
+        document.getElementById("emojiPopup");
+
+    emojiOpened = !emojiOpened;
+
+    popup.style.display =
+        emojiOpened ? "block" : "none";
 }
 
-// EMOJI CLICK
-document.addEventListener("emoji-click", (event) => {
+// CREATE PICKER
+const picker = new EmojiMart.Picker({
 
-    const emoji = event.detail.unicode;
+    theme: "light",
 
-    showEmojiReaction(emoji);
+    previewPosition: "none",
+
+    skinTonePosition: "none",
+
+    onEmojiSelect: (emoji) => {
+
+        showFloatingEmoji(emoji.native);
+    }
 });
 
-// FLOATING EMOJI
-function showEmojiReaction(emoji){
+document
+.getElementById("emojiPicker")
+.appendChild(picker);
+
+// FLOATING EFFECT
+function showFloatingEmoji(emoji){
 
     const div =
         document.createElement("div");
@@ -2093,23 +2120,24 @@ function showEmojiReaction(emoji){
 
     div.style.position = "fixed";
 
-    div.style.left =
-        Math.random() * 80 + "%";
-
     div.style.bottom = "100px";
 
-    div.style.fontSize = "60px";
+    div.style.left =
+        Math.random()*80 + "%";
+
+    div.style.fontSize = "70px";
 
     div.style.zIndex = "999999";
 
-    div.style.transition = "all 2s ease";
+    div.style.transition =
+        "all 2s ease";
 
     document.body.appendChild(div);
 
     setTimeout(()=>{
 
         div.style.transform =
-            "translateY(-250px)";
+            "translateY(-300px)";
 
         div.style.opacity = "0";
 
@@ -2121,6 +2149,7 @@ function showEmojiReaction(emoji){
 
     },2200);
 }
+
 function startMobileScreenShare(){
 
     // SHOW OTHER PARTICIPANT VIDEO
