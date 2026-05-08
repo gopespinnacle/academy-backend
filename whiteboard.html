@@ -468,7 +468,13 @@ muted>
 <!-- TEACHER VIDEO INSIDE -->
 <div id="localVideoBox">
 
-    <video id="localVideo" autoplay muted playsinline></video>
+   <video
+id="localVideo"
+autoplay
+muted
+playsinline
+style="display:none;">
+</video>
 
     <canvas id="cartoonCanvas"></canvas>
 
@@ -1736,14 +1742,20 @@ async function initMedia(){
             localVideo.videoHeight;
 
         // draw video
-        cartoonCtx.drawImage(
-            localVideo,
-            0,
-            0,
-            cartoonCanvas.width,
-            cartoonCanvas.height
-        );
+        // MIRROR EFFECT
+cartoonCtx.save();
 
+cartoonCtx.scale(-1,1);
+
+cartoonCtx.drawImage(
+    localVideo,
+    -cartoonCanvas.width,
+    0,
+    cartoonCanvas.width,
+    cartoonCanvas.height
+);
+
+cartoonCtx.restore();
         // cartoon effect
         let frame =
             cartoonCtx.getImageData(
@@ -1773,6 +1785,7 @@ async function initMedia(){
     }
 
     renderCartoon();
+    cartoonCanvas.style.display = "block";
 
     // 🔥 SEND FILTERED VIDEO
     const filteredStream =
