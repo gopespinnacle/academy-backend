@@ -1746,7 +1746,9 @@ async function initARFilter(){
     if(ARREADY) return;
 
     ARREADY = true;
+const dogImg = new Image();
 
+dogImg.src = "images/dogears.png";
     JEELIZFACEFILTER.init({
 
         canvasId: "jeeFaceFilterCanvas",
@@ -1770,8 +1772,8 @@ async function initARFilter(){
                 "✅ AR FILTER READY"
             );
         },
-
-        callbackTrack: function(detectState){
+        
+callbackTrack: function(detectState){
 
     const canvas =
         document.getElementById(
@@ -1781,7 +1783,14 @@ async function initARFilter(){
     const ctx =
         canvas.getContext("2d");
 
-    // CLEAR OLD
+    // MATCH SIZE
+    canvas.width =
+        canvas.offsetWidth;
+
+    canvas.height =
+        canvas.offsetHeight;
+
+    // CLEAR
     ctx.clearRect(
         0,
         0,
@@ -1792,29 +1801,42 @@ async function initARFilter(){
     // FACE FOUND
     if(detectState.detected > 0.6){
 
-        // FACE POSITION
+        // CENTER
         const x =
-            canvas.width/2;
+            canvas.width / 2;
 
         const y =
-            canvas.height/2;
+            canvas.height / 2;
 
-        // LOAD IMAGE
-        const img = new Image();
+        // SCALE
+        const scale =
+            detectState.s * 220;
 
-        img.src = "/images/dogears.png";
+        // ROTATION
+        const rot =
+            detectState.ry;
 
-        // DRAW DOG EARS
-        ctx.drawImage(
+        ctx.save();
 
-            img,
-
-            x - 80,
-            y - 160,
-
-            160,
-            100
+        // MOVE TO HEAD
+        ctx.translate(
+            x,
+            y - 80
         );
+
+        // ROTATE WITH HEAD
+        ctx.rotate(rot);
+
+        // DRAW FILTER
+        ctx.drawImage(
+            dogImg,
+            -scale/2,
+            -scale/1.2,
+            scale,
+            scale * 0.7
+        );
+
+        ctx.restore();
     }
 }
     });
