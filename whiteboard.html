@@ -148,24 +148,19 @@ video {
 
 /* 🔥 SMALL TEACHER VIDEO INSIDE BOX */
 #localVideoBox {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
 
-    position:absolute;
+    width: 60px;
+height: 40px;
 
-    bottom:5px;
-    right:5px;
+    border-radius: 10px;
+    overflow: hidden;
 
-    width:180px;
-    height:220px;
+    border: 2px solid white;
 
-    border-radius:10px;
-
-    overflow:hidden;
-
-    border:2px solid white;
-
-    z-index:20;
-
-    background:black;
+    z-index: 20;
 }
 
 #localVideo {
@@ -366,18 +361,17 @@ video {
 
     position:absolute;
 
-    inset:0;
+    top:0;
+    left:0;
 
-    width:100% !important;
-    height:100% !important;
+    width:100%;
+    height:100%;
 
-    display:block !important;
-
-    background:black;
-
-    z-index:999;
+    z-index:30;
 
     border-radius:10px;
+
+    object-fit:cover;
 }
 
 </style>
@@ -1732,9 +1726,6 @@ async function initMedia(){
     localVideo.srcObject = localStream;
 
     await localVideo.play();
-    await new Promise(resolve =>
-    setTimeout(resolve,1000)
-);
 
     cartoonCanvas =
         document.getElementById("cartoonCanvas");
