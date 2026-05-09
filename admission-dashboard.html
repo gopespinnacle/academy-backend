@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Admission Dashboard</title>
+
+<link rel="stylesheet"
+      href="admission-dashboard.css">
+
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+        <h2>Admissions</h2>
+
+        <div class="menu-item active"
+             onclick="showSection('academy')">
+
+             Apply For Academy
+
+        </div>
+
+        <div class="menu-item"
+             onclick="showSection('vacation')">
+
+             Apply For Vacation Course
+
+        </div>
+
+        <div class="menu-item"
+             onclick="showSection('eca')">
+
+             Apply For ECA
+
+        </div>
+
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <!-- ACADEMY SECTION -->
+        <div id="academySection">
+
+            <h1>
+                Academy Admission Form
+            </h1>
+
+            <!-- STEP BAR -->
+            <div class="step-bar">
+
+                <div class="step active"
+                     id="step1Indicator">
+                     1
+                </div>
+
+                <div class="step"
+                     id="step2Indicator">
+                     2
+                </div>
+
+                <div class="step"
+                     id="step3Indicator">
+                     3
+                </div>
+
+                <div class="step"
+                     id="step4Indicator">
+                     4
+                </div>
+
+                <div class="step"
+                     id="step5Indicator">
+                     5
+                </div>
+
+            </div>
+
+            <!-- PAGE 1 -->
+            <div class="form-page active-page"
+                 id="page1">
+
+                <h2>
+                    Personal Details
+                </h2>
+
+                <input type="text"
+                       id="studentName"
+                       placeholder="Student Name">
+
+                <input type="date"
+                       id="studentDOB">
+
+                <input type="text"
+                       id="parentName"
+                       placeholder="Parent Name">
+
+                <input type="text"
+                       id="parentMobile"
+                       placeholder="Parent Mobile Number">
+
+                <input type="text"
+                       id="parentWhatsapp"
+                       placeholder="WhatsApp Number">
+
+                <input type="email"
+                       id="parentEmail"
+                       placeholder="Parent Email">
+
+                <textarea
+                    id="address"
+                    placeholder="Communication Address">
+                </textarea>
+
+                <button onclick="nextPage(2)">
+                    Next
+                </button>
+
+            </div>
+
+            <!-- PAGE 2 -->
+            <div class="form-page"
+                 id="page2">
+
+                <h2>
+                    Educational Details
+                </h2>
+
+                <!-- GRADE -->
+                <select id="grade">
+
+                    <option value="">
+                        Select Grade
+                    </option>
+
+                    <option>LKG</option>
+                    <option>UKG</option>
+
+                    <option>Grade 1</option>
+                    <option>Grade 2</option>
+                    <option>Grade 3</option>
+                    <option>Grade 4</option>
+                    <option>Grade 5</option>
+                    <option>Grade 6</option>
+                    <option>Grade 7</option>
+                    <option>Grade 8</option>
+                    <option>Grade 9</option>
+                    <option>Grade 10</option>
+                    <option>Grade 11</option>
+                    <option>Grade 12</option>
+
+                </select>
+
+                <h3>
+                    Subjects
+                </h3>
+
+                <div class="subjects">
+
+                    <label>
+                        <input type="checkbox"
+                               value="English Reading">
+                        English Reading
+                    </label>
+
+                    <label>
+                        <input type="checkbox"
+                               value="Grammar">
+                        Grammar
+                    </label>
+
+                    <label>
+                        <input type="checkbox"
+                               value="Phonics">
+                        Phonics
+                    </label>
+
+                    <label>
+                        <input type="checkbox"
+                               value="Tamil">
+                        Tamil
+                    </label>
+
+                    <label>
+                        <input type="checkbox"
+                               value="Hindi">
+                        Hindi
+                    </label>
+
+                    <label>
+                        <input type="checkbox"
+                               value="French">
+                        French
+                    </label>
+
+                    <label>
+                        <input type="checkbox"
+                               value="Maths">
+                        Maths
+                    </label>
+
+                    <label>
+                        <input type="checkbox"
+                               value="Science">
+                        Science
+                    </label>
+
+                    <label>
+                        <input type="checkbox"
+                               value="Social Science">
+                        Social Science
+                    </label>
+
+                    <label>
+                        <input type="checkbox"
+                               value="Science Stream">
+                        Science Stream
+                    </label>
+
+                    <label>
+                        <input type="checkbox"
+                               value="Arts Stream">
+                        Arts Stream
+                    </label>
+
+                </div>
+
+                <div class="button-row">
+
+                    <button onclick="prevPage(1)">
+                        Back
+                    </button>
+
+                    <button onclick="nextPage(3)">
+                        Next
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- PAGE 3 -->
+            <div class="form-page"
+                 id="page3">
+
+                <h2>
+                    Choose Your Plan
+                </h2>
+
+                <div class="plan-grid">
+
+                    <div class="plan-card"
+                         onclick="selectPlan('Aspire', this)">
+
+                        <h3>Aspire</h3>
+
+                        <p>
+                            ₹1500 per subject
+                        </p>
+
+                    </div>
+
+                    <div class="plan-card"
+                         onclick="selectPlan('Achieve', this)">
+
+                        <h3>Achieve</h3>
+
+                        <p>
+                            ₹2500 per subject
+                        </p>
+
+                    </div>
+
+                    <div class="plan-card"
+                         onclick="selectPlan('Pinnacle', this)">
+
+                        <h3>Pinnacle</h3>
+
+                        <p>
+                            Premium Personalized
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="button-row">
+
+                    <button onclick="prevPage(2)">
+                        Back
+                    </button>
+
+                    <button onclick="nextPage(4)">
+                        Next
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- PAGE 4 -->
+            <div class="form-page"
+                 id="page4">
+
+                <h2>
+                    Plan Confirmation
+                </h2>
+
+                <div class="summary-box">
+
+                    <p>
+                        Selected Plan :
+                        <span id="selectedPlanText">
+                        </span>
+                    </p>
+
+                </div>
+
+                <div class="button-row">
+
+                    <button onclick="prevPage(3)">
+                        Back
+                    </button>
+
+                    <button onclick="nextPage(5)">
+                        Proceed Payment
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- PAGE 5 -->
+            <div class="form-page"
+                 id="page5">
+
+                <h2>
+                    Payment
+                </h2>
+
+                <p>
+                    Complete payment using GPay
+                </p>
+
+                <button onclick="payNow()">
+                    Pay Now
+                </button>
+
+                <input type="text"
+                       id="utr"
+                       placeholder="Enter UTR Number">
+
+                <button onclick="submitApplication()">
+                    Final Submit
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- VACATION -->
+        <div id="vacationSection"
+             class="hidden-section">
+
+            <h1>
+                Vacation Course Application
+            </h1>
+
+        </div>
+
+        <!-- ECA -->
+        <div id="ecaSection"
+             class="hidden-section">
+
+            <h1>
+                ECA Application
+            </h1>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="admission-dashboard.js"></script>
+
+</body>
+</html>

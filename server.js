@@ -49,6 +49,7 @@ require("./cron/sessionCron");
 require("./cron/attendanceCron");
 require("./cron/attendanceAutoExit");
 const app = express();
+app.use(express.static(__dirname));
 app.use(cors({
     origin: [
         "https://www.gopespinnacle.com"
