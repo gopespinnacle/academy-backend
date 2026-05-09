@@ -40,6 +40,8 @@ const founderTimeClashRoutes = require("./routes/founderTimeClashRoutes");
 const authRoutes = require("./routes/authRoutes");
 const teacherRoutes = require("./routes/teacherRoutes");
 const founderRoutes = require("./routes/founderRoutes");
+const admissionAccountRoutes =
+require("./routes/admissionAccountRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const admissionRoutes = require("./routes/admissionRoutes");
 const admissionParentRoutes =
@@ -91,6 +93,10 @@ app.use("/uploads", express.static("uploads", {
 /* ================= ROUTES ================= */
 
 app.use("/api/auth", authRoutes);
+app.use(
+    "/api/admission-account",
+    admissionAccountRoutes
+);
 app.use("/api/teacher", teacherRoutes);
 
 // ✅ FIRST load MAIN routes

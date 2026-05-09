@@ -208,7 +208,7 @@ button{
 
     position:absolute;
 
-    top:18px;
+    top:28px;
 
     right:-38px;
 
@@ -220,15 +220,17 @@ button{
 
     color:white;
 
-    font-size:11px;
+    font-size:12px;
 
     font-weight:bold;
 
-    display:flex;
+   display:flex;
 
-    align-items:center;
+align-items:center;
 
-    justify-content:center;
+justify-content:center;
+
+padding-top:3px;
 
     transform:rotate(45deg);
 
