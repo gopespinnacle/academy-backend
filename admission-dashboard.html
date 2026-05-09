@@ -1441,22 +1441,28 @@ function payNow(){
         "totalAmount"
     );
 
+    const upiLink =
+`upi://pay?pa=svgopeka19@oksbi&pn=GopesPinnacle&am=${amount}&cu=INR`;
+
     alert(
 
-`Open GPay / PhonePe on your mobile.
+`Open GPay / PhonePe.
 
-Pay ₹${amount}
+Amount: ₹${amount}
 
 UPI ID:
 svgopeka19@oksbi
 
 After payment,
-enter the UTR number below.`
+enter UTR number.`
 
     );
 
-}
+    // MOBILE → opens GPay automatically
+    // DESKTOP → harmless
+    window.location.href = upiLink;
 
+}
 /* FINAL SUBMIT */
 
 async function submitApplication(){
