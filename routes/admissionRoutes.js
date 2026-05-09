@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Admission = require("../models/Admission");
+const AdmissionEnquiry =
+require("../models/AdmissionEnquiry");
 const axios = require("axios");
 
 router.post("/admission", async (req, res) => {
@@ -25,25 +27,53 @@ router.post("/admission", async (req, res) => {
 
 } = req.body;
 
-        const newAdmission = new Admission({
+        let newAdmission;
 
-    parentName,
-    studentName,
-    grade,
-    mobile,
-    courses,
+if (
+    studentDOB ||
+    parentMobile ||
+    parentWhatsapp ||
+    parentEmail ||
+    address ||
+    subjects ||
+    selectedPlan
+) {
 
-    studentDOB,
-    parentMobile,
-    parentWhatsapp,
-    parentEmail,
-    address,
-    subjects,
-    selectedPlan,
-    totalAmount,
-    utr
+    // ✅ FULL ADMISSION DASHBOARD
+    newAdmission = new Admission({
 
-});
+        parentName,
+        studentName,
+        grade,
+        mobile,
+        courses,
+
+        studentDOB,
+        parentMobile,
+        parentWhatsapp,
+        parentEmail,
+        address,
+        subjects,
+        selectedPlan,
+        totalAmount,
+        utr
+
+    });
+
+} else {
+
+    // ✅ HOMEPAGE ENQUIRY
+    newAdmission = new AdmissionEnquiry({
+
+        parentName,
+        studentName,
+        grade,
+        mobile,
+        courses
+
+    });
+
+}
 
         await newAdmission.save();
 
