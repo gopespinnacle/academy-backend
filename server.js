@@ -42,6 +42,8 @@ const teacherRoutes = require("./routes/teacherRoutes");
 const founderRoutes = require("./routes/founderRoutes");
 const studentRoutes = require("./routes/studentRoutes");
 const admissionRoutes = require("./routes/admissionRoutes");
+const admissionParentRoutes =
+require("./routes/admissionParentRoutes");
 // CRON JOBS
 require("./cron/sessionCron");
 require("./cron/attendanceCron");
@@ -99,6 +101,10 @@ app.use("/api/founder", founderTimeClashRoutes);
 app.use("/api/student", studentRoutes);
 
 app.use("/api", admissionRoutes);
+app.use(
+    "/api/admission-parent",
+    admissionParentRoutes
+);
 app.post("/upload-file", uploadFile.single("file"), (req, res) => {
 
     const filePath = path.join(__dirname, "uploads", req.file.filename);

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Apply for Admission</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Segoe UI;
+    background:#f4f7fb;
+}
+
+.login-container{
+    width:400px;
+    max-width:90%;
+    margin:80px auto;
+    background:white;
+    padding:40px;
+    border-radius:12px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+h2{
+    text-align:center;
+    margin-bottom:30px;
+    color:#0d1b2a;
+}
+
+input{
+    width:100%;
+    padding:14px;
+    margin-bottom:18px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:15px;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    background:#ffc300;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#ffb703;
+}
+
+.register-link{
+    text-align:center;
+    margin-top:20px;
+}
+
+a{
+    text-decoration:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="login-container">
+
+<h2>Apply for Admission</h2>
+
+<input type="email" id="email" placeholder="Parent Email">
+
+<input type="password" id="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<div class="register-link">
+    New Parent?
+    <a href="admission-register.html">
+        Create Account
+    </a>
+</div>
+
+</div>
+
+<script>
+
+async function login(){
+
+    const data = {
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value
+    };
+
+    const res = await fetch(
+        "https://academy-backend-eatl.onrender.com/api/admission-parent/login",
+        {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/json"
+            },
+            body:JSON.stringify(data)
+        }
+    );
+
+    const result = await res.json();
+
+    if(result.token){
+
+        localStorage.setItem("admissionToken", result.token);
+
+        window.location.href =
+            "admission-dashboard.html";
+
+    }else{
+        alert(result.message);
+    }
+}
+
+</script>
+
+</body>
+</html>
