@@ -1347,7 +1347,49 @@ padding-top:3px;
                     </p>
 
                 </div>
+<div style="margin-top:20px;">
 
+    <input
+    type="text"
+    id="couponInput"
+    placeholder="Enter Discount Coupon"
+    style="
+        padding:12px;
+        width:250px;
+        border-radius:8px;
+        border:1px solid #ccc;
+    ">
+
+    <button
+    onclick="applyCoupon()"
+    style="
+        padding:12px 18px;
+        background:#ffc300;
+        border:none;
+        border-radius:8px;
+        font-weight:bold;
+        cursor:pointer;
+    ">
+
+        Apply Coupon
+
+    </button>
+
+</div>
+
+<p id="discountText"
+style="
+margin-top:15px;
+font-weight:bold;
+color:green;
+"></p>
+
+<p id="finalAmountText"
+style="
+font-size:20px;
+font-weight:bold;
+margin-top:10px;
+"></p>
                 <div class="button-row payment-row">
 
     <button onclick="prevPage(3)">
@@ -1425,7 +1467,14 @@ padding-top:3px;
 </div>
 
 <script>
-    let selectedPlan = "";
+   let selectedPlan = "";
+
+let selectedAmount = 0;
+
+let finalAmount = 0;
+
+let appliedDiscount = 0;
+
 
 /* MENU */
 
@@ -1531,6 +1580,7 @@ function updateSteps(page){
 function selectPlan(plan, amount, el){
 
     selectedPlan = plan;
+    selectedAmount = amount;
 
     localStorage.setItem(
         "selectedPlan",
@@ -1557,6 +1607,10 @@ document.querySelectorAll(
 
 const total =
 subjectCount * amount;
+
+selectedAmount = total;
+
+finalAmount = total;
 
 document.getElementById(
     "selectedPlanText"
@@ -1789,7 +1843,77 @@ function submitPayment(){
 }
 
 /* MOBILE MENU */
+async function applyCoupon(){
 
+    const couponCode =
+    document.getElementById(
+        "couponInput"
+    ).value;
+
+    if(!couponCode){
+
+        alert("Enter Coupon Code");
+
+        return;
+    }
+
+    const res = await fetch(
+
+        "https://academy-backend-eatl.onrender.com/discount/validate",
+
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+                couponCode
+            })
+        }
+
+    );
+
+    const data = await res.json();
+
+    if(!data.success){
+
+        alert("Invalid Coupon");
+
+        return;
+    }
+
+    appliedDiscount =
+    data.discountPercent;
+
+    const discountAmount =
+    (selectedAmount * appliedDiscount)
+    / 100;
+
+    finalAmount =
+    selectedAmount - discountAmount;
+
+    document.getElementById(
+        "discountText"
+    ).innerText =
+
+    "Discount Applied : " +
+    appliedDiscount + "%";
+
+    document.getElementById(
+        "finalAmountText"
+    ).innerText =
+
+    "Final Amount : ₹" +
+    finalAmount;
+
+    localStorage.setItem(
+        "totalAmount",
+        finalAmount
+    );
+
+}
 document
 .getElementById("menuToggle")
 .addEventListener("click", ()=>{
