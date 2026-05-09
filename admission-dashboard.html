@@ -1550,12 +1550,31 @@ function selectPlan(plan, amount, el){
 
     el.classList.add("active");
 
-    document.getElementById(
-        "selectedPlanText"
-    ).innerText =
-    plan + " - ₹" + amount;
+    const subjectCount =
+document.querySelectorAll(
+'input[name="subjects"]:checked'
+).length;
 
-}
+const total =
+subjectCount * amount;
+
+document.getElementById(
+    "selectedPlanText"
+).innerText =
+
+"Selected Plan : " +
+plan +
+
+" - ₹" + amount +
+
+"\nSubjects : " + subjectCount +
+
+"\nTotal Amount : ₹" + total;
+
+localStorage.setItem(
+    "totalAmount",
+    total
+);
 
 /* PAYMENT */
 
