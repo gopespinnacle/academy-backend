@@ -3,6 +3,8 @@ console.log("🔥 ADMISSION ROUTE FILE LOADED");
 const fs = require("fs");
 const TeacherApplication = require("../models/TeacherApplication");
 const Admission = require("../models/Admission");
+const AdmissionEnquiry =
+require("../AdmissionEnquiry");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const axios = require("axios");
 const express = require("express");
@@ -556,5 +558,54 @@ router.delete("/delete-teacher/:id", async (req,res)=>{
     }catch(err){
         res.status(500).json({ message:"Server error ❌" });
     }
+});
+
+/* ================= ENQUIRIES ================= */
+
+// GET ENQUIRIES
+router.get("/enquiries", async (req, res) => {
+
+    try {
+
+        const enquiries =
+            await AdmissionEnquiry.find()
+            .sort({ createdAt: -1 });
+
+        res.json({
+            enquiries
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: "Error fetching enquiries"
+        });
+
+    }
+
+});
+
+
+// DELETE ENQUIRY
+router.delete("/enquiry/:id", async (req, res) => {
+
+    try {
+
+        await AdmissionEnquiry.findByIdAndDelete(
+            req.params.id
+        );
+
+        res.json({
+            message: "Deleted successfully"
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: "Error deleting enquiry"
+        });
+
+    }
+
 });
 module.exports = router;

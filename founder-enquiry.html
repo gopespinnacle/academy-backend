@@ -1,32 +1,77 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>Enquiries</title>
+
   <style>
-    body { font-family: Arial; padding:20px; }
-    table { width:100%; border-collapse: collapse; }
-    th, td { padding:10px; border:1px solid #ccc; text-align:left; }
-    th { background:#333; color:#fff; }
+
+    body{
+      font-family:Arial;
+      padding:20px;
+      background:#f5f7fb;
+    }
+
+    h2{
+      margin-top:40px;
+      margin-bottom:20px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:#fff;
+      margin-bottom:40px;
+    }
+
+    th,td{
+      padding:12px;
+      border:1px solid #ccc;
+      text-align:left;
+    }
+
+    th{
+      background:#333;
+      color:#fff;
+    }
+
+    button{
+      padding:8px 14px;
+      border:none;
+      background:#ffcc00;
+      cursor:pointer;
+      border-radius:6px;
+      font-weight:bold;
+    }
 
     .course-badge{
-  display:inline-block;
-  background:#e6ecf5;
-  color:#123a63;
-  padding:4px 8px;
-  margin:2px;
-  border-radius:6px;
-  font-size:12px;
-}
+      display:inline-block;
+      background:#e6ecf5;
+      color:#123a63;
+      padding:4px 8px;
+      margin:2px;
+      border-radius:6px;
+      font-size:12px;
+    }
+
   </style>
+
 </head>
 
 <body>
 
+<!-- ================================================= -->
+<!-- NEW ENQUIRIES -->
+<!-- ================================================= -->
+
 <h2>New Enquiries</h2>
 
 <table>
+
   <thead>
+
     <tr>
+
       <th>Student Name</th>
       <th>Parent Name</th>
       <th>Grade</th>
@@ -34,76 +79,290 @@
       <th>Date</th>
       <th>Courses</th>
       <th>Action</th>
+
     </tr>
+
   </thead>
-  <tbody id="dataTable"></tbody>
+
+  <tbody id="enquiryTable"></tbody>
+
 </table>
 
-<script>
-async function loadData() {
-  try {
-    const res = await fetch("https://academy-backend-eatl.onrender.com/api/founder/admissions");
-    const result = await res.json();
-    const data = result.admissions;
 
-    const table = document.getElementById("dataTable");
+<!-- ================================================= -->
+<!-- NEW ADMISSIONS -->
+<!-- ================================================= -->
+
+<h2>New Admissions</h2>
+
+<table>
+
+  <thead>
+
+    <tr>
+
+      <th>Student Name</th>
+      <th>Parent Name</th>
+      <th>Grade</th>
+      <th>Mobile</th>
+      <th>Date</th>
+      <th>Subjects</th>
+      <th>Action</th>
+
+    </tr>
+
+  </thead>
+
+  <tbody id="dataTable"></tbody>
+
+</table>
+
+
+
+<script>
+
+/////////////////////////////////////////////////////////
+// LOAD DATA
+/////////////////////////////////////////////////////////
+
+async function loadData() {
+
+  try {
+
+    /////////////////////////////////////////////////////////
+    // ENQUIRIES
+    /////////////////////////////////////////////////////////
+
+    const enquiryRes = await fetch(
+      "https://academy-backend-eatl.onrender.com/api/founder/enquiries"
+    );
+
+    const enquiryResult =
+      await enquiryRes.json();
+
+    const enquiryData =
+      enquiryResult.enquiries;
+
+    const enquiryTable =
+      document.getElementById("enquiryTable");
+
+    enquiryTable.innerHTML = "";
+
+    enquiryData.forEach(item => {
+
+      const tr =
+        document.createElement("tr");
+
+      const date =
+        new Date(item.createdAt);
+
+      tr.innerHTML = `
+
+<td>${item.studentName}</td>
+
+<td>${item.parentName}</td>
+
+<td>${item.grade}</td>
+
+<td>${item.mobile}</td>
+
+<td>${date.toLocaleString()}</td>
+
+<td>
+
+${
+item.courses && item.courses.length > 0
+
+? item.courses.map(
+c => `<span class="course-badge">${c}</span>`
+).join("")
+
+: "-"
+}
+
+</td>
+
+<td>
+
+<button onclick="deleteEnquiry('${item._id}')">
+
+Delete
+
+</button>
+
+</td>
+
+`;
+
+      enquiryTable.appendChild(tr);
+
+    });
+
+
+
+    /////////////////////////////////////////////////////////
+    // ADMISSIONS
+    /////////////////////////////////////////////////////////
+
+    const res = await fetch(
+      "https://academy-backend-eatl.onrender.com/api/founder/admissions"
+    );
+
+    const result =
+      await res.json();
+
+    const data =
+      result.admissions;
+
+    const table =
+      document.getElementById("dataTable");
+
     table.innerHTML = "";
 
     data.forEach(item => {
-      const tr = document.createElement("tr");
 
-      const date = new Date(item.createdAt);
+      const tr =
+        document.createElement("tr");
+
+      const date =
+        new Date(item.createdAt);
 
       tr.innerHTML = `
-  <td>${item.studentName}</td>
-  <td>${item.parentName}</td>
-  <td>${item.grade}</td>
-  <td>${item.mobile}</td>
 
-  <td>${date.toLocaleString()}</td>
+<td>${item.studentName}</td>
 
-  <td>
-    ${
-      item.courses && item.courses.length > 0
-        ? item.courses.map(c => `<span class="course-badge">${c}</span>`).join("")
-        : "-"
-    }
-  </td>
+<td>${item.parentName}</td>
 
-  <td>
-    <button onclick="deleteItem('${item._id}')">Delete</button>
-  </td>
+<td>${item.grade}</td>
+
+<td>${item.mobile}</td>
+
+<td>${date.toLocaleString()}</td>
+
+<td>
+
+${
+item.subjects && item.subjects.length > 0
+
+? item.subjects.map(
+c => `<span class="course-badge">${c}</span>`
+).join("")
+
+: "-"
+}
+
+</td>
+
+<td>
+
+<button onclick="deleteItem('${item._id}')">
+
+Delete
+
+</button>
+
+</td>
+
 `;
 
       table.appendChild(tr);
+
     });
 
-  } catch (err) {
-    console.log(err);
   }
+
+  catch (err) {
+
+    console.log(err);
+
+  }
+
 }
 
 loadData();
 
 
-// ✅ ADD THIS FUNCTION HERE
+
+/////////////////////////////////////////////////////////
+// DELETE ADMISSION
+/////////////////////////////////////////////////////////
+
 async function deleteItem(id) {
-  const confirmDelete = confirm("Are you sure?");
+
+  const confirmDelete =
+    confirm("Are you sure?");
+
   if (!confirmDelete) return;
 
   try {
-    await fetch(`https://academy-backend-eatl.onrender.com/api/founder/admission/${id}`, {
-      method: "DELETE"
-    });
+
+    await fetch(
+
+      `https://academy-backend-eatl.onrender.com/api/founder/admission/${id}`,
+
+      {
+        method: "DELETE"
+      }
+
+    );
 
     alert("Deleted successfully");
-    loadData(); // refresh table
 
-  } catch (err) {
-    console.log(err);
-    alert("Delete failed");
+    loadData();
+
   }
+
+  catch (err) {
+
+    console.log(err);
+
+    alert("Delete failed");
+
+  }
+
 }
+
+
+
+/////////////////////////////////////////////////////////
+// DELETE ENQUIRY
+/////////////////////////////////////////////////////////
+
+async function deleteEnquiry(id) {
+
+  const confirmDelete =
+    confirm("Are you sure?");
+
+  if (!confirmDelete) return;
+
+  try {
+
+    await fetch(
+
+      `https://academy-backend-eatl.onrender.com/api/founder/enquiry/${id}`,
+
+      {
+        method: "DELETE"
+      }
+
+    );
+
+    alert("Deleted successfully");
+
+    loadData();
+
+  }
+
+  catch (err) {
+
+    console.log(err);
+
+    alert("Delete failed");
+
+  }
+
+}
+
 </script>
 
 </body>
