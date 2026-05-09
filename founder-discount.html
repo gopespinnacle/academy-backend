@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>
+Discount Management
+</title>
+
+<style>
+
+body{
+
+    margin:0;
+
+    font-family:Segoe UI;
+
+    background:#f4f7fb;
+}
+
+.container{
+
+    max-width:1100px;
+
+    margin:auto;
+
+    padding:40px;
+}
+
+.card{
+
+    background:white;
+
+    padding:30px;
+
+    border-radius:16px;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,0.08);
+}
+
+h1{
+
+    margin-bottom:30px;
+}
+
+.form-row{
+
+    display:flex;
+
+    gap:15px;
+
+    margin-bottom:25px;
+
+    flex-wrap:wrap;
+}
+
+input{
+
+    flex:1;
+
+    padding:14px;
+
+    border:1px solid #ccc;
+
+    border-radius:8px;
+
+    font-size:15px;
+}
+
+button{
+
+    padding:14px 20px;
+
+    border:none;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+    font-weight:bold;
+}
+
+.create-btn{
+
+    background:#ffc300;
+}
+
+.edit-btn{
+
+    background:#0984e3;
+
+    color:white;
+}
+
+.delete-btn{
+
+    background:#d63031;
+
+    color:white;
+}
+
+table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    margin-top:30px;
+}
+
+th,
+td{
+
+    padding:16px;
+
+    border-bottom:1px solid #eee;
+
+    text-align:left;
+}
+
+.action-buttons{
+
+    display:flex;
+
+    gap:10px;
+}
+
+@media(max-width:768px){
+
+    .container{
+
+        padding:20px;
+    }
+
+    table{
+
+        display:block;
+
+        overflow-x:auto;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>
+            Discount Management
+        </h1>
+
+        <div class="form-row">
+
+            <input
+            type="text"
+            id="couponCode"
+            placeholder="Coupon Code">
+
+            <input
+            type="number"
+            id="discountPercent"
+            placeholder="Discount %">
+
+            <button
+            class="create-btn"
+            onclick="createDiscount()">
+
+                Create Discount
+
+            </button>
+
+        </div>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Coupon Code
+                    </th>
+
+                    <th>
+                        Discount %
+                    </th>
+
+                    <th>
+                        Actions
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="discountTable">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+
+/* LOAD DISCOUNTS */
+
+async function loadDiscounts(){
+
+    const res = await fetch(
+        "https://academy-backend-eatl.onrender.com/discount/all"
+    );
+
+    const data = await res.json();
+
+    let html = "";
+
+    data.forEach(discount=>{
+
+        html += `
+
+        <tr>
+
+            <td>
+                ${discount.couponCode}
+            </td>
+
+            <td>
+                ${discount.discountPercent}%
+            </td>
+
+            <td>
+
+                <div class="action-buttons">
+
+                    <button
+                    class="edit-btn"
+                    onclick="editDiscount(
+                        '${discount._id}',
+                        '${discount.couponCode}',
+                        '${discount.discountPercent}'
+                    )">
+
+                        Edit
+
+                    </button>
+
+                    <button
+                    class="delete-btn"
+                    onclick="deleteDiscount(
+                        '${discount._id}'
+                    )">
+
+                        Delete
+
+                    </button>
+
+                </div>
+
+            </td>
+
+        </tr>
+
+        `;
+
+    });
+
+    document.getElementById(
+        "discountTable"
+    ).innerHTML = html;
+
+}
+
+
+
+/* CREATE */
+
+async function createDiscount(){
+
+    const couponCode =
+    document.getElementById(
+        "couponCode"
+    ).value;
+
+    const discountPercent =
+    document.getElementById(
+        "discountPercent"
+    ).value;
+
+    const res = await fetch(
+
+        "https://academy-backend-eatl.onrender.com/discount/create",
+
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+                couponCode,
+                discountPercent
+            })
+        }
+
+    );
+
+    const result = await res.json();
+
+    alert(result.message);
+
+    loadDiscounts();
+
+}
+
+
+
+/* DELETE */
+
+async function deleteDiscount(id){
+
+    if(!confirm(
+        "Delete this coupon?"
+    )) return;
+
+    await fetch(
+
+        `https://academy-backend-eatl.onrender.com/discount/delete/${id}`,
+
+        {
+            method:"DELETE"
+        }
+
+    );
+
+    loadDiscounts();
+
+}
+
+
+
+/* EDIT */
+
+async function editDiscount(
+    id,
+    oldCode,
+    oldPercent
+){
+
+    const couponCode =
+    prompt(
+        "Edit Coupon Code",
+        oldCode
+    );
+
+    const discountPercent =
+    prompt(
+        "Edit Discount %",
+        oldPercent
+    );
+
+    if(!couponCode || !discountPercent)
+    return;
+
+    await fetch(
+
+        `https://academy-backend-eatl.onrender.com/discount/update/${id}`,
+
+        {
+            method:"PUT",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify({
+                couponCode,
+                discountPercent
+            })
+        }
+
+    );
+
+    loadDiscounts();
+
+}
+
+
+
+loadDiscounts();
+
+</script>
+
+</body>
+</html>
