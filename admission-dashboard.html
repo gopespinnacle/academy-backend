@@ -1244,7 +1244,14 @@ padding-top:3px;
                     <button onclick="payNow()">
     Proceed Payment
 </button>
+<input
+type="text"
+id="utrNumber"
+placeholder="Enter UTR Number">
 
+<button onclick="submitPayment()">
+    Final Submit
+</button>
                 </div>
 
             </div>
@@ -1604,6 +1611,32 @@ async function submitAdmission(){
     const result = await res.json();
 
     alert(result.message);
+
+}
+
+function submitPayment(){
+
+    const utr =
+    document.getElementById(
+        "utrNumber"
+    ).value;
+
+    if(!utr){
+
+        alert(
+            "Please enter UTR Number"
+        );
+
+        return;
+    }
+
+    alert(
+        "Payment Submitted Successfully"
+    );
+
+    // NEXT PAGE
+    window.location.href =
+    "admission-success.html";
 
 }
 </script>
