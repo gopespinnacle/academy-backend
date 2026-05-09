@@ -5,14 +5,44 @@ const axios = require("axios");
 
 router.post("/admission", async (req, res) => {
     try {
-        const { parentName, studentName, grade, mobile, courses } = req.body;
+        const {
 
-        const newAdmission = new Admission({
     parentName,
     studentName,
     grade,
     mobile,
-    courses   // 🔥 ADD THIS
+    courses,
+
+    studentDOB,
+    parentMobile,
+    parentWhatsapp,
+    parentEmail,
+    address,
+    subjects,
+    selectedPlan,
+    totalAmount,
+    utr
+
+} = req.body;
+
+        const newAdmission = new Admission({
+
+    parentName,
+    studentName,
+    grade,
+    mobile,
+    courses,
+
+    studentDOB,
+    parentMobile,
+    parentWhatsapp,
+    parentEmail,
+    address,
+    subjects,
+    selectedPlan,
+    totalAmount,
+    utr
+
 });
 
         await newAdmission.save();

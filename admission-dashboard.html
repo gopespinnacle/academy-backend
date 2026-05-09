@@ -1027,7 +1027,7 @@ padding-top:3px;
 
         <!-- ASPIRE -->
         <div class="plan-card"
-             onclick="selectPlan('Aspire', this)">
+             onclick="selectPlan('Aspire',1500,this)">
 
             <div class="plan-header aspire">
                 Aspire
@@ -1066,7 +1066,7 @@ padding-top:3px;
 
         <!-- ACHIEVE -->
 <div class="plan-card popular-plan"
-     onclick="selectPlan('Achieve', this)">
+     onclick="selectPlan('Achieve',2500,this)">
 
     <div class="popular-badge">
         MOST POPULAR
@@ -1109,7 +1109,7 @@ padding-top:3px;
 
         <!-- PINNACLE -->
         <div class="plan-card"
-             onclick="selectPlan('Pinnacle', this)">
+             onclick="selectPlan('Pinnacle',4000,this)">
 
             <div class="plan-header pinnacle">
                 Pinnacle
@@ -1164,7 +1164,7 @@ padding-top:3px;
 
         <!-- OTHERS -->
         <div class="plan-card"
-             onclick="selectPlan('Others', this)">
+             onclick="selectPlan('Others',0,this)">
 
             <div class="plan-header others">
                 Others
@@ -1269,9 +1269,9 @@ padding-top:3px;
                        id="utr"
                        placeholder="Enter UTR Number">
 
-                <button onclick="submitApplication()">
-                    Final Submit
-                </button>
+              <button onclick="submitAdmission()">
+    Final Submit
+</button>
 
             </div>
 
@@ -1396,9 +1396,19 @@ function updateSteps(page){
 
 /* PLAN */
 
-function selectPlan(plan, el){
+function selectPlan(plan, amount, el){
 
     selectedPlan = plan;
+
+    localStorage.setItem(
+        "selectedPlan",
+        plan
+    );
+
+    localStorage.setItem(
+        "totalAmount",
+        amount
+    );
 
     document
     .querySelectorAll(".plan-card")
@@ -1410,7 +1420,8 @@ function selectPlan(plan, el){
 
     document.getElementById(
         "selectedPlanText"
-    ).innerText = plan;
+    ).innerText =
+    plan + " - ₹" + amount;
 
 }
 
@@ -1418,10 +1429,16 @@ function selectPlan(plan, el){
 
 function payNow(){
 
-    const upiLink =
-    "upi://pay?pa=YOURUPI@oksbi&pn=GopesPinnacle&am=500";
+    const amount =
+    localStorage.getItem(
+        "totalAmount"
+    );
 
-    window.location.href = upiLink;
+    const upiLink =
+    `upi://pay?pa=svgopeka19@oksbi&pn=GopesPinnacle&am=${amount}`;
+
+    window.location.href =
+    upiLink;
 
 }
 
@@ -1497,6 +1514,88 @@ async function submitApplication(){
     alert(
         "Application Submitted Successfully"
     );
+
+}
+
+async function submitAdmission(){
+
+    const data = {
+
+        parentName:
+        document.getElementById("parentName").value,
+
+        studentName:
+        document.getElementById("studentName").value,
+
+        grade:
+        document.getElementById("grade").value,
+
+        mobile:
+        document.getElementById("parentMobile").value,
+
+        courses:
+        Array.from(
+            document.querySelectorAll(
+                'input[name="subjects"]:checked'
+            )
+        ).map(cb=>cb.value),
+
+        studentDOB:
+        document.getElementById("studentDOB").value,
+
+        parentMobile:
+        document.getElementById("parentMobile").value,
+
+        parentWhatsapp:
+        document.getElementById("parentWhatsapp").value,
+
+        parentEmail:
+        document.getElementById("parentEmail").value,
+
+        address:
+        document.getElementById("address").value,
+
+        subjects:
+        Array.from(
+            document.querySelectorAll(
+                'input[name="subjects"]:checked'
+            )
+        ).map(cb=>cb.value),
+
+        selectedPlan:
+        localStorage.getItem(
+            "selectedPlan"
+        ),
+
+        totalAmount:
+        localStorage.getItem(
+            "totalAmount"
+        ),
+
+        utr:
+        document.getElementById("utr").value
+
+    };
+
+    const res = await fetch(
+
+        "https://academy-backend-eatl.onrender.com/api/admission/admission",
+
+        {
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json"
+            },
+
+            body:JSON.stringify(data)
+        }
+
+    );
+
+    const result = await res.json();
+
+    alert(result.message);
 
 }
 </script>
