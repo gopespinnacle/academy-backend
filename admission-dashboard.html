@@ -843,7 +843,25 @@ padding-top:3px;
     display:none;
 }
 
+.payment-row{
 
+    display:flex;
+
+    gap:12px;
+
+    align-items:center;
+
+    flex-wrap:wrap;
+
+}
+
+.utr-input{
+
+    flex:1;
+
+    min-width:220px;
+
+}
 </style>
 
 </head>
@@ -1319,24 +1337,27 @@ padding-top:3px;
 
                 </div>
 
-                <div class="button-row">
+                <div class="button-row payment-row">
 
-                    <button onclick="prevPage(3)">
-                        Back
-                    </button>
+    <button onclick="prevPage(3)">
+        Back
+    </button>
 
-                    <button onclick="payNow()">
-    Proceed Payment
-</button>
-<input
-type="text"
-id="utrNumber"
-placeholder="Enter UTR Number">
+    <button onclick="payNow()">
+        Proceed Payment
+    </button>
 
-<button onclick="submitAdmission()">
-    Final Submit
-</button>
-                </div>
+    <input
+    type="text"
+    id="utrNumber"
+    placeholder="Enter UTR Number"
+    class="utr-input">
+
+    <button onclick="submitAdmission()">
+        Final Submit
+    </button>
+
+</div>
 
             </div>
 
