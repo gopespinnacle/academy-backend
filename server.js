@@ -1,4 +1,6 @@
 require("dotenv").config();
+const discountRoutes =
+require("./routes/discountRoutes");
 const jwt = require("jsonwebtoken");
 const Recording = require("./models/Recording");
 const ClassSummary = require("./models/ClassSummary");
@@ -111,6 +113,11 @@ app.use("/api", admissionRoutes);
 app.use(
     "/api/admission-parent",
     admissionParentRoutes
+);
+
+app.use(
+    "/discount",
+    discountRoutes
 );
 app.post("/upload-file", uploadFile.single("file"), (req, res) => {
 
