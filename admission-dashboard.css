@@ -137,25 +137,145 @@ button{
     margin:0;
 }
 
-.plan-grid{
-    display:grid;
-    grid-template-columns:
-    repeat(auto-fit,minmax(220px,1fr));
+/* PLAN GRID */
 
-    gap:20px;
+.plan-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(260px,1fr));
+
+    gap:25px;
+
+    margin-top:30px;
+
+    margin-bottom:30px;
 }
+
+/* PLAN CARD */
 
 .plan-card{
+
     background:white;
-    padding:25px;
-    border-radius:12px;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
     cursor:pointer;
-    border:2px solid transparent;
-    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+
+    transition:0.3s;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,0.08);
+
+    border:3px solid transparent;
 }
 
+.plan-card:hover{
+
+    transform:translateY(-6px);
+
+}
+
+/* ACTIVE */
+
 .plan-card.active{
+
     border-color:#ffc300;
+
+}
+
+/* HEADER */
+
+.plan-header{
+
+    padding:18px;
+
+    color:white;
+
+    font-size:22px;
+
+    font-weight:bold;
+
+    text-align:center;
+}
+
+/* HEADER COLORS */
+
+.aspire{
+    background:#ff7b00;
+}
+
+.achieve{
+    background:#00b894;
+}
+
+.pinnacle{
+    background:#6c5ce7;
+}
+
+.others{
+    background:#2d3436;
+}
+
+/* BODY */
+
+.plan-body{
+
+    padding:25px;
+}
+
+.plan-body h3{
+
+    font-size:32px;
+
+    margin-bottom:20px;
+
+    text-align:center;
+}
+
+.plan-body h3 span{
+
+    font-size:16px;
+
+    color:gray;
+}
+
+/* FEATURES */
+
+.plan-body ul{
+
+    list-style:none;
+
+    padding:0;
+
+    margin:0;
+}
+
+.plan-body ul li{
+
+    padding:12px 0;
+
+    border-bottom:1px solid #eee;
+
+    font-size:15px;
+}
+
+/* SELECT */
+
+.plan-body select{
+
+    width:100%;
+
+    padding:14px;
+
+    border-radius:10px;
+
+    border:1px solid #ccc;
+
+    font-size:15px;
 }
 
 .summary-box{

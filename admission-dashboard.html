@@ -249,65 +249,192 @@
 
             </div>
 
-            <!-- PAGE 3 -->
-            <div class="form-page"
-                 id="page3">
+           <!-- PAGE 3 -->
+<div class="form-page"
+     id="page3">
 
-                <h2>
-                    Choose Your Plan
-                </h2>
+    <h2>
+        Choose Your Plan
+    </h2>
 
-                <div class="plan-grid">
+    <div class="plan-grid">
 
-                    <div class="plan-card"
-                         onclick="selectPlan('Aspire', this)">
+        <!-- ASPIRE -->
+        <div class="plan-card"
+             onclick="selectPlan('Aspire', this)">
 
-                        <h3>Aspire</h3>
+            <div class="plan-header aspire">
+                Aspire
+            </div>
 
-                        <p>
-                            ₹1500 per subject
-                        </p>
+            <div class="plan-body">
 
-                    </div>
+                <h3>
+                    ₹1500
+                    <span>/subject</span>
+                </h3>
 
-                    <div class="plan-card"
-                         onclick="selectPlan('Achieve', this)">
+                <ul>
 
-                        <h3>Achieve</h3>
+                    <li>
+                        3 classes/week
+                    </li>
 
-                        <p>
-                            ₹2500 per subject
-                        </p>
+                    <li>
+                        Group session (40 mins)
+                    </li>
 
-                    </div>
+                    <li>
+                        Core Subjects
+                    </li>
 
-                    <div class="plan-card"
-                         onclick="selectPlan('Pinnacle', this)">
+                    <li>
+                        Unit Worksheets
+                    </li>
 
-                        <h3>Pinnacle</h3>
-
-                        <p>
-                            Premium Personalized
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <div class="button-row">
-
-                    <button onclick="prevPage(2)">
-                        Back
-                    </button>
-
-                    <button onclick="nextPage(4)">
-                        Next
-                    </button>
-
-                </div>
+                </ul>
 
             </div>
 
+        </div>
+
+        <!-- ACHIEVE -->
+        <div class="plan-card"
+             onclick="selectPlan('Achieve', this)">
+
+            <div class="plan-header achieve">
+                Achieve
+            </div>
+
+            <div class="plan-body">
+
+                <h3>
+                    ₹2500
+                    <span>/subject</span>
+                </h3>
+
+                <ul>
+
+                    <li>
+                        5 classes/week (40 mins)
+                    </li>
+
+                    <li>
+                        One on One
+                    </li>
+
+                    <li>
+                        Unit Worksheets
+                    </li>
+
+                    <li>
+                        Monthly Progress Review
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+        <!-- PINNACLE -->
+        <div class="plan-card"
+             onclick="selectPlan('Pinnacle', this)">
+
+            <div class="plan-header pinnacle">
+                Pinnacle
+            </div>
+
+            <div class="plan-body">
+
+                <h3>
+                    Premium
+                </h3>
+
+                <ul>
+
+                    <li>
+                        5 classes / week
+                    </li>
+
+                    <li>
+                        Fully personalized 1 on 1
+                    </li>
+
+                    <li>
+                        Weekly parent feedback
+                    </li>
+
+                    <li>
+                        Priority Scheduling
+                    </li>
+
+                    <li>
+                        Mock Assessments +
+                        Worksheets
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+        <!-- OTHERS -->
+        <div class="plan-card"
+             onclick="selectPlan('Others', this)">
+
+            <div class="plan-header others">
+                Others
+            </div>
+
+            <div class="plan-body">
+
+                <select id="otherPlan">
+
+                    <option value="">
+                        Select Custom Plan
+                    </option>
+
+                    <option>
+                        2 Hrs Duration -
+                        Homework Tracking -
+                        ₹250 Per Day
+                    </option>
+
+                    <option>
+                        40 mins Duration -
+                        3 Subjects -
+                        ₹200 Per Session
+                    </option>
+
+                    <option>
+                        60 mins Duration -
+                        3 Subjects -
+                        ₹300 Per Session
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="button-row">
+
+        <button onclick="prevPage(2)">
+            Back
+        </button>
+
+        <button onclick="nextPage(4)">
+            Next
+        </button>
+
+    </div>
+
+</div>
             <!-- PAGE 4 -->
             <div class="form-page"
                  id="page4">
