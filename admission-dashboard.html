@@ -1037,66 +1037,77 @@ padding-top:3px;
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="English Reading">
                         English Reading
                     </label>
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="Grammar">
                         Grammar
                     </label>
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="Phonics">
                         Phonics
                     </label>
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="Tamil">
                         Tamil
                     </label>
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="Hindi">
                         Hindi
                     </label>
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="French">
                         French
                     </label>
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="Maths">
                         Maths
                     </label>
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="Science">
                         Science
                     </label>
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="Social Science">
                         Social Science
                     </label>
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="Science Stream">
                         Science Stream
                     </label>
 
                     <label>
                         <input type="checkbox"
+                         name="subjects"
                                value="Arts Stream">
                         Arts Stream
                     </label>
@@ -1638,9 +1649,7 @@ async function submitApplication(){
         selectedPlan,
 
         utr:
-        document.getElementById(
-            "utr"
-        ).value
+document.getElementById("utrNumber").value
 
     };
 
@@ -1714,7 +1723,7 @@ async function submitAdmission(){
 
     const res = await fetch(
 
-        "https://academy-backend-eatl.onrender.com/api/admission/admission",
+        "https://academy-backend-eatl.onrender.com/admission",
 
         {
             method:"POST",
