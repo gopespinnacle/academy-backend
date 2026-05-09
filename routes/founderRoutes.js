@@ -4,7 +4,7 @@ const fs = require("fs");
 const TeacherApplication = require("../models/TeacherApplication");
 const Admission = require("../models/Admission");
 const AdmissionEnquiry =
-require("../AdmissionEnquiry");
+require("../models/AdmissionEnquiry");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const axios = require("axios");
 const express = require("express");
