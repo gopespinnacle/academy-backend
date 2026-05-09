@@ -26,23 +26,17 @@ const admissionSchema = new mongoose.Schema({
 
     selectedPlan:String,
 
-    totalAmount:Number,
+    totalAmount:String,
 
-    utr:String,
-
-    paymentStatus:{
-        type:String,
-        default:"Pending"
-    },
-
-    applicationStatus:{
-        type:String,
-        default:"Pending"
-    }
+    utr:String
 
 },
 {
     timestamps:true
 });
 
-module.exports = mongoose.model("Admission", admissionSchema);
+module.exports =
+mongoose.model(
+    "Admission",
+    admissionSchema
+);
