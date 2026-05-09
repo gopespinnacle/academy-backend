@@ -378,18 +378,102 @@ padding-top:3px;
 
 /* MOBILE */
 
+/* MOBILE */
+
+.mobile-topbar{
+
+    display:none;
+
+}
+
 @media(max-width:768px){
 
     .dashboard{
+
         flex-direction:column;
+
     }
 
+    /* TOP BAR */
+
+    .mobile-topbar{
+
+        display:flex;
+
+        align-items:center;
+
+        gap:15px;
+
+        background:#0d1b2a;
+
+        color:white;
+
+        padding:15px 20px;
+
+        position:sticky;
+
+        top:0;
+
+        z-index:1000;
+
+    }
+
+    .mobile-topbar h3{
+
+        margin:0;
+
+    }
+
+    #menuToggle{
+
+        background:none;
+
+        border:none;
+
+        color:white;
+
+        font-size:28px;
+
+        cursor:pointer;
+
+        padding:0;
+
+    }
+
+    /* SIDEBAR */
+
     .sidebar{
-        width:100%;
+
+        position:fixed;
+
+        top:0;
+
+        left:-100%;
+
+        width:250px;
+
+        height:100vh;
+
+        background:#0d1b2a;
+
+        z-index:2000;
+
+        transition:0.3s;
+
+        overflow-y:auto;
+
+    }
+
+    .sidebar.active{
+
+        left:0;
+
     }
 
     .main-content{
+
         padding:20px;
+
     }
 
 }
@@ -783,9 +867,24 @@ padding-top:3px;
 <body>
 
 <div class="dashboard">
+    <!-- MOBILE MENU BUTTON -->
+
+<div class="mobile-topbar">
+
+    <button id="menuToggle">
+
+        ☰
+
+    </button>
+
+    <h3>
+        Admissions
+    </h3>
+
+</div>
 
     <!-- SIDEBAR -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
 
         <h2>Admissions</h2>
 
@@ -1645,6 +1744,18 @@ function submitPayment(){
     "admission-success.html";
 
 }
+
+/* MOBILE MENU */
+
+document
+.getElementById("menuToggle")
+.addEventListener("click", ()=>{
+
+    document
+    .getElementById("sidebar")
+    .classList.toggle("active");
+
+});
 </script>
 
 </body>
