@@ -1434,11 +1434,19 @@ function payNow(){
         "totalAmount"
     );
 
-    const upiLink =
-    `upi://pay?pa=svgopeka19@oksbi&pn=GopesPinnacle&am=${amount}`;
+    alert(
 
-    window.location.href =
-    upiLink;
+`Open GPay / PhonePe on your mobile.
+
+Pay ₹${amount}
+
+UPI ID:
+svgopeka19@oksbi
+
+After payment,
+enter the UTR number below.`
+
+    );
 
 }
 
