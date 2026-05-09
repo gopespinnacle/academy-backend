@@ -1005,9 +1005,9 @@ padding-top:3px;
                 </h2>
 
                 <!-- GRADE -->
-                <select id="grade">
+                <select id="grade"required>
 
-                    <option value="" required>
+                    <option value="" >
                         Select Grade
                     </option>
 
@@ -1033,7 +1033,7 @@ padding-top:3px;
                     Subjects
                 </h3>
 
-                <div class="subjects" required>
+                <div class="subjects" >
 
                     <label>
                         <input type="checkbox"
@@ -1136,7 +1136,7 @@ padding-top:3px;
         Choose Your Plan
     </h2>
 
-    <div class="plan-grid" required>
+    <div class="plan-grid" >
 
         <!-- ASPIRE -->
         <div class="plan-card"
@@ -1401,11 +1401,11 @@ margin-top:10px;
     </button>
 
     <input
-    type="text"
-    id="utrNumber"
-    placeholder="Enter UTR Number"
-    class="utr-input" required>
-
+type="text"
+id="utrNumber"
+placeholder="Enter UTR Number"
+class="utr-input"
+required>
     <button onclick="submitAdmission()">
         Final Submit
     </button>
@@ -1530,6 +1530,65 @@ function showSection(type){
 /* NEXT PAGE */
 
 function nextPage(page){
+
+    // PAGE 1 VALIDATION
+    if(page === 2){
+
+        if(
+            !document.getElementById("studentName").value ||
+            !document.getElementById("studentDOB").value ||
+            !document.getElementById("parentName").value ||
+            !document.getElementById("parentMobile").value ||
+            !document.getElementById("parentWhatsapp").value ||
+            !document.getElementById("parentEmail").value ||
+            !document.getElementById("address").value
+        ){
+
+            alert("Please fill all fields");
+
+            return;
+        }
+
+    }
+
+    // PAGE 2 VALIDATION
+    if(page === 3){
+
+        const grade =
+        document.getElementById("grade").value;
+
+        const subjects =
+        document.querySelectorAll(
+            'input[name="subjects"]:checked'
+        );
+
+        if(!grade){
+
+            alert("Please select grade");
+
+            return;
+        }
+
+        if(subjects.length === 0){
+
+            alert("Please select at least one subject");
+
+            return;
+        }
+
+    }
+
+    // PAGE 3 VALIDATION
+    if(page === 4){
+
+        if(!selectedPlan){
+
+            alert("Please select a plan");
+
+            return;
+        }
+
+    }
 
     document
     .querySelectorAll(".form-page")
@@ -1735,6 +1794,20 @@ document.getElementById("utrNumber").value,
 }
 
 async function submitAdmission(){
+
+    const utr =
+document.getElementById(
+    "utrNumber"
+).value;
+
+if(!utr){
+
+    alert(
+        "Please enter UTR Number"
+    );
+
+    return;
+}
 
     const data = {
 
