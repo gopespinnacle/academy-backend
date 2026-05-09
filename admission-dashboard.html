@@ -963,31 +963,31 @@ padding-top:3px;
 
                 <input type="text"
                        id="studentName"
-                       placeholder="Student Name">
+                       placeholder="Student Name" required>
 
                 <input type="date"
-                       id="studentDOB">
+                       id="studentDOB" required>
 
                 <input type="text"
                        id="parentName"
-                       placeholder="Parent Name">
+                       placeholder="Parent Name" required>
 
                 <input type="text"
                        id="parentMobile"
-                       placeholder="Parent Mobile Number">
+                       placeholder="Parent Mobile Number" required>
 
                 <input type="text"
                        id="parentWhatsapp"
-                       placeholder="WhatsApp Number">
+                       placeholder="WhatsApp Number" required>
 
                 <input type="email"
                        id="parentEmail"
-                       placeholder="Parent Email">
+                       placeholder="Parent Email" required>
 
                 <textarea
     id="address"
     placeholder="Communication Address"
-    rows="3">
+    rows="3" required>
 </textarea>
 
                 <button onclick="nextPage(2)">
@@ -1007,7 +1007,7 @@ padding-top:3px;
                 <!-- GRADE -->
                 <select id="grade">
 
-                    <option value="">
+                    <option value="" required>
                         Select Grade
                     </option>
 
@@ -1033,7 +1033,7 @@ padding-top:3px;
                     Subjects
                 </h3>
 
-                <div class="subjects">
+                <div class="subjects" required>
 
                     <label>
                         <input type="checkbox"
@@ -1136,7 +1136,7 @@ padding-top:3px;
         Choose Your Plan
     </h2>
 
-    <div class="plan-grid">
+    <div class="plan-grid" required>
 
         <!-- ASPIRE -->
         <div class="plan-card"
@@ -1404,7 +1404,7 @@ margin-top:10px;
     type="text"
     id="utrNumber"
     placeholder="Enter UTR Number"
-    class="utr-input">
+    class="utr-input" required>
 
     <button onclick="submitAdmission()">
         Final Submit
