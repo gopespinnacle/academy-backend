@@ -187,6 +187,48 @@ button{
 
 }
 
+/* POPULAR PLAN */
+
+.popular-plan{
+
+    transform:scale(1.04);
+
+    border:3px solid #ffc300;
+
+    position:relative;
+}
+.popular-plan{
+
+    box-shadow:
+    0 15px 35px rgba(255,195,0,0.35);
+}
+/* BADGE */
+
+.popular-badge{
+
+    position:absolute;
+
+    top:15px;
+
+    right:-35px;
+
+    background:#ff4757;
+
+    color:white;
+
+    padding:8px 40px;
+
+    font-size:12px;
+
+    font-weight:bold;
+
+    transform:rotate(45deg);
+
+    box-shadow:
+    0 5px 15px rgba(0,0,0,0.2);
+
+    z-index:5;
+}
 /* HEADER */
 
 .plan-header{
