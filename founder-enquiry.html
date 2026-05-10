@@ -184,6 +184,15 @@ c => `<span class="course-badge">${c}</span>`
 
 <td>
 
+<button
+onclick="viewEnquiry('${item._id}')"
+style="background:#2563eb;color:white;margin-right:6px;"
+>
+
+View
+
+</button>
+
 <button onclick="deleteEnquiry('${item._id}')">
 
 Delete
@@ -254,6 +263,15 @@ c => `<span class="course-badge">${c}</span>`
 </td>
 
 <td>
+
+<button
+onclick="viewAdmission('${item._id}')"
+style="background:#2563eb;color:white;margin-right:6px;"
+>
+
+View
+
+</button>
 
 <button onclick="deleteItem('${item._id}')">
 
@@ -362,6 +380,30 @@ async function deleteEnquiry(id) {
   }
 
 }
+
+/////////////////////////////////////////////////////////
+// VIEW ADMISSION
+/////////////////////////////////////////////////////////
+
+function viewAdmission(id){
+
+window.location.href =
+`view-admission.html?id=${id}`;
+
+}
+
+
+/////////////////////////////////////////////////////////
+// VIEW ENQUIRY
+/////////////////////////////////////////////////////////
+
+function viewEnquiry(id){
+
+window.location.href =
+`view-enquiry.html?id=${id}`;
+
+}
+
 
 </script>
 

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>View Admission</title>
+
+<style>
+
+body{
+font-family:Arial;
+padding:30px;
+background:#f5f7fb;
+}
+
+.card{
+background:white;
+padding:30px;
+border-radius:12px;
+max-width:800px;
+margin:auto;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+h2{
+margin-bottom:25px;
+}
+
+.row{
+margin-bottom:16px;
+font-size:18px;
+}
+
+.label{
+font-weight:bold;
+color:#111;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Admission Details</h2>
+
+<div id="details"></div>
+
+</div>
+
+<script>
+
+const params =
+new URLSearchParams(window.location.search);
+
+const id =
+params.get("id");
+
+async function loadAdmission(){
+
+const res = await fetch(
+"https://academy-backend-eatl.onrender.com/api/founder/admissions"
+);
+
+const result = await res.json();
+
+const item =
+result.admissions.find(x => x._id === id);
+
+document.getElementById("details").innerHTML = `
+
+<div class="row">
+<span class="label">Student Name:</span>
+${item.studentName}
+</div>
+
+<div class="row">
+<span class="label">Parent Name:</span>
+${item.parentName}
+</div>
+
+<div class="row">
+<span class="label">Grade:</span>
+${item.grade}
+</div>
+
+<div class="row">
+<span class="label">Parent Mobile:</span>
+${item.parentMobile}
+</div>
+
+<div class="row">
+<span class="label">WhatsApp:</span>
+${item.parentWhatsapp}
+</div>
+
+<div class="row">
+<span class="label">Email:</span>
+${item.parentEmail}
+</div>
+
+<div class="row">
+<span class="label">Address:</span>
+${item.address}
+</div>
+
+<div class="row">
+<span class="label">Subjects:</span>
+${item.subjects}
+</div>
+
+<div class="row">
+<span class="label">Plan:</span>
+${item.selectedPlan}
+</div>
+
+<div class="row">
+<span class="label">Total Amount:</span>
+₹${item.totalAmount}
+</div>
+
+<div class="row">
+<span class="label">UTR:</span>
+${item.utr}
+</div>
+
+`;
+
+}
+
+loadAdmission();
+
+</script>
+
+</body>
+</html>

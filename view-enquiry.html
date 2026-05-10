@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>View Enquiry</title>
+
+<style>
+
+body{
+font-family:Arial;
+padding:30px;
+background:#f5f7fb;
+}
+
+.card{
+background:white;
+padding:30px;
+border-radius:12px;
+max-width:800px;
+margin:auto;
+box-shadow:0 10px 25px rgba(0,0,0,0.1);
+}
+
+h2{
+margin-bottom:25px;
+}
+
+.row{
+margin-bottom:16px;
+font-size:18px;
+}
+
+.label{
+font-weight:bold;
+color:#111;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Enquiry Details</h2>
+
+<div id="details"></div>
+
+</div>
+
+<script>
+
+const params =
+new URLSearchParams(window.location.search);
+
+const id =
+params.get("id");
+
+async function loadEnquiry(){
+
+const res = await fetch(
+"https://academy-backend-eatl.onrender.com/api/founder/enquiries"
+);
+
+const result = await res.json();
+
+const item =
+result.enquiries.find(x => x._id === id);
+
+document.getElementById("details").innerHTML = `
+
+<div class="row">
+<span class="label">Student Name:</span>
+${item.studentName}
+</div>
+
+<div class="row">
+<span class="label">Parent Name:</span>
+${item.parentName}
+</div>
+
+<div class="row">
+<span class="label">Grade:</span>
+${item.grade}
+</div>
+
+<div class="row">
+<span class="label">Mobile:</span>
+${item.mobile}
+</div>
+
+<div class="row">
+<span class="label">Courses:</span>
+${item.courses}
+</div>
+
+`;
+
+}
+
+loadEnquiry();
+
+</script>
+
+</body>
+</html>
