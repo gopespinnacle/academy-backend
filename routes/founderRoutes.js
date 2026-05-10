@@ -486,17 +486,36 @@ router.delete("/admission/:id", async (req, res) => {
 });
 const cloudinary = require("cloudinary").v2;
 
+const multer = require("multer");
+const path = require("path");
+const uploadFile = require("../googleDriveUpload");
+
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+const storage = multer.diskStorage({
+
+    destination: function (req, file, cb) {
+        cb(null, "uploads/");
+    },
+
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+
+});
+
+const upload = multer({
+    storage: storage
+});
 
 // ✅ TEACHER APPLICATION API
-router.post("/teacher-application", async (req, res) => {
+router.post("/teacher-application", upload.single("resume"), async (req, res) => {
     try {
-
+const resumeLink = await uploadFile(req.file);
         const data = {
     teacherName: req.body.teacherName,
     whatsapp: req.body.whatsapp,
@@ -506,12 +525,12 @@ router.post("/teacher-application", async (req, res) => {
     experience: req.body.experience,
     presentJob: req.body.presentJob,
     timing: req.body.timing,
-    resume: req.body.resume,
+    resume: resumeLink,
 
     // ✅ ADD THESE 3 LINES
-    subjects: req.body.subjects,
-    skills: req.body.skills,
-    languages: req.body.languages
+    subjects: JSON.parse(req.body.subjects),
+skills: JSON.parse(req.body.skills),
+languages: JSON.parse(req.body.languages)
 };
 
         await TeacherApplication.create(data);
