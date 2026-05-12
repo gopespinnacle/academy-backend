@@ -22,7 +22,8 @@ async function uploadFile(file){
     const response = await drive.files.create({
 
         requestBody: {
-            name: file.originalname
+            name: file.originalname,
+            parents: ["1O6Zn8xlD_PCvtZOzG66OSqSSuTHOAp3k"]
         },
 
         media: {
