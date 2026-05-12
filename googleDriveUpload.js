@@ -25,8 +25,8 @@ async function uploadFile(file){
         name: file.originalname,
 
         parents: [
-            "1v4hjGN5LFb8ddXQVhEeI-SuInH35kgQ0"
-        ]
+    "1O6Zn8xlD_PCvtZOzG66OSqSSuTHOAp3k"
+]
     };
 
     const media = {
