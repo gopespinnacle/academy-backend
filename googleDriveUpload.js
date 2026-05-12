@@ -1,10 +1,13 @@
 const fs = require("fs");
-const path = require("path");
 const { google } = require("googleapis");
 
-const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+const SCOPES = [
+    "https://www.googleapis.com/auth/drive"
+];
 
-const SCOPES = ["https://www.googleapis.com/auth/drive"];
+const credentials = JSON.parse(
+    process.env.GOOGLE_CREDENTIALS
+);
 
 const auth = new google.auth.GoogleAuth({
     credentials,
@@ -16,11 +19,14 @@ const drive = google.drive({
     auth,
 });
 
-async function uploadFile(file) {
+async function uploadFile(file){
 
     const fileMetadata = {
         name: file.originalname,
-        parents: ["1v4hjGN5LFb8ddXQVhEeI-SuInH35kgQ0"]
+
+        parents: [
+            "1v4hjGN5LFb8ddXQVhEeI-SuInH35kgQ0"
+        ]
     };
 
     const media = {
@@ -30,8 +36,8 @@ async function uploadFile(file) {
 
     const response = await drive.files.create({
         resource: fileMetadata,
-        media: media,
-        fields: "id, webViewLink",
+        media,
+        fields: "id",
     });
 
     await drive.permissions.create({
