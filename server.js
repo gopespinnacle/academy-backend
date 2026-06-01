@@ -244,41 +244,61 @@ app.delete("/api/founder/periodassignments/:id", async (req, res) => {
 io.on("connection", (socket) => {
 
 
-    socket.on("joinRoom", (room) => {
+    socket.on(
+"joinRoom",
+(data)=>{
 
-    socket.join(room);
+const room = data.room;
+const role = data.role;
 
-    socket.room = room;
+socket.join(room);
 
-    console.log("USER JOINED ROOM:", room);
+socket.room = room;
 
-    // load old drawings
-    if(boardData[room]){
-        socket.emit("loadBoard", boardData[room]);
-    }
+console.log(
+"USER JOINED ROOM:",
+room,
+role
+);
 
-    // board lock
-    if(boardLock[room]){
-        socket.emit("boardLocked", true);
-    }
+if(boardData[room]){
+socket.emit(
+"loadBoard",
+boardData[room]
+);
+}
 
-    // control sync
-    if(roomControl[room]){
-        socket.emit("controlChanged", {
-            studentId: roomControl[room]
-        });
-    }
+if(boardLock[room]){
+socket.emit(
+"boardLocked",
+true
+);
+}
 
-    // tell others someone joined
-    socket.to(room).emit(
-        "userJoined",
-        {
-            socketId: socket.id
-        }
-    );
+if(roomControl[room]){
+socket.emit(
+"controlChanged",
+{
+studentId:
+roomControl[room]
+}
+);
+}
 
-    // old ready event
-    socket.to(room).emit("ready");
+socket.to(room).emit(
+"userJoined",
+{
+role: role,
+socketId: socket.id
+}
+);
+
+socket.to(room).emit(
+"ready",
+{
+role: role
+}
+);
 
 });
 
