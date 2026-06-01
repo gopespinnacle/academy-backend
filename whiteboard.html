@@ -127,6 +127,7 @@ video {
 /* VIDEO */
 
 #screenDraw {
+
     position:absolute;
 
     top:0;
@@ -138,6 +139,10 @@ video {
     z-index:50;
 
     pointer-events:auto;
+
+    cursor:crosshair;
+
+    touch-action:none;
 }
 /* 🔥 STUDENT SMALL VIDEO */
 #remoteVideo{
@@ -544,31 +549,6 @@ webkit-playsinline>
 </div>
         <!-- LOCAL SMALL PREVIEW -->
     
-<div id="annotationToolbar" style="
-display:none;
-position:absolute;
-top:40px;
-left:20px;
-background:#1e293b;
-padding:10px;
-border-radius:10px;
-z-index:999999;
-">
-
-<button onclick="annotationMode='pen'">
-✏️ Pen
-</button>
-
-<button onclick="annotationMode='eraser'">
-🧽 Eraser
-</button>
-
-<button onclick="clearAnnotations()">
-🗑 Clear
-</button>
-
-</div>
-
 <div id="pdfTab" style="
     display:none;
     position:absolute;
