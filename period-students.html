@@ -7,13 +7,10 @@
 
 <style>
 .main-content {
-margin-left:0;
+margin-left:220px;
 padding:20px;
 }
-body{
-margin:0;
-padding:0;
-}
+
 .student-card {
 background:#fff;
 padding:12px;
@@ -26,6 +23,17 @@ font-size:14px;
 </head>
 
 <body class="dashboard-page">
+
+<!-- SIDEBAR -->
+<div id="sidebar-container"></div>
+
+<script>
+fetch("teacher-sidebar.html")
+.then(res => res.text())
+.then(data=>{
+document.getElementById("sidebar-container").innerHTML=data;
+});
+</script>
 
 <div class="main-content">
 
