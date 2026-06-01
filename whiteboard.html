@@ -847,11 +847,20 @@ await createOffer();
 
 socket.on(
 "userJoined",
-async()=>{
+async(data)=>{
 
 console.log(
-"NEW USER JOINED"
+"NEW USER JOINED:",
+data.role
 );
+
+if(!pc){
+
+await setupPeer();
+
+}
+
+/* student came first -> teacher joined later */
 
 if(
 role === "teacher"
@@ -860,8 +869,9 @@ role === "teacher"
 setTimeout(
 async()=>{
 
+try{
+
 if(
-pc &&
 pc.signalingState === "stable"
 ){
 
@@ -869,9 +879,32 @@ await createOffer();
 
 }
 
+}catch(err){
+
+console.log(err);
+
+}
+
 },
 1500
 );
+
+}
+
+/* teacher came later */
+
+if(
+role === "student"
+){
+
+setTimeout(()=>{
+
+socket.emit(
+"ready",
+room
+);
+
+},1000);
 
 }
 
@@ -921,16 +954,6 @@ setupPeer();
 }
 
 /* NEW */
-
-if(
-pc.signalingState !==
-"stable"
-){
-
-return;
-
-}
-
     await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
 
     const answer = await pc.createAnswer();
