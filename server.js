@@ -248,26 +248,38 @@ io.on("connection", (socket) => {
 
     socket.join(room);
 
-    // 🔥 SEND OLD DRAWINGS
+    socket.room = room;
+
+    console.log("USER JOINED ROOM:", room);
+
+    // load old drawings
     if(boardData[room]){
         socket.emit("loadBoard", boardData[room]);
     }
 
-    // 🔥 SEND BOARD LOCK STATUS
+    // board lock
     if(boardLock[room]){
         socket.emit("boardLocked", true);
     }
 
-    // 🔥 SEND CONTROL STATUS
+    // control sync
     if(roomControl[room]){
         socket.emit("controlChanged", {
             studentId: roomControl[room]
         });
     }
 
-socket.on("ready", (room) => {
+    // tell others someone joined
+    socket.to(room).emit(
+        "userJoined",
+        {
+            socketId: socket.id
+        }
+    );
+
+    // old ready event
     socket.to(room).emit("ready");
-});
+
 });
 
 
