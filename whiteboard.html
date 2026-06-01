@@ -638,10 +638,9 @@ const role = params.get("role");
 const socket = io(
 "https://academy-backend-eatl.onrender.com",
 {
-transports:[
-"websocket",
-"polling"
-]
+transports:["websocket","polling"],
+reconnectionAttempts:5,
+timeout:20000
 }
 );
 
