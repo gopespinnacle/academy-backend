@@ -795,13 +795,7 @@ socket.emit(
 room
 );
 
-socket.emit(
-"userJoined",
-{
-room,
-role
-}
-);
+
 
 if(role === "teacher"){
 
@@ -836,7 +830,14 @@ if(
 role === "teacher"
 ){
 
+setTimeout(
+async()=>{
+
 await createOffer();
+
+},
+1000
+);
 
 }
 
@@ -846,11 +847,10 @@ await createOffer();
 
 socket.on(
 "userJoined",
-async(data)=>{
+async()=>{
 
 console.log(
-"USER JOINED",
-data.role
+"NEW USER JOINED"
 );
 
 if(
@@ -858,15 +858,19 @@ role === "teacher"
 ){
 
 setTimeout(
-
 async()=>{
+
+if(
+pc &&
+pc.signalingState === "stable"
+){
 
 await createOffer();
 
+}
+
 },
-
-1000
-
+1500
 );
 
 }
@@ -1377,7 +1381,7 @@ async function switchCamera(deviceId){
         );
     }
 }
-function setupPeer(){
+async function setupPeer(){
 
     pc = new RTCPeerConnection({
     iceServers: [
