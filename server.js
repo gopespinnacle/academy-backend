@@ -59,12 +59,40 @@ require("./cron/attendanceAutoExit");
 const app = express();
 app.use(express.static(__dirname));
 app.use(cors({
+
     origin: [
-        "https://www.gopespinnacle.com"
+
+        "https://www.gopespinnacle.com",
+
+        "https://gopespinnacle.com",
+
+        "http://localhost:5500",
+
+        "http://127.0.0.1:5500"
+
     ],
-    methods: ["GET","POST","PUT","DELETE","OPTIONS"],
-    allowedHeaders: ["Content-Type","Authorization"]
+
+    credentials:true,
+
+    methods: [
+
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+
+    ],
+
+    allowedHeaders: [
+
+        "Content-Type",
+        "Authorization"
+
+    ]
+
 }));
+app.options("*", cors());
 const server = http.createServer(app);
 
 const io = new Server(server, {
