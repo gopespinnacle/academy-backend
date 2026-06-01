@@ -96,16 +96,17 @@ video {
 #screenContainer {
     position: fixed;
 
-    top: 90px;
-    right: 10px;
+    top: 60px;
+    left: 0;
 
-    width: 180px;
-    height: 120px;
+    width: 100vw;
+    height: calc(100vh - 60px);
 
     overflow: hidden;
 
-    border-radius: 10px;
-    border: 2px solid white;
+    border-radius: 0;
+
+    border: none;
 
     z-index: 999;
 }
@@ -131,7 +132,9 @@ video {
 }
 /* 🔥 STUDENT SMALL VIDEO */
 #remoteVideo{
-
+position:absolute;
+top:0;
+left:0;
     width:100%;
     height:100%;
 
@@ -153,8 +156,8 @@ video {
     bottom:10px;
     right:10px;
 
-    width:120px;
-    height:90px;
+    width:250px;
+height:180px;
 
     background:black;
 
