@@ -786,9 +786,9 @@ await initMedia();
 
 await loadCameraList();
 
-setupPeer();
+await setupPeer();
 
-/* JOIN ONLY AFTER CAMERA READY */
+/* JOIN ONLY AFTER PEER READY */
 
 socket.emit(
 "joinRoom",
@@ -808,40 +808,6 @@ socket.emit(
 
 /* small delay */
 
-setTimeout(()=>{
-
-socket.emit(
-"ready",
-room
-);
-
-},1000);
-
-socket.on(
-"ready",
-async()=>{
-
-console.log(
-"READY EVENT",
-role
-);
-
-if(
-role === "teacher"
-){
-
-setTimeout(
-async()=>{
-
-await createOffer();
-
-},
-1000
-);
-
-}
-
-});
 
 /* ADD HERE */
 
@@ -850,7 +816,7 @@ socket.on(
 async(data)=>{
 
 console.log(
-"NEW USER JOINED:",
+"USER JOINED:",
 data.role
 );
 
@@ -860,8 +826,6 @@ await setupPeer();
 
 }
 
-/* student came first -> teacher joined later */
-
 if(
 role === "teacher"
 ){
@@ -869,42 +833,18 @@ role === "teacher"
 setTimeout(
 async()=>{
 
-try{
-
 if(
-pc.signalingState === "stable"
+pc.signalingState ===
+"stable"
 ){
 
 await createOffer();
 
 }
 
-}catch(err){
-
-console.log(err);
-
-}
-
 },
-1500
+2000
 );
-
-}
-
-/* teacher came later */
-
-if(
-role === "student"
-){
-
-setTimeout(()=>{
-
-socket.emit(
-"ready",
-room
-);
-
-},1000);
 
 }
 
@@ -949,7 +889,7 @@ console.log(
 
 if(!pc){
 
-setupPeer();
+await setupPeer();
 
 }
 
