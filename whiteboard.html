@@ -94,21 +94,18 @@ video {
 }
 
 #screenContainer {
+
     position: fixed;
 
     top: 60px;
+
     left: 0;
 
+    padding-top:70px;
+
     width: 100vw;
+
     height: calc(100vh - 60px);
-
-    overflow: hidden;
-
-    border-radius: 0;
-
-    border: none;
-
-    z-index: 999;
 }
 
 /* HEADER */
@@ -481,8 +478,8 @@ onclick="startScreenShare()">
 <div id="screenContainer">
 <div id="annotationToolbar" style="
 display:none;
-position:absolute;
-top:40px;
+position:fixed;
+top:80px;
 left:20px;
 background:#1e293b;
 padding:10px;
