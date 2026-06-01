@@ -792,7 +792,10 @@ await setupPeer();
 
 socket.emit(
 "joinRoom",
-room
+{
+room: room,
+role: role
+}
 );
 
 
@@ -811,44 +814,7 @@ socket.emit(
 
 /* ADD HERE */
 
-socket.on(
-"userJoined",
-async(data)=>{
 
-console.log(
-"USER JOINED:",
-data.role
-);
-
-if(!pc){
-
-await setupPeer();
-
-}
-
-if(
-role === "teacher"
-){
-
-setTimeout(
-async()=>{
-
-if(
-pc.signalingState ===
-"stable"
-){
-
-await createOffer();
-
-}
-
-},
-2000
-);
-
-}
-
-});
 
 
 })();
@@ -922,6 +888,32 @@ data.answer
 )
 
 );
+
+});
+
+socket.on(
+"ready",
+async()=>{
+
+console.log(
+"READY EVENT",
+role
+);
+
+if(
+role === "teacher"
+){
+
+if(
+pc.signalingState ===
+"stable"
+){
+
+await createOffer();
+
+}
+
+}
 
 });
 
