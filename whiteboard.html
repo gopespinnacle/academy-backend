@@ -795,6 +795,14 @@ socket.emit(
 room
 );
 
+socket.emit(
+"userJoined",
+{
+room,
+role
+}
+);
+
 if(role === "teacher"){
 
 socket.emit(
@@ -819,13 +827,52 @@ socket.on(
 "ready",
 async()=>{
 
-if(role==="teacher"){
+console.log(
+"READY EVENT",
+role
+);
+
+if(
+role === "teacher"
+){
 
 await createOffer();
 
 }
 
 });
+
+/* ADD HERE */
+
+socket.on(
+"userJoined",
+async(data)=>{
+
+console.log(
+"USER JOINED",
+data.role
+);
+
+if(
+role === "teacher"
+){
+
+setTimeout(
+
+async()=>{
+
+await createOffer();
+
+},
+
+1000
+
+);
+
+}
+
+});
+
 
 })();
 
