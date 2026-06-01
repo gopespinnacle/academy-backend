@@ -635,9 +635,15 @@ const params = new URLSearchParams(window.location.search);
 const room = params.get("room");
 const role = params.get("role");
 
-const socket = io("https://academy-backend-eatl.onrender.com", {
-    transports: ["websocket"]
-});
+const socket = io(
+"https://academy-backend-eatl.onrender.com",
+{
+transports:[
+"websocket",
+"polling"
+]
+}
+);
 
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext(

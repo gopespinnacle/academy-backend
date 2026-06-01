@@ -97,11 +97,19 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: ["https://www.gopespinnacle.com"],
-        methods: ["GET", "POST"],
-        credentials: true
+        origin: [
+            "https://www.gopespinnacle.com",
+            "https://gopespinnacle.com"
+        ],
+        methods: ["GET","POST"],
+        credentials:true
     },
-    transports: ["websocket"] // 🔥 IMPORTANT: remove polling
+
+    transports:[
+        "websocket",
+        "polling"
+    ]
+
 });
 
 /* ================= TEST ================= */
