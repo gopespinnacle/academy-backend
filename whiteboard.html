@@ -439,6 +439,9 @@ onclick="startScreenShare()">
         <button onclick="toggleAudio()">🎤 Mute</button>
 
         <button onclick="toggleVideo()">📷 Stop Video</button>
+        <select id="cameraSelect" onchange="switchCamera(this.value)">
+    <option>Loading Cameras...</option>
+</select>
 
         <button onclick="startPiP()">📺 Camera PiP</button>
         <button onclick="openEmojiPopup()">😀 Emojis</button>
@@ -696,9 +699,11 @@ if(role === "teacher"){
 (async () => {
 
     await initMedia();
+
+    await loadCameraList();
+
     setupPeer();
 
-    
 socket.on("ready", async () => {
     if(role === "teacher"){
         await createOffer();
@@ -983,6 +988,7 @@ async function saveAsPDF(){
 }
 
 let localStream;
+let currentCameraId = null;
 
 let ARREADY = false;
 
@@ -1086,30 +1092,86 @@ callbackTrack: function(detectState){
     });
 }
 
-async function initMedia(){
-    localStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: false
+async function initMedia(cameraId = null){
+
+    if(localStream){
+        localStream.getTracks().forEach(t => t.stop());
+    }
+
+    localStream =
+    await navigator.mediaDevices.getUserMedia({
+
+        video: cameraId
+        ? { deviceId: { exact: cameraId } }
+        : true,
+
+        audio:false
     });
 
-    console.log("LOCAL STREAM:", localStream);  // ✅ ADD HERE
-
-    const localVideo = document.getElementById("localVideo");
+    const localVideo =
+        document.getElementById("localVideo");
 
     localVideo.srcObject = localStream;
-    console.log("VIDEO TRACKS:", localStream.getVideoTracks());
-    localVideo.muted = true;
+
     await localVideo.play();
-    console.log(
- "LOCAL VIDEO SIZE:",
- localVideo.videoWidth,
- localVideo.videoHeight
-);
-    await initARFilter();
+
+
 }
-
 let pc;
+async function loadCameraList(){
 
+    const devices =
+    await navigator.mediaDevices.enumerateDevices();
+
+    const cams =
+        devices.filter(
+            d => d.kind === "videoinput"
+        );
+
+    const select =
+        document.getElementById(
+            "cameraSelect"
+        );
+
+    select.innerHTML = "";
+
+    cams.forEach(cam => {
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value = cam.deviceId;
+
+        option.text =
+            cam.label ||
+            "Camera";
+
+        select.appendChild(option);
+    });
+}
+async function switchCamera(deviceId){
+
+    currentCameraId = deviceId;
+
+    await initMedia(deviceId);
+
+    const sender =
+        pc.getSenders().find(
+            s =>
+            s.track &&
+            s.track.kind === "video"
+        );
+
+    if(sender){
+
+        sender.replaceTrack(
+            localStream
+            .getVideoTracks()[0]
+        );
+    }
+}
 function setupPeer(){
 
     pc = new RTCPeerConnection({
