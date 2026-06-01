@@ -798,7 +798,22 @@ role: role
 }
 );
 
+setTimeout(()=>{
 
+socket.emit(
+"ready",
+{
+room,
+role
+}
+);
+
+console.log(
+"SENT READY",
+role
+);
+
+},1000);
 
 if(role === "teacher"){
 
@@ -893,25 +908,36 @@ data.answer
 
 socket.on(
 "ready",
-async()=>{
+async(data)=>{
 
 console.log(
 "READY EVENT",
-role
+data.role
 );
 
-if(
-role === "teacher"
-){
+if(!pc){
+
+await setupPeer();
+
+}
 
 if(
-pc.signalingState ===
-"stable"
+role === "teacher" &&
+data.role === "student"
 ){
+
+setTimeout(
+async()=>{
+
+console.log(
+"Creating offer for student"
+);
 
 await createOffer();
 
-}
+},
+1000
+);
 
 }
 
