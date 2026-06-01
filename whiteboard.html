@@ -469,8 +469,7 @@ onclick="Android.startScreenCapture()">
 id="remoteVideo"
 autoplay
 playsinline
-webkit-playsinline
-muted>
+webkit-playsinline>
 </video>
 
 <!-- DRAW -->
@@ -698,8 +697,7 @@ if(role === "teacher"){
     await initMedia();
     setupPeer();
 
-    socket.emit("ready", room);
-
+    
 socket.on("ready", async () => {
     if(role === "teacher"){
         await createOffer();
@@ -1098,6 +1096,7 @@ async function initMedia(){
     const localVideo = document.getElementById("localVideo");
 
     localVideo.srcObject = localStream;
+    console.log("VIDEO TRACKS:", localStream.getVideoTracks());
     localVideo.muted = true;
     await localVideo.play();
     await initARFilter();
@@ -1133,13 +1132,17 @@ function setupPeer(){
     
 
 pc.ontrack = async (event) => {
-
+console.log("REMOTE TRACK RECEIVED", event.streams);
     const remoteVideo =
         document.getElementById("remoteVideo");
 
    
     // ADD NEW STREAM
     remoteVideo.srcObject = event.streams[0];
+    console.log(
+ "Remote tracks:",
+ event.streams[0].getTracks()
+);
 
     // IMPORTANT FOR MOBILE
     remoteVideo.autoplay = true;
