@@ -780,32 +780,51 @@ let prevY = 0;
 
 let localStream;
 let currentCameraId = null;
-socket.emit("joinRoom", room);
+(async () => {
+
+await initMedia();
+
+await loadCameraList();
+
+setupPeer();
+
+/* JOIN ONLY AFTER CAMERA READY */
+
+socket.emit(
+"joinRoom",
+room
+);
+
+if(role === "teacher"){
+
+socket.emit(
+"teacherJoined",
+{ room }
+);
+
+}
+
+/* small delay */
+
+setTimeout(()=>{
+
 socket.emit(
 "ready",
 room
 );
-if(role === "teacher"){
 
-    socket.emit("teacherJoined", {
-        room
-    });
+},1000);
+
+socket.on(
+"ready",
+async()=>{
+
+if(role==="teacher"){
+
+await createOffer();
 
 }
 
-// ✅ START VIDEO CALL
-(async () => {
-
-    await initMedia();
-
-    await loadCameraList();
-
-    setupPeer();
-
-socket.on("ready", async () => {
-    if(role === "teacher"){
-        await createOffer();
-    }
 });
 
 })();
@@ -839,14 +858,27 @@ async function createOffer(){
 
 // RECEIVE OFFER
 socket.on("offer", async (data) => {
-    console.log(
+
+console.log(
 "OFFER RECEIVED"
 );
 
-    // ALWAYS ensure peer exists
-    if(!pc){
-        setupPeer();
-    }
+if(!pc){
+
+setupPeer();
+
+}
+
+/* NEW */
+
+if(
+pc.signalingState !==
+"stable"
+){
+
+return;
+
+}
 
     await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
 
@@ -857,13 +889,26 @@ socket.on("offer", async (data) => {
 });
 
 // RECEIVE ANSWER
-socket.on("answer", async (data) => {
-console.log(
-"ANSWER RECEIVED"
-);
-    if(!pc) return;
+socket.on("answer", async(data)=>{
 
-    await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+if(!pc) return;
+
+if(
+pc.currentRemoteDescription
+){
+
+return;
+
+}
+
+await pc.setRemoteDescription(
+
+new RTCSessionDescription(
+data.answer
+)
+
+);
+
 });
 
 socket.on("ice-candidate", async (data) => {
@@ -1351,8 +1396,21 @@ event.streams[0].getTracks()
     remoteVideo.style.visibility = "visible";
     remoteVideo.style.opacity = "1";
 };
-pc.onconnectionstatechange = () => {
-    console.log("STATE:", pc.connectionState);
+pc.onconnectionstatechange=()=>{
+
+console.log(
+"STATE:",
+pc.connectionState
+);
+
+if(
+pc.connectionState==="failed"
+){
+
+pc.restartIce();
+
+}
+
 };
 pc.oniceconnectionstatechange = () => {
     console.log("ICE:", pc.iceConnectionState);
