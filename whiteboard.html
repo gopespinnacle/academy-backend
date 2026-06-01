@@ -135,7 +135,7 @@ video {
     width:100%;
     height:100%;
 
-    z-index:20;
+    z-index:50;
 
     pointer-events:auto;
 }
@@ -480,7 +480,25 @@ onclick="startScreenShare()">
         </div>
     </div>
 
-   <!-- REMOTE VIDEO -->
+   <!-- SCREEN SHARE VIEW -->
+<video
+id="screenVideo"
+autoplay
+muted
+playsinline
+style="
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+object-fit:cover;
+z-index:5;
+display:none;
+">
+</video>
+
+<!-- REMOTE VIDEO -->
 <video
 id="remoteVideo"
 autoplay
@@ -823,10 +841,6 @@ socket.on("screenDraw", (data) => {
 
     screenCtx.stroke();
 });
-
-
-
-
 
 function leaveClass(){
 
@@ -1370,6 +1384,16 @@ async function startScreenShare(){
 });
 
         const screenTrack = screenStream.getVideoTracks()[0];
+        const screenVideo =
+document.getElementById(
+    "screenVideo"
+);
+
+screenVideo.srcObject =
+new MediaStream([screenTrack]);
+
+screenVideo.style.display =
+"block";
 
         // 🔥 THIS WAS MISSING (VERY IMPORTANT)
         const videoSender = pc.getSenders().find(
@@ -1419,6 +1443,15 @@ async function stopScreenShare(){
     screenCanvas.width,
     screenCanvas.height
 );
+const screenVideo =
+document.getElementById(
+    "screenVideo"
+);
+
+screenVideo.style.display =
+"none";
+
+screenVideo.srcObject = null;
     screenStream = null;
 }
 
