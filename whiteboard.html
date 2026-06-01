@@ -527,7 +527,30 @@ webkit-playsinline>
 </div>
         <!-- LOCAL SMALL PREVIEW -->
     
+<div id="annotationToolbar" style="
+display:none;
+position:fixed;
+top:70px;
+left:20px;
+background:#1e293b;
+padding:10px;
+border-radius:10px;
+z-index:999999;
+">
 
+<button onclick="annotationMode='pen'">
+✏️ Pen
+</button>
+
+<button onclick="annotationMode='eraser'">
+🧽 Eraser
+</button>
+
+<button onclick="clearAnnotations()">
+🗑 Clear
+</button>
+
+</div>
 
 <div id="pdfTab" style="
     display:none;
@@ -655,6 +678,7 @@ window.addEventListener("resize", resizeScreenCanvas);
 // ===== UNIVERSAL DRAW (MOBILE + MOUSE + STYLUS) =====
 
 let isDrawingPointer = false;
+let annotationMode = "pen";
 
 
 // 🔥 SCREEN DRAW POINTER EVENTS
@@ -680,12 +704,31 @@ screenCanvas.addEventListener("pointermove", (e) => {
     const y = (e.clientY - rect.top) * (screenCanvas.height / rect.height);
 
     screenCtx.beginPath();
-    screenCtx.moveTo(prevX, prevY);
-    screenCtx.lineTo(x, y);
-    
-    screenCtx.lineWidth = 3;
-    screenCtx.lineCap = "round";
-    screenCtx.stroke();
+
+screenCtx.moveTo(prevX, prevY);
+
+screenCtx.lineTo(x, y);
+
+screenCtx.lineCap = "round";
+
+if(annotationMode === "eraser"){
+
+    screenCtx.globalCompositeOperation =
+    "destination-out";
+
+    screenCtx.lineWidth = 30;
+
+}else{
+
+    screenCtx.globalCompositeOperation =
+    "source-over";
+
+    screenCtx.strokeStyle = "red";
+
+    screenCtx.lineWidth = 5;
+}
+
+screenCtx.stroke();
 
     socket.emit("screenDraw", {
         room,
@@ -1382,7 +1425,11 @@ async function startScreenShare(){
     video: true,
     audio: true
 });
-
+document
+.getElementById(
+"annotationToolbar"
+)
+.style.display = "flex";
         const screenTrack = screenStream.getVideoTracks()[0];
         const screenVideo =
 document.getElementById(
@@ -1452,7 +1499,14 @@ screenVideo.style.display =
 "none";
 
 screenVideo.srcObject = null;
-    screenStream = null;
+
+document
+.getElementById(
+"annotationToolbar"
+)
+.style.display = "none";
+
+screenStream = null;
 }
 
 const pip = document.getElementById("screenContainer");
@@ -1658,7 +1712,16 @@ function showFloatingEmoji(emoji){
     },2200);
 }
 
+function clearAnnotations(){
 
+screenCtx.clearRect(
+0,
+0,
+screenCanvas.width,
+screenCanvas.height
+);
+
+}
 </script>
 </body>
 </html>
