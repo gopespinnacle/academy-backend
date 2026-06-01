@@ -499,34 +499,42 @@ app.post("/api/save-class-summary", async (req, res) => {
     try{
 
         const {
-            room,
-            className,
-            periodTime,
-            studentName,
-            teacherName,
-            homework
-        } = req.body;
+    room,
+    className,
+    periodTime,
+    studentName,
+    teacherName,
+    homework,
+    teacherInTime,
+    teacherOutTime
+} = req.body;
 
         const today = new Date();
 
-        const inData = teacherAttendanceMemory[room];
+        const inTime = teacherInTime;
 
-        let inTime = "";
-        let outTime = "";
-        let totalMinutes = 0;
+const outTime = teacherOutTime;
 
-        if(inData){
+const totalMinutes = Math.floor(
 
-            inTime = new Date(inData.inTime).toLocaleTimeString();
+(
+new Date(outTime)
 
-            outTime = new Date().toLocaleTimeString();
+-
 
-            totalMinutes =
-                Math.floor(
-                    (new Date() - new Date(inData.inTime))
-                    / 1000 / 60
-                );
-        }
+new Date(inTime)
+
+)
+
+/
+
+1000
+
+/
+
+60
+
+);
 
         const summary = await ClassSummary.create({
 

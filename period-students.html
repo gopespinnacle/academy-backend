@@ -483,7 +483,10 @@ roomName = roomName.replace(/\s+/g, "").replace(/[^a-zA-Z0-9\-]/g,"");
 const studentName =
 document.querySelector(".student-card b")
 ?.innerText.replace("👤 ","") || "";
-
+localStorage.setItem(
+"teacherInTime",
+new Date().toISOString()
+);
 window.location.href =
 `whiteboard.html
 ?room=${encodeURIComponent(roomName)}

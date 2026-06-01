@@ -111,13 +111,27 @@ params.get("student") || "-";
 
 const room = params.get("room");
 
-const response = await fetch(
-"https://academy-backend-eatl.onrender.com/api/get-meeting-time?room=" + room
+const inTime =
+localStorage.getItem(
+"teacherInTime"
 );
 
-const data = await response.json();
+const outTime =
+localStorage.getItem(
+"teacherOutTime"
+);
 
-document.getElementById("summaryMeeting").value =
+document.getElementById(
+"summaryMeeting"
+).value =
+
+new Date(inTime)
+.toLocaleTimeString()
+
++ " → " +
+
+new Date(outTime)
+.toLocaleTimeString();
 data.inTime + " → " +
 new Date(params.get("outTime"))
 .toLocaleTimeString();
@@ -152,6 +166,16 @@ document.getElementById("summaryStudent").value,
 
 teacherName:
 params.get("teacher"),
+
+teacherInTime:
+localStorage.getItem(
+"teacherInTime"
+),
+
+teacherOutTime:
+localStorage.getItem(
+"teacherOutTime"
+),
 
 homework:
 document.getElementById("summaryHomework").value

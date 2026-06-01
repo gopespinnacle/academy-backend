@@ -917,7 +917,10 @@ function leaveClass(){
         localStorage.getItem("teacherName") || "";
 
     const outTime = new Date().toISOString();
-
+localStorage.setItem(
+"teacherOutTime",
+new Date().toISOString()
+);
     window.location.href =
 `teacher-class-summary.html
 ?showSummary=true
