@@ -16,17 +16,45 @@ joinTime,
 status: incomingStatus
 } = data;
 
+console.log("Teacher Attendance Data:", data);
+
+if(
+!teacherId ||
+teacherId === "undefined"
+){
+
+console.log(
+"Teacher ID Missing"
+);
+
+return {
+message:
+"Teacher ID Missing"
+};
+
+}
+
 // ✅ handle null join
 const join = joinTime ? new Date(joinTime) : null;
 
 // class start
-const [hour, minute] = startTime.split(":");
+if(!startTime){
+
+return {
+message:
+"Start Time Missing"
+};
+
+}
+
+const [hour, minute] =
+startTime.split(":");
 
 const classStart = new Date();
 classStart.setHours(hour, minute, 0);
 
 // class end (1 hour)
-const classEnd = new Date(classStart.getTime() + 60 * 60000);
+
 
 // ✅ default status
 let status = incomingStatus || "Present";
@@ -54,6 +82,15 @@ compensationMinutes += lateMinutes;
 const CompensationClass = require("../models/CompensationClass");
 
 // 🔥 CHECK if already exists for today
+const students = await Attendance.find({
+    className,
+    subject,
+    status: "Present"
+}).populate("studentId");
+const studentNames = students
+    .filter(s => s.studentId)
+    .map(s => s.studentId.name);
+
 let record = await CompensationClass.findOne({
     teacher: teacherId,
     className,
@@ -86,14 +123,7 @@ await record.save();
 
 
 // 🔥 OPTIONAL (can remove later)
-const students = await Attendance.find({
-    className,
-    subject,
-    status: "Present"
-}).populate("studentId");
-const studentNames = students
-    .filter(s => s.studentId)
-    .map(s => s.studentId.name);
+
 for(const s of students){
 
     if(!s.studentId) continue;
