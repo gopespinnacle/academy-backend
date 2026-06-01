@@ -1,125 +1,80 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Teacher Homework</title>
+<h2>Student Homework</h2>
 
-<style>
+<table border="1">
 
-body{
-font-family:Segoe UI;
-background:#f4f6f9;
-margin:0;
-}
+<thead>
 
-.container{
-width:500px;
-margin:80px auto;
-background:white;
-padding:30px;
-border-radius:10px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
+<tr>
 
-input,select,textarea{
-width:100%;
-padding:10px;
-margin-bottom:15px;
-border:1px solid #ccc;
-border-radius:6px;
-}
+<th>Student</th>
 
-button{
-background:#4CAF50;
-color:white;
-border:none;
-padding:10px 15px;
-border-radius:6px;
-cursor:pointer;
-}
+<th>Class</th>
 
-button:hover{
-background:#45a049;
-}
+<th>Subject</th>
 
-</style>
+<th>File</th>
 
-</head>
+</tr>
 
-<body>
+</thead>
 
-<div class="container">
+<tbody id="body">
 
-<h2>Assign Homework</h2>
+</tbody>
 
-<label>Class</label>
-<select id="className">
-<option value="Grade-8">Grade-8</option>
-<option value="Grade-9">Grade-9</option>
-<option value="Grade-10">Grade-10</option>
-</select>
-
-<label>Subject</label>
-<input type="text" id="subject">
-
-<label>Homework</label>
-<textarea id="homework"></textarea>
-
-<label>Due Date</label>
-<input type="date" id="dueDate">
-
-<button onclick="submitHomework()">Assign Homework</button>
-
-</div>
+</table>
 
 <script>
 
-async function submitHomework(){
+async function load(){
 
-const token = localStorage.getItem("token");
+const res =
+await fetch(
 
-if(!token){
-alert("Teacher not logged in");
-return;
-}
+"https://academy-backend-eatl.onrender.com/api/teacher-homeworks"
+);
 
-const className = document.getElementById("className").value;
-const subject = document.getElementById("subject").value;
-const homework = document.getElementById("homework").value;
-const dueDate = document.getElementById("dueDate").value;
+const data =
+await res.json();
 
-try{
+let html="";
 
-const res = await fetch("https://academy-backend-eatl.onrender.com/api/auth/teacher/homework",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer "+token
-},
-body:JSON.stringify({
-className,
-subject,
-homework,
-dueDate
-})
+data.forEach(x=>{
+
+html += `
+
+<tr>
+
+<td>${x.studentName}</td>
+
+<td>${x.className}</td>
+
+<td>${x.subject}</td>
+
+<td>
+
+<a
+href="${x.driveLink}"
+target="_blank">
+
+Download
+
+</a>
+
+</td>
+
+</tr>
+
+`;
+
 });
 
-const data = await res.json();
-
-console.log("SERVER RESPONSE:",data);
-
-alert(data.message);
-
-}catch(error){
-
-console.error("FETCH ERROR:",error);
-alert("Server error");
+document
+.getElementById("body")
+.innerHTML=html;
 
 }
 
-}
+load();
 
 </script>
-
-</body>
-</html>

@@ -658,4 +658,10 @@ server.listen(PORT, () => {
     console.log(`🔥 Server running on port ${PORT}`);
 });
 
+const homeworkRoutes =
+require("./routes/homeworkRoutes");
 
+app.use(
+"/api",
+homeworkRoutes
+);
