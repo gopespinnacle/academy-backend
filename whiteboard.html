@@ -782,6 +782,10 @@ let prevY = 0;
 let localStream;
 let currentCameraId = null;
 socket.emit("joinRoom", room);
+socket.emit(
+"ready",
+room
+);
 if(role === "teacher"){
 
     socket.emit("teacherJoined", {
@@ -836,6 +840,9 @@ async function createOffer(){
 
 // RECEIVE OFFER
 socket.on("offer", async (data) => {
+    console.log(
+"OFFER RECEIVED"
+);
 
     // ALWAYS ensure peer exists
     if(!pc){
@@ -852,7 +859,9 @@ socket.on("offer", async (data) => {
 
 // RECEIVE ANSWER
 socket.on("answer", async (data) => {
-
+console.log(
+"ANSWER RECEIVED"
+);
     if(!pc) return;
 
     await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
@@ -1305,7 +1314,17 @@ function setupPeer(){
     
 
 pc.ontrack = async (event) => {
+    
 console.log("REMOTE TRACK RECEIVED", event.streams);
+console.log(
+"REMOTE VIDEO STREAM:",
+event.streams[0]
+);
+
+console.log(
+"REMOTE TRACK COUNT:",
+event.streams[0].getTracks()
+);
     const remoteVideo =
         document.getElementById("remoteVideo");
 
