@@ -421,31 +421,8 @@ height: 40px;
 
     <!-- ALL TOOLS INSIDE MENU -->
     <div id="mobileMenu">
-
-        <!-- CANVAS -->
-        <select onchange="changeCanvasType(this.value)">
-            <option value="white">White Canvas</option>
-            <option value="four">Four Line Canvas</option>
-            <option value="one">One Line Canvas</option>
-        </select>
-
-        <!-- COLOR -->
-        <input type="color" id="colorPicker" value="#000000">
-
-        <!-- TOOLS -->
-        <button onclick="setTool('pen')">✏️ Pen</button>
-<button onclick="testCamera()">TEST CAMERA</button>
-        <button onclick="setTool('eraser')">
-            Back to DOC
-        </button>
-
-        <div class="teacher-tools" id="teacherTools">
-            <button onclick="clearBoard()">🧹 Clear</button>
-        </div>
-
-        <button onclick="setTool('eraseDraw')">🧽 Erase</button>
-
-        <button onclick="openBigTextBox()">⌨️ Type Text</button>
+       
+      
 
         <button onclick="saveAsPDF()">💾 Save PDF</button>
 
@@ -517,7 +494,7 @@ muted>
 </div>
         <!-- LOCAL SMALL PREVIEW -->
     
-<input type="file" id="fileInput">
+
 
 <div id="pdfTab" style="
     display:none;
@@ -630,123 +607,13 @@ function resizeScreenCanvas(){
 }
 resizeScreenCanvas();
 window.addEventListener("resize", resizeScreenCanvas);
-function getPDFHistoryKey(){
-    const pdf = localStorage.getItem("currentPDF") || "default";
-    return "pdfHistory_" + pdf;
-}
-function getHistoryKey(){
-    const type = localStorage.getItem("canvasType") || "white";
-    return "boardHistory_" + type;
-}
+
+
 // ✅ DRAW ONLY ON MAIN BOARD (NEW ADDITION)
 // ===== UNIVERSAL DRAW (MOBILE + MOUSE + STYLUS) =====
 
 let isDrawingPointer = false;
 
-mainBoard.addEventListener("pointerdown", (e) => {
-
-    if(role !== "teacher") return;
-
-    e.preventDefault();
-
-    // 🔥 TEXT TOOL
-    if(currentTool === "text"){
-
-        const rect = mainBoard.getBoundingClientRect();
-
-        const x = (e.clientX - rect.left) * (mainBoard.width / rect.width);
-
-        const y = (e.clientY - rect.top) * (mainBoard.height / rect.height);
-
-        createTextInput(x, y);
-
-        return;
-    }
-
-    // 🔥 PEN + ERASER ONLY
-    if(currentTool !== "pen" && currentTool !== "eraser"){
-        return;
-    }
-
-    isDrawingPointer = true;
-
-    const rect = mainBoard.getBoundingClientRect();
-
-    prevX = (e.clientX - rect.left) * (mainBoard.width / rect.width);
-
-    prevY = (e.clientY - rect.top) * (mainBoard.height / rect.height);
-
-});
-
-mainBoard.addEventListener("pointermove", (e) => {
-    
-    e.preventDefault();   // 🔥 VERY IMPORTANT (mobile fix)
-
-    if(!isDrawingPointer) return;
-    if(role !== "teacher") return;
-if(currentTool !== "pen" && currentTool !== "eraser") return;
-
-    const rect = mainBoard.getBoundingClientRect();
-
-    const x = (e.clientX - rect.left) * (mainBoard.width / rect.width);
-    const y = (e.clientY - rect.top) * (mainBoard.height / rect.height);
-
-    mainCtx.beginPath();
-mainCtx.moveTo(prevX, prevY);
-mainCtx.lineTo(x, y);
-
-mainCtx.lineCap = "round";
-
-// 🔥 ERASER
-if(currentTool === "eraser"){
-
-    mainCtx.globalCompositeOperation = "destination-out";
-    mainCtx.lineWidth = 25;
-
-}else{
-
-    mainCtx.globalCompositeOperation = "source-over";
-    mainCtx.strokeStyle = currentColor;
-    mainCtx.lineWidth = 2;
-}
-
-mainCtx.stroke();
-// 🔥 SAVE DRAWING HISTORY
-let key = getHistoryKey();
-
-let history = JSON.parse(localStorage.getItem(key) || "[]");
-
-history.push({
-    x1: prevX,
-    y1: prevY,
-    x2: x,
-    y2: y,
-    tool: currentTool === "eraser" ? "eraser" : "pen",
-    color: currentColor
-});
-
-localStorage.setItem(key, JSON.stringify(history));
-    socket.emit("draw", {
-        room,
-        prevX,
-        prevY,
-        x,
-        y,
-        tool: currentTool === "eraser" ? "eraser" : "pen",
-        color: currentColor,
-        sender: socket.id
-    });
-
-    prevX = x;
-    prevY = y;
-});
-mainBoard.addEventListener("pointerup", () => {
-    isDrawingPointer = false;
-});
-
-mainBoard.addEventListener("pointerleave", () => {
-    isDrawingPointer = false;
-});
 
 // 🔥 SCREEN DRAW POINTER EVENTS
 screenCanvas.addEventListener("pointerdown", (e) => {
@@ -773,7 +640,7 @@ screenCanvas.addEventListener("pointermove", (e) => {
     screenCtx.beginPath();
     screenCtx.moveTo(prevX, prevY);
     screenCtx.lineTo(x, y);
-    screenCtx.strokeStyle = currentColor;
+    
     screenCtx.lineWidth = 3;
     screenCtx.lineCap = "round";
     screenCtx.stroke();
@@ -784,7 +651,7 @@ screenCanvas.addEventListener("pointermove", (e) => {
         prevY,
         x,
         y,
-        color: currentColor
+       
     });
 
     prevX = x;
@@ -811,61 +678,11 @@ canvas.width = canvas.parentElement.clientWidth;
 canvas.height = canvas.parentElement.clientHeight - 40;
 drawCanvas.width = window.innerWidth;
 drawCanvas.height = window.innerHeight - 90;
-let drawing = false;
+
 let prevX = 0;
 let prevY = 0;
 
-/* ✅ TOOL */
-let currentTool = "pen";
-let currentColor = "#000000";
-let typingInput = null;
-document.getElementById("colorPicker").addEventListener("input", (e) => {
-    currentColor = e.target.value;
-});
 
-function setTool(tool){
-
-    if(tool === "pen"){
-        currentTool = "pen";
-
-        mainBoard.style.touchAction = "none";   // disable scroll
-    }
-
-    else if(tool === "eraseDraw"){
-        currentTool = "eraser";
-
-        mainBoard.style.touchAction = "none";
-    }
-else if(tool === "text"){
-
-    currentTool = "text";
-
-    mainBoard.style.touchAction = "none";
-}
-    else if(tool === "eraser"){   // BACK TO DOC
-
-    currentTool = "none";
-
-    isDrawingPointer = false;
-
-    mainBoard.style.touchAction = "auto";
-
-    // 🔥 CLOSE TEXTBOX
-    if(typingInput){
-
-        typingInput.remove();
-
-        typingInput = null;
-    }
-}
-}
-
-/* ROLE */
-if(role === "teacher"){
-    document.getElementById("teacherTools").style.display = "block";
-}
-
-/* JOIN */
 socket.emit("joinRoom", room);
 if(role === "teacher"){
 
@@ -894,14 +711,7 @@ socket.on("ready", async () => {
 // 🔥 LOAD HISTORY AFTER REFRESH
 window.addEventListener("load", () => {
 
-    const type = localStorage.getItem("canvasType") || "white";
-
-    // set dropdown
-    document.querySelector("select").value = type;
-
-    // draw background + drawing
-    changeCanvasType(type);
-
+    
     // ✅ ADD THIS PART (PDF RESTORE)
     const savedPDF = localStorage.getItem("currentPDF");
 const pdfOpen = localStorage.getItem("pdfOpen");
@@ -911,93 +721,10 @@ if(savedPDF && pdfOpen === "true"){
 }
 
 });
-/* DRAW START */
-drawCanvas.addEventListener("mousedown", (e) => {
-    if(role !== "teacher") return;
 
-    const rect = drawCanvas.getBoundingClientRect();
 
-    const scaleX = drawCanvas.width / rect.width;
-    const scaleY = drawCanvas.height / rect.height;
 
-    prevX = (e.clientX - rect.left) * scaleX;
-    prevY = (e.clientY - rect.top) * scaleY;
 
-    drawing = true;
-
-    // ✅ ONLY start path (no drawing here)
-    dctx.beginPath();
-    dctx.moveTo(prevX, prevY);
-});
-/* DRAW MOVE */
-drawCanvas.addEventListener("mousemove", (e) => {
-
-    if(e.buttons !== 1) return;   // 🔥 ADD THIS LINE
-    if(!drawing || role !== "teacher") return;
-
-    if(!drawing || role !== "teacher") return;
-
-    const rect = drawCanvas.getBoundingClientRect();
-
-    const scaleX = drawCanvas.width / rect.width;
-const scaleY = drawCanvas.height / rect.height;
-
-const x = (e.clientX - rect.left) * scaleX;
-const y = (e.clientY - rect.top) * scaleY;
-
-    drawLine(prevX, prevY, x, y, currentTool,currentColor);
-
-    socket.emit("draw", {
-    room,
-    prevX,
-    prevY,
-    x,
-    y,
-    tool: currentTool,
-    color: currentColor,
-    sender: socket.id
-});
-    prevX = x;
-    prevY = y;
-});
-
-/* 🔥 DRAW FUNCTION WITH ERASER */
-function drawLine(x1, y1, x2, y2, tool, color){
-
-    const activeCtx = dctx;
-
-    activeCtx.lineCap = "round";
-    activeCtx.lineJoin = "round";     // ✅ smooth corners
-activeCtx.miterLimit = 1;         // ✅ prevents sharp edges
-
-    if(tool === "eraser"){
-        activeCtx.globalCompositeOperation = "destination-out";
-        activeCtx.lineWidth = 20;
-    } else {
-        activeCtx.globalCompositeOperation = "source-over";
-        activeCtx.strokeStyle = color || "black";
-        activeCtx.lineWidth = 3;
-    }
-
-    // 🔥 KEY FIX (smooth continuous drawing)
-    activeCtx.beginPath();
-    activeCtx.moveTo(x1, y1);
-    activeCtx.lineTo(x2, y2);
-    activeCtx.stroke();
-
-    if(document.getElementById("pdfWindow").style.display === "block"){
-
-    let key = getPDFHistoryKey();
-    let history = JSON.parse(localStorage.getItem(key) || "[]");
-
-    history.push({
-        x1, y1, x2, y2, tool, color
-    });
-
-    localStorage.setItem(key, JSON.stringify(history));
-} 
-
-}
 
 // SEND OFFER
 async function createOffer(){
@@ -1043,69 +770,6 @@ socket.on("ice-candidate", async (data) => {
     }
 });
 
-/* RECEIVE DRAW */
-socket.on("draw", (data) => {
-
-    // 🔥 prevent drawing your own data again
-    if(data.sender === socket.id) return;
-
-    // PDF open → draw on drawLayer
-    if(document.getElementById("pdfWindow").style.display === "block"){
-        drawLine(data.prevX, data.prevY, data.x, data.y, data.tool, data.color);
-        return;
-    }
-
-    if(role === "student"){
-
-    let key = getHistoryKey();
-
-    let history = JSON.parse(localStorage.getItem(key) || "[]");
-
-    history.push({
-        x1: data.prevX,
-        y1: data.prevY,
-        x2: data.x,
-        y2: data.y,
-        tool: data.tool,
-        color: data.color
-    });
-
-    localStorage.setItem(key, JSON.stringify(history));
-}
-
-    // main board → draw here
-    mainCtx.beginPath();
-    mainCtx.moveTo(data.prevX, data.prevY);
-    mainCtx.lineTo(data.x, data.y);
-
-    mainCtx.lineCap = "round";
-
-    if(data.tool === "eraser"){
-        mainCtx.globalCompositeOperation = "destination-out";
-        mainCtx.lineWidth = 20;
-    } else {
-        mainCtx.globalCompositeOperation = "source-over";
-        mainCtx.strokeStyle = data.color;
-        mainCtx.lineWidth = 2;
-    }
-
-    mainCtx.stroke();
-});
-socket.on("textDraw", (data) => {
-
-    // clear old text
-    mainCtx.clearRect(
-        0,
-        0,
-        mainBoard.width,
-        mainBoard.height
-    );
-
-    // draw latest text
-    drawBigText(data.text, data.color);
-
-});
-/* RECEIVE DRAW */
 // ✅ ✅ ADD EXACTLY HERE (NEW CODE)
 socket.on("emojiReaction", (data) => {
 
@@ -1116,84 +780,16 @@ socket.on("screenDraw", (data) => {
     screenCtx.beginPath();
     screenCtx.moveTo(data.prevX, data.prevY);
     screenCtx.lineTo(data.x, data.y);
-
-    screenCtx.strokeStyle = data.color;
+    
     screenCtx.lineWidth = 3;
     screenCtx.lineCap = "round";
     screenCtx.stroke();
 });
 
 
-socket.on("canvasTypeChanged", (data) => {
 
-    // update dropdown only
-    document.querySelector("select").value = data.type;
 
-    // 🔥 STOP LOOP
-    localStorage.setItem("canvasType", data.type);
 
-    mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
-    dctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-
-    if(data.type === "white"){
-        mainBoard.style.background = "white";
-    }
-    else if(data.type === "four"){
-        drawFourLines();
-    }
-    else if(data.type === "one"){
-        drawOneLines();
-    }
-
-    loadCanvasHistory(data.type);
-});
-socket.on("loadBoard", (dataArray) => {
-
-    // 🔥 TEACHER IGNORE
-    if(role === "teacher") return;
-
-    dataArray.forEach(d => {
-        drawLine(d.prevX, d.prevY, d.x, d.y, d.tool, d.color);
-    });
-
-});
-/* CLEAR */
-function clearBoard(){
-    if(role !== "teacher") return;
-
-    // clear drawing
-    mainCtx.clearRect(0,0,mainBoard.width,mainBoard.height);
-
-    // clear only current canvas history
-    localStorage.removeItem(getHistoryKey());
-
-    // 🔥 redraw background lines
-    const type = localStorage.getItem("canvasType") || "white";
-
-    if(type === "four") drawFourLines();
-    else if(type === "one") drawOneLines();
-
-    socket.emit("clear", room);
-}
-socket.on("clear", () => {
-
-    dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
-    mainCtx.clearRect(0,0,mainBoard.width,mainBoard.height);
-
-    // 🔥 REMOVE SAVED DRAWINGS
-    localStorage.removeItem(getHistoryKey());
-
-    // 🔥 REDRAW BACKGROUND
-    const type = localStorage.getItem("canvasType") || "white";
-
-    if(type === "four"){
-        drawFourLines();
-    }
-    else if(type === "one"){
-        drawOneLines();
-    }
-});
-/* LEAVE */
 function leaveClass(){
 
     // ✅ ONLY FOR STUDENT
@@ -1234,39 +830,7 @@ function leaveClass(){
 
 }
 
-// ================= FILE UPLOAD =================
-document.getElementById("fileInput").addEventListener("change", async (e) => {
 
-    const file = e.target.files[0];
-    if(!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch("https://academy-backend-eatl.onrender.com/upload-file", {
-        method: "POST",
-        body: formData
-    });
-
-    const data = await res.json();
-console.log("UPLOAD RESPONSE:", data);
-    // 🔥 send to students
-    socket.emit("loadPDF", {
-    room,
-    url: data.url
-});
-localStorage.setItem("currentPDF", data.url);
-loadPDFToCanvas(data.url);
-
-
-
-});
-
-// ================= DISPLAY FILE =================
-    
-// ✅ DRAW LAYER ABOVE PDF
-
-// ================= RECEIVE =================
 
 
 socket.on("loadPDF", (data) => {
@@ -1327,13 +891,7 @@ localStorage.setItem("pdfOpen", "true");
     drawCanvas.width = container.scrollWidth;
 drawCanvas.height = container.scrollHeight;
 
-// ✅ LOAD SAVED PDF DRAWING
-let key = getPDFHistoryKey();
-let history = JSON.parse(localStorage.getItem(key) || "[]");
 
-history.forEach(d => {
-    drawLine(d.x1, d.y1, d.x2, d.y2, d.tool, d.color);
-});
 }
 
 function minimizePDF(){
@@ -1373,336 +931,7 @@ document.getElementById("pdfTab").onclick = function(){
     document.getElementById("pdfTab").style.display = "none";
 };
 
-function changeCanvasType(type){
 
-
-
-    // 🔥 SAVE SELECTED TYPE
-    localStorage.setItem("canvasType", type);
-    // 🔥 ONLY TEACHER SENDS SYNC
-if(role === "teacher"){
-
-    socket.emit("canvasTypeChanged", {
-        room,
-        type
-    });
-
-}
-    
-    mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
-
-    if(type === "white"){
-        mainBoard.style.background = "white";
-    }
-    else if(type === "four"){
-        drawFourLines();
-    }
-    else if(type === "one"){
-        drawOneLines();
-    }
-
-    // 🔥 LOAD THAT CANVAS DRAWING
-    loadCanvasHistory(type);
-}
-
-function drawFourLines(){
-
-    mainBoard.style.background = "white";
-
-    const gap = 60;  // space between each set
-
-    for(let y = 0; y < mainBoard.height; y += gap){
-
-        // top thin line
-        mainCtx.beginPath();
-        mainCtx.moveTo(0, y);
-        mainCtx.lineTo(mainBoard.width, y);
-        mainCtx.strokeStyle = "#035096";
-        mainCtx.lineWidth = 1;
-        mainCtx.stroke();
-
-        // middle thick line
-        mainCtx.beginPath();
-        mainCtx.moveTo(0, y + 20);
-        mainCtx.lineTo(mainBoard.width, y + 20);
-        mainCtx.strokeStyle = "#8b0000";
-        mainCtx.lineWidth = 1.5;
-        mainCtx.stroke();
-
-        // bottom thin line
-        mainCtx.beginPath();
-        mainCtx.moveTo(0, y + 40);
-        mainCtx.lineTo(mainBoard.width, y + 40);
-        mainCtx.strokeStyle = "#035096";
-        mainCtx.lineWidth = 1;
-        mainCtx.stroke();
-    }
-}
-
-function drawOneLines(){
-
-    mainBoard.style.background = "white";
-
-    const gap = 40;
-
-    for(let y = 0; y < mainBoard.height; y += gap){
-
-        mainCtx.beginPath();
-        mainCtx.moveTo(0, y);
-        mainCtx.lineTo(mainBoard.width, y);
-        mainCtx.strokeStyle = "#002366";
-        mainCtx.lineWidth = 1;
-        mainCtx.stroke();
-    }
-}
-
-function loadCanvasHistory(type){
-
-    const key = "boardHistory_" + type;
-    let history = JSON.parse(localStorage.getItem(key) || "[]");
-
-    // CLEAR
-    mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
-
-    // REDRAW BACKGROUND
-    if(type === "white"){
-        mainBoard.style.background = "white";
-    }
-    else if(type === "four"){
-        drawFourLines();
-    }
-    else if(type === "one"){
-        drawOneLines();
-    }
-
-    // 🔥 REDRAW SAVED DRAWINGS
-    history.forEach(d => {
-
-        mainCtx.beginPath();
-
-        mainCtx.moveTo(d.x1, d.y1);
-        mainCtx.lineTo(d.x2, d.y2);
-
-        mainCtx.lineCap = "round";
-
-        if(d.tool === "eraser"){
-
-            mainCtx.globalCompositeOperation = "destination-out";
-            mainCtx.lineWidth = 20;
-
-        }else{
-
-            mainCtx.globalCompositeOperation = "source-over";
-            mainCtx.strokeStyle = d.color;
-            mainCtx.lineWidth = 2;
-        }
-
-        mainCtx.stroke();
-    });
-}
-
-function openBigTextBox(){
-
-    // remove old
-    if(typingInput){
-        typingInput.remove();
-    }
-
-    typingInput = document.createElement("textarea");
-
-    typingInput.placeholder = "Type here...";
-
-    // 🔥 BIG CLASSROOM STYLE
-    typingInput.style.position = "fixed";
-
-    typingInput.style.top = "160px";
-    typingInput.style.left = "20px";
-
-    typingInput.style.width = "85vw";
-    typingInput.style.height = "500px";
-
-    typingInput.style.zIndex = "99999";
-
-    typingInput.style.fontSize = "80px";
-
-    typingInput.style.padding = "30px";
-
-    typingInput.style.border = "4px solid red";
-
-    typingInput.style.borderRadius = "20px";
-
-    typingInput.style.outline = "none";
-
-    typingInput.style.background = "white";
-
-    typingInput.style.resize = "none";
-
-    typingInput.style.boxShadow =
-        "0 10px 30px rgba(0,0,0,0.3)";
-
-    document.body.appendChild(typingInput);
-
-    typingInput.focus();
-
-    // 🔥 LIVE TYPING SYNC
-typingInput.addEventListener("input", () => {
-
-    const text = typingInput.value;
-
-    // clear old text
-    mainCtx.clearRect(
-        0,
-        0,
-        mainBoard.width,
-        mainBoard.height
-    );
-
-    // redraw live text
-    drawBigText(text, currentColor);
-
-    // send to student LIVE
-    socket.emit("textDraw", {
-        room,
-        text,
-        color: currentColor
-    });
-
-});
-}
-function createTextInput(x, y){
-
-    // remove old input
-    if(typingInput){
-        typingInput.remove();
-    }
-
-    typingInput = document.createElement("input");
-
-    typingInput.type = "text";
-    typingInput.placeholder = "Type here...";
-
-    // 🔥 IMPORTANT
-    typingInput.style.position = "fixed";
-
-    typingInput.style.left = x + "px";
-    typingInput.style.top = y + "px";
-
-    typingInput.style.zIndex = "99999";
-
-    typingInput.style.fontSize = "42px";
-
-typingInput.style.padding = "15px";
-
-typingInput.style.width = "700px";
-typingInput.style.height = "90px";
-
-    typingInput.style.border = "2px solid #2563eb";
-    typingInput.style.borderRadius = "6px";
-
-    typingInput.style.outline = "none";
-
-    document.body.appendChild(typingInput);
-
-    typingInput.focus();
-
-    // mobile keyboard support
-    typingInput.setAttribute("autocapitalize", "on");
-
-    typingInput.addEventListener("keydown", (event) => {
-
-        if(event.key === "Enter"){
-
-            const text = typingInput.value;
-
-            drawText(text, x, y, currentColor);
-
-            socket.emit("textDraw", {
-                room,
-                text,
-                x,
-                y,
-                color: currentColor
-            });
-
-            typingInput.remove();
-            typingInput = null;
-        }
-    });
-
-    // remove if clicked outside
-    typingInput.addEventListener("blur", () => {
-
-        setTimeout(() => {
-
-            if(typingInput){
-
-                typingInput.remove();
-                typingInput = null;
-            }
-
-        }, 200);
-
-    });
-}
-
-function drawText(text, x, y, color){
-
-    mainCtx.globalCompositeOperation = "source-over";
-
-    mainCtx.font = "28px Arial";
-
-    mainCtx.fillStyle = color || "black";
-
-    mainCtx.fillText(text, x, y);
-}
-function drawBigText(text, color){
-
-    mainCtx.globalCompositeOperation = "source-over";
-
-    mainCtx.font = "80px Arial";
-
-    mainCtx.fillStyle = color || "black";
-
-    // multi line support
-    const lines = text.split("\n");
-
-    let startY = 300;
-
-    lines.forEach((line, index) => {
-
-        mainCtx.fillText(
-            line,
-            80,
-            startY + (index * 100)
-        );
-
-    });
-}
-function redrawCanvas(){
-    const type = localStorage.getItem("canvasType") || "white";
-
-    mainCtx.clearRect(0, 0, mainBoard.width, mainBoard.height);
-
-    if(type === "four") drawFourLines();
-    else if(type === "one") drawOneLines();
-
-    // redraw all drawing
-    const key = getHistoryKey();
-    let history = JSON.parse(localStorage.getItem(key) || "[]");
-
-    history.forEach(d => {
-
-    drawLine(
-        d.x1,
-        d.y1,
-        d.x2,
-        d.y2,
-        d.tool,
-        d.color
-    );
-
-});
-}
 
 async function saveAsPDF(){
 
@@ -1901,7 +1130,7 @@ function setupPeer(){
     });
 
     // receive other person video
-    let remoteStream = new MediaStream();
+    
 
 pc.ontrack = async (event) => {
 
@@ -2205,29 +1434,6 @@ async function startPiP() {
         .classList.toggle("show");
 }
 
-async function testCamera(){
-
-    try{
-
-        const stream = await navigator.mediaDevices.getUserMedia({
-    video:true,
-    audio:false
-})
-
-        document.getElementById("localVideo").srcObject = stream;
-
-        alert("CAMERA WORKING");
-
-    }catch(err){
-
-        alert("CAMERA ERROR: " + err.message);
-
-        console.log(err);
-    }
-}
-
-
-
 
 let emojiOpened = false;
 
@@ -2309,15 +1515,7 @@ function showFloatingEmoji(emoji){
     },2200);
 }
 
-function startMobileScreenShare(){
 
-    // SHOW OTHER PARTICIPANT VIDEO
-
-   
-    // START ANDROID SCREEN SHARE
-
-    Android.startScreenCapture();
-}
 </script>
 </body>
 </html>
