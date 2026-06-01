@@ -813,7 +813,7 @@ console.log(
 role
 );
 
-},1000);
+},3000);
 
 if(role === "teacher"){
 
@@ -922,22 +922,34 @@ await setupPeer();
 }
 
 if(
-role === "teacher" &&
-data.role === "student"
+role === "teacher"
 ){
 
 setTimeout(
 async()=>{
 
+try{
+
+if(
+pc.signalingState ===
+"stable"
+){
+
 console.log(
-"Creating offer for student"
+"FORCED OFFER"
 );
 
 await createOffer();
 
-},
-1000
-);
+}
+
+}catch(err){
+
+console.log(err);
+
+}
+
+},2500);
 
 }
 
