@@ -130,19 +130,23 @@ video {
 
     position:absolute;
 
-    top:0;
+    top:30px;
+
     left:0;
 
     width:100%;
-    height:100%;
 
-    z-index:50;
+    height:calc(100% - 30px);
+
+    z-index:99999;
 
     pointer-events:auto;
 
     cursor:crosshair;
 
     touch-action:none;
+
+    background:transparent;
 }
 /* 🔥 STUDENT SMALL VIDEO */
 #remoteVideo{
@@ -515,7 +519,8 @@ left:0;
 width:100%;
 height:100%;
 object-fit:cover;
-z-index:5;
+z-index:1;
+pointer-events:none;
 display:none;
 ">
 </video>
@@ -741,6 +746,10 @@ screenCtx.stroke();
 });
 
 screenCanvas.addEventListener("pointerup", () => {
+    isDrawingPointer = false;
+});
+
+screenCanvas.addEventListener("pointerleave", () => {
     isDrawingPointer = false;
 });
 // 🔥 ADD THIS (important)
@@ -1438,7 +1447,8 @@ new MediaStream([screenTrack]);
 
 screenVideo.style.display =
 "block";
-
+screenCanvas.style.zIndex = "99999";
+screenCanvas.style.pointerEvents = "auto";
         // 🔥 THIS WAS MISSING (VERY IMPORTANT)
         const videoSender = pc.getSenders().find(
     s => s.track && s.track.kind === "video"
