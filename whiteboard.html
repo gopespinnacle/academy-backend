@@ -470,7 +470,24 @@ onclick="startScreenShare()">
 </div>
 <!-- 🔥 SCREEN SHARE CONTAINER -->
 <div id="screenContainer">
+<div id="annotationToolbar" style="
+display:none;
+position:absolute;
+top:40px;
+left:20px;
+background:#1e293b;
+padding:10px;
+border-radius:10px;
+z-index:999999;
+">
 
+<button onclick="annotationMode='pen'">✏️ Pen</button>
+
+<button onclick="annotationMode='eraser'">🧽 Eraser</button>
+
+<button onclick="clearAnnotations()">🗑 Clear</button>
+
+</div>
     <!-- HEADER -->
     <div id="pipHeader">
         <span>📺 Live</span>
@@ -529,8 +546,8 @@ webkit-playsinline>
     
 <div id="annotationToolbar" style="
 display:none;
-position:fixed;
-top:70px;
+position:absolute;
+top:40px;
 left:20px;
 background:#1e293b;
 padding:10px;
