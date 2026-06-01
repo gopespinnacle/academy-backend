@@ -685,7 +685,8 @@ drawCanvas.height = window.innerHeight - 90;
 let prevX = 0;
 let prevY = 0;
 
-
+let localStream;
+let currentCameraId = null;
 socket.emit("joinRoom", room);
 if(role === "teacher"){
 
@@ -987,8 +988,7 @@ async function saveAsPDF(){
     pdf.save("annotated.pdf");
 }
 
-let localStream;
-let currentCameraId = null;
+
 
 let ARREADY = false;
 
