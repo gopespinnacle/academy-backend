@@ -127,8 +127,17 @@ video {
 /* VIDEO */
 
 #screenDraw {
-    z-index: 2;
-    pointer-events: none;  /* 🔥 VERY IMPORTANT */
+    position:absolute;
+
+    top:0;
+    left:0;
+
+    width:100%;
+    height:100%;
+
+    z-index:20;
+
+    pointer-events:auto;
 }
 /* 🔥 STUDENT SMALL VIDEO */
 #remoteVideo{
@@ -608,8 +617,17 @@ const screenCtx = screenCanvas.getContext("2d");
 
 // match size properly
 function resizeScreenCanvas(){
-    screenCanvas.width = screenCanvas.offsetWidth;
-    screenCanvas.height = screenCanvas.offsetHeight;
+
+    const container =
+    document.getElementById(
+        "screenContainer"
+    );
+
+    screenCanvas.width =
+        container.clientWidth;
+
+    screenCanvas.height =
+        container.clientHeight;
 }
 resizeScreenCanvas();
 window.addEventListener("resize", resizeScreenCanvas);
@@ -786,11 +804,23 @@ socket.on("emojiReaction", (data) => {
 socket.on("screenDraw", (data) => {
 
     screenCtx.beginPath();
-    screenCtx.moveTo(data.prevX, data.prevY);
-    screenCtx.lineTo(data.x, data.y);
-    
+
+    screenCtx.moveTo(
+        data.prevX,
+        data.prevY
+    );
+
+    screenCtx.lineTo(
+        data.x,
+        data.y
+    );
+
     screenCtx.lineWidth = 3;
+
+    screenCtx.strokeStyle = "red";
+
     screenCtx.lineCap = "round";
+
     screenCtx.stroke();
 });
 
@@ -1383,6 +1413,12 @@ async function stopScreenShare(){
     document.getElementById("localVideo").srcObject = localStream;
 
     screenStream.getTracks().forEach(track => track.stop());
+    screenCtx.clearRect(
+    0,
+    0,
+    screenCanvas.width,
+    screenCanvas.height
+);
     screenStream = null;
 }
 
