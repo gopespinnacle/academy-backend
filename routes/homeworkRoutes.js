@@ -90,7 +90,9 @@ fileMetadata,
 
 media,
 
-fields:"id"
+fields:"id",
+
+supportsAllDrives:true
 
 });
 
@@ -100,6 +102,8 @@ response.data.id;
 await drive.permissions.create({
 
 fileId,
+
+supportsAllDrives:true,
 
 requestBody:{
 role:"reader",
