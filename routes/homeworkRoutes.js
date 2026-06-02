@@ -119,7 +119,9 @@ media,
 
 fields:"id",
 
-supportsAllDrives:true
+supportsAllDrives:true,
+
+includeItemsFromAllDrives:true
 
 });
 
