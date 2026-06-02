@@ -9,12 +9,18 @@ storage: multer.memoryStorage()
 
 const HomeworkUpload =
 require("../models/HomeworkUpload");
-
+const stream = require("stream");
 const { google } = require("googleapis");
 
 const credentials =
 JSON.parse(
 process.env.GOOGLE_CREDENTIALS
+);
+
+credentials.private_key =
+credentials.private_key.replace(
+/\\n/g,
+"\n"
 );
 
 const auth =
@@ -41,7 +47,14 @@ upload.single("file"),
 async(req,res)=>{
 
 try{
+if(!req.file){
 
+return res.status(400).json({
+success:false,
+message:"No file uploaded"
+});
+
+}
 const fileMetadata = {
 
 name:req.file.originalname,
@@ -52,20 +65,28 @@ process.env.GOOGLE_FOLDER_ID
 
 };
 
+const bufferStream =
+new stream.PassThrough();
+
+bufferStream.end(
+req.file.buffer
+);
+
 const media = {
 
-mimeType:req.file.mimetype,
+mimeType:
+req.file.mimetype,
 
-body: Buffer.from(
-req.file.buffer
-)
+body:
+bufferStream
 
 };
 
 const response =
 await drive.files.create({
 
-resource:fileMetadata,
+requestBody:
+fileMetadata,
 
 media,
 
@@ -118,10 +139,18 @@ link
 
 }catch(err){
 
-console.log(err);
+console.log(
+"UPLOAD ERROR:",
+err
+);
 
 res.status(500).json({
-success:false
+
+success:false,
+
+message:
+err.message
+
 });
 
 }
