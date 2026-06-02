@@ -60,11 +60,6 @@ message:"No file uploaded"
 });
 
 }
-const fileMetadata = {
-
-name:req.file.originalname
-
-};
 
 const bufferStream =
 new stream.PassThrough();
@@ -84,9 +79,7 @@ bufferStream
 };
 
 const fileMetadata = {
-
 name:req.file.originalname,
-
 parents:[
 process.env.GOOGLE_FOLDER_ID
 ]
