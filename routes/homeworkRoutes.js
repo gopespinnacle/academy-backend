@@ -57,11 +57,7 @@ message:"No file uploaded"
 }
 const fileMetadata = {
 
-name:req.file.originalname,
-
-parents:[
-process.env.GOOGLE_FOLDER_ID
-]
+name:req.file.originalname
 
 };
 
@@ -85,14 +81,11 @@ bufferStream
 const response =
 await drive.files.create({
 
-requestBody:
-fileMetadata,
+requestBody:fileMetadata,
 
 media,
 
-fields:"id",
-
-supportsAllDrives:true
+fields:"id"
 
 });
 
