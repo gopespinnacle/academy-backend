@@ -109,6 +109,7 @@ process.env.GOOGLE_FOLDER_ID
 ],
 driveId: undefined
 };
+console.log("FOLDER ID:", process.env.GOOGLE_FOLDER_ID);
 console.log("Uploading to Google Drive...");
 const response =
 await drive.files.create({
