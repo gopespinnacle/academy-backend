@@ -12,9 +12,14 @@ require("../models/HomeworkUpload");
 const stream = require("stream");
 const { google } = require("googleapis");
 
+console.log(
+"GOOGLE ENV EXISTS:",
+!!process.env.GOOGLE_CREDENTIALS
+);
+
 const credentials =
 JSON.parse(
-process.env.GOOGLE_CREDENTIALS
+process.env.GOOGLE_CREDENTIALS.trim()
 );
 
 console.log(
@@ -22,11 +27,20 @@ console.log(
 credentials.client_email
 );
 
-credentials.private_key =
-credentials.private_key.replace(
-/\\n/g,
-"\n"
+console.log(
+"PROJECT:",
+credentials.project_id
 );
+
+console.log(
+"PRIVATE KEY START:",
+credentials.private_key.substring(0,50)
+);
+
+credentials.private_key =
+credentials.private_key
+.replace(/\\\\n/g,"\n")
+.replace(/\\n/g,"\n");
 
 const auth =
 new google.auth.GoogleAuth({
