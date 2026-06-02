@@ -106,8 +106,8 @@ const fileMetadata = {
 name:req.file.originalname,
 parents:[
 process.env.GOOGLE_FOLDER_ID
-]
-
+],
+driveId: undefined
 };
 console.log("Uploading to Google Drive...");
 const response =
@@ -119,9 +119,7 @@ media,
 
 fields:"id",
 
-supportsAllDrives:true,
-
-includeItemsFromAllDrives:true
+supportsAllDrives:false
 
 });
 
@@ -131,8 +129,6 @@ response.data.id;
 await drive.permissions.create({
 
 fileId,
-
-supportsAllDrives:true,
 
 requestBody:{
 role:"reader",
