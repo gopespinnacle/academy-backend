@@ -42,6 +42,16 @@ credentials.private_key
 .replace(/\\\\n/g,"\n")
 .replace(/\\n/g,"\n");
 
+console.log(
+"PRIVATE KEY START:",
+credentials.private_key.substring(0,50)
+);
+
+console.log(
+"PRIVATE KEY LENGTH:",
+credentials.private_key.length
+);
+
 const auth =
 new google.auth.GoogleAuth({
 
