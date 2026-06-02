@@ -17,6 +17,11 @@ JSON.parse(
 process.env.GOOGLE_CREDENTIALS
 );
 
+console.log(
+"EMAIL:",
+credentials.client_email
+);
+
 credentials.private_key =
 credentials.private_key.replace(
 /\\n/g,
