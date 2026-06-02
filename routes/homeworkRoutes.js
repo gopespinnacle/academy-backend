@@ -137,8 +137,11 @@ link
 }catch(err){
 
 console.log(
-"UPLOAD ERROR:",
-err
+"UPLOAD FULL ERROR:"
+);
+
+console.log(
+err.response?.data || err
 );
 
 res.status(500).json({
@@ -146,7 +149,10 @@ res.status(500).json({
 success:false,
 
 message:
-err.message
+err.message,
+
+error:
+err.response?.data || err
 
 });
 
