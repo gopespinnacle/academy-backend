@@ -83,6 +83,16 @@ bufferStream
 
 };
 
+const fileMetadata = {
+
+name:req.file.originalname,
+
+parents:[
+process.env.GOOGLE_FOLDER_ID
+]
+
+};
+
 const response =
 await drive.files.create({
 
@@ -90,7 +100,9 @@ requestBody:fileMetadata,
 
 media,
 
-fields:"id"
+fields:"id",
+
+supportsAllDrives:true
 
 });
 
