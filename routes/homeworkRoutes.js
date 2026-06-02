@@ -60,7 +60,7 @@ message:"No file uploaded"
 });
 
 }
-
+  console.log("FILE RECEIVED:", req.file.originalname);
 const bufferStream =
 new stream.PassThrough();
 
@@ -85,7 +85,7 @@ process.env.GOOGLE_FOLDER_ID
 ]
 
 };
-
+console.log("Uploading to Google Drive...");
 const response =
 await drive.files.create({
 
