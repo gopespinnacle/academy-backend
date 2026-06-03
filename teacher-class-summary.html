@@ -50,6 +50,14 @@ style="width:100%;padding:10px;">
 </div>
 
 <div style="margin-bottom:15px;">
+<label><b>Subject</b></label>
+<input type="text"
+id="summarySubject"
+readonly
+style="width:100%;padding:10px;">
+</div>
+
+<div style="margin-bottom:15px;">
 <label><b>Student</b></label>
 <input type="text" id="summaryStudent"
 readonly
@@ -105,7 +113,10 @@ new Date().toLocaleDateString();
 
 document.getElementById("summaryTime").value =
 params.get("startTime") || "-";
-
+document.getElementById(
+"summarySubject"
+).value =
+params.get("subject") || "-";
 document.getElementById("summaryStudent").value =
 params.get("student") || "-";
 
@@ -160,6 +171,11 @@ document.getElementById("summaryClass").value,
 
 periodTime:
 document.getElementById("summaryTime").value,
+
+subject:
+document.getElementById(
+"summarySubject"
+).value,
 
 studentName:
 document.getElementById("summaryStudent").value,
