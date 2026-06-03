@@ -180,8 +180,15 @@ router.get(
 
 async(req,res)=>{
 
+const teacherName =
+req.query.teacherName;
+
 const summaries =
-await ClassSummary.find();
+await ClassSummary.find({
+
+teacherName: teacherName
+
+});
 
 const uploads =
 await HomeworkUpload.find();

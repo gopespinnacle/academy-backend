@@ -90,9 +90,22 @@ document.getElementById(
 "filterDate"
 ).value;
 
+const teacherName =
+localStorage.getItem(
+"teacherName"
+);
+
 const res =
 await fetch(
-"https://academy-backend-eatl.onrender.com/api/teacher-homeworks"
+
+"https://academy-backend-eatl.onrender.com/api/teacher-homeworks?teacherName="
+
++
+
+encodeURIComponent(
+teacherName
+)
+
 );
 
 const data =
