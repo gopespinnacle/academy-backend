@@ -106,15 +106,17 @@ const fileMetadata = {
  name:req.file.originalname,
  parents:[
    process.env.GOOGLE_FOLDER_ID
- ],
- driveId: undefined
+ ]
 };
 
 console.log(
 "FOLDER ID:",
 process.env.GOOGLE_FOLDER_ID
 );
-
+console.log(
+"UPLOAD PARENTS:",
+fileMetadata.parents
+);
 console.log(
 "Uploading to Google Drive..."
 );
