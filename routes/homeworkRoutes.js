@@ -66,8 +66,6 @@ credentials.private_key,
 
 );
 
-await auth.authorize();
-
 const drive =
 google.drive({
 
