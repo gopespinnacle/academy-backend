@@ -9,6 +9,8 @@ storage: multer.memoryStorage()
 
 const HomeworkUpload =
 require("../models/HomeworkUpload");
+const ClassSummary =
+require("../models/ClassSummary");
 const stream = require("stream");
 const { google } = require("googleapis");
 
@@ -178,14 +180,52 @@ router.get(
 
 async(req,res)=>{
 
-const data =
-await HomeworkUpload
-.find()
-.sort({
-uploadedAt:-1
+const uploads =
+await HomeworkUpload.find();
+
+const summaries =
+await ClassSummary.find();
+
+let finalData = [];
+
+uploads.forEach(x=>{
+
+const match =
+summaries.find(s =>
+
+s.studentName === x.studentName &&
+
+s.className === x.className &&
+
+s.subject === x.subject
+
+);
+
+finalData.push({
+
+studentName:
+x.studentName,
+
+className:
+x.className,
+
+subject:
+x.subject,
+
+driveLink:
+x.driveLink,
+
+homework:
+match?.homework || "-",
+
+date:
+match?.date || "-"
+
 });
 
-res.json(data);
+});
+
+res.json(finalData);
 
 });
 
