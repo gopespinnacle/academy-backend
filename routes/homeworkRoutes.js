@@ -60,6 +60,8 @@ const auth = new google.auth.JWT({
   ]
 });
 
+await auth.authorize();
+
 const drive = google.drive({
   version: "v3",
   auth: auth
@@ -121,7 +123,11 @@ fileMetadata.parents
 console.log(
 "Uploading to Google Drive..."
 );
+await auth.authorize();
 
+console.log(
+"JWT AUTH SUCCESS"
+);
 const response =
 await drive.files.create({
 
