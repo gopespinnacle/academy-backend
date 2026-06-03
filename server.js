@@ -542,6 +542,7 @@ app.post("/api/save-class-summary", async (req, res) => {
     room,
     className,
     periodTime,
+    subject,
     studentName,
     teacherName,
     homework,
@@ -583,6 +584,8 @@ new Date(inTime)
             date: today.toLocaleDateString(),
 
             periodTime,
+
+            subject,
 
             studentName,
 
