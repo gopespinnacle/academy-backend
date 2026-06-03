@@ -8,6 +8,8 @@ const classSummarySchema = new mongoose.Schema({
 
     periodTime: String,
 
+    subject: String,
+
     studentName: String,
 
     teacherName: String,
