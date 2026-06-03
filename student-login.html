@@ -63,12 +63,28 @@ async function loginStudent() {
                 return;
             }
 
-            localStorage.setItem("token", data.token);
+            localStorage.setItem(
+"token",
+data.token
+);
 
-// 🔥 ADD THIS LINE (MOST IMPORTANT)
-localStorage.setItem("studentId", data.studentId);
+localStorage.setItem(
+"studentId",
+data.studentId
+);
 
-window.location.href = "student-dashboard.html";
+localStorage.setItem(
+"studentName",
+data.name
+);
+
+localStorage.setItem(
+"className",
+data.grade
+);
+
+window.location.href =
+"student-dashboard.html";
 
         } else {
             alert(data.message || "Login failed");
