@@ -52,8 +52,7 @@ console.log(
 credentials.private_key.length
 );
 
-const auth =
-new google.auth.JWT(
+const auth = new google.auth.JWT(
 
 credentials.client_email,
 
@@ -61,14 +60,21 @@ null,
 
 credentials.private_key,
 
-["https://www.googleapis.com/auth/drive"]
+[
+"https://www.googleapis.com/auth/drive"
+]
 
 );
 
+await auth.authorize();
+
 const drive =
 google.drive({
+
 version:"v3",
+
 auth
+
 });
 
 router.post(
