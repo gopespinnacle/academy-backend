@@ -66,12 +66,16 @@ credentials.private_key,
 
 );
 
-const drive =
-google.drive({
+console.log(
+"JWT EMAIL:",
+credentials.client_email
+);
+
+const drive = google.drive({
 
 version:"v3",
 
-auth
+auth: auth
 
 });
 
