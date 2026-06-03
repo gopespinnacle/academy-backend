@@ -60,8 +60,6 @@ const auth = new google.auth.JWT({
   ]
 });
 
-await auth.authorize();
-
 const drive = google.drive({
   version: "v3",
   auth: auth
