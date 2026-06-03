@@ -180,53 +180,46 @@ router.get(
 
 async(req,res)=>{
 
-const uploads =
-await HomeworkUpload.find();
-
 const summaries =
 await ClassSummary.find();
 
+const uploads =
+await HomeworkUpload.find();
+
 let finalData = [];
 
-uploads.forEach(x=>{
+summaries.forEach(s=>{
 
-const match =
-summaries.find(s =>
+const upload =
+uploads.find(x =>
 
-s.studentName?.trim() ===
-x.studentName?.trim()
+x.studentName?.trim() ===
+s.studentName?.trim()
 
-);
-
-console.log(
-"UPLOAD:",
-x.studentName
-);
-
-console.log(
-"MATCH:",
-match
 );
 
 finalData.push({
 
 studentName:
-x.studentName,
+s.studentName,
 
 className:
-x.className,
+s.className,
 
 subject:
-x.subject,
-
-driveLink:
-x.driveLink,
+s.subject,
 
 homework:
-match?.homework || "-",
+s.homework,
 
 date:
-match?.date || "-"
+s.date,
+
+driveLink:
+upload ?
+upload.driveLink
+:
+null
 
 });
 
@@ -235,6 +228,5 @@ match?.date || "-"
 res.json(finalData);
 
 });
-
 module.exports =
 router;

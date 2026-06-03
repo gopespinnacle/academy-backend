@@ -135,7 +135,14 @@ ${
 x.driveLink ?
 
 `<a href="${x.driveLink}"
-target="_blank">
+target="_blank"
+style="
+background:#1e3a5f;
+color:white;
+padding:6px 12px;
+border-radius:6px;
+text-decoration:none;
+">
 
 Download
 
@@ -143,7 +150,12 @@ Download
 
 :
 
-"-"
+`<span style="
+color:red;
+font-weight:bold;
+">
+Not Submitted
+</span>`
 
 }
 
