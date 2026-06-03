@@ -103,24 +103,32 @@ bufferStream
 };
 
 const fileMetadata = {
-name:req.file.originalname,
-parents:[
-process.env.GOOGLE_FOLDER_ID
-],
-driveId: undefined
+ name:req.file.originalname,
+ parents:[
+   process.env.GOOGLE_FOLDER_ID
+ ],
+ driveId: undefined
 };
-console.log("FOLDER ID:", process.env.GOOGLE_FOLDER_ID);
-console.log("Uploading to Google Drive...");
+
+console.log(
+"FOLDER ID:",
+process.env.GOOGLE_FOLDER_ID
+);
+
+console.log(
+"Uploading to Google Drive..."
+);
+
 const response =
 await drive.files.create({
 
-requestBody:fileMetadata,
+ requestBody:fileMetadata,
 
-media,
+ media,
 
-fields:"id",
+ fields:"id",
 
-supportsAllDrives:false
+ supportsAllDrives:false
 
 });
 
