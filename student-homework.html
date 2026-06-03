@@ -46,6 +46,21 @@ Upload
 
 async function loadHomeworkDetails(){
 
+localStorage.setItem(
+"studentName",
+"Titiksha Sree S"
+);
+
+localStorage.setItem(
+"className",
+"Grade - 6"
+);
+
+localStorage.setItem(
+"subject",
+"Maths"
+);
+
 const studentName =
 localStorage.getItem(
 "studentName"
@@ -59,12 +74,6 @@ localStorage.getItem(
 const subject =
 localStorage.getItem(
 "subject"
-);
-
-console.log(
-studentName,
-className,
-subject
 );
 
 const res =
