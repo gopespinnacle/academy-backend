@@ -65,7 +65,7 @@ console.log(data);
                 return;
             }
 
-            localStorage.setItem(
+localStorage.setItem(
 "token",
 data.token
 );
@@ -77,12 +77,22 @@ data.studentId
 
 localStorage.setItem(
 "studentName",
-data.name
+data.studentName
 );
 
 localStorage.setItem(
 "className",
-data.grade
+data.className
+);
+
+console.log(
+"Saved Name:",
+data.studentName
+);
+
+console.log(
+"Saved Class:",
+data.className
 );
 
 window.location.href =
