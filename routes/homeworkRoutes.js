@@ -53,15 +53,17 @@ credentials.private_key.length
 );
 
 const auth =
-new google.auth.GoogleAuth({
+new google.auth.JWT(
 
-credentials,
+credentials.client_email,
 
-scopes:[
-"https://www.googleapis.com/auth/drive"
-]
+null,
 
-});
+credentials.private_key,
+
+["https://www.googleapis.com/auth/drive"]
+
+);
 
 const drive =
 google.drive({
