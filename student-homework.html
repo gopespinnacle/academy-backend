@@ -1,46 +1,121 @@
-<h2>Upload Homework</h2>
+<h2 style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+">
+
+<span>Upload Homework</span>
+
+<button onclick="
+window.location.href='student-dashboard.html'
+"
+style="
+background:#1e3a5f;
+color:white;
+border:none;
+padding:10px 20px;
+border-radius:8px;
+cursor:pointer;
+">
+
+← Back
+
+</button>
+
+</h2>
+
+<table style="
+width:100%;
+border-collapse:collapse;
+background:white;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
+margin-bottom:30px;
+">
+
+<thead>
+
+<tr style="
+background:#1e3a5f;
+color:white;
+">
+
+<th style="padding:12px;">
+Teacher
+</th>
+
+<th>
+Class
+</th>
+
+<th>
+Subject
+</th>
+
+<th>
+Homework Given
+</th>
+
+<th>
+Date
+</th>
+
+</tr>
+
+</thead>
+
+<tbody id="homeworkBody">
+
+</tbody>
+
+</table>
 
 <div style="
 background:white;
 padding:20px;
-margin-bottom:20px;
 border-radius:10px;
 box-shadow:0 2px 8px rgba(0,0,0,0.1);
 ">
 
-<h3>Homework Details</h3>
+<label>
+Subject
+</label>
 
-<p>
-<b>Teacher :</b>
-<span id="teacherName">-</span>
-</p>
+<br><br>
 
-<p>
-<b>Class :</b>
-<span id="className">-</span>
-</p>
+<input
+id="subject"
 
-<p>
-<b>Subject :</b>
-<span id="homeworkSubject">-</span>
-</p>
+style="
+width:300px;
+padding:10px;
+margin-bottom:20px;
+">
 
-<p>
-<b>Homework Given :</b>
-<span id="homeworkText">-</span>
-</p>
-
-</div>
-
-<input id="subject">
+<br>
 
 <input
 type="file"
 id="file">
 
-<button onclick="uploadHomework()">
-Upload
+<button
+
+onclick="uploadHomework()"
+
+style="
+margin-left:20px;
+background:#1e3a5f;
+color:white;
+border:none;
+padding:10px 20px;
+border-radius:6px;
+cursor:pointer;
+">
+
+Upload Homework
+
 </button>
+
+</div>
 
 <script>
 
@@ -56,77 +131,79 @@ localStorage.getItem(
 "className"
 );
 
-const subject =
-localStorage.getItem(
-"subject"
-);
-
 const res =
 await fetch(
 
-`https://academy-backend-eatl.onrender.com/api/teacher-homeworks?studentName=${encodeURIComponent(studentName)}&className=${encodeURIComponent(className)}&subject=${encodeURIComponent(subject)}`
+`https://academy-backend-eatl.onrender.com/api/teacher-homeworks?studentName=${encodeURIComponent(studentName)}&className=${encodeURIComponent(className)}`
 
 );
 
-const filtered =
+const data =
 await res.json();
 
 console.log(
 "Filtered:",
-filtered
+data
 );
 
-if(filtered.length === 0){
+let html = "";
 
-document.getElementById(
-"teacherName"
-).innerText =
-"No Homework Found";
+data.forEach(x=>{
 
-return;
+html += `
+
+<tr>
+
+<td style="padding:12px;">
+${x.teacherName || "-"}
+</td>
+
+<td>
+${x.className || "-"}
+</td>
+
+<td>
+${x.subject || "-"}
+</td>
+
+<td>
+${x.homework || "-"}
+</td>
+
+<td>
+${x.date || "-"}
+</td>
+
+</tr>
+
+`;
+
+});
+
+document
+.getElementById(
+"homeworkBody"
+)
+.innerHTML =
+html;
+
+if(data.length > 0){
+
+document
+.getElementById(
+"subject"
+)
+.value =
+
+data[
+data.length - 1
+].subject;
 
 }
-
-const hw =
-filtered[
-filtered.length - 1
-];
-
-document.getElementById(
-"teacherName"
-).innerText =
-hw.teacherName || "-";
-
-document.getElementById(
-"className"
-).innerText =
-hw.className || "-";
-
-document.getElementById(
-"homeworkSubject"
-).innerText =
-hw.subject || "-";
-
-document.getElementById(
-"homeworkText"
-).innerText =
-hw.homework || "-";
-
-document.getElementById(
-"subject"
-).value =
-hw.subject || "";
 
 }
 
 async function uploadHomework(){
-
-console.log(
-"studentName:",
-localStorage.getItem(
-"studentName"
-)
-);
 
 const fd =
 new FormData();
@@ -181,7 +258,7 @@ body:fd
 await res.json();
 
 alert(
-"Uploaded"
+"Uploaded Successfully"
 );
 
 }
