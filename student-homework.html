@@ -51,6 +51,11 @@ localStorage.getItem(
 "studentName"
 );
 
+console.log(
+"Student:",
+studentName
+);
+
 const res =
 await fetch(
 
@@ -61,44 +66,56 @@ await fetch(
 const data =
 await res.json();
 
-const hw =
-data.find(x =>
+const filtered =
+data.filter(x =>
 
-x.studentName ===
-studentName
+x.studentName?.trim() ===
+studentName?.trim()
 
 );
 
-if(!hw) return;
+console.log(
+"Filtered:",
+filtered
+);
+
+if(filtered.length === 0){
 
 document.getElementById(
 "teacherName"
 ).innerText =
+"No Homework Found";
 
+return;
+
+}
+
+const hw =
+filtered[0];
+
+document.getElementById(
+"teacherName"
+).innerText =
 hw.teacherName || "-";
 
 document.getElementById(
 "className"
 ).innerText =
-
 hw.className || "-";
 
 document.getElementById(
 "homeworkSubject"
 ).innerText =
-
 hw.subject || "-";
 
 document.getElementById(
 "homeworkText"
 ).innerText =
-
 hw.homework || "-";
 
 document.getElementById(
 "subject"
 ).value =
-
 hw.subject || "";
 
 }
