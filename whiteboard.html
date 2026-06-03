@@ -1015,6 +1015,8 @@ function leaveClass(){
 
     const startTime = params.get("startTime");
     const day = params.get("day");
+    const subject =
+params.get("subject");
 
     const teacher =
         localStorage.getItem("teacherName") || "";
@@ -1029,6 +1031,7 @@ new Date().toISOString()
 ?showSummary=true
 &room=${encodeURIComponent(room)}
 &className=${encodeURIComponent(className)}
+&subject=${encodeURIComponent(subject)}
 &student=${encodeURIComponent(student)}
 &startTime=${encodeURIComponent(startTime)}
 &day=${encodeURIComponent(day)}
