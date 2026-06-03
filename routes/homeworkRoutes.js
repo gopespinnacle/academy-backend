@@ -193,12 +193,19 @@ uploads.forEach(x=>{
 const match =
 summaries.find(s =>
 
-s.studentName === x.studentName &&
+s.studentName?.trim() ===
+x.studentName?.trim()
 
-s.className === x.className &&
+);
 
-s.subject === x.subject
+console.log(
+"UPLOAD:",
+x.studentName
+);
 
+console.log(
+"MATCH:",
+match
 );
 
 finalData.push({
