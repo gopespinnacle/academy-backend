@@ -12,63 +12,32 @@ require("../models/HomeworkUpload");
 const stream = require("stream");
 const { google } = require("googleapis");
 
-console.log(
-"GOOGLE ENV EXISTS:",
-!!process.env.GOOGLE_CREDENTIALS
+const oauth2Client =
+new google.auth.OAuth2(
+
+process.env.GOOGLE_CLIENT_ID,
+
+process.env.GOOGLE_CLIENT_SECRET,
+
+process.env.GOOGLE_REDIRECT_URI
+
 );
 
-const credentials =
-JSON.parse(
-process.env.GOOGLE_CREDENTIALS.trim()
-);
+oauth2Client.setCredentials({
 
-console.log(
-"EMAIL:",
-credentials.client_email
-);
+refresh_token:
+process.env.GOOGLE_REFRESH_TOKEN
 
-console.log(
-"PROJECT:",
-credentials.project_id
-);
-
-console.log(
-"PRIVATE KEY START:",
-credentials.private_key.substring(0,50)
-);
-
-credentials.private_key =
-credentials.private_key
-.replace(/\\\\n/g,"\n")
-.replace(/\\n/g,"\n");
-
-console.log(
-"PRIVATE KEY START:",
-credentials.private_key.substring(0,50)
-);
-
-console.log(
-"PRIVATE KEY LENGTH:",
-credentials.private_key.length
-);
-
-const auth = new google.auth.JWT({
-  email: credentials.client_email,
-  key: credentials.private_key,
-  scopes: [
-    "https://www.googleapis.com/auth/drive"
-  ]
 });
 
-const drive = google.drive({
-  version: "v3",
-  auth: auth
-});
+const drive =
+google.drive({
 
-console.log(
-"JWT EMAIL:",
-credentials.client_email
-);
+version:"v3",
+
+auth:oauth2Client
+
+});
 
 router.post(
 "/upload-homework",
@@ -121,11 +90,7 @@ fileMetadata.parents
 console.log(
 "Uploading to Google Drive..."
 );
-await auth.authorize();
 
-console.log(
-"JWT AUTH SUCCESS"
-);
 const response =
 await drive.files.create({
 
@@ -135,7 +100,7 @@ await drive.files.create({
 
  fields:"id",
 
- supportsAllDrives:false
+ supportsAllDrives:true
 
 });
 
