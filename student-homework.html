@@ -122,8 +122,13 @@ Upload Homework
 async function loadHomeworkDetails(){
 
 const studentName =
-localStorage.getItem(
-"studentName"
+prompt(
+"Enter Student Name"
+);
+
+console.log(
+"studentName:",
+studentName
 );
 
 console.log(
