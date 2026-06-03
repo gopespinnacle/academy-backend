@@ -122,8 +122,8 @@ Upload Homework
 async function loadHomeworkDetails(){
 
 const studentName =
-prompt(
-"Enter Student Name"
+localStorage.getItem(
+"studentName"
 );
 
 console.log(
@@ -139,12 +139,26 @@ studentName
 const res =
 await fetch(
 
-`https://academy-backend-eatl.onrender.com/api/teacher-homeworks?studentName=${encodeURIComponent(studentName)}`
+"https://academy-backend-eatl.onrender.com/api/teacher-homeworks"
 
 );
 
-const data =
+const allData =
 await res.json();
+
+const data =
+allData.filter(x =>
+
+x.studentName
+?.toLowerCase()
+.includes(
+
+studentName
+.toLowerCase()
+
+)
+
+);
 
 console.log(
 "Filtered:",
