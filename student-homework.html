@@ -51,28 +51,31 @@ localStorage.getItem(
 "studentName"
 );
 
+const className =
+localStorage.getItem(
+"className"
+);
+
+const subject =
+localStorage.getItem(
+"subject"
+);
+
 console.log(
-"Student:",
-studentName
+studentName,
+className,
+subject
 );
 
 const res =
 await fetch(
 
-"https://academy-backend-eatl.onrender.com/api/teacher-homeworks"
+`https://academy-backend-eatl.onrender.com/api/teacher-homeworks?studentName=${encodeURIComponent(studentName)}&className=${encodeURIComponent(className)}&subject=${encodeURIComponent(subject)}`
 
 );
-
-const data =
-await res.json();
 
 const filtered =
-data.filter(x =>
-
-x.studentName?.trim() ===
-studentName?.trim()
-
-);
+await res.json();
 
 console.log(
 "Filtered:",

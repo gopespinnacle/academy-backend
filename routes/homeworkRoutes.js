@@ -183,12 +183,49 @@ async(req,res)=>{
 const teacherName =
 req.query.teacherName;
 
+const studentName =
+req.query.studentName;
+
+const className =
+req.query.className;
+
+const subject =
+req.query.subject;
+
+let filter = {};
+
+if(teacherName){
+
+filter.teacherName =
+teacherName;
+
+}
+
+if(studentName){
+
+filter.studentName =
+studentName;
+
+}
+
+if(className){
+
+filter.className =
+className;
+
+}
+
+if(subject){
+
+filter.subject =
+subject;
+
+}
+
 const summaries =
-await ClassSummary.find({
-
-teacherName: teacherName
-
-});
+await ClassSummary.find(
+filter
+);
 
 const uploads =
 await HomeworkUpload.find();
