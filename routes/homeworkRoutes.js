@@ -207,6 +207,9 @@ s.studentName?.trim()
 
 finalData.push({
 
+teacherName:
+s.teacherName,
+
 studentName:
 s.studentName,
 
@@ -229,7 +232,6 @@ upload.driveLink
 null
 
 });
-
 });
 
 res.json(finalData);

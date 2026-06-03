@@ -1,5 +1,37 @@
 <h2>Upload Homework</h2>
 
+<div style="
+background:white;
+padding:20px;
+margin-bottom:20px;
+border-radius:10px;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
+">
+
+<h3>Homework Details</h3>
+
+<p>
+<b>Teacher :</b>
+<span id="teacherName">-</span>
+</p>
+
+<p>
+<b>Class :</b>
+<span id="className">-</span>
+</p>
+
+<p>
+<b>Subject :</b>
+<span id="homeworkSubject">-</span>
+</p>
+
+<p>
+<b>Homework Given :</b>
+<span id="homeworkText">-</span>
+</p>
+
+</div>
+
 <input id="subject">
 
 <input
@@ -12,21 +44,72 @@ Upload
 
 <script>
 
+async function loadHomeworkDetails(){
+
+const studentName =
+localStorage.getItem(
+"studentName"
+);
+
+const res =
+await fetch(
+
+"https://academy-backend-eatl.onrender.com/api/teacher-homeworks"
+
+);
+
+const data =
+await res.json();
+
+const hw =
+data.find(x =>
+
+x.studentName ===
+studentName
+
+);
+
+if(!hw) return;
+
+document.getElementById(
+"teacherName"
+).innerText =
+
+hw.teacherName || "-";
+
+document.getElementById(
+"className"
+).innerText =
+
+hw.className || "-";
+
+document.getElementById(
+"homeworkSubject"
+).innerText =
+
+hw.subject || "-";
+
+document.getElementById(
+"homeworkText"
+).innerText =
+
+hw.homework || "-";
+
+document.getElementById(
+"subject"
+).value =
+
+hw.subject || "";
+
+}
+
 async function uploadHomework(){
 
 console.log(
 "studentName:",
-localStorage.getItem("studentName")
-);
-
-console.log(
-"studentId:",
-localStorage.getItem("studentId")
-);
-
-console.log(
-"className:",
-localStorage.getItem("className")
+localStorage.getItem(
+"studentName"
+)
 );
 
 const fd =
@@ -34,22 +117,30 @@ new FormData();
 
 fd.append(
 "file",
-document.getElementById("file").files[0]
+document.getElementById(
+"file"
+).files[0]
 );
 
 fd.append(
 "studentName",
-prompt("Enter Student Name")
+prompt(
+"Enter Student Name"
+)
 );
 
 fd.append(
 "studentId",
-prompt("Enter Student ID")
+prompt(
+"Enter Student ID"
+)
 );
 
 fd.append(
 "className",
-prompt("Enter Class Name")
+prompt(
+"Enter Class Name"
+)
 );
 
 fd.append(
@@ -66,13 +157,11 @@ await fetch(
 
 {
 method:"POST",
-
 body:fd
 }
 
 );
 
-const data =
 await res.json();
 
 alert(
@@ -80,5 +169,7 @@ alert(
 );
 
 }
+
+loadHomeworkDetails();
 
 </script>
