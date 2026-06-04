@@ -126,19 +126,29 @@ const link =
 const hw =
 new HomeworkUpload({
 
-studentName:req.body.studentName,
+homeworkId:
+req.body.homeworkId,
 
-studentId:req.body.studentId,
+studentName:
+req.body.studentName,
 
-className:req.body.className,
+studentId:
+req.body.studentId,
 
-subject:req.body.subject,
+className:
+req.body.className,
 
-fileName:req.file.originalname,
+subject:
+req.body.subject,
 
-driveFileId:fileId,
+fileName:
+req.file.originalname,
 
-driveLink:link
+driveFileId:
+fileId,
+
+driveLink:
+link
 
 });
 
@@ -237,8 +247,15 @@ summaries.forEach(s=>{
 const upload =
 uploads.find(x =>
 
-x.studentName?.trim() ===
-s.studentName?.trim()
+String(
+x.homeworkId
+)
+
+===
+
+String(
+s._id
+)
 
 );
 
