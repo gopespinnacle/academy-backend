@@ -126,9 +126,6 @@ const link =
 const hw =
 new HomeworkUpload({
 
-homeworkId:
-req.body.homeworkId,
-
 summaryId:
 req.body.homeworkId,
 
@@ -263,6 +260,9 @@ s._id
 );
 
 finalData.push({
+
+summaryId:
+s._id,
 
 teacherName:
 s.teacherName,
