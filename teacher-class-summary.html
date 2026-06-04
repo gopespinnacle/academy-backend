@@ -120,9 +120,36 @@ document.getElementById(
 ).value =
 studentName;
 
+const res =
+await fetch(
+"https://academy-backend-eatl.onrender.com/api/auth/students"
+);
+
+const students =
+await res.json();
+
+const foundStudent =
+students.find(x =>
+
+x.name
+?.trim()
+.toLowerCase()
+
+===
+
+studentName
+.trim()
+.toLowerCase()
+
+);
+
 document.getElementById(
 "summaryClass"
 ).value =
+
+foundStudent?.grade
+
+||
 
 params.get(
 "className"
@@ -131,18 +158,6 @@ params.get(
 ||
 
 "-";
-
-if(
-studentName ===
-"Titiksha Sree S"
-){
-
-document.getElementById(
-"summaryClass"
-).value =
-"5";
-
-}
 
 document.getElementById("summaryDate").value =
 new Date().toLocaleDateString();
