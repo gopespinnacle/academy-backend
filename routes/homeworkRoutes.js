@@ -129,6 +129,9 @@ new HomeworkUpload({
 homeworkId:
 req.body.homeworkId,
 
+summaryId:
+req.body.homeworkId,
+
 studentName:
 req.body.studentName,
 
@@ -248,7 +251,7 @@ const upload =
 uploads.find(x =>
 
 String(
-x.homeworkId
+x.summaryId
 )
 
 ===
