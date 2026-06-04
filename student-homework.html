@@ -145,7 +145,7 @@ data
 
 let html = "";
 
-data.forEach(x=>{
+data.forEach((x,index)=>{
 
 html += `
 
@@ -175,7 +175,7 @@ ${x.date || "-"}
 
 <input
 type="file"
-id="file${x.homeworkId || x._id}"
+id="file${index}"
 >
 
 </td>
@@ -183,7 +183,7 @@ id="file${x.homeworkId || x._id}"
 <td>
 
 <button
-onclick="uploadHomework('${x.homeworkId || x._id}')"
+onclick="uploadHomework('${index}')"
 style="
 background:#1e3a5f;
 color:white;
