@@ -76,19 +76,38 @@ if (data.role !== "teacher") {
 }
 
 // ✅ SAVE DATA (BASED ON YOUR BACKEND)
-localStorage.setItem("token", data.token);
-localStorage.setItem("role", data.role);
+localStorage.setItem(
+"token",
+data.token
+);
 
-// 🔥 IMPORTANT CHANGE
-localStorage.setItem("teacherId", data.studentId);
-localStorage.setItem("teacherName", data.user.name);
-localStorage.setItem("meetingLink", data.user.meetingLink);
+localStorage.setItem(
+"role",
+data.role
+);
 
-// ✅ REDIRECT
-window.location.href = "teacher-dashboard.html";
+localStorage.setItem(
+"teacherId",
+data.user._id
+);
 
-// ✅ REDIRECT
-window.location.href = "teacher-dashboard.html";
+localStorage.setItem(
+"teacherName",
+data.user.name
+);
+
+localStorage.setItem(
+"meetingLink",
+data.user.meetingLink
+);
+
+console.log(
+"Teacher Saved:",
+data.user.name
+);
+
+window.location.href =
+"teacher-dashboard.html";
 
     } catch (error) {
     console.error(error);
