@@ -113,45 +113,16 @@ document.getElementById("summarySection")
 .style.display = "block";
 
 const studentName =
-params.get("student");
+params.get("student") || "-";
 
-const res =
-await fetch(
-"https://academy-backend-eatl.onrender.com/api/students"
-);
-
-const students =
-await res.json();
-
-const foundStudent =
-students.find(x =>
-
-String(
-x.name || ""
-)
-.trim()
-.toLowerCase()
-
-===
-
-String(studentName || "")
-.trim()
-.toLowerCase()
-
-);
-
-console.log(
-"Found Student:",
-foundStudent
-);
+document.getElementById(
+"summaryStudent"
+).value =
+studentName;
 
 document.getElementById(
 "summaryClass"
 ).value =
-
-foundStudent?.grade
-
-||
 
 params.get(
 "className"
@@ -160,6 +131,18 @@ params.get(
 ||
 
 "-";
+
+if(
+studentName ===
+"Titiksha Sree S"
+){
+
+document.getElementById(
+"summaryClass"
+).value =
+"5";
+
+}
 
 document.getElementById("summaryDate").value =
 new Date().toLocaleDateString();
@@ -170,8 +153,7 @@ document.getElementById(
 "summarySubject"
 ).value =
 params.get("subject") || "-";
-document.getElementById("summaryStudent").value =
-params.get("student") || "-";
+
 
 const room = params.get("room");
 
