@@ -131,10 +131,18 @@ console.log(
 studentName
 );
 
-console.log(
-"studentName:",
-studentName
+if(!studentName){
+
+alert(
+"Student name not found. Login again."
 );
+
+window.location.href =
+"student-login.html";
+
+return;
+
+}
 
 const res =
 await fetch(
@@ -149,14 +157,16 @@ await res.json();
 const data =
 allData.filter(x =>
 
+x.studentName &&
 x.studentName
-?.toLowerCase()
-.includes(
+.toLowerCase()
+.trim()
+
+===
 
 studentName
 .toLowerCase()
-
-)
+.trim()
 
 );
 
@@ -199,24 +209,19 @@ ${x.date || "-"}
 
 });
 
-document
-.getElementById(
+document.getElementById(
 "homeworkBody"
-)
-.innerHTML =
-html;
+).innerHTML = html;
 
 if(data.length > 0){
 
-document
-.getElementById(
+document.getElementById(
 "subject"
-)
-.value =
+).value =
 
 data[
 data.length - 1
-].subject;
+].subject || "";
 
 }
 
