@@ -100,13 +100,33 @@ const params = new URLSearchParams(window.location.search);
 const showSummary =
 params.get("showSummary");
 
+console.log(
+"Local Grade:",
+localStorage.getItem(
+"className"
+)
+);
+
 if(showSummary !== "true") return;
 
 document.getElementById("summarySection")
 .style.display = "block";
 
 document.getElementById("summaryClass").value =
-params.get("className") || "-";
+
+localStorage.getItem(
+"className"
+)
+
+||
+
+params.get(
+"className"
+)
+
+||
+
+"-";
 
 document.getElementById("summaryDate").value =
 new Date().toLocaleDateString();
