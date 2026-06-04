@@ -154,10 +154,22 @@ await fetch(
 const allData =
 await res.json();
 
+const className =
+localStorage.getItem(
+"className"
+);
+
+console.log(
+"className:",
+className
+);
+
 const data =
 allData.filter(x =>
 
 x.studentName &&
+x.className &&
+
 x.studentName
 .toLowerCase()
 .trim()
@@ -165,6 +177,18 @@ x.studentName
 ===
 
 studentName
+.toLowerCase()
+.trim()
+
+&&
+
+x.className
+.toLowerCase()
+.trim()
+
+===
+
+className
 .toLowerCase()
 .trim()
 
