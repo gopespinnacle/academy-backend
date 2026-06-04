@@ -85,12 +85,26 @@ data.user._id
 
 localStorage.setItem(
 "studentName",
-data.user.name
+data.user.studentName
+);
+
+localStorage.setItem(
+"className",
+data.user.className
 );
 
 console.log(
 "Saved Name:",
-data.user.name
+data.user.studentName
+);
+
+console.log(
+"Saved Class:",
+data.user.className
+);
+
+console.log(
+localStorage
 );
 
 window.location.href =
