@@ -112,11 +112,44 @@ if(showSummary !== "true") return;
 document.getElementById("summarySection")
 .style.display = "block";
 
-document.getElementById("summaryClass").value =
+const studentName =
+params.get("student");
 
-localStorage.getItem(
-"className"
+const res =
+await fetch(
+"https://academy-backend-eatl.onrender.com/api/students"
+);
+
+const students =
+await res.json();
+
+const foundStudent =
+students.find(x =>
+
+String(
+x.name || ""
 )
+.trim()
+.toLowerCase()
+
+===
+
+String(studentName || "")
+.trim()
+.toLowerCase()
+
+);
+
+console.log(
+"Found Student:",
+foundStudent
+);
+
+document.getElementById(
+"summaryClass"
+).value =
+
+foundStudent?.grade
 
 ||
 
