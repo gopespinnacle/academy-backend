@@ -175,7 +175,7 @@ ${x.date || "-"}
 
 <input
 type="file"
-id="file${x._id}"
+id="file${x.homeworkId || x._id}"
 >
 
 </td>
@@ -183,7 +183,7 @@ id="file${x._id}"
 <td>
 
 <button
-onclick="uploadHomework('${x._id}')"
+onclick="uploadHomework('${x.homeworkId || x._id}')"
 style="
 background:#1e3a5f;
 color:white;
