@@ -74,55 +74,6 @@ Upload
 </tbody>
 
 </table>
-
-<div style="
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
-">
-
-<label>
-Subject
-</label>
-
-<br><br>
-
-<input
-id="subject"
-
-style="
-width:300px;
-padding:10px;
-margin-bottom:20px;
-">
-
-<br>
-
-<input
-type="file"
-id="file">
-
-<button
-
-onclick="uploadHomework()"
-
-style="
-margin-left:20px;
-background:#1e3a5f;
-color:white;
-border:none;
-padding:10px 20px;
-border-radius:6px;
-cursor:pointer;
-">
-
-Upload Homework
-
-</button>
-
-</div>
-
 <script>
 
 async function loadHomeworkDetails(){
@@ -274,14 +225,30 @@ data.length - 1
 
 async function uploadHomework(homeworkId){
 
+const fileInput =
+document.getElementById(
+"file" + homeworkId
+);
+
+if(
+!fileInput ||
+!fileInput.files[0]
+){
+alert("Choose file first");
+return;
+}
+
 const fd =
 new FormData();
 
 fd.append(
 "file",
-document.getElementById(
-"file" + homeworkId
-).files[0]
+fileInput.files[0]
+);
+
+fd.append(
+"homeworkId",
+homeworkId
 );
 
 fd.append(
@@ -312,11 +279,6 @@ document.getElementById(
 ).value
 );
 
-fd.append(
-"homeworkId",
-homeworkId
-);
-
 const res =
 await fetch(
 
@@ -329,11 +291,25 @@ body:fd
 
 );
 
+const data =
 await res.json();
+
+console.log(data);
+
+if(data.success){
 
 alert(
 "Uploaded Successfully"
 );
+
+}else{
+
+alert(
+data.message ||
+"Upload Failed"
+);
+
+}
 
 }
 
