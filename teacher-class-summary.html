@@ -228,7 +228,9 @@ studentName:
 document.getElementById("summaryStudent").value,
 
 teacherName:
-params.get("teacher"),
+localStorage.getItem(
+"teacherName"
+),
 
 teacherInTime:
 localStorage.getItem(
