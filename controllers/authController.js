@@ -166,3 +166,26 @@ res.status(500).json({ error: "Server error" });
 }
 
 };
+
+exports.getStudents = async(req,res)=>{
+
+try{
+
+const students =
+await User.find({
+role:"student"
+});
+
+res.json(
+students
+);
+
+}catch(err){
+
+res.status(500).json({
+message:"Server Error"
+});
+
+}
+
+};
