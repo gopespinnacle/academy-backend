@@ -209,18 +209,6 @@ document.getElementById(
 "homeworkBody"
 ).innerHTML = html;
 
-if(data.length > 0){
-
-document.getElementById(
-"subject"
-).value =
-
-data[
-data.length - 1
-].subject || "";
-
-}
-
 }
 
 async function uploadHomework(homeworkId){
@@ -272,11 +260,19 @@ localStorage.getItem(
 )
 );
 
+const selectedHomework =
+document.querySelector(
+`button[onclick="uploadHomework('${homeworkId}')"]`
+)
+.closest("tr");
+
+const subject =
+selectedHomework.children[2]
+.innerText;
+
 fd.append(
 "subject",
-document.getElementById(
-"subject"
-).value
+subject
 );
 
 const res =
