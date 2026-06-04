@@ -80,27 +80,17 @@ data
 
 localStorage.setItem(
 "studentId",
-data.user.studentId
+data.user._id
 );
 
 localStorage.setItem(
 "studentName",
-data.user.studentName
-);
-
-localStorage.setItem(
-"className",
-data.user.className
+data.user.name
 );
 
 console.log(
 "Saved Name:",
-data.user.studentName
-);
-
-console.log(
-"Saved Class:",
-data.user.className
+data.user.name
 );
 
 window.location.href =
