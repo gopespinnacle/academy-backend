@@ -104,10 +104,12 @@ exports.loginUser = async (req, res) => {
 
     // 🔥 IMPORTANT FIX
     user: {
-        _id: user._id,
-        name: user.name,
-        meetingLink: user.meetingLink
-    }
+    _id: user._id,
+    studentId: user.studentId,
+    studentName: user.name,
+    className: user.grade,
+    meetingLink: user.meetingLink
+}
 });
 
     } catch (error) {
