@@ -563,8 +563,49 @@ if(showSummary !== "true") return;
 document.getElementById("summarySection")
 .style.display = "block";
 
-document.getElementById("summaryClass").value =
-params.get("className") || "-";
+const studentName =
+params.get(
+"student"
+);
+
+const res =
+await fetch(
+"https://academy-backend-eatl.onrender.com/api/students"
+);
+
+const students =
+await res.json();
+
+const foundStudent =
+students.find(x =>
+
+x.name
+?.trim()
+.toLowerCase()
+
+===
+
+studentName
+.trim()
+.toLowerCase()
+
+);
+
+document.getElementById(
+"summaryClass"
+).value =
+
+foundStudent?.grade
+
+||
+
+params.get(
+"className"
+)
+
+||
+
+"-";
 
 document.getElementById("summaryDate").value =
 new Date().toLocaleDateString();
