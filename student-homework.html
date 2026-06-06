@@ -149,7 +149,9 @@ data.forEach((x,index)=>{
 
 html += `
 
-<tr>
+<tr
+data-hw="${x.homeworkUniqueId || ''}"
+>
 
 <td style="padding:12px;">
 ${x.teacherName || "-"}
@@ -273,6 +275,21 @@ selectedHomework.children[2]
 fd.append(
 "subject",
 subject
+);
+
+const homeworkUniqueId =
+
+selectedHomework
+.getAttribute(
+"data-hw"
+);
+
+fd.append(
+
+"homeworkUniqueId",
+
+homeworkUniqueId
+
 );
 
 const res =
