@@ -126,9 +126,6 @@ const link =
 const hw =
 new HomeworkUpload({
 
-summaryId:
-req.body.homeworkId,
-
 studentName:
 req.body.studentName,
 
@@ -140,6 +137,9 @@ req.body.className,
 
 subject:
 req.body.subject,
+
+homeworkUniqueId:
+req.body.homeworkUniqueId,
 
 fileName:
 req.file.originalname,
@@ -154,9 +154,32 @@ link
 
 await hw.save();
 
+await ClassSummary.updateOne(
+
+{
+
+homeworkUniqueId:
+
+req.body.homeworkUniqueId
+
+},
+
+{
+
+homeworkStatus:
+
+"Submitted"
+
+}
+
+);
+
 res.json({
+
 success:true,
+
 link
+
 });
 
 }catch(err){
@@ -247,15 +270,11 @@ summaries.forEach(s=>{
 const upload =
 uploads.find(x =>
 
-String(
-x.summaryId
-)
+x.homeworkUniqueId
 
 ===
 
-String(
-s._id
-)
+s.homeworkUniqueId
 
 );
 
@@ -263,6 +282,12 @@ finalData.push({
 
 summaryId:
 s._id,
+
+homeworkUniqueId:
+s.homeworkUniqueId,
+
+homeworkStatus:
+s.homeworkStatus,
 
 teacherName:
 s.teacherName,
