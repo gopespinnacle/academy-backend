@@ -145,7 +145,14 @@ ${x.homework || "-"}
 <td>
 
 ${
-x.driveLink ?
+
+x.homeworkStatus === "Submitted"
+
+&&
+
+x.driveLink
+
+?
 
 `<a href="${x.driveLink}"
 target="_blank"
@@ -167,7 +174,9 @@ Download
 color:red;
 font-weight:bold;
 ">
+
 Not Submitted
+
 </span>`
 
 }
