@@ -9,6 +9,8 @@ className:String,
 
 subject:String,
 
+homeworkUniqueId:String,
+
 fileName:String,
 
 driveFileId:String,
