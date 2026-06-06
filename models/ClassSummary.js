@@ -14,6 +14,16 @@ const classSummarySchema = new mongoose.Schema({
 
     teacherName: String,
 
+    teacherId: String,
+
+    homeworkUniqueId: String,
+
+    homeworkStatus:{
+    type:String,
+    default:"Pending"
+    
+    },
+
     teacherInTime: String,
 
     teacherOutTime: String,
