@@ -538,16 +538,21 @@ app.post("/api/save-class-summary", async (req, res) => {
 
     try{
 
-        const {
-    room,
-    className,
-    periodTime,
-    subject,
-    studentName,
-    teacherName,
-    homework,
-    teacherInTime,
-    teacherOutTime
+    const {
+room,
+className,
+periodTime,
+subject,
+studentName,
+teacherName,
+homework,
+teacherInTime,
+teacherOutTime,
+
+studentId,
+teacherId,
+homeworkUniqueId
+
 } = req.body;
 
         const today = new Date();
@@ -579,27 +584,39 @@ new Date(inTime)
 
         const summary = await ClassSummary.create({
 
-            className,
+className,
 
-            date: today.toLocaleDateString(),
+studentId,
 
-            periodTime,
+teacherId,
 
-            subject,
+homeworkUniqueId,
 
-            studentName,
+homeworkStatus:
+"Pending",
 
-            teacherName,
+date:
+today.toLocaleDateString(),
 
-            teacherInTime: inTime,
+periodTime,
 
-            teacherOutTime: outTime,
+subject,
 
-            totalMinutes,
+studentName,
 
-            homework
+teacherName,
 
-        });
+teacherInTime:
+inTime,
+
+teacherOutTime:
+outTime,
+
+totalMinutes,
+
+homework
+
+});
 
         // CLEAR MEMORY
         delete teacherAttendanceMemory[room];
