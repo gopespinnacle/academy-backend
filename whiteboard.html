@@ -158,7 +158,7 @@ left:0;
 
     object-fit:cover;
 
-    display:block !important;
+    display:none;
     visibility:visible !important;
     opacity:1 !important;
 
@@ -798,8 +798,6 @@ role: role
 }
 );
 
-setTimeout(()=>{
-
 socket.emit(
 "ready",
 {
@@ -812,8 +810,6 @@ console.log(
 "SENT READY",
 role
 );
-
-},3000);
 
 if(role === "teacher"){
 
@@ -877,6 +873,18 @@ await setupPeer();
 /* NEW */
     await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
 
+    while(pendingCandidates.length){
+
+await pc.addIceCandidate(
+
+new RTCIceCandidate(
+pendingCandidates.shift()
+)
+
+);
+
+}
+
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
 
@@ -884,6 +892,25 @@ await setupPeer();
 });
 
 // RECEIVE ANSWER
+
+
+socket.on("userJoined", async()=>{
+
+if(
+role==="teacher" &&
+pc &&
+pc.signalingState==="stable" &&
+!offerCreated
+){
+
+offerCreated=true;
+
+await createOffer();
+
+}
+
+});
+
 socket.on("answer", async(data)=>{
 
 if(!pc) return;
@@ -904,42 +931,59 @@ data.answer
 
 );
 
-});
+while(pendingCandidates.length){
 
-socket.on(
-"ready",
-async(data)=>{
+await pc.addIceCandidate(
 
-console.log(
-"READY EVENT",
-data.role
+new RTCIceCandidate(
+pendingCandidates.shift()
+)
+
 );
-
-if(!pc){
-
-await setupPeer();
 
 }
 
+});
+
+socket.on("ready", async(data)=>{
+
+console.log("READY",data.role);
+
+if(!pc){
+   await setupPeer();
+}
+
 if(
-role === "teacher"
+role==="teacher" &&
+!offerCreated &&
+pc.signalingState==="stable"
 ){
 
-setTimeout(
-async()=>{
+offerCreated=true;
+
+await createOffer();
+
+}
+
+});
+
+socket.on("ice-candidate", async(data)=>{
+
+if(!pc) return;
 
 try{
 
-if(
-pc.signalingState ===
-"stable"
-){
+if(pc.remoteDescription){
 
-console.log(
-"FORCED OFFER"
+await pc.addIceCandidate(
+new RTCIceCandidate(data.candidate)
 );
 
-await createOffer();
+}else{
+
+pendingCandidates.push(
+data.candidate
+);
 
 }
 
@@ -949,21 +993,6 @@ console.log(err);
 
 }
 
-},2500);
-
-}
-
-});
-
-socket.on("ice-candidate", async (data) => {
-
-    if(!pc) return;
-
-    try{
-        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-    } catch(e){
-        console.error("ICE ERROR:", e);
-    }
 });
 
 // ✅ ✅ ADD EXACTLY HERE (NEW CODE)
@@ -1039,9 +1068,6 @@ new Date().toISOString()
 &outTime=${encodeURIComponent(outTime)}`;
 
 }
-
-
-
 
 socket.on("loadPDF", (data) => {
     localStorage.setItem("currentPDF", data.url);  // ✅ ADD THIS
@@ -1323,6 +1349,10 @@ async function initMedia(cameraId = null){
 
 }
 let pc;
+
+let offerCreated = false;
+
+const pendingCandidates = [];
 async function loadCameraList(){
 
     const devices =
@@ -1422,6 +1452,7 @@ event.streams[0].getTracks()
    
     // ADD NEW STREAM
     remoteVideo.srcObject = event.streams[0];
+    remoteVideo.style.display="block";
     console.log(
  "Remote tracks:",
  event.streams[0].getTracks()
