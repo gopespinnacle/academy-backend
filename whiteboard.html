@@ -322,9 +322,8 @@ background:black;
 
 display:block;
 
-touch-action:none;
+pointer-events:auto;
 
-overflow:hidden;
 }
 /* DESKTOP */
 #menuBtn{
@@ -366,6 +365,10 @@ position:fixed;
 top:60px;
 
 right:-280px;
+
+overscroll-behavior:contain;
+
+pointer-events:auto;
 
 width:260px;
 
@@ -1970,10 +1973,7 @@ menu.classList.contains(
 "show"
 );
 
-document.body.style.overflow =
-opened
-? "hidden"
-: "";
+document.body.style.overflowX = "hidden";
 }
 
 let emojiOpened = false;
