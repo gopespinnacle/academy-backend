@@ -189,7 +189,8 @@ res.json({
 
 success:true,
 
-link
+message:
+"Files uploaded successfully"
 
 });
 
@@ -318,11 +319,15 @@ s.homework,
 date:
 s.date,
 
-driveLink:
+files:
+
 upload ?
-upload.driveLink
+
+upload.files
+
 :
-null
+
+[]
 
 });
 });
