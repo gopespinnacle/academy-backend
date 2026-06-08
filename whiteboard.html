@@ -560,7 +560,9 @@ background:black;
 </style>
 </head>
 
-<body style="
+<body
+onload="forcePortrait()"
+style="
 margin:0;
 overflow-x:hidden;
 overscroll-behavior:none;
@@ -2066,7 +2068,27 @@ screenCanvas.height
 }
 </script>
 <script>
+async function forcePortrait(){
 
+try{
+
+if(screen.orientation){
+
+await screen.orientation.lock(
+"portrait"
+);
+
+}
+
+}catch(err){
+
+console.log(
+"orientation lock failed"
+);
+
+}
+
+}
 if(
 "serviceWorker"
 in navigator
