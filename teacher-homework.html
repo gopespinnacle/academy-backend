@@ -150,34 +150,78 @@ x.homeworkStatus === "Submitted"
 
 &&
 
-x.driveLink
+x.files
+
+&&
+
+x.files.length > 0
 
 ?
 
-`<a href="${x.driveLink}"
+`
+
+<div>
+
+<b>
+
+Files (${x.files.length})
+
+</b>
+
+<br><br>
+
+${
+
+x.files.map(
+
+(file,i)=>`
+
+<a
+
+href="${file.driveLink}"
+
 target="_blank"
+
 style="
+display:block;
+margin-bottom:5px;
 background:#1e3a5f;
 color:white;
-padding:6px 12px;
+padding:6px 10px;
 border-radius:6px;
 text-decoration:none;
+width:120px;
+text-align:center;
 ">
 
-Download
+Download ${i+1}
 
-</a>`
+</a>
+
+`
+
+).join("")
+
+}
+
+</div>
+
+`
 
 :
 
-`<span style="
+`
+
+<span style="
 color:red;
 font-weight:bold;
 ">
 
 Not Submitted
 
-</span>`
+</span>
+
+`
 
 }
 
