@@ -148,13 +148,13 @@ video {
 
 position:absolute;
 
-top:42px;
+top:60px;
 
 left:0;
 
 width:100vw;
 
-height:calc(100vh - 42px);
+height:calc(100vh - 60px);
 
 z-index:1;
 }
@@ -278,13 +278,13 @@ z-index:99999;
 
 position:fixed;
 
-top:42px;
+top:60px;
 
 left:0;
 
 width:100vw;
 
-height:calc(100vh - 42px);
+height:calc(100vh - 60px);
 
 overflow:hidden;
 
@@ -421,27 +421,23 @@ touch-action:pan-y;
 
     .toolbar{
 
-    position:fixed;
+        position:fixed;
+        top:0;
+        left:0;
 
-    top:0;
-    left:0;
+        width:100%;
+        height:60px;
 
-    width:100%;
+        background:#1e293b;
 
-    height:42px;
+        display:flex;
+        justify-content:flex-end;
+        align-items:center;
 
-    background:#1e293b;
+        padding:0 10px;
 
-    display:flex;
-
-    justify-content:flex-end;
-
-    align-items:center;
-
-    padding:0 8px;
-
-    z-index:99999;
-}
+        z-index:99999;
+    }
 
     /* HIDE NORMAL TOOLBAR */
     /*#mobileMenu{
@@ -501,13 +497,11 @@ touch-action:pan-y;
 
 #screenContainer{
 
-top:42px;
-
+top:60px;
 left:0;
 
 width:100vw;
-
-height:calc(100vh - 42px);
+height:calc(100vh - 60px);
 
 right:auto;
 }
