@@ -392,14 +392,19 @@ height:180px;
         height:calc(100vh - 60px) !important;
     }
 
-    #screenContainer{
+    @media(max-width:768px){
 
-        width:110px;
-        height:80px;
+#screenContainer{
 
-        top:70px;
-        right:5px;
-    }
+top:60px;
+left:0;
+
+width:100vw;
+height:calc(100vh - 60px);
+
+right:auto;
+}
+}
 
     #localVideoBox{
 
@@ -518,7 +523,8 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-object-fit:cover;
+object-fit:contain;
+background:black;
 z-index:1;
 pointer-events:none;
 display:none;
@@ -1629,6 +1635,17 @@ new MediaStream([screenTrack]);
 
 screenVideo.style.display =
 "block";
+
+const pip =
+document.getElementById(
+"screenContainer"
+);
+
+pip.style.top = "60px";
+pip.style.left = "0";
+pip.style.width = "100vw";
+pip.style.height =
+"calc(100vh - 60px)";
 screenCanvas.style.zIndex = "99999";
 screenCanvas.style.pointerEvents = "auto";
         // 🔥 THIS WAS MISSING (VERY IMPORTANT)
