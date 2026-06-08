@@ -175,17 +175,43 @@ ${x.date || "-"}
 
 <td>
 
+<div
+id="fileContainer${index}"
+>
+
 <input
 type="file"
-id="file${x.summaryId}"
+class="multiFile${index}"
 >
+
+</div>
+
+<button
+type="button"
+onclick="addMoreFile(${index})"
+style="
+margin-top:5px;
+background:#1e3a5f;
+color:white;
+border:none;
+padding:5px 10px;
+border-radius:6px;
+cursor:pointer;
+">
+
++ Add File
+
+</button>
 
 </td>
 
 <td>
 
 <button
-onclick="uploadHomework('${x.summaryId}')"
+onclick="uploadHomework(
+'${x.homeworkUniqueId}',
+${index}
+)"
 style="
 background:#1e3a5f;
 color:white;
@@ -213,60 +239,111 @@ document.getElementById(
 
 }
 
-async function uploadHomework(homeworkId){
+function addMoreFile(index){
 
-const fileInput =
+const container =
 document.getElementById(
-"file" + homeworkId
+"fileContainer" + index
 );
 
-if(
-!fileInput ||
-!fileInput.files[0]
-){
-alert("Choose file first");
-return;
+const input =
+document.createElement(
+"input"
+);
+
+input.type = "file";
+
+input.className =
+"multiFile" + index;
+
+input.style.marginTop =
+"5px";
+
+container.appendChild(
+document.createElement("br")
+);
+
+container.appendChild(
+input
+);
+
 }
+
+
+async function uploadHomework(
+homeworkUniqueId,
+index
+){
+
+const allInputs =
+document.querySelectorAll(
+".multiFile" + index
+);
 
 const fd =
 new FormData();
 
-fd.append(
-"file",
-fileInput.files[0]
-);
+let hasFile = false;
+
+allInputs.forEach(input=>{
+
+if(input.files[0]){
 
 fd.append(
-"homeworkId",
-homeworkId
+"files",
+input.files[0]
 );
 
+hasFile = true;
+
+}
+
+});
+
+if(!hasFile){
+
+alert(
+"Choose atleast one file"
+);
+
+return;
+
+}
+
 fd.append(
+
 "studentName",
+
 localStorage.getItem(
 "studentName"
 )
+
 );
 
 fd.append(
+
 "studentId",
+
 localStorage.getItem(
 "studentId"
 )
+
 );
 
 fd.append(
+
 "className",
+
 localStorage.getItem(
 "className"
 )
+
 );
 
 const selectedHomework =
-document.querySelector(
-`button[onclick="uploadHomework('${homeworkId}')"]`
-)
-.closest("tr");
+document.querySelectorAll(
+"#homeworkBody tr"
+)[index];
 
 const subject =
 selectedHomework.children[2]
@@ -275,13 +352,6 @@ selectedHomework.children[2]
 fd.append(
 "subject",
 subject
-);
-
-const homeworkUniqueId =
-
-selectedHomework
-.getAttribute(
-"data-hw"
 );
 
 fd.append(
@@ -298,16 +368,17 @@ await fetch(
 "https://academy-backend-eatl.onrender.com/api/upload-homework",
 
 {
+
 method:"POST",
+
 body:fd
+
 }
 
 );
 
 const data =
 await res.json();
-
-console.log(data);
 
 if(data.success){
 
