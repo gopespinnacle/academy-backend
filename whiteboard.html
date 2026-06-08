@@ -127,27 +127,16 @@ video {
     background: black;
 }
 #mainBoard {
-    position: absolute;
-    top: 80px;
-    left: 0;
-    width: 100%;
-    height: calc(100% - 80px);
-    z-index: 1;   /* BELOW video */
-}
-
-#screenContainer{
 
 position:absolute;
 
-top:0;
+top:60px;
+
 left:0;
 
-width:100%;
-height:100%;
+width:100vw;
 
-overflow:hidden;
-
-border:none;
+height:calc(100vh - 60px);
 
 z-index:1;
 }
@@ -197,7 +186,7 @@ left:0;
     width:100%;
     height:100%;
 
-    object-fit:cover;
+    object-fit:contain;
 
     display:none;
     visibility:visible !important;
@@ -209,22 +198,27 @@ left:0;
 }
 
 /* 🔥 SMALL TEACHER VIDEO INSIDE BOX */
-#localVideoBox {
-    position:absolute;
+#localVideoBox{
 
-    bottom:10px;
-    right:10px;
+position:fixed;
 
-    width:250px;
-height:180px;
+bottom:15px;
 
-    background:black;
+right:15px;
 
-    border:2px solid white;
+width:110px;
 
-    z-index:9999;
+height:150px;
 
-    overflow:hidden;
+background:black;
+
+border:2px solid white;
+
+border-radius:12px;
+
+overflow:hidden;
+
+z-index:99999;
 }
 
 #localVideo{
@@ -262,9 +256,23 @@ height:180px;
 }
 /* 🔥 TEACHER SMALL VIDEO */
 
-#screenContainer {
-    position: fixed;
-    overflow: hidden;
+#screenContainer{
+
+position:fixed;
+
+top:60px;
+
+left:0;
+
+width:100vw;
+
+height:calc(100vh - 60px);
+
+overflow:hidden;
+
+z-index:10;
+
+background:black;
 }
 /* MINIMIZE */
 .minimized {
@@ -447,10 +455,11 @@ right:auto;
 }
 }
 
-    #localVideoBox{
+#localVideoBox{
 
-width:95px;
-height:130px;
+width:90px;
+height:120px;
+
 
 border-radius:12px;
 
@@ -527,10 +536,6 @@ onclick="startScreenShare()">
     <div id="emojiPicker"></div>
 
 </div>
-<div id="meetingContainer">
-
-<div id="mainStage">
-
 <!-- 🔥 SCREEN SHARE CONTAINER -->
 <div id="screenContainer">
 <div id="annotationToolbar" style="
@@ -568,15 +573,16 @@ muted
 playsinline
 style="
 position:absolute;
-top:0;
+top:30px;
 left:0;
 width:100%;
-height:100%;
+height:calc(100% - 30px);
 object-fit:contain;
 background:black;
 z-index:1;
 pointer-events:none;
 display:none;
+"
 ">
 </video>
 
@@ -605,17 +611,7 @@ webkit-playsinline>
      <!--<canvas id="arOverlay"></canvas>-->
 
 </div>
-
 </div>
-
-</div>
-
-<div id="participantStrip">
-
-    </div>
-
-</div>
-
 <!-- LOCAL SMALL PREVIEW -->
     
 <div id="pdfTab" style="
