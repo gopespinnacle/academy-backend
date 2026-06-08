@@ -19,18 +19,28 @@ const classSummarySchema = new mongoose.Schema({
     homeworkUniqueId: String,
 
     homeworkStatus:{
-    type:String,
-    default:"Pending"
-    
-    },
+type:String,
+default:"Pending"
 
-    teacherInTime: String,
+},
 
-    teacherOutTime: String,
+questionDocs:[{
 
-    totalMinutes: Number,
+fileName:String,
 
-    homework: String
+driveFileId:String,
+
+driveLink:String
+
+}],
+
+teacherInTime: String,
+
+teacherOutTime: String,
+
+totalMinutes: Number,
+
+homework: String
 
 }, {
     timestamps: true

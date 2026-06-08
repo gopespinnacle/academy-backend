@@ -335,5 +335,155 @@ upload.files
 res.json(finalData);
 
 });
+
+router.post(
+
+"/upload-question-docs",
+
+upload.array("files"),
+
+async(req,res)=>{
+
+try{
+
+if(
+
+!req.files ||
+
+req.files.length===0
+
+){
+
+return res.json({
+
+success:false,
+
+message:"No files"
+
+});
+
+}
+
+let uploadedDocs = [];
+
+for(const file of req.files){
+
+const bufferStream =
+new stream.PassThrough();
+
+bufferStream.end(
+file.buffer
+);
+
+const response =
+
+await drive.files.create({
+
+requestBody:{
+
+name:file.originalname,
+
+parents:[
+process.env.GOOGLE_FOLDER_ID
+]
+
+},
+
+media:{
+
+mimeType:file.mimetype,
+
+body:bufferStream
+
+},
+
+fields:"id",
+
+supportsAllDrives:true
+
+});
+
+const fileId =
+response.data.id;
+
+await drive.permissions.create({
+
+fileId,
+
+requestBody:{
+
+role:"reader",
+
+type:"anyone"
+
+}
+
+});
+
+uploadedDocs.push({
+
+fileName:
+file.originalname,
+
+driveFileId:
+fileId,
+
+driveLink:
+`https://drive.google.com/file/d/${fileId}/view`
+
+});
+
+}
+
+await ClassSummary.updateOne(
+
+{
+
+homeworkUniqueId:
+
+req.body.homeworkUniqueId
+
+},
+
+{
+
+$push:{
+
+questionDocs:{
+
+$each:
+
+uploadedDocs
+
+}
+
+}
+
+}
+
+);
+
+res.json({
+
+success:true
+
+});
+
+}catch(err){
+
+console.log(err);
+
+res.json({
+
+success:false,
+
+message:err.message
+
+});
+
+}
+
+});
+
 module.exports =
 router;
