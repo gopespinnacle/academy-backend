@@ -168,6 +168,53 @@ ${x.homework || "-"}
 
 <td>
 
+<div id="questionFiles${x.summaryId}">
+
+<input
+type="file"
+name="questionFile${x.summaryId}"
+>
+
+</div>
+
+<button
+onclick="addQuestionFile('${x.summaryId}')"
+style="
+margin-top:5px;
+background:#1e3a5f;
+color:white;
+border:none;
+padding:4px 8px;
+border-radius:5px;
+cursor:pointer;
+">
+
++ Add File
+
+</button>
+
+<br><br>
+
+<button
+onclick="uploadQuestionDocs(
+'${x.homeworkUniqueId}',
+'${x.summaryId}'
+)"
+style="
+background:green;
+color:white;
+border:none;
+padding:6px 12px;
+border-radius:5px;
+cursor:pointer;
+">
+
+Upload
+
+</button>
+
+<br><br>
+
 ${
 
 x.questionDocs &&
@@ -346,5 +393,110 @@ document
 }
 
 load();
+
+function addQuestionFile(summaryId){
+
+const container =
+
+document.getElementById(
+"questionFiles" + summaryId
+);
+
+const input =
+document.createElement(
+"input"
+);
+
+input.type = "file";
+
+input.name =
+"questionFile" + summaryId;
+
+input.style.display =
+"block";
+
+input.style.marginTop =
+"5px";
+
+container.appendChild(
+input
+);
+
+}
+
+async function uploadQuestionDocs(
+homeworkUniqueId,
+summaryId
+){
+
+const inputs =
+
+document.querySelectorAll(
+
+`#questionFiles${summaryId} input`
+
+);
+
+const fd =
+new FormData();
+
+inputs.forEach(input=>{
+
+if(
+input.files[0]
+){
+
+fd.append(
+"files",
+input.files[0]
+);
+
+}
+
+});
+
+fd.append(
+
+"homeworkUniqueId",
+
+homeworkUniqueId
+
+);
+
+const res =
+await fetch(
+
+"https://academy-backend-eatl.onrender.com/api/upload-question-docs",
+
+{
+
+method:"POST",
+
+body:fd
+
+}
+
+);
+
+const data =
+await res.json();
+
+if(data.success){
+
+alert(
+"Question Docs Uploaded"
+);
+
+load();
+
+}else{
+
+alert(
+data.message
+);
+
+}
+
+}
 
 </script>
