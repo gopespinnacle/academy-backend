@@ -43,31 +43,45 @@ auth:oauth2Client
 
 router.post(
 "/upload-homework",
-upload.single("file"),
+upload.array("files"),
 
 async(req,res)=>{
 
 try{
-if(!req.file){
+if(
+!req.files ||
+req.files.length === 0
+){
 
 return res.status(400).json({
+
 success:false,
-message:"No file uploaded"
+
+message:"No files uploaded"
+
 });
 
 }
-  console.log("FILE RECEIVED:", req.file.originalname);
+let uploadedFiles = [];
+
+for(const file of req.files){
+
+console.log(
+"FILE RECEIVED:",
+file.originalname
+);
+
 const bufferStream =
 new stream.PassThrough();
 
 bufferStream.end(
-req.file.buffer
+file.buffer
 );
 
 const media = {
 
 mimeType:
-req.file.mimetype,
+file.mimetype,
 
 body:
 bufferStream
@@ -75,34 +89,25 @@ bufferStream
 };
 
 const fileMetadata = {
- name:req.file.originalname,
- parents:[
-   process.env.GOOGLE_FOLDER_ID
- ]
-};
 
-console.log(
-"FOLDER ID:",
+name:file.originalname,
+
+parents:[
 process.env.GOOGLE_FOLDER_ID
-);
-console.log(
-"UPLOAD PARENTS:",
-fileMetadata.parents
-);
-console.log(
-"Uploading to Google Drive..."
-);
+]
+
+};
 
 const response =
 await drive.files.create({
 
- requestBody:fileMetadata,
+requestBody:fileMetadata,
 
- media,
+media,
 
- fields:"id",
+fields:"id",
 
- supportsAllDrives:true
+supportsAllDrives:true
 
 });
 
@@ -123,6 +128,18 @@ type:"anyone"
 const link =
 `https://drive.google.com/file/d/${fileId}/view`;
 
+uploadedFiles.push({
+
+fileName:file.originalname,
+
+driveFileId:fileId,
+
+driveLink:link
+
+});
+
+}
+
 const hw =
 new HomeworkUpload({
 
@@ -141,14 +158,8 @@ req.body.subject,
 homeworkUniqueId:
 req.body.homeworkUniqueId,
 
-fileName:
-req.file.originalname,
-
-driveFileId:
-fileId,
-
-driveLink:
-link
+files:
+uploadedFiles
 
 });
 
