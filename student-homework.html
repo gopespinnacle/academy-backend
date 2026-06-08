@@ -178,12 +178,14 @@ ${x.teacherName || "-"}
 padding:10px;
 border:1px solid #d0d0d0;
 vertical-align:top;
-word-wrap:break-word;
-overflow-wrap:break-word;
 ">
+${x.className || "-"}
+</td>
 
 <td style="
 padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
 word-wrap:break-word;
 overflow-wrap:break-word;
 ">
@@ -199,13 +201,21 @@ word-wrap:break-word;
 ${x.homework || "-"}
 </td>
 
-<td>
+<td style="
+padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
+">
 ${x.date || "-"}
 </td>
 
 <!-- Question Doc Column -->
 
-<td>
+<td style="
+padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
+">
 
 ${
 
@@ -283,7 +293,11 @@ No Question Doc
 
 <!-- Choose File Column -->
 
-<td>
+<td style="
+padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
+">
 
 <div
 id="fileContainer${index}"
@@ -315,7 +329,12 @@ cursor:pointer;
 
 </td>
 
-<td>
+<td style="
+padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
+text-align:center;
+">
 
 <button
 onclick="uploadHomework(
