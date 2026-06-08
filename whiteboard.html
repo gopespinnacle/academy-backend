@@ -379,7 +379,11 @@ flex-direction:column;
 
 padding:20px;
 
-overflow-y:auto;
+overflow-y:scroll;
+
+-webkit-overflow-scrolling:touch;
+
+touch-action:pan-y;
 
 transition:right .3s;
 
@@ -414,7 +418,7 @@ justify-content:flex-end;
 }
 
     body{
-        overflow:hidden;
+        overflow-x:hidden;
     }
 
     .toolbar{
@@ -548,7 +552,7 @@ height:100%;
 
 margin:0;
 
-overflow:hidden;
+overflow-x:hidden;
 
 background:black;
 }
@@ -557,7 +561,7 @@ background:black;
 
 <body style="
 margin:0;
-overflow:hidden;
+overflow-x:hidden;
 overscroll-behavior:none;
 ">
 <div class="menu-overlay" onclick="toggleMobileMenu()"></div>
