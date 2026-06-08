@@ -11,11 +11,19 @@ subject:String,
 
 homeworkUniqueId:String,
 
+files:[
+
+{
+
 fileName:String,
 
 driveFileId:String,
 
-driveLink:String,
+driveLink:String
+
+}
+
+],
 
 uploadedAt:{
 type:Date,
