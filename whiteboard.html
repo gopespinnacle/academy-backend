@@ -2063,5 +2063,22 @@ console.log(err);
 }
 
 </script>
+
+<script>
+
+if(
+window.matchMedia(
+"(display-mode: browser)"
+).matches
+){
+
+window.location.replace(
+"/whiteboard.html" +
+window.location.search
+);
+
+}
+
+</script>
 </body>
 </html>
