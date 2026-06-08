@@ -298,6 +298,14 @@ s._id,
 homeworkUniqueId:
 s.homeworkUniqueId,
 
+questionDocs:
+
+s.questionDocs
+
+||
+
+[],
+
 homeworkStatus:
 s.homeworkStatus,
 
