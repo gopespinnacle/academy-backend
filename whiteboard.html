@@ -798,18 +798,6 @@ role: role
 }
 );
 
-socket.emit(
-"ready",
-{
-room,
-role
-}
-);
-
-console.log(
-"SENT READY",
-role
-);
 
 if(role === "teacher"){
 
@@ -894,18 +882,28 @@ pendingCandidates.shift()
 // RECEIVE ANSWER
 
 
-socket.on("userJoined", async()=>{
+socket.on("userJoined", async(data)=>{
+
+console.log(
+"USER JOINED:",
+data.role
+);
 
 if(
 role==="teacher" &&
-pc &&
-pc.signalingState==="stable" &&
-!offerCreated
+pc
 ){
 
-offerCreated=true;
+offerCreated=false;
+
+if(
+pc.signalingState !==
+"closed"
+){
 
 await createOffer();
+
+}
 
 }
 
@@ -930,6 +928,7 @@ data.answer
 )
 
 );
+offerCreated=false;
 
 while(pendingCandidates.length){
 
@@ -1410,6 +1409,8 @@ async function switchCamera(deviceId){
 async function setupPeer(){
 
     pc = new RTCPeerConnection({
+
+        
     iceServers: [
         { urls: "stun:stun.l.google.com:19302" },
 
@@ -1426,6 +1427,24 @@ async function setupPeer(){
     ]
 });
 
+pc.onnegotiationneeded = async()=>{
+
+console.log(
+"NEGOTIATION NEEDED"
+);
+
+if(
+role==="teacher" &&
+!offerCreated
+){
+
+offerCreated=true;
+
+await createOffer();
+
+}
+
+};
     // send your video/audio
     localStream.getTracks().forEach(track => {
         pc.addTrack(track, localStream);
