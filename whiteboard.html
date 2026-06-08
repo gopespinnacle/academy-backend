@@ -15,6 +15,48 @@ body > code {
 body > div[style*="white-space"] {
     display: none !important;
 }
+#meetingContainer{
+
+position:fixed;
+
+top:60px;
+left:0;
+
+width:100vw;
+height:calc(100vh - 60px);
+
+display:flex;
+
+overflow:hidden;
+}
+
+#mainStage{
+
+flex:1;
+
+position:relative;
+
+overflow:hidden;
+
+background:black;
+}
+
+#participantStrip{
+
+position:absolute;
+
+right:10px;
+bottom:10px;
+
+display:flex;
+
+flex-direction:column;
+
+gap:10px;
+
+z-index:99999;
+}
+
 body {
     margin:0;
     font-family:sans-serif;
@@ -93,22 +135,21 @@ video {
     z-index: 1;   /* BELOW video */
 }
 
-#screenContainer {
-    position: fixed;
+#screenContainer{
 
-    top: 60px;
-    left: 0;
+position:absolute;
 
-    width: 100vw;
-    height: calc(100vh - 60px);
+top:0;
+left:0;
 
-    overflow: hidden;
+width:100%;
+height:100%;
 
-    border-radius: 0;
+overflow:hidden;
 
-    border: none;
+border:none;
 
-    z-index: 999;
+z-index:1;
 }
 
 /* HEADER */
@@ -408,9 +449,13 @@ right:auto;
 
     #localVideoBox{
 
-        width:40px;
-        height:28px;
-    }
+width:95px;
+height:130px;
+
+border-radius:12px;
+
+overflow:hidden;
+}
 }
 
 #emojiPopup{
@@ -482,6 +527,10 @@ onclick="startScreenShare()">
     <div id="emojiPicker"></div>
 
 </div>
+<div id="meetingContainer">
+
+<div id="mainStage">
+
 <!-- 🔥 SCREEN SHARE CONTAINER -->
 <div id="screenContainer">
 <div id="annotationToolbar" style="
@@ -558,7 +607,16 @@ webkit-playsinline>
 </div>
 
 </div>
-        <!-- LOCAL SMALL PREVIEW -->
+
+</div>
+
+<div id="participantStrip">
+
+    </div>
+
+</div>
+
+<!-- LOCAL SMALL PREVIEW -->
     
 <div id="pdfTab" style="
     display:none;
