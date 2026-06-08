@@ -51,6 +51,8 @@ border-collapse:collapse;
 background:white;
 box-shadow:0 2px 8px rgba(0,0,0,0.1);
 table-layout:fixed;
+border:1px solid #d0d0d0;
+font-size:14px;
 ">
 
 <thead>
@@ -60,31 +62,31 @@ background:#1e3a5f;
 color:white;
 ">
 
-<th style="width:12%;">
+<th style="width:12%;border:1px solid #d0d0d0;padding:10px;">
 Student
 </th>
 
-<th style="width:8%;">
+<th style="width:8%;border:1px solid #d0d0d0;padding:10px;">
 Class
 </th>
 
-<th style="width:8%;">
+<th style="width:8%;border:1px solid #d0d0d0;padding:10px;">
 Subject
 </th>
 
-<th style="width:28%;">
+<th style="width:25%;border:1px solid #d0d0d0;padding:10px;">
 Homework Given
 </th>
 
-<th style="width:16%;">
+<th style="width:20%;border:1px solid #d0d0d0;padding:10px;">
 Question Doc
 </th>
 
-<th style="width:18%;">
+<th style="width:17%;border:1px solid #d0d0d0;padding:10px;">
 File
 </th>
 
-<th style="width:10%;">
+<th style="width:10%;border:1px solid #d0d0d0;padding:10px;">
 Date
 </th>
 
@@ -143,30 +145,54 @@ html += `
 
 <tr style="
 vertical-align:top;
+border-bottom:1px solid #d0d0d0;
 ">
 
 <td style="
 padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
 word-wrap:break-word;
 ">
 ${x.studentName || "-"}
 </td>
 
-<td>
+<td style="
+padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
+word-wrap:break-word;
+overflow-wrap:break-word;
+">
 ${x.className || "-"}
 </td>
 
-<td>
+<td style="
+padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
+word-wrap:break-word;
+">
 ${x.subject || "-"}
 </td>
 
-<td>
+<td style="
+padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
+word-wrap:break-word;
+overflow-wrap:break-word;
+">
 ${x.homework || "-"}
 </td>
 
 <!-- Question Doc Column -->
 
-<td>
+<td style="
+padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
+">
 
 <div id="questionFiles${x.summaryId}">
 
@@ -291,7 +317,12 @@ No Question Doc
 
 <!-- Existing Student File Column -->
 
-<td>
+<td style="
+padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
+text-align:center;
+">
 
 ${
 
@@ -376,7 +407,12 @@ Not Submitted
 
 </td>
 
-<td>
+<td style="
+padding:10px;
+border:1px solid #d0d0d0;
+vertical-align:top;
+text-align:center;
+">
 ${x.date || "-"}
 </td>
 
