@@ -13,6 +13,15 @@ content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="mobile-web-app-capable"
 content="yes">
 
+<meta name="apple-mobile-web-app-title"
+content="Academy">
+
+<meta name="application-name"
+content="Academy">
+
+<meta name="theme-color"
+content="#000000">
+
 <meta name="apple-mobile-web-app-capable"
 content="yes">
 
@@ -531,10 +540,26 @@ overflow:hidden;
     display:none;
 }
 
+html,
+body{
+
+width:100%;
+height:100%;
+
+margin:0;
+
+overflow:hidden;
+
+background:black;
+}
 </style>
 </head>
 
-<body>
+<body style="
+margin:0;
+overflow:hidden;
+overscroll-behavior:none;
+">
 <div class="menu-overlay" onclick="toggleMobileMenu()"></div>
 <div class="toolbar">
 
@@ -2064,21 +2089,6 @@ console.log(err);
 
 </script>
 
-<script>
 
-if(
-window.matchMedia(
-"(display-mode: browser)"
-).matches
-){
-
-window.location.replace(
-"/whiteboard.html" +
-window.location.search
-);
-
-}
-
-</script>
 </body>
 </html>
