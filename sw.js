@@ -1,4 +1,4 @@
-const CACHE_NAME = "gopes-cache-v1";
+const CACHE_NAME = "gopes-cache-v2";
 
 const urlsToCache = [
   "/",
