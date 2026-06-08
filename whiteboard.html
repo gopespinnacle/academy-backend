@@ -130,7 +130,7 @@ canvas {
 
 #drawLayer {
     position:absolute;
-    top:42px;
+    top:80px;
     left:0;
     width:100%;
     height:calc(100% - 80px);
@@ -148,7 +148,7 @@ video {
 
 position:absolute;
 
-top:42px;
+top:60px;
 
 left:0;
 
@@ -327,67 +327,80 @@ overflow:hidden;
 /* DESKTOP */
 #mobileMenu{
 
-display:flex;
-
-flex-direction:row;
-
-gap:5px;
-
-align-items:center;
-
-position:static;
-
-background:transparent;
-
-width:auto;
-
-height:auto;
-
-padding:0;
-
-overflow:visible;
-}
-
-@media(max-width:768px){
-
-#mobileMenu{
-
 position:fixed;
 
-top:60px;
+top:0;
 
 right:-280px;
 
 width:260px;
 
-height:calc(100vh - 60px);
+height:100vh;
 
 background:#1e293b;
 
-display:flex;
+display:none;
 
 flex-direction:column;
 
-padding:20px;
+padding:80px 15px 20px;
+
+gap:12px;
+
+transition:0.3s ease;
+
+z-index:99999;
 
 overflow-y:auto;
 
-transition:right .3s;
+-webkit-overflow-scrolling:touch;
 
-z-index:999999;
+touch-action:pan-y;
 }
 
-#mobileMenu.show{
+/* MOBILE */
+@media(max-width:768px){
 
-right:0;
+    #mobileMenu{
+        display:none !important;
+    }
+
+    #mobileMenu.show{
+        display:flex !important;
+        flex-direction:column;
+    }
+
+    .toolbar{
+        justify-content:flex-end;
+    }
 }
 
-.toolbar{
+/* MOBILE */
+@media(max-width:768px){
 
-justify-content:flex-end;
+    #mobileMenu{
+        display:none;
+    }
+
+    #mobileMenu.show{
+        display:flex;
+    }
 }
 
+
+/* MOBILE ONLY */
+@media(max-width:768px){
+
+    #menuBtn{
+        display:flex !important;
+    }
+
+    #mobileMenu{
+        display:flex;
+        flex-direction:column;
+    }
 }
+
 /* MOBILE ONLY */
 
 
@@ -408,28 +421,23 @@ justify-content:flex-end;
 
     .toolbar{
 
-position:absolute;
+        position:fixed;
+        top:0;
+        left:0;
 
-top:0;
+        width:100%;
+        height:60px;
 
-left:0;
+        background:#1e293b;
 
-width:100%;
+        display:flex;
+        justify-content:flex-end;
+        align-items:center;
 
-height:42px;
+        padding:0 10px;
 
-background:#1e293b;
-
-display:flex;
-
-justify-content:flex-end;
-
-align-items:center;
-
-padding:0 6px;
-
-z-index:99999;
-}
+        z-index:99999;
+    }
 
     /* HIDE NORMAL TOOLBAR */
     /*#mobileMenu{
@@ -489,11 +497,11 @@ z-index:99999;
 
 #screenContainer{
 
-top:42px;
+top:60px;
 left:0;
 
 width:100vw;
-height:calc(100vh - 42px);
+height:calc(100vh - 60px);
 
 right:auto;
 }
