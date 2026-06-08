@@ -67,6 +67,8 @@ color:white;
 
 <th>Homework Given</th>
 
+<th>Question Doc</th>
+
 <th>File</th>
 
 <th>Date</th>
@@ -141,6 +143,91 @@ ${x.subject || "-"}
 <td>
 ${x.homework || "-"}
 </td>
+
+<td>
+<td>
+${x.homework || "-"}
+</td>
+
+<!-- Question Doc Column -->
+
+<td>
+
+${
+
+x.questionDocs &&
+
+x.questionDocs.length > 0
+
+?
+
+`
+
+<b>
+
+Question Files
+(${x.questionDocs.length})
+
+</b>
+
+<br><br>
+
+${
+
+x.questionDocs.map(
+
+(doc,index)=>`
+
+<a
+
+href="${doc.driveLink}"
+
+target="_blank"
+
+style="
+display:block;
+margin-bottom:5px;
+background:#1e3a5f;
+color:white;
+padding:6px 10px;
+border-radius:6px;
+text-decoration:none;
+width:120px;
+text-align:center;
+">
+
+Question ${index+1}
+
+</a>
+
+`
+
+).join("")
+
+}
+
+`
+
+:
+
+`
+
+<span style="
+color:red;
+font-weight:bold;
+">
+
+No Question Doc
+
+</span>
+
+`
+
+}
+
+</td>
+
+<!-- Existing Student File Column -->
 
 <td>
 
