@@ -12,6 +12,11 @@ content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
+
+<div class="overlay"
+onclick="closeMenu()">
+</div>
+
 <div class="mobile-header">
 
     <button class="menu-btn"
@@ -206,6 +211,22 @@ function toggleMenu(){
     document
     .querySelector(".sidebar")
     .classList.toggle("show");
+
+    document
+    .querySelector(".overlay")
+    .classList.toggle("show");
+
+}
+
+function closeMenu(){
+
+    document
+    .querySelector(".sidebar")
+    .classList.remove("show");
+
+    document
+    .querySelector(".overlay")
+    .classList.remove("show");
 
 }
 </script>
