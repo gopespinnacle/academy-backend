@@ -492,11 +492,17 @@ footer{
 /* ================= LOGIN PAGE ================= */
 
 .login-page{
-    height:100vh;
+    min-height:100vh;
+
     display:flex;
     justify-content:center;
     align-items:center;
-    background:url("images/image1.png") no-repeat center center/cover;
+
+    background:url("images/image1.png");
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+
     position:relative;
 }
 
@@ -1780,6 +1786,31 @@ background: #2c5282;
 
     height:55px !important;
     font-size:18px !important;
+
+}
+
+}
+
+@media(max-width:768px){
+
+.login-page{
+
+    width:100vw !important;
+    min-height:100vh !important;
+
+    padding:20px !important;
+
+    background-size:cover !important;
+    background-position:center center !important;
+
+}
+
+.login-page .login-box{
+
+    width:100% !important;
+    max-width:380px !important;
+
+    padding:30px 25px !important;
 
 }
 
