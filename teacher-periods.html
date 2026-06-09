@@ -11,9 +11,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 <link rel="stylesheet" href="style.css">
 <style>
  .main-content {
+
 margin-left:240px;
 padding:20px;
-width: calc(100% - 220px);
+
 }
 .timetable-container {
 display: grid;
@@ -97,7 +98,9 @@ display:none;
 }
 
 @media(max-width:768px){
-
+.desktop-title{
+display:none;
+}
 body{
 margin:0;
 background:#f4f6f9;
@@ -171,13 +174,34 @@ display:none;
 
 #sidebar-container .sidebar{
 
-left:-260px;
+position:fixed !important;
+
+top:0;
+left:-100% !important;
+
+width:250px !important;
+
+height:100vh !important;
+
+z-index:9999;
+
+transition:.3s;
+
+background:#0d1b2a;
 
 }
 
 #sidebar-container .sidebar.show{
 
-left:0;
+left:0 !important;
+
+}
+
+.main-content{
+
+margin:0 !important;
+width:100% !important;
+padding:15px !important;
 
 }
 
@@ -211,7 +235,22 @@ onclick="toggleMenu()">
 fetch("teacher-sidebar.html")
 .then(res => res.text())
 .then(data=>{
-document.getElementById("sidebar-container").innerHTML=data;
+
+document.getElementById(
+"sidebar-container"
+).innerHTML = data;
+
+if(window.innerWidth <= 768){
+
+const sidebar =
+document.querySelector(
+"#sidebar-container .sidebar"
+);
+
+sidebar.style.left = "-240px";
+
+}
+
 });
 
 </script>
