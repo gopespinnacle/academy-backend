@@ -47,7 +47,8 @@
 </div>
 
 <style>
-.sidebar {
+
+.sidebar{
     width:240px;
     height:100vh;
     position:fixed;
@@ -58,38 +59,74 @@
 
     display:flex;
     flex-direction:column;
+
+    z-index:9999;
 }
 
 /* HEADER */
-.sidebar h2 {
+.sidebar h2{
     font-size:18px;
     margin:0;
     padding:15px;
-    border-bottom:1px solid rgba(255,255,255,0.1);
+    border-bottom:1px solid rgba(255,255,255,.1);
 }
 
-/* MENU CONTAINER */
-.sidebar ul {
+/* MENU */
+.sidebar ul{
     list-style:none;
-    padding:10px 0;   /* 🔥 THIS FIXES GAP */
+    padding:10px 0;
     margin:0;
-    flex:1;           /* 🔥 IMPORTANT */
+    flex:1;
 }
 
-/* MENU ITEMS */
-.sidebar ul li {
+.sidebar ul li{
     padding:12px 20px;
     cursor:pointer;
-    transition:0.3s;
+    transition:.3s;
 }
 
-.sidebar ul li:hover {
+.sidebar ul li:hover{
     background:#2f3e52;
 }
 
-.sidebar i {
+.sidebar i{
     margin-right:10px;
 }
+
+/* ======================
+MOBILE
+====================== */
+
+@media(max-width:768px){
+
+.sidebar{
+
+    left:-260px;
+    transition:.3s;
+
+}
+
+.sidebar.show{
+
+    left:0;
+
+}
+
+.sidebar h2{
+
+    font-size:22px;
+
+}
+
+.sidebar ul li{
+
+    padding:18px 20px;
+    font-size:18px;
+
+}
+
+}
+
 </style>
 
 <script>
