@@ -8,7 +8,20 @@
 </head>
 
 <body>
+<div class="mobile-header">
 
+    <button class="menu-btn"
+    onclick="toggleMenu()">
+
+        <i class="fa fa-bars"></i>
+
+    </button>
+
+    <h2>Academy ERP</h2>
+
+    <i class="fa fa-user-circle"></i>
+
+</div>
 <div class="sidebar">
     <h2>Academy ERP</h2>
     <ul>
@@ -60,6 +73,30 @@
 </div>
 
 <script>
+
+    <div class="bottom-nav">
+
+    <div onclick="location.href='teacher-dashboard.html'">
+        <i class="fa fa-home"></i>
+        <span>Home</span>
+    </div>
+
+    <div onclick="location.href='teacher-periods.html'">
+        <i class="fa fa-book"></i>
+        <span>Classes</span>
+    </div>
+
+    <div onclick="location.href='teacher-homework.html'">
+        <i class="fa fa-tasks"></i>
+        <span>Work</span>
+    </div>
+
+    <div onclick="location.href='teacher-students.html'">
+        <i class="fa fa-users"></i>
+        <span>Students</span>
+    </div>
+
+</div>
 const name = localStorage.getItem("teacherName");
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("role");
@@ -156,6 +193,15 @@ function goToPeriods(){
 }
 function goToStudentsPage(){
     window.location.href = "teacher-students.html";
+}
+
+
+function toggleMenu(){
+
+    document
+    .querySelector(".sidebar")
+    .classList.toggle("show");
+
 }
 </script>
 
