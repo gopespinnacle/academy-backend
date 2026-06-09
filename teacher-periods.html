@@ -228,6 +228,22 @@ document.getElementById("sidebar-container").innerHTML=data;
 <!-- EXISTING TIMETABLE -->
 <div id="timetable"></div>
 
+<!-- WEEKLY TIMETABLE -->
+
+<div id="weeklyTimetable">
+
+<h2 style="
+margin-top:30px;
+margin-bottom:15px;
+color:#0f2d52;
+">
+📅 Weekly Timetable
+</h2>
+
+<div id="weeklyContent"></div>
+
+</div>
+
 <h2 style="margin-top:30px;">Assigned Students</h2>
 
 <table border="1" width="100%">
@@ -426,6 +442,13 @@ const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 
 const container = document.getElementById("timetable");
 container.innerHTML = "";
+
+const weeklyContainer =
+document.getElementById(
+"weeklyContent"
+);
+
+weeklyContainer.innerHTML = "";
 
 const todayBox =
 document.getElementById(
@@ -658,6 +681,55 @@ else if(status === "completed"){
 column.appendChild(div);
 
 });
+
+const weeklyDay =
+document.createElement("div");
+
+weeklyDay.innerHTML = `
+
+<div style="
+background:#0f2d52;
+color:white;
+padding:10px;
+border-radius:10px;
+font-weight:bold;
+margin-top:15px;
+margin-bottom:10px;
+">
+${day}
+</div>
+
+`;
+
+grouped[day].forEach(period=>{
+
+weeklyDay.innerHTML += `
+
+<div style="
+background:white;
+padding:12px;
+border-radius:12px;
+margin-bottom:10px;
+box-shadow:0 2px 8px rgba(0,0,0,.08);
+">
+
+<b>${period.className}</b><br>
+
+📘 ${period.subject || period.eca || period.language}<br>
+
+⏰ ${formatTime(period.startTime)}
+-
+${formatTime(period.endTime)}
+
+</div>
+
+`;
+
+});
+
+weeklyContainer.appendChild(
+weeklyDay
+);
 
 container.appendChild(column);
 
