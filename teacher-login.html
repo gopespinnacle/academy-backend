@@ -2,9 +2,204 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Teacher Login</title>
-<link rel="stylesheet" href="style.css">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+}
+
+.login-page{
+
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:
+    linear-gradient(
+    rgba(255,255,255,.65),
+    rgba(255,255,255,.65)
+    ),
+    url("images/image1.png");
+
+    background-size:cover;
+    background-position:center;
+}
+
+.login-box{
+
+    width:90%;
+    max-width:420px;
+
+    background:white;
+
+    padding:40px;
+
+    border-radius:25px;
+
+    box-shadow:
+    0 10px 30px rgba(0,0,0,.15);
+}
+
+.login-box img{
+
+    width:180px;
+    display:block;
+    margin:auto;
+}
+
+.login-box h2{
+
+    text-align:center;
+}
+
+.input-box{
+
+    margin-bottom:20px;
+}
+
+.input-box input{
+
+    width:100%;
+    height:50px;
+}
+
+.login-btn{
+
+    width:100%;
+    height:55px;
+
+    border:none;
+
+    border-radius:30px;
+
+    color:white;
+
+    background:
+    linear-gradient(
+    90deg,
+    #ff6a4d,
+    #ff9b3d
+    );
+}
+@media(max-width:768px){
+
+.login-page{
+
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:20px;
+
+    background:
+    linear-gradient(
+    rgba(255,255,255,.65),
+    rgba(255,255,255,.65)
+    ),
+    url("images/image1.png");
+
+    background-size:cover;
+    background-position:center;
+}
+
+.login-box{
+
+    width:92%;
+
+    max-width:none;
+
+    background:white;
+
+    border-radius:30px;
+
+    padding:40px 30px;
+
+    box-shadow:
+    0 15px 40px rgba(0,0,0,.18);
+
+}
+
+.login-box img{
+    width:220px;
+    display:block;
+    margin:0 auto 20px;
+}
+
+.login-box h2{
+
+    text-align:center;
+
+    font-size:36px;
+
+    margin-bottom:35px;
+
+    color:#222;
+}
+
+.input-box{
+
+    margin-bottom:18px;
+}
+
+.input-box input{
+
+    width:100%;
+
+    height:65px;
+
+    font-size:18px;
+
+    border:none;
+
+    border-bottom:
+    2px solid #ddd;
+
+    border-radius:0;
+
+    background:none;
+}
+
+.login-btn{
+
+    width:100%;
+
+    height:65px;
+
+    border:none;
+
+    border-radius:30px;
+
+    font-size:20px;
+
+    font-weight:bold;
+    letter-spacing:1px;
+    color:white;
+
+    background:
+    linear-gradient(
+    90deg,
+    #ff6a4d,
+    #ff9b3d
+    );
+}
+
+.remember{
+
+    margin:15px 0 20px;
+}
+
+}
+
+</style>
 </head>
 
 <body class="login-page">
