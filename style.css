@@ -1731,3 +1731,75 @@ background: #2c5282;
     background: #123a63;
     color: white;
 }
+
+@media(max-width:768px){
+
+.login-page{
+
+    background:#f5f7fb !important;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    min-height:100vh;
+
+    padding:20px;
+
+}
+
+.login-box{
+
+    width:100% !important;
+    max-width:400px;
+
+    padding:30px 25px !important;
+
+    border-radius:25px;
+
+}
+
+.login-box img{
+
+    width:120px;
+    display:block;
+    margin:auto;
+
+}
+
+.login-box h2{
+
+    text-align:center;
+    font-size:28px;
+    margin:20px 0;
+
+}
+
+.input-box{
+
+    margin-bottom:18px;
+
+}
+
+.input-box input{
+
+    width:100%;
+    height:55px;
+
+    font-size:16px;
+
+}
+
+.login-btn{
+
+    width:100%;
+    height:55px;
+
+    font-size:18px;
+    font-weight:bold;
+
+    border-radius:12px;
+
+}
+
+}
