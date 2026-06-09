@@ -2,6 +2,11 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <title>Teacher Periods</title>
 <link rel="stylesheet" href="style.css">
 <style>
@@ -80,10 +85,115 @@ border-left: 4px solid orange;
 opacity: 0.4;
 pointer-events: none;
 }
+
+
+/* ==========================
+MOBILE UI
+========================== */
+
+.mobile-header{
+display:none;
+}
+
+@media(max-width:768px){
+
+body{
+margin:0;
+overflow-x:hidden;
+}
+
+.mobile-header{
+
+display:flex;
+
+justify-content:space-between;
+align-items:center;
+
+background:#0d1b2a;
+color:white;
+
+padding:15px;
+
+position:sticky;
+top:0;
+
+z-index:999;
+}
+
+.mobile-header h2{
+
+margin:0;
+font-size:20px;
+}
+
+.menu-btn{
+
+background:none;
+border:none;
+
+color:white;
+
+font-size:24px;
+}
+
+.desktop-title{
+display:none;
+}
+
+.main-content{
+
+margin-left:0 !important;
+padding:15px !important;
+}
+
+.timetable-container{
+
+display:block;
+}
+
+.day-column{
+
+margin-bottom:20px;
+}
+
+.day-header{
+
+font-size:16px;
+padding:12px;
+}
+
+.period-card{
+
+padding:15px;
+font-size:14px;
+border-radius:15px;
+}
+
+table{
+
+display:none;
+}
+
+}
 </style>
 </head>
 
 <body class="dashboard-page">
+
+<div class="mobile-header">
+
+<button class="menu-btn"
+onclick="toggleMenu()">
+
+<i class="fa fa-bars"></i>
+
+</button>
+
+<h2>My Timetable</h2>
+
+<i class="fa fa-user-circle"></i>
+
+</div>
 
 <div id="sidebar-container"></div>
 
@@ -97,11 +207,15 @@ document.getElementById("sidebar-container").innerHTML=data;
 
 <div class="main-content">
 
-<h1>My Timetable</h1>
+<h1 class="desktop-title">
+My Timetable
+</h1>
 
 <div id="timetable"></div>
 
 <h2 style="margin-top:30px;">Assigned Students</h2>
+
+<div id="studentCards"></div>
 
 <table border="1" width="100%">
 <thead>
@@ -180,6 +294,13 @@ const table = document.getElementById("studentTable");
 
 table.innerHTML = "";
 
+const cardContainer =
+document.getElementById(
+"studentCards"
+);
+
+cardContainer.innerHTML = "";
+
 data.data.forEach(d=>{
 
 table.innerHTML += `
@@ -191,8 +312,39 @@ table.innerHTML += `
 <td>${d.student ? d.student.name : "-"}</td>
 </tr>
 `;
+cardContainer.innerHTML += `
 
+<div style="
+background:white;
+padding:15px;
+border-radius:15px;
+margin-bottom:10px;
+box-shadow:0 2px 10px rgba(0,0,0,.08);
+">
+
+<b>👤 ${d.student ? d.student.name : "-"}</b>
+
+<br><br>
+
+📘 ${d.subject}
+
+<br>
+
+🏫 ${d.className}
+
+<br>
+
+📅 ${d.day}
+
+<br>
+
+⏰ ${d.startTime} - ${d.endTime}
+
+</div>
+
+`;
 });
+
 
 }
 function formatTime(time){
@@ -449,6 +601,23 @@ setInterval(() => {
 loadTimetable();
 loadStudents();
 
+
+function toggleMenu(){
+
+const sidebar =
+document.querySelector(
+"#sidebar-container .sidebar"
+);
+
+if(sidebar){
+
+sidebar.classList.toggle(
+"show"
+);
+
+}
+
+}
 </script>
 
 </body>
