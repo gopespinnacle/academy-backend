@@ -185,12 +185,22 @@ padding:15px;
 }
 
 }
+
+@media(max-width:768px){
+
+.desktop-sidebar{
+
+display:none;
+
+}
+
+}
 </style>
 </head>
 
 <body class="dashboard-page">
 
-<div id="sidebar-container"></div>
+<div id="sidebar-container" class="desktop-sidebar"></div>
 
 <script>
 fetch("teacher-sidebar.html")
