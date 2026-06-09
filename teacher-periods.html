@@ -2,19 +2,12 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <title>Teacher Periods</title>
 <link rel="stylesheet" href="style.css">
 <style>
  .main-content {
-
-margin-left:240px;
-padding:20px;
-
+margin-left: 220px; /* adjust based on sidebar width */
+padding: 20px;
 }
 .timetable-container {
 display: grid;
@@ -87,185 +80,28 @@ border-left: 4px solid orange;
 opacity: 0.4;
 pointer-events: none;
 }
-
-
-/* ==========================
-MOBILE UI
-========================== */
-
-.mobile-header{
-display:none;
-}
-
-@media(max-width:768px){
-.desktop-title{
-display:none;
-}
-body{
-margin:0;
-background:#f4f6f9;
-overflow-x:hidden;
-}
-
-.main-content{
-
-margin:0 !important;
-padding:15px !important;
-width:100% !important;
-
-}
-
-.mobile-header{
-
-display:flex;
-
-justify-content:space-between;
-align-items:center;
-
-background:#0d1b2a;
-
-color:white;
-
-padding:15px;
-
-position:sticky;
-top:0;
-
-z-index:999;
-}
-
-.timetable-container{
-
-display:block;
-}
-
-.day-column{
-
-background:none;
-box-shadow:none;
-padding:0;
-
-margin-bottom:25px;
-}
-
-.day-header{
-
-font-size:18px;
-padding:12px;
-
-border-radius:12px;
-}
-
-.period-card{
-
-padding:18px;
-
-font-size:15px;
-
-border-radius:18px;
-
-margin-bottom:12px;
-}
-
-table{
-
-display:none;
-}
-
-#sidebar-container .sidebar{
-
-position:fixed !important;
-
-top:0;
-left:-100% !important;
-
-width:250px !important;
-
-height:100vh !important;
-
-z-index:9999;
-
-transition:.3s;
-
-background:#0d1b2a;
-
-}
-
-#sidebar-container .sidebar.show{
-
-left:0 !important;
-
-}
-
-.main-content{
-
-margin:0 !important;
-width:100% !important;
-padding:15px !important;
-
-}
-
-}
 </style>
 </head>
 
 <body class="dashboard-page">
 
-    
-
-<div class="mobile-header">
-
-<button class="menu-btn"
-onclick="toggleMenu()">
-
-<i class="fa fa-bars"></i>
-
-</button>
-
-<h2>My Timetable</h2>
-
-<i class="fa fa-user-circle"></i>
-
-</div>
-
 <div id="sidebar-container"></div>
 
 <script>
-
 fetch("teacher-sidebar.html")
 .then(res => res.text())
 .then(data=>{
-
-document.getElementById(
-"sidebar-container"
-).innerHTML = data;
-
-if(window.innerWidth <= 768){
-
-const sidebar =
-document.querySelector(
-"#sidebar-container .sidebar"
-);
-
-sidebar.style.left = "-240px";
-
-}
-
+document.getElementById("sidebar-container").innerHTML=data;
 });
-
 </script>
 
 <div class="main-content">
 
-<h1 class="desktop-title">
-My Timetable
-</h1>
+<h1>My Timetable</h1>
 
 <div id="timetable"></div>
 
 <h2 style="margin-top:30px;">Assigned Students</h2>
-
-<div id="studentCards"></div>
 
 <table border="1" width="100%">
 <thead>
@@ -344,13 +180,6 @@ const table = document.getElementById("studentTable");
 
 table.innerHTML = "";
 
-const cardContainer =
-document.getElementById(
-"studentCards"
-);
-
-cardContainer.innerHTML = "";
-
 data.data.forEach(d=>{
 
 table.innerHTML += `
@@ -362,39 +191,8 @@ table.innerHTML += `
 <td>${d.student ? d.student.name : "-"}</td>
 </tr>
 `;
-cardContainer.innerHTML += `
 
-<div style="
-background:white;
-padding:15px;
-border-radius:15px;
-margin-bottom:10px;
-box-shadow:0 2px 10px rgba(0,0,0,.08);
-">
-
-<b>👤 ${d.student ? d.student.name : "-"}</b>
-
-<br><br>
-
-📘 ${d.subject}
-
-<br>
-
-🏫 ${d.className}
-
-<br>
-
-📅 ${d.day}
-
-<br>
-
-⏰ ${d.startTime} - ${d.endTime}
-
-</div>
-
-`;
 });
-
 
 }
 function formatTime(time){
@@ -651,23 +449,6 @@ setInterval(() => {
 loadTimetable();
 loadStudents();
 
-
-function toggleMenu(){
-
-const sidebar =
-document.querySelector(
-"#sidebar-container .sidebar"
-);
-
-if(sidebar){
-
-sidebar.classList.toggle(
-"show"
-);
-
-}
-
-}
 </script>
 
 </body>
