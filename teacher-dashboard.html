@@ -21,12 +21,20 @@ onclick="closeMenu()">
 
     <button class="menu-btn"
     onclick="toggleMenu()">
-
         <i class="fa fa-bars"></i>
-
     </button>
 
-    <h2>Academy ERP</h2>
+    <div class="welcome-box">
+
+    <div class="welcome-text">
+        Welcome
+    </div>
+
+    <div id="mobileTeacherName"
+    class="teacher-mobile-name">
+    </div>
+
+</div>
 
     <i class="fa fa-user-circle"></i>
 
@@ -117,6 +125,11 @@ if (!token || role !== "teacher") {
 }
 
 document.getElementById("teacherName").innerText = name || "";
+
+document.getElementById(
+    "mobileTeacherName"
+).innerText =
+name || "";
 
 async function loadDashboard() {
 

@@ -108,6 +108,31 @@ body {
 .overlay{
     display:none;
 }
+
+.welcome-box{
+
+    text-align:center;
+    line-height:1.2;
+
+}
+
+.welcome-text{
+
+    font-size:14px;
+    color:white;
+    opacity:.8;
+
+}
+
+.teacher-mobile-name{
+
+    font-size:18px;
+    font-weight:bold;
+    color:white;
+
+}
+
+
 @media(max-width:768px){
 
 html,
