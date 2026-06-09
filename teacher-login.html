@@ -76,22 +76,22 @@ if (data.role !== "teacher") {
 }
 
 // ✅ SAVE DATA (BASED ON YOUR BACKEND)
-localStorage.setItem(
+sessionStorage.setItem(
 "token",
 data.token
 );
 
-localStorage.setItem(
+sessionStorage.setItem(
 "role",
 data.role
 );
 
-localStorage.setItem(
+sessionStorage.setItem(
 "teacherId",
 data.user._id
 );
 
-localStorage.setItem(
+sessionStorage.setItem(
 "teacherName",
 data.user.studentName
 );
@@ -110,7 +110,7 @@ console.log(
 "Teacher User:",
 data.user
 );
-localStorage.setItem(
+sessionStorage.setItem(
 "meetingLink",
 data.user.meetingLink
 );

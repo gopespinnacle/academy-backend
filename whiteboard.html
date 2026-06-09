@@ -742,6 +742,16 @@ const params = new URLSearchParams(window.location.search);
 const room = params.get("room");
 const role = params.get("role");
 
+const token = sessionStorage.getItem("token");
+const teacherRole = sessionStorage.getItem("role");
+
+if (
+    role === "teacher" &&
+    (!token || teacherRole !== "teacher")
+) {
+    alert("Please login first");
+    window.location.href = "teacher-login.html";
+}
 const socket = io(
 "https://academy-backend-eatl.onrender.com",
 {
@@ -930,8 +940,8 @@ window.addEventListener("load", () => {
 
     
     // ✅ ADD THIS PART (PDF RESTORE)
-    const savedPDF = localStorage.getItem("currentPDF");
-const pdfOpen = localStorage.getItem("pdfOpen");
+    const savedPDF = sessionStorage.getItem("currentPDF");
+const pdfOpen = sessionStorage.getItem("pdfOpen");
 
 if(savedPDF && pdfOpen === "true"){
     loadPDFToCanvas(savedPDF);
@@ -1154,10 +1164,10 @@ function leaveClass(){
 params.get("subject");
 
     const teacher =
-        localStorage.getItem("teacherName") || "";
+sessionStorage.getItem("teacherName") || "";
 
     const outTime = new Date().toISOString();
-localStorage.setItem(
+sessionStorage.setItem(
 "teacherOutTime",
 new Date().toISOString()
 );
@@ -1176,7 +1186,7 @@ new Date().toISOString()
 }
 
 socket.on("loadPDF", (data) => {
-    localStorage.setItem("currentPDF", data.url);  // ✅ ADD THIS
+    sessionStorage.setItem("currentPDF", data.url);
     loadPDFToCanvas(data.url);
 });
 
@@ -1192,11 +1202,11 @@ socket.on("closePDF", () => {
     drawCanvas.width = 0;
     drawCanvas.height = 0;
 
-    localStorage.setItem("pdfOpen", "false");
+    sessionStorage.setItem("pdfOpen", "false");
 });
 async function loadPDFToCanvas(url){
     drawCanvas.style.pointerEvents = "auto";
-localStorage.setItem("pdfOpen", "true");
+sessionStorage.setItem("pdfOpen", "true");
     document.getElementById("pdfWindow").style.display = "block";
     dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
     document.getElementById("pdfTab").style.display = "none";
@@ -1265,7 +1275,7 @@ function closePDF(){
     drawCanvas.height = 0;
 
     // ✅ mark PDF closed
-    localStorage.setItem("pdfOpen", "false");
+    sessionStorage.setItem("pdfOpen", "false");
     socket.emit("closePDF", { room });
 }
 document.getElementById("pdfTab").onclick = function(){

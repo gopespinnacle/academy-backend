@@ -98,8 +98,13 @@ function go(page){
 }
 
 function logout(){
-    localStorage.clear();
-    window.location.href = "teacher-login.html";
+
+    sessionStorage.clear();
+
+    window.location.replace(
+        "teacher-login.html"
+    );
+
 }
 </script>
 <script>
