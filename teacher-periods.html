@@ -80,6 +80,92 @@ border-left: 4px solid orange;
 opacity: 0.4;
 pointer-events: none;
 }
+
+/* MOBILE DASHBOARD SECTIONS */
+
+.mobile-section{
+
+margin-bottom:20px;
+
+}
+
+.mobile-section h3{
+
+background:#1e2a38;
+color:white;
+
+padding:12px 15px;
+
+border-radius:10px;
+
+font-size:16px;
+
+margin-bottom:10px;
+
+}
+
+.mobile-card{
+
+background:white;
+
+padding:15px;
+
+border-radius:15px;
+
+margin-bottom:12px;
+
+box-shadow:0 2px 8px rgba(0,0,0,.1);
+
+}
+
+.mobile-card .class-name{
+
+font-size:18px;
+font-weight:bold;
+
+}
+
+.mobile-card .subject{
+
+margin-top:5px;
+font-size:15px;
+
+}
+
+.mobile-card .time{
+
+margin-top:8px;
+font-size:14px;
+color:#666;
+
+}
+
+.mobile-card .status{
+
+margin-top:8px;
+font-weight:bold;
+
+}
+
+#todayClasses,
+#upcomingClasses,
+#completedClasses{
+
+display:none;
+
+}
+
+@media(max-width:768px){
+
+#todayClasses,
+#upcomingClasses,
+#completedClasses{
+
+display:block;
+
+}
+
+}
 </style>
 </head>
 
@@ -99,6 +185,14 @@ document.getElementById("sidebar-container").innerHTML=data;
 
 <h1>My Timetable</h1>
 
+<!-- MOBILE SECTIONS -->
+<div id="todayClasses"></div>
+
+<div id="upcomingClasses"></div>
+
+<div id="completedClasses"></div>
+
+<!-- EXISTING TIMETABLE -->
 <div id="timetable"></div>
 
 <h2 style="margin-top:30px;">Assigned Students</h2>
@@ -300,6 +394,30 @@ const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const container = document.getElementById("timetable");
 container.innerHTML = "";
 
+const todayBox =
+document.getElementById(
+"todayClasses"
+);
+
+const upcomingBox =
+document.getElementById(
+"upcomingClasses"
+);
+
+const completedBox =
+document.getElementById(
+"completedClasses"
+);
+
+todayBox.innerHTML =
+'<div class="mobile-section"><h3>TODAY\'S CLASSES</h3></div>';
+
+upcomingBox.innerHTML =
+'<div class="mobile-section"><h3>UPCOMING CLASSES</h3></div>';
+
+completedBox.innerHTML =
+'<div class="mobile-section"><h3>COMPLETED CLASSES</h3></div>';
+
 container.className = "timetable-container";
 
 /* GROUP BY DAY */
@@ -372,6 +490,8 @@ div.onclick = () => {
 
 const status = getClassStatus(s.day, s.startTime, s.endTime);
 
+
+
 /* ❌ BLOCK IF NOT LIVE OR STARTING SOON */
 if(status !== "live" && status !== "starting-soon"){
     alert("Class is not active now ❌");
@@ -411,6 +531,57 @@ else if(status === "upcoming") statusLabel = "🟡 UPCOMING";
 else if(status === "completed") statusLabel = "⚪ DONE";
 else statusLabel = "❌ Not Today";
 
+const mobileCard = `
+
+
+
+<div class="mobile-card">
+
+
+
+<div class="class-name">
+
+${s.className}
+
+</div>
+
+
+
+<div class="subject">
+
+${s.subject || s.eca || s.language}
+
+</div>
+
+
+
+<div class="time">
+
+${formatTime(s.startTime)}
+
+-
+
+${formatTime(s.endTime)}
+
+</div>
+
+
+
+<div class="status">
+
+${statusLabel}
+
+</div>
+
+
+
+</div>
+
+
+
+`;
+
+
 /* HTML */
 div.innerHTML = `
 
@@ -433,6 +604,23 @@ ${timeText}
 </div>
 
 `;
+
+if(status === "live" ||
+   status === "starting-soon"){
+
+    todayBox.innerHTML += mobileCard;
+
+}
+else if(status === "upcoming"){
+
+    upcomingBox.innerHTML += mobileCard;
+
+}
+else if(status === "completed"){
+
+    completedBox.innerHTML += mobileCard;
+
+}
 
 column.appendChild(div);
 
