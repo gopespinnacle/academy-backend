@@ -158,7 +158,7 @@ Save Summary
 
 <script>
 
-const token = localStorage.getItem("token");
+const token = sessionStorage.getItem("token");
 let attendanceMarked = false; 
 /* GET URL PARAMS */
 const params = new URLSearchParams(window.location.search);
@@ -347,8 +347,8 @@ headers:{
 "Authorization":"Bearer " + token
 },
 body: JSON.stringify({
-teacherId: localStorage.getItem("teacherId"),
-teacherName: localStorage.getItem("teacherName"),
+teacherId: sessionStorage.getItem("teacherId"),
+teacherName: sessionStorage.getItem("teacherName"),
 className: params.get("className"),
 subject: params.get("subject") || "General",
 day: params.get("day"),
@@ -443,8 +443,8 @@ params.get("language") ||
 params.get("eca") ||
 "General";
 
-const token = localStorage.getItem("token");
-const teacherId = localStorage.getItem("teacherId");
+const token = sessionStorage.getItem("token");
+const teacherId = sessionStorage.getItem("teacherId");
 
 /* API */
 try{
@@ -483,7 +483,7 @@ roomName = roomName.replace(/\s+/g, "").replace(/[^a-zA-Z0-9\-]/g,"");
 const studentName =
 document.querySelector(".student-card b")
 ?.innerText.replace("👤 ","") || "";
-localStorage.setItem(
+sessionStorage.setItem(
 "teacherInTime",
 new Date().toISOString()
 );
@@ -502,7 +502,7 @@ async function endClass(){
 
 const params = new URLSearchParams(window.location.search);
 
-const token = localStorage.getItem("token");
+const token = sessionStorage.getItem("token");
 
 await fetch("https://academy-backend-eatl.onrender.com/api/teacher/end-attendance",{
 method:"POST",
@@ -511,7 +511,7 @@ headers:{
 "Authorization":"Bearer " + token
 },
 body: JSON.stringify({
-teacherId: localStorage.getItem("teacherId"),
+teacherId: sessionStorage.getItem("teacherId"),
 className: params.get("className"),
 day: params.get("day"),
 startTime: params.get("startTime"),
@@ -534,8 +534,8 @@ headers:{
 "Authorization":"Bearer " + token
 },
 body: JSON.stringify({
-teacherId: localStorage.getItem("teacherId"),
-teacherName: localStorage.getItem("teacherName"),
+teacherId: sessionStorage.getItem("teacherId"),
+teacherName: sessionStorage.getItem("teacherName"),
 className: params.get("className"),
 subject: params.get("subject") || "General",
 day: params.get("day"),
