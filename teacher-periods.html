@@ -589,51 +589,39 @@ else statusLabel = "❌ Not Today";
 
 const mobileCard = `
 
-
-
-<div class="mobile-card">
-
-
+<div
+class="mobile-card"
+onclick="openPeriod(
+'${s.className}',
+'${s.subject || ""}',
+'${s.eca || ""}',
+'${s.language || ""}',
+'${s.day}',
+'${s.startTime}',
+'${s.endTime}'
+)"
+style="cursor:pointer;"
+>
 
 <div class="class-name">
-
 ${s.className}
-
 </div>
-
-
 
 <div class="subject">
-
 ${s.subject || s.eca || s.language}
-
 </div>
-
-
 
 <div class="time">
-
 ${formatTime(s.startTime)}
-
 -
-
 ${formatTime(s.endTime)}
-
 </div>
-
-
 
 <div class="status">
-
 ${statusLabel}
-
 </div>
 
-
-
 </div>
-
-
 
 `;
 
@@ -736,6 +724,44 @@ container.appendChild(column);
 });
 
 }
+
+function openPeriod(
+className,
+subject,
+eca,
+language,
+day,
+startTime,
+endTime
+){
+
+const status =
+getClassStatus(
+day,
+startTime,
+endTime
+);
+
+if(
+status !== "live" &&
+status !== "starting-soon"
+){
+alert("Class is not active now ❌");
+return;
+}
+
+window.location.href =
+"period-students.html?" +
+"className=" + encodeURIComponent(className) +
+"&subject=" + encodeURIComponent(subject) +
+"&eca=" + encodeURIComponent(eca) +
+"&language=" + encodeURIComponent(language) +
+"&day=" + encodeURIComponent(day) +
+"&startTime=" + encodeURIComponent(startTime) +
+"&endTime=" + encodeURIComponent(endTime);
+
+}
+
 setInterval(() => {
     loadTimetable();
 }, 10000);
