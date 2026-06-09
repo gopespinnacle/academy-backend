@@ -169,39 +169,25 @@ table{
 display:none;
 }
 
+#sidebar-container .sidebar{
+
+left:-260px;
+
+}
+
+#sidebar-container .sidebar.show{
+
+left:0;
+
+}
+
 }
 </style>
 </head>
 
 <body class="dashboard-page">
 
-    <div class="mobile-header">
-
-<button class="menu-btn">
-<i class="fa fa-calendar"></i>
-</button>
-
-<div>
-
-<div style="
-font-size:12px;
-opacity:.8;
-">
-Welcome
-</div>
-
-<div style="
-font-size:18px;
-font-weight:bold;
-">
-My Timetable
-</div>
-
-</div>
-
-<i class="fa fa-user-circle"></i>
-
-</div>
+    
 
 <div class="mobile-header">
 
@@ -222,15 +208,11 @@ onclick="toggleMenu()">
 
 <script>
 
-if(window.innerWidth > 768){
-
 fetch("teacher-sidebar.html")
 .then(res => res.text())
 .then(data=>{
 document.getElementById("sidebar-container").innerHTML=data;
 });
-
-}
 
 </script>
 
