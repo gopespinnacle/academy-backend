@@ -1,32 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    
-    <link rel="manifest" href="/manifest.json">
-
-<meta name="theme-color"
-content="#000000">
-
+        
 <meta name="viewport"
 content="width=device-width,initial-scale=1,viewport-fit=cover">
 
-<meta name="mobile-web-app-capable"
-content="yes">
-
-<meta name="apple-mobile-web-app-title"
-content="Academy">
-
-<meta name="application-name"
-content="Academy">
-
 <meta name="theme-color"
 content="#000000">
-
-<meta name="apple-mobile-web-app-capable"
-content="yes">
-
-<meta name="apple-mobile-web-app-status-bar-style"
-content="black-translucent">
 
 <meta charset="UTF-8">
 <title></title>
@@ -560,13 +540,7 @@ background:black;
 </style>
 </head>
 
-<body
-onload="forcePortrait()"
-style="
-margin:0;
-overflow-x:hidden;
-overscroll-behavior:none;
-">
+<body>
 <div class="menu-overlay" onclick="toggleMobileMenu()"></div>
 <div class="toolbar">
 
@@ -2067,55 +2041,5 @@ screenCanvas.height
 
 }
 </script>
-<script>
-async function forcePortrait(){
-
-try{
-
-if(screen.orientation){
-
-await screen.orientation.lock(
-"portrait"
-);
-
-}
-
-}catch(err){
-
-console.log(
-"orientation lock failed"
-);
-
-}
-
-}
-forcePortrait();
-
-if(
-"serviceWorker"
-in navigator
-){
-
-navigator.serviceWorker
-.register("/sw.js")
-.then(()=>{
-
-console.log(
-"SW REGISTERED"
-);
-
-})
-.catch(err=>{
-
-console.log(err);
-
-});
-
-}
-
-
-</script>
-
-
 </body>
 </html>

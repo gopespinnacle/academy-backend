@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="manifest" href="/manifest.json">
+    
 <meta name="theme-color" content="#1e293b">
     <link rel="icon" href="favicon.ico">
 <meta charset="UTF-8">
@@ -1201,42 +1201,6 @@ function toggleCourse(el, name){
 }
 
 loadCourses();
-
-</script>
-
-<script>
-
-if(screen.orientation){
-
-screen.orientation.lock("portrait")
-
-.catch(()=>{});
-
-}
-
-window.addEventListener("load",()=>{
-
-if(window.innerWidth >
-
-window.innerHeight){
-
-document.body.style.transform="rotate(90deg)";
-
-document.body.style.transformOrigin="center center";
-
-}
-
-});
-
-if ("serviceWorker" in navigator) {
-
-navigator.serviceWorker.register("/sw.js")
-
-.then(() => console.log("SW registered"))
-
-.catch(err => console.log(err));
-
-}
 
 </script>
 </body>
