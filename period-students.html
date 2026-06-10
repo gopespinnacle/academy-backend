@@ -132,9 +132,19 @@ margin-bottom:15px;
 <div id="sidebar-container"></div>
 
 <script>
-if(window.screen.width > 768){
+
+if(window.innerWidth > 768){
+
+fetch("teacher-sidebar.html")
+.then(res => res.text())
+.then(data=>{
+
+document.getElementById("sidebar-container").innerHTML = data;
+
+});
 
 }
+
 </script>
 
 <div class="main-content">
