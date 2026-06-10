@@ -1054,6 +1054,22 @@ Send
 
 <div id="deviceBar" style="display:none;">
 
+<div style="
+display:flex;
+flex-direction:column;
+gap:8px;
+">
+
+<button onclick="openChat()">
+💬 Chat
+</button>
+
+<hr style="
+border:none;
+border-top:1px solid #555;
+width:100%;
+">
+
 <span>📷 Camera</span>
 
 <select id="cameraSelect"
@@ -1068,6 +1084,8 @@ onchange="switchCamera(this.value)">
 
 </div>
 
+</div>
+
 
 <div id="bottomControls">
 
@@ -1079,7 +1097,6 @@ onchange="switchCamera(this.value)">
 
 <button onclick="openParticipants()">👥</button>
 
-<button onclick="openChat()">💬</button>
 
 <button onclick="startScreenShare()">🖥️</button>
 
