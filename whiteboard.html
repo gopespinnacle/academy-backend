@@ -428,6 +428,56 @@ display:none !important;
         z-index:99999;
     }
 
+
+    #meetTopBar{
+
+position:fixed;
+
+top:0;
+
+left:0;
+
+width:100%;
+
+height:50px;
+
+background:#202124;
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+padding:0 15px;
+
+box-sizing:border-box;
+
+z-index:999999;
+
+color:white;
+
+font-size:14px;
+
+font-weight:bold;
+
+}
+
+#meetTitle{
+
+flex:1;
+
+text-align:center;
+
+}
+
+#meetTime{
+
+font-size:12px;
+
+color:#8ab4f8;
+
+}
     /* HIDE NORMAL TOOLBAR */
     /*#mobileMenu{
 
@@ -485,8 +535,7 @@ display:none !important;
     @media(max-width:768px){
 
 #screenContainer{
-
-top:42px;
+top:50px;
 left:0;
 
 width:100vw;
@@ -767,6 +816,26 @@ border-radius:8px;
 <div class="menu-overlay" onclick="toggleMobileMenu()"></div>
 <div class="toolbar">
 
+    <div id="meetTopBar">
+
+<button onclick="history.back()">
+←
+</button>
+
+<div id="meetTitle">
+
+Grade 6 Maths
+
+</div>
+
+<div id="meetTime">
+
+00:00
+
+</div>
+
+</div>
+
     <!-- MOBILE MENU BUTTON -->
     <button id="menuBtn" onclick="toggleMobileMenu()">⋮</button>
 
@@ -960,7 +1029,7 @@ webkit-playsinline>
 </div>
 <canvas id="mainBoard" style="
     position:absolute;
-    top:80px;
+    top:50px;
     left:0;
     width:100%;
     bottom:0;   /* 🔥 THIS IS THE FIX */
@@ -2218,6 +2287,30 @@ function toggleAudio(btn){
     isAudioOn = !isAudioOn;
 
     audioTrack.enabled = isAudioOn;
+
+    let seconds = 0;
+
+setInterval(()=>{
+
+seconds++;
+
+const mins =
+Math.floor(seconds/60);
+
+const secs =
+seconds%60;
+
+document.getElementById(
+"meetTime"
+).innerText =
+
+String(mins).padStart(2,"0")
++
+":"
++
+String(secs).padStart(2,"0");
+
+},1000);
 
     updateMicBadge();
 
