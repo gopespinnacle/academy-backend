@@ -661,13 +661,13 @@ gap:12px;
 
 position:fixed;
 
-top:0;
+top:10px;
 
 right:-320px;
 
 width:280px;
 
-height:100vh;
+height:calc(100vh - 80px);
 
 background:white;
 
@@ -680,6 +680,8 @@ transition:right .3s ease;
 display:flex;
 
 flex-direction:column;
+
+border-radius:12px 0 0 12px;
 
 }
 
@@ -2368,6 +2370,8 @@ ${msg}
 input.value="";
 
 }
+
+
 </script>
 </body>
 </html>
