@@ -589,35 +589,39 @@ height:42px;
 
 background:#1e293b;
 
-display:flex;
+display:grid;
+
+grid-template-columns:40px 1fr 50px;
 
 align-items:center;
 
-justify-content:space-between;
-
-padding:0 10px;
+padding:0 6px;
 
 box-sizing:border-box;
 
 z-index:999999;
 
-color:white;
+}
 
-font-size:13px;
+#meetTopBar button{
 
-font-weight:600;
+width:28px;
 
-overflow:hidden;
+height:28px;
+
+padding:0;
+
+font-size:14px;
 
 }
 
 #meetTitle{
 
-flex:1;
-
 text-align:center;
 
 font-size:14px;
+
+font-weight:600;
 
 white-space:nowrap;
 
@@ -629,9 +633,7 @@ text-overflow:ellipsis;
 
 #meetTime{
 
-font-size:12px;
-
-min-width:45px;
+font-size:11px;
 
 text-align:right;
 
@@ -1028,21 +1030,7 @@ Grade 6 Maths
        
       
 
-        <div id="meetTopBar">
-
-<button onclick="history.back()">
-←
-</button>
-
-<div id="meetTitle">
-Grade 6 Maths
-</div>
-
-<div id="meetTime">
-00:00
-</div>
-
-</div>
+        
 <div id="participantsPanel">
 
 <div class="participants-header">
@@ -2502,33 +2490,7 @@ function toggleAudio(btn){
 
     audioTrack.enabled = isAudioOn;
     
-    let meetingSeconds = 0;
-
-setInterval(()=>{
-
-meetingSeconds++;
-
-const mins =
-Math.floor(meetingSeconds/60);
-
-const secs =
-meetingSeconds % 60;
-
-const timer =
-document.getElementById("meetTime");
-
-if(timer){
-
-timer.innerText =
-String(mins).padStart(2,"0")
-+
-":"
-+
-String(secs).padStart(2,"0");
-
-}
-
-},1000);
+    
 
 updateMicBadge();
 
@@ -2780,6 +2742,60 @@ bar.style.display = "none";
 }
 
 }
+
+let meetingSeconds = 0;
+
+
+
+setInterval(()=>{
+
+
+
+meetingSeconds++;
+
+
+
+const mins =
+
+Math.floor(meetingSeconds/60);
+
+
+
+const secs =
+
+meetingSeconds % 60;
+
+
+
+const timer =
+
+document.getElementById("meetTime");
+
+
+
+if(timer){
+
+
+
+timer.innerText =
+
+String(mins).padStart(2,"0")
+
++
+
+":"
+
++
+
+String(secs).padStart(2,"0");
+
+
+
+}
+
+
+
+},1000);
 
 updateMicBadge();
 
