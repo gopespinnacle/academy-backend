@@ -69,13 +69,23 @@ padding:5px;
 
 @media(max-width:768px){
 
-#sidebar-container{
+#sidebar-container,
+#attendanceTable,
+h3{
 display:none;
 }
 
 .main-content{
 margin-left:0;
 padding:15px;
+}
+
+.student-card{
+background:white;
+border-radius:12px;
+padding:15px;
+margin-bottom:12px;
+box-shadow:0 2px 8px rgba(0,0,0,.08);
 }
 
 }
@@ -139,6 +149,8 @@ margin-left:10px;
 ⛔ End Class
 </button>
 <div id="assignedContainer"></div>
+
+<div id="mobileAttendanceCards"></div>
 <!-- ✅ PASTE HERE -->
 <h3>Class Attendance</h3>
 
@@ -458,6 +470,13 @@ function renderAttendanceTable(students){
 const tbody = document.getElementById("attendanceBody");
 tbody.innerHTML = "";
 
+const mobileCards =
+document.getElementById("mobileAttendanceCards");
+
+if(mobileCards){
+mobileCards.innerHTML = "";
+}
+
 students.forEach(s => {
 
 const today = new Date().toLocaleDateString("en-IN");
@@ -485,6 +504,31 @@ tbody.innerHTML += `
 
 </tr>
 `;
+
+if(window.innerWidth <= 768){
+
+mobileCards.innerHTML += `
+
+<div style="
+background:white;
+padding:15px;
+border-radius:12px;
+margin-bottom:12px;
+box-shadow:0 2px 8px rgba(0,0,0,.08);
+">
+
+<b>👤 ${s.student.name}</b><br>
+
+📘 ${params.get("subject") || "General"}<br><br>
+
+🟡 Pending
+
+</div>
+
+`;
+
+}
+
 
 });
 
