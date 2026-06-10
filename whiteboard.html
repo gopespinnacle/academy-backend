@@ -2288,17 +2288,17 @@ function toggleAudio(btn){
 
     audioTrack.enabled = isAudioOn;
 
-    let seconds = 0;
+    let meetingSeconds = 0;
 
 setInterval(()=>{
 
-seconds++;
+meetingSeconds++;
 
 const mins =
-Math.floor(seconds/60);
+Math.floor(meetingSeconds/60);
 
 const secs =
-seconds%60;
+meetingSeconds%60;
 
 document.getElementById(
 "meetTime"
