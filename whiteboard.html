@@ -595,6 +595,69 @@ overflow-x:hidden;
 
 background:black;
 }
+
+
+#participantsPanel{
+
+position:fixed;
+
+top:0;
+
+right:-320px;
+
+width:280px;
+
+height:100vh;
+
+background:white;
+
+z-index:999999;
+
+box-shadow:-5px 0 20px rgba(0,0,0,.2);
+
+transition:right .3s ease;
+
+overflow-y:auto;
+
+}
+
+#participantsPanel.show{
+
+right:0;
+
+}
+
+.participants-header{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:15px;
+
+font-weight:bold;
+
+font-size:18px;
+
+border-bottom:1px solid #ddd;
+
+}
+
+#participantsList{
+
+padding:15px;
+
+display:flex;
+
+flex-direction:column;
+
+gap:12px;
+
+}
+
+
 </style>
 </head>
 
@@ -636,6 +699,21 @@ onclick="startScreenShare()">
     </div>
  
 </div>
+<div id="participantsPanel">
+
+<div class="participants-header">
+👥 Participants
+<span onclick="closeParticipants()">✖</span>
+</div>
+
+<div id="participantsList">
+
+<div>🟢 Teacher</div>
+
+</div>
+
+</div>
+
 
 <div id="bottomControls">
 
@@ -645,7 +723,7 @@ onclick="startScreenShare()">
 
 <button onclick="openEmojiPopup()">😊</button>
 
-<button onclick="toggleMobileMenu()">👥</button>
+<button onclick="openParticipants()">👥</button>
 
 <button onclick="toggleMobileMenu()">💬</button>
 
@@ -2124,6 +2202,26 @@ screenCtx.clearRect(
 screenCanvas.width,
 screenCanvas.height
 );
+
+function openParticipants(){
+
+document
+.getElementById(
+"participantsPanel"
+)
+.classList.add("show");
+
+}
+
+function closeParticipants(){
+
+document
+.getElementById(
+"participantsPanel"
+)
+.classList.remove("show");
+
+}
 
 }
 </script>
