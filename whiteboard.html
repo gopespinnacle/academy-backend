@@ -2336,9 +2336,14 @@ alert("Share Screen Clicked");
     try{
 
         alert("Screen Selected");
-        screenStream = await navigator.mediaDevices.getDisplayMedia({
-    video: true,
-    audio: true
+
+alert(
+typeof navigator.mediaDevices.getDisplayMedia
+);
+
+screenStream = await navigator.mediaDevices.getDisplayMedia({
+    video:true,
+    audio:true
 });
 document
 .getElementById(
