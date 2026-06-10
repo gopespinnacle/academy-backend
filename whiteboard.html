@@ -1052,7 +1052,7 @@ Send
 
 </div>
 
-<div id="deviceBar">
+<div id="deviceBar" style="display:none;">
 
 <span>📷 Camera</span>
 
@@ -1082,6 +1082,8 @@ onchange="switchCamera(this.value)">
 <button onclick="openChat()">💬</button>
 
 <button onclick="startScreenShare()">🖥️</button>
+
+<button onclick="toggleDeviceBar()">⋮</button>
 
 <button onclick="leaveClass()">📞</button>
 
@@ -2687,6 +2689,29 @@ ${msg}
 `;
 
 input.value="";
+
+}
+
+function toggleDeviceBar(){
+
+const bar =
+document.getElementById(
+"deviceBar"
+);
+
+if(
+bar.style.display === "none"
+||
+bar.style.display === ""
+){
+
+bar.style.display = "flex";
+
+}else{
+
+bar.style.display = "none";
+
+}
 
 }
 
