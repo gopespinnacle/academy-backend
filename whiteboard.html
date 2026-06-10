@@ -305,7 +305,17 @@ pointer-events:auto;
 }
 /* DESKTOP */
 #menuBtn{
-    display:none !important;
+
+display:flex !important;
+
+position:absolute;
+
+right:5px;
+
+top:10px;
+
+z-index:10000000;
+
 }
 
 /* DESKTOP */
@@ -528,7 +538,7 @@ right:0;
 justify-content:flex-end;
 }
 
-.toolbar > *:not(#menuBtn):not(#mobileMenu){
+.toolbar > *:not(#menuBtn):not(#mobileMenu):not(#meetTopBar){
 
 display:none !important;
 
@@ -620,21 +630,27 @@ padding:0;
 
 #meetTitle{
 
+position:absolute;
+
+left:50%;
+
+top:50%;
+
+transform:translate(-50%,-50%);
+
 font-size:14px;
 
 font-weight:600;
 
 color:white;
 
-position:absolute;
+z-index:9999999;
 
-left:50%;
+display:block !important;
 
-transform:translateX(-50%);
+visibility:visible !important;
 
-white-space:nowrap;
-
-display:block;
+opacity:1 !important;
 
 }
 
