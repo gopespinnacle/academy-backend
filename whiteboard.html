@@ -1169,7 +1169,13 @@ onclick="toggleVideo(this)">
 <button onclick="openParticipants()">👥</button>
 
 
-<button onclick="startScreenShare()">🖥️</button>
+<button
+id="screenShareBtn"
+onclick="startScreenShare()">
+🖥️
+</button>
+
+
 
 <button onclick="toggleDeviceBar()">⋮</button>
 
@@ -2843,6 +2849,19 @@ String(secs).padStart(2,"0");
 },1000);
 
 updateMicBadge();
+
+
+updateMicBadge();
+
+if(
+/Android|iPhone|iPad/i.test(
+navigator.userAgent
+)
+){
+document.getElementById(
+"screenShareBtn"
+).style.display="none";
+}
 
 </script>
 </body>
