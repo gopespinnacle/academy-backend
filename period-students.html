@@ -474,11 +474,42 @@ if(now < classStart){
 el.innerHTML = "<span style='color:gray;'>Class yet to start</span>";
 }
 
+const studentId =
+el.id.replace("teacher-status-","");
+
+const mobileEl =
+document.getElementById(
+`mobile-teacher-status-${studentId}`
+);
+
+if(mobileEl){
+mobileEl.innerHTML =
+"Class yet to start";
+mobileEl.style.color = "gray";
+}
+
 // DURING CLASS (NOT JOINED)
 else if(now >= classStart && now <= classEnd){
 
 if(el.innerText !== "Present"){
-el.innerHTML = "<span style='color:orange;'>Teacher not yet came</span>";
+
+el.innerHTML =
+"<span style='color:orange;'>Teacher not yet came</span>";
+
+const studentId =
+el.id.replace("teacher-status-","");
+
+const mobileEl =
+document.getElementById(
+`mobile-teacher-status-${studentId}`
+);
+
+if(mobileEl){
+mobileEl.innerHTML =
+"Teacher not yet came";
+mobileEl.style.color = "orange";
+}
+
 }
 
 }
@@ -489,6 +520,19 @@ else if(now > classEnd){
 if(!attendanceMarked && el.innerText !== "Present" && el.innerText !== "Absent"){
 
 el.innerHTML = "<span style='color:red;'>Absent</span>";
+
+const studentId =
+el.id.replace("teacher-status-","");
+
+const mobileEl =
+document.getElementById(
+`mobile-teacher-status-${studentId}`
+);
+
+if(mobileEl){
+mobileEl.innerHTML = "Absent";
+mobileEl.style.color = "red";
+}
 
 /* ✅ SAVE ABSENT IN DB */
 fetch("https://academy-backend-eatl.onrender.com/api/teacher/attendance",{
@@ -589,7 +633,9 @@ box-shadow:0 2px 8px rgba(0,0,0,.08);
 ⏰ Late Join : 0 min<br><br>
 
 👨‍🏫 Teacher Status :
-<span style="color:gray;">
+<span
+id="mobile-teacher-status-${s.student._id}"
+style="color:gray;">
 Class yet to start
 </span><br>
 
@@ -626,8 +672,26 @@ return;
 }
 
 /* ✅ SET PRESENT */
-document.querySelectorAll("[id^='teacher-status-']").forEach(el=>{
-el.innerHTML = "<span style='color:green;'>Present</span>";
+document.querySelectorAll(
+"[id^='teacher-status-']"
+).forEach(el=>{
+
+el.innerHTML =
+"<span style='color:green;'>Present</span>";
+
+const studentId =
+el.id.replace("teacher-status-","");
+
+const mobileEl =
+document.getElementById(
+`mobile-teacher-status-${studentId}`
+);
+
+if(mobileEl){
+mobileEl.innerHTML = "Present";
+mobileEl.style.color = "green";
+}
+
 });
 
 const className = params.get("className");
