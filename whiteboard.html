@@ -1709,7 +1709,8 @@ data.candidate
 
 }
 
-}catch(err){
+}
+catch(err){
 
 console.log(err);
 
@@ -2328,10 +2329,13 @@ setTimeout(() => {
 let screenStream;
 
 async function startScreenShare(){
-
+    
+alert("Share Screen Clicked");
     if(role !== "teacher") return;
 
     try{
+
+        alert("Screen Selected");
         screenStream = await navigator.mediaDevices.getDisplayMedia({
     video: true,
     audio: true
