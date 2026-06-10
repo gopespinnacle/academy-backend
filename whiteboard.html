@@ -849,7 +849,7 @@ Send
 
 <button onclick="toggleVideo()">🎥</button>
 
-<button onclick="toggleAudio()">🎤</button>
+<button onclick="toggleAudio(this)">🎤</button>
 
 <button onclick="openEmojiPopup()">😊</button>
 
@@ -1736,7 +1736,7 @@ async function initMedia(cameraId = null){
         ? { deviceId: { exact: cameraId } }
         : true,
 
-        audio:false
+        audio:true
     });
 
     const localVideo =
@@ -2206,21 +2206,23 @@ badge.style.color =
 let isVideoOn = true;
 
 // 🎤 TOGGLE AUDIO
-function toggleAudio(){
+function toggleAudio(btn){
 
     if(!localStream) return;
 
-    const audioTrack = localStream.getAudioTracks()[0];
+    const audioTrack =
+    localStream.getAudioTracks()[0];
+
     if(!audioTrack) return;
 
     isAudioOn = !isAudioOn;
 
-    updateMicBadge();
-
     audioTrack.enabled = isAudioOn;
 
-    // change button text
-    event.target.innerText = isAudioOn ? "🎤 Mute" : "🔇 Unmute";
+    updateMicBadge();
+
+    btn.innerText =
+    isAudioOn ? "🎤" : "🔇";
 }
 
 // 📷 TOGGLE VIDEO
