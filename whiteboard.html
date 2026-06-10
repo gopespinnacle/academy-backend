@@ -557,30 +557,33 @@ display:none !important;
 
     .toolbar{
 
-        position:fixed;
-        top:0;
-        left:0;
+    position:fixed;
+    top:0;
+    left:0;
 
-        width:100%;
-        height:42px;
+    width:100%;
+    height:50px;
 
-        background:#1e293b;
+    background:transparent;
 
-        display:flex;
-        justify-content:flex-end;
-        align-items:center;
+    display:flex;
 
-       padding:0 4px;
+    justify-content:flex-end;
 
-        z-index:99999;
-    }
+    align-items:center;
+
+    padding:0;
+
+    z-index:1;
+}
 
 
-    #meetTopBar{
+   #meetTopBar{
 
 position:fixed;
 
 top:0;
+
 left:0;
 
 width:100%;
@@ -595,7 +598,7 @@ align-items:center;
 
 justify-content:space-between;
 
-padding:0 10px;
+padding:0 8px;
 
 box-sizing:border-box;
 
@@ -617,15 +620,21 @@ padding:0;
 
 #meetTitle{
 
-font-size:16px;
+font-size:14px;
 
 font-weight:600;
 
 color:white;
 
-flex:1;
+position:absolute;
 
-text-align:center;
+left:50%;
+
+transform:translateX(-50%);
+
+white-space:nowrap;
+
+display:block;
 
 }
 
