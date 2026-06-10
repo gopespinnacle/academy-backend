@@ -958,6 +958,27 @@ border-radius:8px;
 
 }
 
+.video-off{
+
+position:relative;
+
+}
+
+.video-off::after{
+
+content:"❌";
+
+position:absolute;
+
+right:-3px;
+
+top:-3px;
+
+font-size:10px;
+
+color:red;
+
+}
 
 </style>
 </head>
@@ -1089,7 +1110,11 @@ onchange="switchCamera(this.value)">
 
 <div id="bottomControls">
 
-<button onclick="toggleVideo()">🎥</button>
+<button
+id="videoBtn"
+onclick="toggleVideo(this)">
+🎥
+</button>
 
 <button onclick="toggleAudio(this)">🎤</button>
 
@@ -2499,17 +2524,28 @@ updateMicBadge();
 }
 
 // 📷 TOGGLE VIDEO
-function toggleVideo(){
+function toggleVideo(btn){
 
     if(!localStream) return;
 
-    const videoTrack = localStream.getVideoTracks()[0];
+    const videoTrack =
+    localStream.getVideoTracks()[0];
+
     if(!videoTrack) return;
 
     isVideoOn = !isVideoOn;
+
     videoTrack.enabled = isVideoOn;
 
-    event.target.innerText = isVideoOn ? "📷 Stop Video" : "📷 Start Video";
+    if(isVideoOn){
+
+        btn.classList.remove("video-off");
+
+    }else{
+
+        btn.classList.add("video-off");
+
+    }
 }
 
 async function startPiP() {
