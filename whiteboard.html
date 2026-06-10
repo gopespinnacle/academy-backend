@@ -399,13 +399,13 @@ font-size:12px;
 
 #deviceBar select{
 
-height:26px;
+width:90px;
 
-width:120px;
+min-width:90px;
 
-min-width:120px;
+height:24px;
 
-font-size:11px;
+font-size:10px;
 
 padding:0 4px;
 
@@ -730,26 +730,29 @@ overflow:hidden;
 
 @media(max-width:768px){
 
-#bottomControls{
+#bottomControls button{
 
-position:fixed;
+width:34px;
 
-bottom:0;
-left:0;
+height:34px;
 
-width:100%;
+font-size:15px;
 
-height:60px;
+padding:0;
 
-background:#202124;
+border-radius:50%;
 
-display:flex;
+background:#3c4043;
 
-justify-content:space-evenly;
+color:white;
 
-align-items:center;
+border:none;
 
-z-index:999999;
+}
+
+#bottomControls button:last-child{
+
+background:#ea4335;
 
 }
 
