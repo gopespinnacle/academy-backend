@@ -681,6 +681,8 @@ display:flex;
 
 flex-direction:column;
 
+overflow:hidden;
+
 }
 
 #chatPanel.show{
@@ -697,6 +699,8 @@ overflow-y:auto;
 
 padding:10px;
 
+min-height:0;
+
 }
 
 #chatInputArea{
@@ -708,6 +712,10 @@ gap:5px;
 padding:10px;
 
 border-top:1px solid #ddd;
+
+background:white;
+
+flex-shrink:0;
 
 }
 
@@ -731,6 +739,24 @@ border-radius:8px;
 
 }
 
+
+@media(max-width:768px){
+
+#chatPanel{
+
+width:100%;
+
+right:-100%;
+
+}
+
+#chatPanel.show{
+
+right:0;
+
+}
+
+}
 
 </style>
 </head>
