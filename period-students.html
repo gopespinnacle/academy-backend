@@ -19,6 +19,55 @@ border-radius:10px;
 box-shadow:0 2px 8px rgba(0,0,0,0.1);
 font-size:14px;
 }
+
+.mobile-header{
+
+display:none;
+
+}
+
+@media(max-width:768px){
+
+.mobile-header{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+margin-bottom:15px;
+
+}
+
+.page-title{
+
+margin:0;
+
+font-size:20px;
+
+text-align:center;
+
+flex:1;
+
+}
+
+.back-btn,
+.home-btn{
+
+all:unset;
+
+font-size:24px;
+
+cursor:pointer;
+
+padding:5px;
+
+}
+
+}
+
+
 </style>
 </head>
 
@@ -37,7 +86,25 @@ document.getElementById("sidebar-container").innerHTML=data;
 
 <div class="main-content">
 
-<h2>Assigned Students (This Period)</h2>
+<div class="mobile-header">
+
+<button
+class="back-btn"
+onclick="history.back()">
+←
+</button>
+
+<h2 class="page-title">
+Assigned Students
+</h2>
+
+<button
+class="home-btn"
+onclick="window.location.href='teacher-dashboard.html'">
+🏠
+</button>
+
+</div>
 <button id="attendBtn" onclick="joinClass()" disabled style="
 background:gray;
 color:white;
