@@ -69,15 +69,12 @@ padding:5px;
 
 @media(max-width:768px){
 
-#sidebar-container,
-#attendanceTable,
-#assignedContainer,
-h3{
-display:none;
-}
-
 #sidebar-container{
 display:none !important;
+}
+
+#attendanceTable{
+display:none;
 }
 
 body{
@@ -86,11 +83,24 @@ margin:0;
 }
 
 .main-content{
-margin-left:0 !important;
+margin:0 !important;
+padding:15px !important;
 width:100% !important;
-padding:15px;
-max-width:100%;
+max-width:100% !important;
 box-sizing:border-box;
+}
+
+#assignedContainer{
+display:none;
+}
+
+#mobileAttendanceCards{
+display:block;
+width:100%;
+}
+
+h3{
+display:none;
 }
 
 }
