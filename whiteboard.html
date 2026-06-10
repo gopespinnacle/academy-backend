@@ -421,6 +421,52 @@ background:#ea4335;
 
 }
 
+#meetTopBar{
+
+position:fixed;
+
+top:0;
+
+left:0;
+
+width:100%;
+
+height:50px;
+
+background:#1e293b;
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+padding:0 20px;
+
+box-sizing:border-box;
+
+z-index:999999;
+
+color:white;
+
+font-weight:600;
+
+}
+
+#meetTitle{
+
+font-size:18px;
+
+}
+
+#meetTime{
+
+color:#8ab4f8;
+
+font-size:14px;
+
+}
+
 @media(max-width:768px){
 
 #mobileMenu{
@@ -931,28 +977,20 @@ Grade 6 Maths
        
       
 
-        <button onclick="saveAsPDF()">💾 Save PDF</button>
+        <div id="meetTopBar">
 
-       <button id="shareScreenBtn"
-onclick="startScreenShare()">
-
-🖥️ Share Screen
-
+<button onclick="history.back()">
+←
 </button>
 
-        <button onclick="stopScreenShare()">❌ Stop Share</button>
+<div id="meetTitle">
+Grade 6 Maths
+</div>
 
-        <button onclick="toggleAudio()">🎤 Mute</button>
+<div id="meetTime">
+00:00
+</div>
 
-        <button onclick="toggleVideo()">📷 Stop Video</button>
-        
-        <button onclick="startPiP()">📺 Camera PiP</button>
-        <button onclick="openEmojiPopup()">😀 Emojis</button>
-
-        <button onclick="leaveClass()">🚪 Leave</button>
-
-    </div>
- 
 </div>
 <div id="participantsPanel">
 
