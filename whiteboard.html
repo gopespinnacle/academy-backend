@@ -2370,8 +2370,18 @@ pip.style.height =
 screenCanvas.style.zIndex = "99999";
 screenCanvas.style.pointerEvents = "auto";
         // 🔥 THIS WAS MISSING (VERY IMPORTANT)
-        const videoSender = pc.getSenders().find(
-    s => s.track && s.track.kind === "video"
+        alert(
+"Senders: " +
+pc.getSenders().length
+);
+
+const videoSender = pc.getSenders().find(
+s => s.track && s.track.kind === "video"
+);
+
+alert(
+"Video Sender Found: " +
+!!videoSender
 );
 
 if(videoSender){
