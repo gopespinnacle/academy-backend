@@ -76,20 +76,33 @@ h3{
 display:none;
 }
 
+body{
+padding:0;
+margin:0;
+}
+
 .main-content{
 margin-left:0;
 padding:15px;
-}
-
-.student-card{
-background:white;
-border-radius:12px;
-padding:15px;
-margin-bottom:12px;
-box-shadow:0 2px 8px rgba(0,0,0,.08);
+width:100%;
+max-width:100%;
+box-sizing:border-box;
 }
 
 }
+
+.attend-mobile-btn{
+width:100%;
+background:#28a745;
+color:white;
+padding:14px;
+border:none;
+border-radius:10px;
+font-size:16px;
+font-weight:bold;
+margin-bottom:15px;
+}
+
 </style>
 </head>
 
@@ -127,15 +140,11 @@ onclick="window.location.href='teacher-dashboard.html'">
 </button>
 
 </div>
-<button id="attendBtn" onclick="joinClass()" disabled style="
-background:gray;
-color:white;
-padding:10px 20px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-margin-bottom:15px;
-">
+<button
+id="attendBtn"
+class="attend-mobile-btn"
+onclick="joinClass()"
+disabled>
 ⏳ Available 10 min before
 </button>
 
