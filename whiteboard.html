@@ -2287,7 +2287,7 @@ function toggleAudio(btn){
     isAudioOn = !isAudioOn;
 
     audioTrack.enabled = isAudioOn;
-
+    
     let meetingSeconds = 0;
 
 setInterval(()=>{
@@ -2298,21 +2298,25 @@ const mins =
 Math.floor(meetingSeconds/60);
 
 const secs =
-meetingSeconds%60;
+meetingSeconds % 60;
 
-document.getElementById(
-"meetTime"
-).innerText =
+const timer =
+document.getElementById("meetTime");
 
+if(timer){
+
+timer.innerText =
 String(mins).padStart(2,"0")
 +
 ":"
 +
 String(secs).padStart(2,"0");
 
+}
+
 },1000);
 
-    updateMicBadge();
+updateMicBadge();
 
     btn.innerText =
     isAudioOn ? "🎤" : "🔇";
