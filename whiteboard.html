@@ -2329,6 +2329,13 @@ setTimeout(() => {
 let screenStream;
 
 async function startScreenShare(){
+
+    if(window.AndroidBridge){
+
+    AndroidBridge.startScreenShare();
+
+    return;
+}
     
 alert("Share Screen Clicked");
     if(role !== "teacher") return;
