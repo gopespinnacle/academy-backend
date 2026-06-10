@@ -2375,7 +2375,13 @@ screenCanvas.style.pointerEvents = "auto";
 );
 
 if(videoSender){
-    videoSender.replaceTrack(screenTrack);
+
+alert("Replacing Track");
+
+await videoSender.replaceTrack(screenTrack);
+
+alert("Track Replaced");
+
 }
 
 // 🔥 ADD AUDIO TRACK ALSO
