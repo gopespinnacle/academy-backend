@@ -76,15 +76,19 @@ h3{
 display:none;
 }
 
+#sidebar-container{
+display:none !important;
+}
+
 body{
 padding:0;
 margin:0;
 }
 
 .main-content{
-margin-left:0;
+margin-left:0 !important;
+width:100% !important;
 padding:15px;
-width:100%;
 max-width:100%;
 box-sizing:border-box;
 }
@@ -112,11 +116,15 @@ margin-bottom:15px;
 <div id="sidebar-container"></div>
 
 <script>
+if(window.innerWidth > 768){
+
 fetch("teacher-sidebar.html")
 .then(res => res.text())
 .then(data=>{
 document.getElementById("sidebar-container").innerHTML=data;
 });
+
+}
 </script>
 
 <div class="main-content">
