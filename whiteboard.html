@@ -657,6 +657,32 @@ gap:12px;
 
 }
 
+#teacherParticipant{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:10px;
+
+background:#f8fafc;
+
+border-radius:10px;
+
+}
+
+#teacherMicStatus{
+
+font-size:12px;
+
+font-weight:bold;
+
+color:green;
+
+}
+
 #chatPanel{
 
 position:fixed;
@@ -784,7 +810,12 @@ onclick="startScreenShare()">
 
 <div id="participantsList">
 
-<div>🟢 Teacher</div>
+<div id="teacherParticipant">
+
+🟢 Teacher
+<span id="teacherMicStatus">🎤 ON</span>
+
+</div>
 
 </div>
 
@@ -2143,6 +2174,35 @@ function resetPiP(){
     pip.classList.remove("minimized");
 }
 let isAudioOn = true;
+
+function updateMicBadge(){
+
+const badge =
+document.getElementById(
+"teacherMicStatus"
+);
+
+if(!badge) return;
+
+if(isAudioOn){
+
+badge.innerHTML =
+"🎤 ON";
+
+badge.style.color =
+"green";
+
+}else{
+
+badge.innerHTML =
+"🔇 OFF";
+
+badge.style.color =
+"red";
+
+}
+
+}
 let isVideoOn = true;
 
 // 🎤 TOGGLE AUDIO
@@ -2154,6 +2214,9 @@ function toggleAudio(){
     if(!audioTrack) return;
 
     isAudioOn = !isAudioOn;
+
+    updateMicBadge();
+
     audioTrack.enabled = isAudioOn;
 
     // change button text
@@ -2371,6 +2434,7 @@ input.value="";
 
 }
 
+updateMicBadge();
 
 </script>
 </body>
