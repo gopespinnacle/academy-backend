@@ -360,6 +360,43 @@ z-index:999999;
 
 }
 
+
+#deviceBar{
+
+position:fixed;
+
+bottom:90px;
+
+left:50%;
+
+transform:translateX(-50%);
+
+display:flex;
+
+gap:15px;
+
+padding:10px 15px;
+
+background:#202124;
+
+border-radius:12px;
+
+color:white;
+
+z-index:999999;
+
+align-items:center;
+
+}
+
+#deviceBar select{
+
+height:35px;
+
+min-width:220px;
+
+}
+
 #bottomControls button{
 
 width:50px;
@@ -908,10 +945,7 @@ onclick="startScreenShare()">
         <button onclick="toggleAudio()">🎤 Mute</button>
 
         <button onclick="toggleVideo()">📷 Stop Video</button>
-        <select id="cameraSelect" onchange="switchCamera(this.value)">
-    <option>Loading Cameras...</option>
-</select>
-
+        
         <button onclick="startPiP()">📺 Camera PiP</button>
         <button onclick="openEmojiPopup()">😀 Emojis</button>
 
@@ -960,6 +994,22 @@ Send
 </button>
 
 </div>
+
+</div>
+
+<div id="deviceBar">
+
+<span>📷 Camera</span>
+
+<select id="cameraSelect"
+onchange="switchCamera(this.value)">
+</select>
+
+<span>🎤 Audio</span>
+
+<select id="audioSelect">
+<option>Default Microphone</option>
+</select>
 
 </div>
 
