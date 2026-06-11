@@ -2324,7 +2324,12 @@ let screenStream;
 
 async function startScreenShare(){
 
-    if(window.AndroidBridge){
+    alert(
+"AndroidBridge = " +
+typeof window.AndroidBridge
+);
+
+if(window.AndroidBridge){
 
     AndroidBridge.startScreenShare();
 
