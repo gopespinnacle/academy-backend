@@ -2893,25 +2893,21 @@ updateMicBadge();
 
 window.addEventListener(
 "androidScreenGranted",
-function(){
+async function(){
 
 alert(
 "ANDROID SCREEN SHARE APPROVED"
 );
 
-alert(
-"APK RECEIVED SCREEN PERMISSION"
+const videoSender =
+pc.getSenders().find(
+s => s.track &&
+s.track.kind === "video"
 );
 
-}
-);
-
-window.addEventListener(
-"androidScreenDenied",
-function(){
-
 alert(
-"ANDROID SCREEN SHARE DENIED"
+"VIDEO SENDER FOUND: " +
+!!videoSender
 );
 
 }
