@@ -2910,6 +2910,22 @@ alert(
 !!videoSender
 );
 
+if(videoSender){
+
+alert(
+"REPLACING TRACK"
+);
+
+await videoSender.replaceTrack(
+localStream.getVideoTracks()[0]
+);
+
+alert(
+"TRACK REPLACED"
+);
+
+}
+
 }
 );
 
