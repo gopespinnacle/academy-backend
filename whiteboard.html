@@ -2893,51 +2893,15 @@ updateMicBadge();
 
 window.addEventListener(
 "androidScreenGranted",
-async function(){
+function(){
 
 alert(
 "ANDROID SCREEN SHARE APPROVED"
 );
 
-try{
-
-screenStream =
-await navigator.mediaDevices.getDisplayMedia({
-video:true,
-audio:true
-});
-
-const screenTrack =
-screenStream.getVideoTracks()[0];
-
-const videoSender =
-pc.getSenders().find(
-s => s.track &&
-s.track.kind === "video"
-);
-
-if(videoSender){
-
-await videoSender.replaceTrack(
-screenTrack
-);
-
-}
-
 alert(
-"SCREEN TRACK SENT"
+"APK RECEIVED SCREEN PERMISSION"
 );
-
-}catch(err){
-
-alert(
-"SCREEN SHARE FAILED: " +
-err.message
-);
-
-console.log(err);
-
-}
 
 }
 );
