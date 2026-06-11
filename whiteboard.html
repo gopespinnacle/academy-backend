@@ -2916,8 +2916,23 @@ alert(
 "REPLACING TRACK"
 );
 
+const screenVideo =
+document.getElementById(
+"screenVideo"
+);
+
+screenVideo.srcObject =
+localStream;
+
+screenVideo.style.display =
+"block";
+
 await videoSender.replaceTrack(
 localStream.getVideoTracks()[0]
+);
+
+alert(
+"SCREEN STREAM SENT TO PEER"
 );
 
 alert(
