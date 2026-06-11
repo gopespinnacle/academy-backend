@@ -2888,5 +2888,31 @@ updateMicBadge();
 
 
 </script>
+
+<script>
+
+window.addEventListener(
+"androidScreenGranted",
+function(){
+
+alert(
+"ANDROID SCREEN SHARE APPROVED"
+);
+
+}
+);
+
+window.addEventListener(
+"androidScreenDenied",
+function(){
+
+alert(
+"ANDROID SCREEN SHARE DENIED"
+);
+
+}
+);
+
+</script>
 </body>
 </html>
