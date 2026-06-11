@@ -2897,41 +2897,12 @@ async function(){
 
 alert("ANDROID SCREEN SHARE APPROVED");
 
-screenStream =
-await navigator.mediaDevices.getDisplayMedia({
-video:true,
-audio:true
-});
-
-const screenTrack =
-screenStream.getVideoTracks()[0];
-
-const screenVideo =
-document.getElementById("screenVideo");
-
-screenVideo.srcObject =
-new MediaStream([screenTrack]);
-
-screenVideo.style.display =
-"block";
-
-const videoSender =
-pc.getSenders().find(
-s => s.track &&
-s.track.kind === "video"
-);
-
-if(videoSender){
-
-await videoSender.replaceTrack(
-screenTrack
+alert(
+typeof navigator.mediaDevices.getDisplayMedia
 );
 
 }
-
-}
 );
-
 </script>
 </body>
 </html>
