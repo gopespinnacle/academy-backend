@@ -1368,6 +1368,16 @@ timeout:20000
 }
 );
 
+socket.onAny((event, ...args) => {
+
+    console.log(
+        "SOCKET EVENT:",
+        event,
+        args
+    );
+
+});
+
 const canvas = document.getElementById("board");
 const ctx = canvas.getContext(
     "2d",
@@ -1522,7 +1532,10 @@ role: role
 }
 );
 
-
+console.log(
+    "JOINED ROOM:",
+    room
+);
 if(role === "teacher"){
 
 socket.emit(
@@ -1565,37 +1578,23 @@ async function createOffer(){
 // RECEIVE OFFER
 socket.on("offer", async (data) => {
 
-console.log(
-"OFFER RECEIVED"
-);
+    console.log("OFFER RECEIVED");
+    console.log(data);
 
-if(!pc){
-
-await setupPeer();
-
-}
-
-/* NEW */
-    await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-
-    while(pendingCandidates.length){
-
-await pc.addIceCandidate(
-
-new RTCIceCandidate(
-pendingCandidates.shift()
-)
-
-);
-
-}
+    await pc.setRemoteDescription(
+        new RTCSessionDescription(data.offer)
+    );
 
     const answer = await pc.createAnswer();
+
     await pc.setLocalDescription(answer);
 
-    socket.emit("answer", { room, answer });
-});
+    socket.emit("answer", {
+        room,
+        answer
+    });
 
+});
 // RECEIVE ANSWER
 
 
