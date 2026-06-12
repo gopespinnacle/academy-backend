@@ -306,10 +306,26 @@ role: role
         // ================= WEBRTC =================
 
 // TEACHER SEND OFFER
+// TEACHER SEND OFFER
 socket.on("offer", (data) => {
-    socket.to(data.room).emit("offer", {
-        offer: data.offer
-    });
+
+    console.log(
+        "OFFER RECEIVED:",
+        data.room
+    );
+
+    socket.to(data.room).emit(
+        "offer",
+        {
+            offer: data.offer
+        }
+    );
+
+    console.log(
+        "OFFER FORWARDED:",
+        data.room
+    );
+
 });
 
 // STUDENT SEND ANSWER
