@@ -1581,18 +1581,45 @@ socket.on("offer", async (data) => {
     console.log("OFFER RECEIVED");
     console.log(data);
 
-    await pc.setRemoteDescription(
-        new RTCSessionDescription(data.offer)
-    );
+    try{
 
-    const answer = await pc.createAnswer();
+        console.log("STEP 1");
 
-    await pc.setLocalDescription(answer);
+        await pc.setRemoteDescription(
+            new RTCSessionDescription(data.offer)
+        );
 
-    socket.emit("answer", {
-        room,
-        answer
-    });
+        console.log("STEP 2");
+
+        const answer =
+            await pc.createAnswer();
+
+        console.log("STEP 3");
+
+        await pc.setLocalDescription(
+            answer
+        );
+
+        console.log("STEP 4");
+
+        socket.emit(
+            "answer",
+            {
+                room,
+                answer
+            }
+        );
+
+        console.log("ANSWER SENT");
+
+    }catch(err){
+
+        console.log(
+            "OFFER ERROR",
+            err
+        );
+
+    }
 
 });
 // RECEIVE ANSWER
