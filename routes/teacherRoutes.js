@@ -352,10 +352,16 @@ router.get("/period-students", protect, authorize("teacher"), async (req,res)=>{
             filter.$or = orConditions;
         }
 
-        const data = await PeriodAssignment.find(filter)
-        .populate("student","name");
+        console.log("Teacher ID:", teacherId);
+console.log("Request Query:", req.query);
+console.log("Mongo Filter:", filter);
 
-        res.json({data});
+const data = await PeriodAssignment.find(filter)
+.populate("student","name");
+
+console.log("Students Found:", data);
+
+res.json({ data });
 
     }catch(err){
         res.status(500).json({message:"Error"});
