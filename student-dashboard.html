@@ -178,12 +178,13 @@ else{
 
         <button
         onclick='joinClass(
-            "${c.className}",
-            "${c.subject}",
-            "${c.day}",
-            "${c.startTime}",
-            "${c.endTime}"
-        )'
+    "${c._id}",
+    "${c.className}",
+    "${c.subject}",
+    "${c.day}",
+    "${c.startTime}",
+    "${c.endTime}"
+)'
         style="
         background:green;
         color:white;
@@ -214,6 +215,7 @@ window.location.href = page;
 
 loadDashboard();
 async function joinClass(
+    periodId,
     className,
     subject,
     day,
@@ -221,42 +223,55 @@ async function joinClass(
     endTime
 ){
 
-    try {
+    try{
 
         const studentId = localStorage.getItem("studentId");
 
         await fetch(
-        "https://academy-backend-eatl.onrender.com/api/student-attendance/mark",
-        {
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json",
-                "Authorization":"Bearer " + token
-            },
-            body: JSON.stringify({
-                studentId,
-                className,
-                subject,
-                day,
-                startTime,
-                endTime
-            })
-        });
+            "https://academy-backend-eatl.onrender.com/api/student-attendance/mark",
+            {
+                method:"POST",
+                headers:{
+                    "Content-Type":"application/json",
+                    "Authorization":"Bearer " + token
+                },
+                body:JSON.stringify({
+                    studentId,
+                    className,
+                    subject,
+                    day,
+                    startTime,
+                    endTime
+                })
+            }
+        );
 
-    } catch(e){
-        console.log("Attendance failed");
+        // Get teacher's meeting link
+        const meetRes = await fetch(
+            `https://academy-backend-eatl.onrender.com/api/student/meeting-link/${periodId}`,
+            {
+                headers:{
+                    "Authorization":"Bearer " + token
+                }
+            }
+        );
+
+        const meetData = await meetRes.json();
+
+        if(!meetRes.ok){
+            alert(meetData.message);
+            return;
+        }
+
+        // Open teacher's Google Meet
+        window.open(meetData.meetingLink, "_blank");
+
+    }catch(err){
+
+        console.error(err);
+        alert("Unable to join class");
+
     }
-
-    let roomName = `academy-${className}-${day}-${startTime}`;
-
-    roomName = roomName
-    .replace(/\s+/g, "")
-    .replace(/[^a-zA-Z0-9\-]/g,"");
-
-    window.open(
-    `whiteboard.html?room=${roomName}&role=student`,
-    "_blank"
-    );
 }
 async function loadRecordings(){
     const subject = document.getElementById("subjectFilter").value;
