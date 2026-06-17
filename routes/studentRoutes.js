@@ -23,6 +23,7 @@ const ExamActivity = require("../models/ExamActivity");
 const ExamCamera = require("../models/ExamCamera");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const TeacherSchedule = require("../models/TeacherSchedule");
+const mongoose = require("mongoose");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
 
@@ -293,5 +294,69 @@ res.json({
 console.log(err);
 res.status(500).json({message:"Dashboard error"});
 }
+});
+
+/* ================= GET MEETING LINK ================= */
+
+router.get(
+"/meeting-link/:periodId",
+protect,
+authorize("student"),
+async(req,res)=>{
+
+try{
+
+const period = await PeriodAssignment
+.findById(req.params.periodId)
+.populate(
+    "teacher",
+    "name meetingLink role"
+);
+
+if(!period){
+    return res.status(404).json({
+        message:"Period not found"
+    });
+}
+
+/* Extra Security */
+
+if(
+period.student.toString() !== req.user.id
+){
+    return res.status(403).json({
+        message:"Not your class"
+    });
+}
+
+if(
+!period.teacher ||
+!period.teacher.meetingLink
+){
+    return res.status(404).json({
+        message:"Teacher meeting link not found"
+    });
+}
+
+res.json({
+
+teacherId:period.teacher._id,
+teacherName:period.teacher.name,
+
+meetingLink:
+period.teacher.meetingLink
+
+});
+
+}catch(err){
+
+console.log(err);
+
+res.status(500).json({
+message:"Server Error"
+});
+
+}
+
 });
 module.exports = router;
