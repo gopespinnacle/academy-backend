@@ -59,9 +59,15 @@ style="width:100%;padding:10px;">
 
 <div style="margin-bottom:15px;">
 <label><b>Student</b></label>
-<input type="text" id="summaryStudent"
-readonly
-style="width:100%;padding:10px;">
+<div id="summaryStudent"
+style="
+width:100%;
+padding:10px;
+border:1px solid #ccc;
+background:#fff;
+min-height:60px;
+">
+</div>
 </div>
 
 <div style="margin-bottom:15px;">
@@ -121,21 +127,38 @@ if(showSummary !== "true") return;
 document.getElementById("summarySection")
 .style.display = "block";
 
-const studentName =
-params.get("student") || "-";
+const studentBox =
+document.getElementById("summaryStudent");
 
-document.getElementById(
-"summaryStudent"
-).value =
-studentName;
+studentBox.innerHTML = "";
 
-const res =
-await fetch(
-"https://academy-backend-eatl.onrender.com/api/auth/students"
+const res = await fetch(
+
+`https://academy-backend-eatl.onrender.com/api/teacher/period-students?className=${params.get("className")}&subject=${params.get("subject")}&day=${params.get("day")}&startTime=${params.get("startTime")}`,
+
+{
+headers:{
+Authorization:"Bearer " + token
+}
+}
+
 );
 
-const students =
-await res.json();
+const result = await res.json();
+
+const students = result.data;
+
+studentBox.innerHTML = "";
+
+students.forEach((item,index)=>{
+
+    studentBox.innerHTML += `
+        <div style="padding:6px 0;">
+            Student ${index + 1} : ${item.student.name}
+        </div>
+    `;
+
+});
 
 const foundStudent =
 students.find(x =>
@@ -315,9 +338,7 @@ document.getElementById(
 
 +
 
-localStorage.getItem(
-"teacherId"
-)
+sessionStorage.getItem("teacherId")
 
 +
 
