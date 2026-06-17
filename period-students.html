@@ -318,9 +318,11 @@ Save Summary
 <script>
 
 const token = sessionStorage.getItem("token");
-let attendanceMarked = false; 
+let attendanceMarked = false;
 
 let meetWindow = null;
+
+let periodStudents = [];
 /* GET URL PARAMS */
 const params = new URLSearchParams(window.location.search);
 
@@ -362,7 +364,11 @@ headers:{
 );
 
 const data = await res.json();
+
+periodStudents = data.data;
+
 console.log("Response:", data);
+
 const container = document.getElementById("assignedContainer");
 container.innerHTML = "";
 
@@ -813,9 +819,11 @@ async function endClass(){
 
     "&startTime=" + encodeURIComponent(params.get("startTime")) +
 
-    "&student=" + encodeURIComponent(
-        document.querySelector(".student-card b")?.innerText.replace("👤 ","") || ""
-    );
+    "&students=" + encodeURIComponent(
+JSON.stringify(
+periodStudents.map(x => x.student.name)
+)
+);
 
 }
 async function testSaveAttendance(){
