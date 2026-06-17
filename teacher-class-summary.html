@@ -132,32 +132,26 @@ document.getElementById("summaryStudent");
 
 studentBox.innerHTML = "";
 
-const res = await fetch(
-
-`https://academy-backend-eatl.onrender.com/api/teacher/period-students?className=${params.get("className")}&subject=${params.get("subject")}&day=${params.get("day")}&startTime=${params.get("startTime")}`,
-
-{
-headers:{
-Authorization:"Bearer " + token
-}
-}
-
-);
-
-const result = await res.json();
-console.log("API Response:", result);
-console.log("Students:", result.data);
-
-const students = result.data;
+const students = JSON.parse(
+decodeURIComponent(
+params.get("students")
+));
 
 studentBox.innerHTML = "";
 
-students.forEach((item,index)=>{
+students.forEach((name,index)=>{
 
     studentBox.innerHTML += `
-        <div style="padding:6px 0;">
-            Student ${index + 1} : ${item.student.name}
-        </div>
+    <div style="
+        border:1px solid #ccc;
+        border-radius:8px;
+        padding:10px;
+        margin-bottom:10px;
+        background:#fafafa;
+    ">
+        <b>Student ${index+1}</b><br>
+        ${name}
+    </div>
     `;
 
 });
