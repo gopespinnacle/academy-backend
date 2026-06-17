@@ -159,6 +159,7 @@ async function joinClass(){
         );
 
         const data = await response.json();
+        console.log("Period ID:", periodId);
 
         if(!response.ok){
             alert(data.message);
