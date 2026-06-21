@@ -112,21 +112,37 @@ async function loadPeriodDetails(){
 
     const s = data.schedule;
 
+    const students = data.assignments || [];
+
+const studentNames = students
+.map(x => x.student ? x.student.name : "")
+.filter(x => x !== "");
+
     document.getElementById("periodCard").innerHTML = `
 
-        <h2>${s.subject || s.eca || s.language}</h2>
+<h2>${s.subject || s.eca || s.language}</h2>
 
-        <hr>
+<hr>
 
-        <p><b>Teacher :</b> ${s.teacher.name}</p>
+<p><b>Teacher :</b> ${s.teacher.name}</p>
 
-        <p><b>Class :</b> ${s.className}</p>
+<p><b>Class :</b> ${s.className}</p>
 
-        <p><b>Day :</b> ${s.day}</p>
+<p><b>Day :</b> ${s.day}</p>
 
-        <p><b>Time :</b> ${s.startTime} - ${s.endTime}</p>
+<p><b>Time :</b> ${s.startTime} - ${s.endTime}</p>
 
-    `;
+<p><b>No Of Students :</b> ${studentNames.length}</p>
+
+<p><b>Students :</b></p>
+
+<ul>
+
+${studentNames.map(name=>`<li>${name}</li>`).join("")}
+
+</ul>
+
+`;
 
 }
 
