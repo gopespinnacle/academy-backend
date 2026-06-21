@@ -217,8 +217,21 @@ router.get("/period/:id", protect, authorize("founder"), async (req,res)=>{
             });
         }
 
+        const assignments = await PeriodAssignment.find({
+
+            teacher: schedule.teacher._id,
+            className: schedule.className,
+            day: schedule.day,
+            startTime: schedule.startTime,
+            endTime: schedule.endTime
+
+        }).populate("student","name");
+
         res.json({
-            schedule
+
+            schedule,
+            assignments
+
         });
 
     }catch(error){
