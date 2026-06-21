@@ -81,11 +81,54 @@ Upload New Chapter
 
 <script>
 
-const params=new URLSearchParams(window.location.search);
+const params = new URLSearchParams(window.location.search);
 
-const scheduleId=params.get("scheduleId");
+const scheduleId = params.get("scheduleId");
 
-console.log(scheduleId);
+loadPeriodDetails();
+
+async function loadPeriodDetails(){
+
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(
+        "https://academy-backend-eatl.onrender.com/api/founder/period/" + scheduleId,
+        {
+            headers:{
+                "Authorization":"Bearer " + token
+            }
+        }
+    );
+
+    const data = await res.json();
+
+    if(!data.schedule){
+
+        document.getElementById("periodCard").innerHTML =
+        "<h3>Period not found</h3>";
+
+        return;
+    }
+
+    const s = data.schedule;
+
+    document.getElementById("periodCard").innerHTML = `
+
+        <h2>${s.subject || s.eca || s.language}</h2>
+
+        <hr>
+
+        <p><b>Teacher :</b> ${s.teacher.name}</p>
+
+        <p><b>Class :</b> ${s.className}</p>
+
+        <p><b>Day :</b> ${s.day}</p>
+
+        <p><b>Time :</b> ${s.startTime} - ${s.endTime}</p>
+
+    `;
+
+}
 
 </script>
 
