@@ -532,22 +532,39 @@ router.delete("/admission/:id", async (req, res) => {
 });
 const multer = require("multer");
 const path = require("path");
-const uploadFile = require("../googleDriveUpload");
+const stream = require("stream");
+const { google } = require("googleapis");
 
-const storage = multer.diskStorage({
 
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, "../uploads"));
-    },
+const upload = multer({
+    storage: multer.memoryStorage()
+});
 
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
+const oauth2Client =
+new google.auth.OAuth2(
+
+process.env.GOOGLE_CLIENT_ID,
+
+process.env.GOOGLE_CLIENT_SECRET,
+
+process.env.GOOGLE_REDIRECT_URI
+
+);
+
+oauth2Client.setCredentials({
+
+refresh_token:
+process.env.GOOGLE_REFRESH_TOKEN
 
 });
 
-const upload = multer({
-    storage: storage
+const drive =
+google.drive({
+
+version:"v3",
+
+auth:oauth2Client
+
 });
 
 // ✅ TEACHER APPLICATION API
@@ -670,18 +687,81 @@ router.delete("/enquiry/:id", async (req, res) => {
             UPLOAD PERIOD CHAPTER
 ======================================================*/
 
+/*======================================================
+            UPLOAD PERIOD CHAPTER
+======================================================*/
+
 router.post(
 "/period/upload",
 upload.single("document"),
+
 async(req,res)=>{
 
 try{
 
+if(!req.file){
+
+return res.status(400).json({
+
+success:false,
+
+message:"No document selected"
+
+});
+
+}
+
+const bufferStream =
+new stream.PassThrough();
+
+bufferStream.end(req.file.buffer);
+
+const response =
+await drive.files.create({
+
+requestBody:{
+
+name:req.file.originalname,
+
+parents:[
+"1QoEa2AhLOfNHcVVsJu6xVesGI4foJ_9m"
+]
+
+},
+
+media:{
+
+mimeType:req.file.mimetype,
+
+body:bufferStream
+
+},
+
+fields:"id",
+
+supportsAllDrives:true
+
+});
+
+const fileId =
+response.data.id;
+
+await drive.permissions.create({
+
+fileId,
+
+requestBody:{
+
+role:"reader",
+
+type:"anyone"
+
+}
+
+});
+
 const driveLink =
-await uploadFile(
-    req.file,
-    "1QoEa2AhLOfNHcVVsJu6xVesGI4foJ_9m"
-);
+`https://drive.google.com/file/d/${fileId}/view`;
 
 const chapter =
 new PeriodChapter({
@@ -710,6 +790,8 @@ topicName:req.body.topicName,
 
 documentName:req.file.originalname,
 
+driveFileId:fileId,
+
 driveLink
 
 });
@@ -726,13 +808,20 @@ chapter
 
 }catch(err){
 
-console.log(err);
+console.log("PERIOD UPLOAD ERROR");
+
+console.log(
+err.response?.data || err
+);
 
 res.status(500).json({
 
 success:false,
 
-message:err.message
+message:err.message,
+
+error:
+err.response?.data || err
 
 });
 
