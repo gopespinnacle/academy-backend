@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Period Details</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body class="dashboard-page">
+
+<div id="sidebar-container"></div>
+
+<script>
+fetch("sidebar.html")
+.then(res=>res.text())
+.then(data=>{
+document.getElementById("sidebar-container").innerHTML=data;
+});
+</script>
+
+<div class="main-content">
+
+<h2>Period Details</h2>
+
+<!-- Period Information Card -->
+
+<div id="periodCard" class="card">
+
+Loading...
+
+</div>
+
+<br><br>
+
+<h2>Chapter Documents</h2>
+
+<table border="1" width="100%">
+
+<thead>
+
+<tr>
+
+<th>Date</th>
+
+<th>Chapter No</th>
+
+<th>Chapter Name</th>
+
+<th>Topic Name</th>
+
+<th>Upload</th>
+
+<th>View</th>
+
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="chapterBody">
+
+</tbody>
+
+</table>
+
+<br>
+
+<button onclick="uploadDocument()">
+
+Upload New Chapter
+
+</button>
+
+</div>
+
+<script>
+
+const params=new URLSearchParams(window.location.search);
+
+const scheduleId=params.get("scheduleId");
+
+console.log(scheduleId);
+
+</script>
+
+</body>
+
+</html>
