@@ -394,11 +394,13 @@ return s.day === day && `${s.startTime}-${s.endTime}` === hour;
 if(found){
 
 row += `<td>
-<div class="class-block ${(found.subject || found.eca || found.language || "general").toLowerCase()}">
+<button
+class="class-block ${(found.subject || found.eca || found.language || "general").toLowerCase()}"
+onclick="openPeriod('${found._id}')">
 ${found.className}<br>
 ${found.subject || found.eca || found.language}<br>
 ${convertTo12Hour(found.startTime)} - ${convertTo12Hour(found.endTime)}
-</div>
+</button>
 </td>`;
 
 }else{
@@ -423,6 +425,13 @@ const teacherId = document.getElementById("gridTeacher").value;
 if(teacherId === "all"){
 buildGrid(allSchedules);
 return;
+}
+
+function openPeriod(scheduleId){
+
+    window.location.href =
+    "period-details.html?scheduleId=" + scheduleId;
+
 }
 
 const filtered = allSchedules.filter(s => s.teacher && s.teacher._id === teacherId);
