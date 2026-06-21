@@ -678,7 +678,10 @@ async(req,res)=>{
 try{
 
 const driveLink =
-await uploadFile(req.file);
+await uploadFile(
+    req.file,
+    "1AaoIG__mXf-n3flG8gFDJmdHQpdw4Ny1"
+);
 
 const chapter =
 new PeriodChapter({
