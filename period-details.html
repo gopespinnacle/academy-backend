@@ -85,6 +85,8 @@ fd.append(
 document.getElementById("topicName").value
 );
 
+const token = localStorage.getItem("token");
+
 const res =
 await fetch(
 
@@ -93,6 +95,10 @@ await fetch(
 {
 
 method:"POST",
+
+headers:{
+    "Authorization":"Bearer " + token
+},
 
 body:fd
 
