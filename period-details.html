@@ -15,12 +15,30 @@
 
 <div id="sidebar-container"></div>
 
+
+
 <script>
 fetch("sidebar.html")
 .then(res=>res.text())
 .then(data=>{
 document.getElementById("sidebar-container").innerHTML=data;
 });
+
+function openUploadPopup(){
+
+document.getElementById(
+"chapterPopup"
+).style.display="block";
+
+}
+
+function closePopup(){
+
+document.getElementById(
+"chapterPopup"
+).style.display="none";
+
+}
 </script>
 
 <div class="main-content">
@@ -71,9 +89,19 @@ Loading...
 
 <br>
 
-<button onclick="uploadDocument()">
+<button
+onclick="openUploadPopup()"
+style="
+background:#0b5ed7;
+color:white;
+border:none;
+padding:10px 18px;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+">
 
-Upload New Chapter
++ Upload New Chapter
 
 </button>
 
@@ -147,6 +175,102 @@ ${studentNames.map(name=>`<li>${name}</li>`).join("")}
 }
 
 </script>
+
+<!-- ================= Upload Chapter Popup ================= -->
+
+<div
+id="chapterPopup"
+style="
+display:none;
+position:fixed;
+left:0;
+top:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.45);
+z-index:9999;
+">
+
+<div
+style="
+width:500px;
+background:white;
+margin:70px auto;
+padding:25px;
+border-radius:12px;
+">
+
+<h2>Upload Chapter</h2>
+
+<br>
+
+<label>Chapter No</label>
+
+<input
+type="text"
+id="chapterNo"
+style="width:100%;padding:10px;">
+
+<br><br>
+
+<label>Chapter Name</label>
+
+<input
+type="text"
+id="chapterName"
+style="width:100%;padding:10px;">
+
+<br><br>
+
+<label>Topic Name</label>
+
+<input
+type="text"
+id="topicName"
+style="width:100%;padding:10px;">
+
+<br><br>
+
+<label>Select Document</label>
+
+<input
+type="file"
+id="chapterFile">
+
+<br><br>
+
+<button
+onclick="uploadChapter()"
+style="
+background:green;
+color:white;
+border:none;
+padding:10px 20px;
+border-radius:8px;
+">
+
+Upload
+
+</button>
+
+<button
+onclick="closePopup()"
+style="
+background:red;
+color:white;
+border:none;
+padding:10px 20px;
+border-radius:8px;
+margin-left:10px;
+">
+
+Cancel
+
+</button>
+
+</div>
+
+</div>
 
 </body>
 
