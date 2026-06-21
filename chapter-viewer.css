@@ -1,0 +1,389 @@
+/* ==============================
+        GLOBAL
+================================*/
+
+*{
+
+margin:0;
+
+padding:0;
+
+box-sizing:border-box;
+
+font-family:Arial,Helvetica,sans-serif;
+
+}
+
+html,body{
+
+width:100%;
+
+height:100%;
+
+overflow:hidden;
+
+background:#202124;
+
+}
+
+/* ==============================
+      LOADING SCREEN
+================================*/
+
+#loadingScreen{
+
+position:fixed;
+
+left:0;
+
+top:0;
+
+width:100%;
+
+height:100%;
+
+background:#0b0b0b;
+
+display:flex;
+
+flex-direction:column;
+
+justify-content:center;
+
+align-items:center;
+
+z-index:999999;
+
+}
+
+.loader{
+
+width:65px;
+
+height:65px;
+
+border-radius:50%;
+
+border:6px solid #ffffff22;
+
+border-top:6px solid #0b5ed7;
+
+animation:spin 1s linear infinite;
+
+}
+
+.loadingText{
+
+margin-top:20px;
+
+color:white;
+
+font-size:18px;
+
+letter-spacing:1px;
+
+}
+
+@keyframes spin{
+
+100%{
+
+transform:rotate(360deg);
+
+}
+
+}
+
+/* ==============================
+          HEADER
+================================*/
+
+#topHeader{
+
+height:85px;
+
+background:#0b3d91;
+
+color:white;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:15px 30px;
+
+}
+
+#academyName{
+
+font-size:28px;
+
+font-weight:bold;
+
+}
+
+#chapterDetails{
+
+display:grid;
+
+grid-template-columns:repeat(5,auto);
+
+gap:25px;
+
+font-size:15px;
+
+}
+
+/* ==============================
+         TOOLBAR
+================================*/
+
+#toolbar{
+
+height:60px;
+
+background:#111;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+gap:12px;
+
+color:white;
+
+border-bottom:1px solid #2c2c2c;
+
+}
+
+#toolbar button{
+
+background:#0b5ed7;
+
+border:none;
+
+color:white;
+
+padding:8px 16px;
+
+border-radius:8px;
+
+cursor:pointer;
+
+font-size:14px;
+
+transition:.2s;
+
+}
+
+#toolbar button:hover{
+
+transform:scale(1.05);
+
+}
+
+.separator{
+
+width:2px;
+
+height:30px;
+
+background:#444;
+
+}
+
+/* ==============================
+      PDF VIEWER
+================================*/
+
+#viewerContainer{
+
+position:absolute;
+
+left:0;
+
+right:0;
+
+top:145px;
+
+bottom:0;
+
+overflow:auto;
+
+background:#555;
+
+padding:30px;
+
+text-align:center;
+
+}
+
+/* PDF canvas */
+
+canvas{
+
+background:white;
+
+margin-bottom:25px;
+
+box-shadow:0 0 25px rgba(0,0,0,.45);
+
+}
+
+/* ==============================
+      WATERMARK LAYER
+================================*/
+
+#watermarkLayer{
+
+position:absolute;
+
+left:0;
+
+top:0;
+
+right:0;
+
+bottom:0;
+
+pointer-events:none;
+
+z-index:25;
+
+}
+
+/* ==============================
+      MICRO GRID
+================================*/
+
+#gridOverlay{
+
+position:absolute;
+
+left:0;
+
+top:0;
+
+right:0;
+
+bottom:0;
+
+pointer-events:none;
+
+z-index:15;
+
+opacity:.04;
+
+background-image:
+
+linear-gradient(#000 0.5px, transparent 0.5px),
+
+linear-gradient(90deg,#000 0.5px,transparent 0.5px);
+
+background-size:8px 8px;
+
+}
+
+/* ==============================
+       RGB OVERLAY
+================================*/
+
+#rgbOverlay{
+
+position:absolute;
+
+left:0;
+
+top:0;
+
+right:0;
+
+bottom:0;
+
+pointer-events:none;
+
+z-index:20;
+
+opacity:.025;
+
+background:
+
+repeating-linear-gradient(
+
+90deg,
+
+rgba(255,0,0,.08) 0px,
+
+rgba(255,0,0,.08) 1px,
+
+transparent 2px,
+
+transparent 4px,
+
+rgba(0,255,0,.08) 5px,
+
+rgba(0,255,0,.08) 6px,
+
+transparent 7px,
+
+transparent 9px,
+
+rgba(0,0,255,.08) 10px,
+
+rgba(0,0,255,.08) 11px,
+
+transparent 12px
+
+);
+
+}
+
+/* ==============================
+        MOBILE
+================================*/
+
+@media(max-width:900px){
+
+#topHeader{
+
+height:auto;
+
+flex-direction:column;
+
+align-items:flex-start;
+
+gap:10px;
+
+padding:20px;
+
+}
+
+#chapterDetails{
+
+grid-template-columns:1fr;
+
+gap:8px;
+
+}
+
+#toolbar{
+
+flex-wrap:wrap;
+
+height:auto;
+
+padding:10px;
+
+}
+
+#viewerContainer{
+
+top:220px;
+
+}
+
+}

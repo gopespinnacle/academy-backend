@@ -5,106 +5,193 @@
 
 <meta charset="UTF-8">
 
-<title>Secure Chapter Viewer</title>
+<title>Gopes Pinnacle Secure Viewer</title>
+
+<link rel="stylesheet" href="chapter-viewer.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
-<style>
-
-html,body{
-margin:0;
-padding:0;
-height:100%;
-overflow:hidden;
-font-family:Arial;
-background:#1a1a1a;
-}
-
-#topBar{
-
-height:70px;
-background:#0b3d91;
-color:white;
-
-display:flex;
-align-items:center;
-justify-content:space-between;
-
-padding:0 25px;
-
-box-sizing:border-box;
-
-}
-
-#academy{
-
-font-size:24px;
-font-weight:bold;
-
-}
-
-#chapterInfo{
-
-font-size:15px;
-
-}
-
-#pdfArea{
-
-position:absolute;
-
-top:70px;
-left:0;
-right:0;
-bottom:0;
-
-overflow:auto;
-
-text-align:center;
-
-background:#555;
-
-padding:20px;
-
-box-sizing:border-box;
-
-}
-
-canvas{
-
-margin-bottom:20px;
-
-box-shadow:0 0 20px rgba(0,0,0,.5);
-
-}
-
-</style>
 
 </head>
 
 <body>
 
-<div id="topBar">
+<!-- Loading -->
 
-<div id="academy">
+<div id="loadingScreen">
 
-Gopes Pinnacle Academy
+<div class="loader"></div>
+
+<div class="loadingText">
+
+Loading Secure Viewer...
 
 </div>
 
-<div id="chapterInfo">
+</div>
+
+<!-- Header -->
+
+<header id="topHeader">
+
+<div id="academyName">
+
+GOPES PINNACLE ACADEMY
+
+</div>
+
+<div id="chapterDetails">
+
+<div>
+
+<b>Subject :</b>
+
+<span id="subjectName">
 
 Loading...
 
+</span>
+
+</div>
+
+<div>
+
+<b>Teacher :</b>
+
+<span id="teacherName">
+
+Loading...
+
+</span>
+
+</div>
+
+<div>
+
+<b>Class :</b>
+
+<span id="className">
+
+Loading...
+
+</span>
+
+</div>
+
+<div>
+
+<b>Chapter :</b>
+
+<span id="chapterName">
+
+Loading...
+
+</span>
+
+</div>
+
+<div>
+
+<b>Topic :</b>
+
+<span id="topicName">
+
+Loading...
+
+</span>
+
 </div>
 
 </div>
 
-<div id="pdfArea">
+</header>
 
-Loading PDF...
+<!-- Toolbar -->
+
+<div id="toolbar">
+
+<button id="prevPage">
+
+◀ Previous
+
+</button>
+
+<div>
+
+Page
+
+<span id="currentPage">
+
+1
+
+</span>
+
+/
+
+<span id="totalPages">
+
+1
+
+</span>
 
 </div>
+
+<button id="nextPage">
+
+Next ▶
+
+</button>
+
+<div class="separator"></div>
+
+<button id="zoomOut">
+
+－
+
+</button>
+
+<span id="zoomLevel">
+
+100%
+
+</span>
+
+<button id="zoomIn">
+
+＋
+
+</button>
+
+<div class="separator"></div>
+
+<button id="fullscreenBtn">
+
+Fullscreen
+
+</button>
+
+</div>
+
+<!-- Viewer -->
+
+<div id="viewerContainer">
+
+<div id="gridOverlay"></div>
+
+<div id="rgbOverlay"></div>
+
+<div id="watermarkLayer"></div>
+
+<div id="pdfContainer"></div>
+
+</div>
+
+<script src="chapter-viewer.js"></script>
+
+<script src="chapter-pdf.js"></script>
+
+<script src="chapter-watermark.js"></script>
+
+<script src="chapter-security.js"></script>
 
 </body>
 

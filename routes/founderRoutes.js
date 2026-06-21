@@ -865,4 +865,54 @@ message:err.message
 }
 
 });
+
+/*======================================================
+            GET SINGLE CHAPTER
+======================================================*/
+
+router.get(
+"/period/chapter/:id",
+
+async(req,res)=>{
+
+try{
+
+const chapter =
+await PeriodChapter.findById(
+req.params.id
+);
+
+if(!chapter){
+
+return res.status(404).json({
+
+success:false,
+
+message:"Chapter not found"
+
+});
+
+}
+
+res.json({
+
+success:true,
+
+chapter
+
+});
+
+}catch(err){
+
+res.status(500).json({
+
+success:false,
+
+message:err.message
+
+});
+
+}
+
+});
 module.exports = router;
