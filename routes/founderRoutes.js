@@ -202,6 +202,37 @@ router.get("/schedules", protect, authorize("founder"), async (req,res)=>{
     res.json({ schedules });
 });
 
+/* ================= PERIOD DETAILS ================= */
+
+router.get("/period/:id", protect, authorize("founder"), async (req,res)=>{
+
+    try{
+
+        const schedule = await TeacherSchedule.findById(req.params.id)
+        .populate("teacher","name subject");
+
+        if(!schedule){
+            return res.status(404).json({
+                message:"Schedule not found"
+            });
+        }
+
+        res.json({
+            schedule
+        });
+
+    }catch(error){
+
+        console.log(error);
+
+        res.status(500).json({
+            message:"Server Error"
+        });
+
+    }
+
+});
+
 router.put("/update-schedule/:id", protect, authorize("founder"), async (req,res)=>{
     try{
 
