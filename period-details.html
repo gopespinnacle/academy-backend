@@ -315,7 +315,7 @@ ${ch.topicName}
 <td>
 
 <button
-onclick="window.open('${ch.driveLink}')">
+onclick="openChapter('${ch._id}')">
 
 View
 
@@ -350,6 +350,14 @@ Delete
 document.getElementById(
 "chapterBody"
 ).innerHTML=html;
+
+}
+
+function openChapter(id){
+
+window.location.href =
+
+"chapter-viewer.html?id=" + id;
 
 }
 
