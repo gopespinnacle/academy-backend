@@ -828,4 +828,41 @@ err.response?.data || err
 }
 
 });
+
+router.get("/period/chapters/:periodId", async (req,res)=>{
+
+try{
+
+const chapters =
+await PeriodChapter.find({
+
+periodId:req.params.periodId
+
+}).sort({
+
+uploadDate:-1
+
+});
+
+res.json({
+
+success:true,
+
+chapters
+
+});
+
+}catch(err){
+
+res.status(500).json({
+
+success:false,
+
+message:err.message
+
+});
+
+}
+
+});
 module.exports = router;
