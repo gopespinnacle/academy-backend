@@ -423,20 +423,21 @@ function filterGrid(){
 const teacherId = document.getElementById("gridTeacher").value;
 
 if(teacherId === "all"){
-buildGrid(allSchedules);
-return;
+    buildGrid(allSchedules);
+    return;
 }
 
+const filtered = allSchedules.filter(
+    s => s.teacher && s.teacher._id === teacherId
+);
+
+buildGrid(filtered);
+
+}
 function openPeriod(scheduleId){
 
     window.location.href =
     "period-details.html?scheduleId=" + scheduleId;
-
-}
-
-const filtered = allSchedules.filter(s => s.teacher && s.teacher._id === teacherId);
-
-buildGrid(filtered);
 
 }
 async function deleteSchedule(id){
