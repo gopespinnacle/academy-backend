@@ -6,6 +6,8 @@ const Admission = require("../models/Admission");
 const AdmissionEnquiry =
 require("../models/AdmissionEnquiry");
 const PeriodAssignment = require("../models/PeriodAssignment");
+const PeriodChapter =
+require("../models/PeriodChapter");
 const axios = require("axios");
 const express = require("express");
 const router = express.Router();
@@ -661,6 +663,77 @@ router.delete("/enquiry/:id", async (req, res) => {
         });
 
     }
+
+});
+
+/*======================================================
+            UPLOAD PERIOD CHAPTER
+======================================================*/
+
+router.post(
+"/period/upload",
+upload.single("document"),
+async(req,res)=>{
+
+try{
+
+const driveLink =
+await uploadFile(req.file);
+
+const chapter =
+new PeriodChapter({
+
+periodId:req.body.periodId,
+
+teacherId:req.body.teacherId,
+
+teacherName:req.body.teacherName,
+
+className:req.body.className,
+
+subject:req.body.subject,
+
+day:req.body.day,
+
+startTime:req.body.startTime,
+
+endTime:req.body.endTime,
+
+chapterNo:req.body.chapterNo,
+
+chapterName:req.body.chapterName,
+
+topicName:req.body.topicName,
+
+documentName:req.file.originalname,
+
+driveLink
+
+});
+
+await chapter.save();
+
+res.json({
+
+success:true,
+
+chapter
+
+});
+
+}catch(err){
+
+console.log(err);
+
+res.status(500).json({
+
+success:false,
+
+message:err.message
+
+});
+
+}
 
 });
 module.exports = router;
