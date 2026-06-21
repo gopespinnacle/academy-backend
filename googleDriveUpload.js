@@ -17,13 +17,13 @@ const drive = google.drive({
     auth
 });
 
-async function uploadFile(file){
+async function uploadFile(file, folderId = "1O6Zn8xlD_PCvtZOzG66OSqSSuTHOAp3k"){
 
     const response = await drive.files.create({
 
         requestBody: {
             name: file.originalname,
-            parents: ["1O6Zn8xlD_PCvtZOzG66OSqSSuTHOAp3k"]
+            parents: [folderId]
         },
 
         media: {
