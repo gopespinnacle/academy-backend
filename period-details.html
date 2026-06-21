@@ -39,6 +39,85 @@ document.getElementById(
 ).style.display="none";
 
 }
+
+async function uploadChapter(){
+
+const file =
+document.getElementById("chapterFile").files[0];
+
+if(!file){
+    alert("Select a document");
+    return;
+}
+
+const fd = new FormData();
+
+fd.append("document",file);
+
+fd.append("periodId",scheduleId);
+
+fd.append("teacherId",currentPeriod.teacher._id);
+
+fd.append("teacherName",currentPeriod.teacher.name);
+
+fd.append("className",currentPeriod.className);
+
+fd.append("subject",currentPeriod.subject);
+
+fd.append("day",currentPeriod.day);
+
+fd.append("startTime",currentPeriod.startTime);
+
+fd.append("endTime",currentPeriod.endTime);
+
+fd.append(
+"chapterNo",
+document.getElementById("chapterNo").value
+);
+
+fd.append(
+"chapterName",
+document.getElementById("chapterName").value
+);
+
+fd.append(
+"topicName",
+document.getElementById("topicName").value
+);
+
+const res =
+await fetch(
+
+"https://academy-backend-eatl.onrender.com/api/founder/period/upload",
+
+{
+
+method:"POST",
+
+body:fd
+
+}
+
+);
+
+const data =
+await res.json();
+
+if(data.success){
+
+alert("Chapter Uploaded Successfully");
+
+closePopup();
+
+loadChapterDocuments();
+
+}else{
+
+alert(data.message);
+
+}
+
+}
 </script>
 
 <div class="main-content">
@@ -139,6 +218,7 @@ async function loadPeriodDetails(){
     }
 
     const s = data.schedule;
+    window.currentPeriod = s;
 
     const students = data.assignments || [];
 
