@@ -166,6 +166,7 @@ Loading...
 
 </thead>
 
+
 <tbody id="chapterBody">
 
 </tbody>
@@ -257,6 +258,98 @@ ${studentNames.map(name=>`<li>${name}</li>`).join("")}
 </ul>
 
 `;
+
+}
+
+loadChapterDocuments();
+
+async function loadChapterDocuments(){
+
+const res =
+await fetch(
+
+"https://academy-backend-eatl.onrender.com/api/founder/period/chapters/" +
+scheduleId,
+
+{
+
+headers:{
+
+Authorization:
+"Bearer " +
+localStorage.getItem("token")
+
+}
+
+}
+
+);
+
+const data =
+await res.json();
+
+let html="";
+
+data.chapters.forEach(ch=>{
+
+html += `
+
+<tr>
+
+<td>
+${new Date(ch.uploadDate).toLocaleDateString()}
+</td>
+
+<td>
+${ch.chapterNo}
+</td>
+
+<td>
+${ch.chapterName}
+</td>
+
+<td>
+${ch.topicName}
+</td>
+
+<td>
+
+<button
+onclick="window.open('${ch.driveLink}')">
+
+View
+
+</button>
+
+</td>
+
+<td>
+
+<button
+onclick="editChapter('${ch._id}')">
+
+Edit
+
+</button>
+
+<button
+onclick="deleteChapter('${ch._id}')">
+
+Delete
+
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById(
+"chapterBody"
+).innerHTML=html;
 
 }
 
