@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Secure Chapter Viewer</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<style>
+
+html,body{
+margin:0;
+padding:0;
+height:100%;
+overflow:hidden;
+font-family:Arial;
+background:#1a1a1a;
+}
+
+#topBar{
+
+height:70px;
+background:#0b3d91;
+color:white;
+
+display:flex;
+align-items:center;
+justify-content:space-between;
+
+padding:0 25px;
+
+box-sizing:border-box;
+
+}
+
+#academy{
+
+font-size:24px;
+font-weight:bold;
+
+}
+
+#chapterInfo{
+
+font-size:15px;
+
+}
+
+#pdfArea{
+
+position:absolute;
+
+top:70px;
+left:0;
+right:0;
+bottom:0;
+
+overflow:auto;
+
+text-align:center;
+
+background:#555;
+
+padding:20px;
+
+box-sizing:border-box;
+
+}
+
+canvas{
+
+margin-bottom:20px;
+
+box-shadow:0 0 20px rgba(0,0,0,.5);
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="topBar">
+
+<div id="academy">
+
+Gopes Pinnacle Academy
+
+</div>
+
+<div id="chapterInfo">
+
+Loading...
+
+</div>
+
+</div>
+
+<div id="pdfArea">
+
+Loading PDF...
+
+</div>
+
+</body>
+
+</html>
