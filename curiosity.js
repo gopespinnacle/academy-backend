@@ -22,13 +22,13 @@ async function uploadContent(){
         document.getElementById("file").files[0]
     );
 
-    const res = await fetch("/api/curiosity/upload",{
-
-        method:"POST",
-
-        body:form
-
-    });
+    const res = await fetch(
+    "https://academy-backend-eatl.onrender.com/api/curiosity/upload",
+    {
+        method: "POST",
+        body: form
+    }
+);
 
     const data = await res.json();
 
@@ -44,7 +44,9 @@ async function uploadContent(){
 
 async function loadContent(){
 
-    const res = await fetch("/api/curiosity/all");
+    const res = await fetch(
+    "https://academy-backend-eatl.onrender.com/api/curiosity/all"
+);
 
     const items = await res.json();
 
@@ -125,11 +127,12 @@ async function deleteContent(id){
 
     if(!confirm("Delete?")) return;
 
-    await fetch("/api/curiosity/"+id,{
-
-        method:"DELETE"
-
-    });
+    await fetch(
+    "https://academy-backend-eatl.onrender.com/api/curiosity/" + id,
+    {
+        method: "DELETE"
+    }
+);
 
     loadContent();
 
