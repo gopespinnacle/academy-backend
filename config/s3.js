@@ -1,3 +1,8 @@
+console.log("Bucket:", process.env.AWS_BUCKET);
+console.log("Region:", process.env.AWS_REGION);
+console.log("Access:", process.env.AWS_ACCESS_KEY_ID ? "YES" : "NO");
+console.log("Secret:", process.env.AWS_SECRET_ACCESS_KEY ? "YES" : "NO");
+
 const {
     S3Client,
     PutObjectCommand,
@@ -7,9 +12,9 @@ const {
 const client = new S3Client({
     region: process.env.AWS_REGION,
     credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY,
-        secretAccessKey: process.env.AWS_SECRET_KEY
-    }
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+}
 });
 
 exports.uploadFile = async (file) => {
