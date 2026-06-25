@@ -72,7 +72,43 @@ exports.getAllContent = async(req,res)=>{
 
 };
 
+exports.getCategoryContent = async (req, res) => {
 
+    try {
+
+        const category = req.params.category;
+
+        const data = await Curiosity.find({
+
+            category: category
+
+        }).sort({
+
+            createdAt: -1
+
+        });
+
+        res.json({
+
+            success: true,
+
+            data
+
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
+
+};
 
 exports.deleteContent = async(req,res)=>{
 
