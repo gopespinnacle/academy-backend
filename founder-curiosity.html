@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Curiosity Corner</title>
+
+<link rel="stylesheet" href="dashboard.css">
+
+<style>
+
+body{
+    background:#f4f6fb;
+    font-family:Arial;
+}
+
+.container{
+
+    max-width:900px;
+    margin:40px auto;
+
+    background:white;
+
+    padding:30px;
+
+    border-radius:12px;
+
+    box-shadow:0 5px 20px rgba(0,0,0,.08);
+
+}
+
+input,select,textarea{
+
+    width:100%;
+
+    padding:12px;
+
+    margin-top:8px;
+
+    margin-bottom:20px;
+
+    border-radius:8px;
+
+    border:1px solid #ddd;
+
+}
+
+button{
+
+    background:#0d6efd;
+
+    color:white;
+
+    border:none;
+
+    padding:12px 30px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+
+}
+
+button:hover{
+
+    background:#0849aa;
+
+}
+
+.card{
+
+    border:1px solid #ddd;
+
+    padding:15px;
+
+    margin-top:15px;
+
+    border-radius:10px;
+
+}
+
+img{
+
+    width:180px;
+
+    border-radius:8px;
+
+}
+
+video{
+
+    width:300px;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Curiosity Corner Publisher</h2>
+
+<input
+id="title"
+placeholder="Title">
+
+<select id="category">
+
+<option>Vocabulary</option>
+
+<option>Science</option>
+
+<option>GK</option>
+
+<option>Maths</option>
+
+<option>English</option>
+
+<option>Tamil</option>
+
+<option>Programming</option>
+
+<option>Fun Facts</option>
+
+<option>Others</option>
+
+</select>
+
+<textarea
+id="description"
+placeholder="Description"></textarea>
+
+<select id="mediaType">
+
+<option value="image">Image</option>
+
+<option value="video">Video</option>
+
+<option value="pdf">PDF</option>
+
+</select>
+
+<input
+type="file"
+id="file">
+
+<label>
+
+<input
+type="checkbox"
+id="featured">
+
+Feature Today
+
+</label>
+
+<br><br>
+
+<button onclick="uploadContent()">
+
+Publish
+
+</button>
+
+<hr>
+
+<div id="list"></div>
+
+</div>
+
+<script src="curiosity.js"></script>
+
+</body>
+
+</html>

@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const Recording = require("./models/Recording");
 const ClassSummary = require("./models/ClassSummary");
 const multer = require("multer");
+const curiosityRoutes = require("./routes/curiosityRoutes");
 
 // ✅ FIX: KEEP FILE EXTENSION
 const storageFile = multer.diskStorage({
@@ -148,6 +149,7 @@ app.use("/api/founder", founderRoutes);
 app.use("/api/founder", founderTimeClashRoutes);
 
 app.use("/api/student", studentRoutes);
+app.use("/api/curiosity", curiosityRoutes);
 
 app.use("/api", admissionRoutes);
 app.use(
