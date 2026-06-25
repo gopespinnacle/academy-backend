@@ -1,6 +1,6 @@
 const Curiosity = require("../models/Curiosity");
 const { uploadFile, deleteFile } = require("../config/s3");
-const fs = require("fs");
+
 
 exports.uploadContent = async (req, res) => {
 
@@ -15,7 +15,7 @@ exports.uploadContent = async (req, res) => {
 
         const result = await uploadFile(req.file);
 
-        fs.unlinkSync(req.file.path);
+        
 
         const curiosity = await Curiosity.create({
 

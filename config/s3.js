@@ -4,56 +4,47 @@ const {
     DeleteObjectCommand
 } = require("@aws-sdk/client-s3");
 
-const fs = require("fs");
-
 const client = new S3Client({
-
-    region:process.env.AWS_REGION,
-
-    credentials:{
-        accessKeyId:process.env.AWS_ACCESS_KEY,
-        secretAccessKey:process.env.AWS_SECRET_KEY
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY,
+        secretAccessKey: process.env.AWS_SECRET_KEY
     }
-
 });
 
-exports.uploadFile = async(file)=>{
+exports.uploadFile = async (file) => {
 
-    const stream = fs.createReadStream(file.path);
-
-    const key = Date.now()+"-"+file.originalname;
+    const key = Date.now() + "-" + file.originalname;
 
     await client.send(new PutObjectCommand({
 
-        Bucket:process.env.AWS_BUCKET,
+        Bucket: process.env.AWS_BUCKET,
 
-        Key:key,
+        Key: key,
 
-        Body:stream,
+        Body: file.buffer,
 
-        ContentType:file.mimetype
+        ContentType: file.mimetype
 
     }));
 
-    return{
+    return {
 
-        Key:key,
+        Key: key,
 
-        Location:`https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`
+        Location: `https://${process.env.AWS_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`
 
     };
 
 };
 
-
-
-exports.deleteFile = async(key)=>{
+exports.deleteFile = async (key) => {
 
     await client.send(new DeleteObjectCommand({
 
-        Bucket:process.env.AWS_BUCKET,
+        Bucket: process.env.AWS_BUCKET,
 
-        Key:key
+        Key: key
 
     }));
 
