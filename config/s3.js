@@ -45,6 +45,8 @@ exports.uploadFile = async (file) => {
 
 exports.deleteFile = async (key) => {
 
+    console.log("Deleting from S3:", key);
+
     await client.send(new DeleteObjectCommand({
 
         Bucket: process.env.AWS_BUCKET,
@@ -52,5 +54,8 @@ exports.deleteFile = async (key) => {
         Key: key
 
     }));
+
+    console.log("Deleted successfully from S3");
+
 
 };

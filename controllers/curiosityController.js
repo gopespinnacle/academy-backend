@@ -110,31 +110,39 @@ exports.getCategoryContent = async (req, res) => {
 
 };
 
-exports.deleteContent = async(req,res)=>{
+exports.deleteContent = async (req, res) => {
 
-    try{
+    try {
 
         const item = await Curiosity.findById(req.params.id);
 
-        if(!item){
+        console.log("DELETE ITEM:", item);
 
+        if (!item) {
             return res.status(404).json({
-                message:"Not Found"
+                success: false,
+                message: "Not Found"
             });
-
         }
+
+        console.log("S3 KEY:", item.s3Key);
 
         await deleteFile(item.s3Key);
 
         await item.deleteOne();
 
         res.json({
-            success:true
+            success: true
         });
 
-    }catch(err){
+    } catch (err) {
 
-        res.status(500).json(err);
+        console.error("DELETE ERROR:", err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
 
     }
 
