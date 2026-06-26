@@ -8,20 +8,18 @@ const curiositySchema = new mongoose.Schema({
     },
 
     category:{
-        type:String,
-        enum:[
-            "Vocabulary",
-            "Science",
-            "GK",
-            "Maths",
-            "English",
-            "Tamil",
-            "Programming",
-            "Fun Facts",
-            "Others"
-        ],
-        default:"Vocabulary"
-    },
+    type:String,
+    enum:[
+        "Vocabulary",
+        "Science Wonders",
+        "Aptitude",
+        "World Knowledge",
+        "Grammar",
+        "Brain Teasers",
+        "Life Skills"
+    ],
+    default:"Vocabulary"
+},
 
     description:{
         type:String
