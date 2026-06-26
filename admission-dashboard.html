@@ -1143,7 +1143,34 @@ padding-top:3px;
         Choose Your Plan
     </h2>
 
-    <div class="plan-grid" >
+    <!-- Global Banner -->
+<div id="globalBanner"
+     style="
+        display:none;
+        background:#1565C0;
+        color:white;
+        padding:18px;
+        border-radius:12px;
+        margin:20px 0;
+        text-align:center;
+     ">
+
+    <h3 style="margin:0;">
+        🌍 Choose Your Global Learning Plan
+    </h3>
+
+    <p style="margin-top:10px;">
+        🌍 Designed for International Students
+        <br>
+        🕒 Flexible Time Zone Scheduling
+    </p>
+
+</div>
+
+    <!-- Indian Plans -->
+<div id="indianPlans">
+
+<div class="plan-grid">
 
         <!-- ASPIRE -->
         <div class="plan-card"
@@ -1324,7 +1351,119 @@ padding-top:3px;
 
     </div>
 
-    <div class="button-row">
+</div>
+
+<!-- ======================= -->
+<!-- GLOBAL PLANS -->
+<!-- ======================= -->
+
+<div id="abroadPlans"
+     style="display:none;">
+
+<div class="plan-grid">
+
+    <div class="plan-card"
+onclick="selectPlan('Global Achieve',350,this)">
+
+<div class="plan-header achieve">
+🌍 Global Achieve
+</div>
+
+<div class="plan-body">
+
+<h3>
+₹350
+<span>/Subject</span>
+</h3>
+
+<ul>
+
+<li>3 Live Classes / Week (60 Minutes)</li>
+
+<li>Maximum 4 Students Per Batch</li>
+
+<li>Complete Concept-Based Teaching</li>
+
+<li>Daily Oral Assessment</li>
+
+<li>Weekly Assessment</li>
+
+<li>Homework After Every Class</li>
+
+<li>Unit Worksheets & Practice Sheets</li>
+
+<li>Monthly Progress Report</li>
+
+<li>Parent Progress Updates</li>
+
+<li>Doubt Clarification During Classes</li>
+
+</ul>
+
+</div>
+
+</div>
+
+<div class="plan-card popular-plan"
+onclick="selectPlan('Global Pinnacle',500,this)">
+
+<div class="popular-badge">
+
+BEST VALUE
+
+</div>
+
+<div class="plan-header pinnacle">
+
+👑 Global Pinnacle
+
+</div>
+
+<div class="plan-body">
+
+<h3>
+
+₹500
+
+<span>/Subject</span>
+
+</h3>
+
+<ul>
+
+<li>5 Live One-to-One Classes / Week (60 Minutes)</li>
+
+<li>Fully Personalized Learning Plan</li>
+
+<li>Complete Concept-Based Teaching</li>
+
+<li>Daily Oral Assessment</li>
+
+<li>Weekly Assessment</li>
+
+<li>Homework After Every Class</li>
+
+<li>HOTS & Case Study Based Practice</li>
+
+<li>Personalized Worksheets</li>
+
+<li>Monthly Progress Report</li>
+
+<li>Weekly Parent Review</li>
+
+<li>Dedicated Academic Mentor</li>
+
+<li>Flexible Time Zone Scheduling</li>
+
+<li>Priority Doubt Support</li>
+
+<li>Exam Strategy & Revision Sessions</li>
+
+</ul>
+
+</div>
+
+</div>
 
         <button onclick="prevPage(2)">
             Back
@@ -1482,49 +1621,87 @@ let finalAmount = 0;
 
 let appliedDiscount = 0;
 
+/* NEW */
+let applicationType = "Indian";
+
 
 /* MENU */
 
 function showSection(type){
 
-    document.getElementById(
-        "academySection"
-    ).style.display = "none";
+    // Remove active menu
+    document.querySelectorAll(".menu-item")
+    .forEach(item=>{
+        item.classList.remove("active");
+    });
 
-    document.getElementById(
-        "vacationSection"
-    ).style.display = "none";
+    // Highlight selected menu
+    event.currentTarget.classList.add("active");
 
-    document.getElementById(
-        "ecaSection"
-    ).style.display = "none";
+    // Hide all sections
+    document.getElementById("academySection").style.display="none";
+    document.getElementById("vacationSection").style.display="none";
+    document.getElementById("ecaSection").style.display="none";
 
-    if(type === "academy"){
+    // Academy - Indians
+    if(type==="academy"){
 
-        document.getElementById(
-            "academySection"
-        ).style.display = "block";
+    applicationType="Indian";
+
+    document.getElementById("academySection").style.display="block";
+
+    // Show Indian Plans
+    document.getElementById("indianPlans").style.display="block";
+    document.getElementById("abroadPlans").style.display="none";
+    document.getElementById("globalBanner").style.display="none";
+
+    // Change Heading
+    document.querySelector("#page3 h2").innerText =
+    "Choose Your Plan";
+
+}
+
+    // Academy - Abroad
+    if(type==="abroad"){
+
+    applicationType="Abroad";
+
+    document.getElementById("academySection").style.display="block";
+
+    // Hide Indian Plans
+    document.getElementById("indianPlans").style.display="none";
+
+    // Show Abroad Plans
+    document.getElementById("abroadPlans").style.display="block";
+
+    // Show Banner
+    document.getElementById("globalBanner").style.display="block";
+
+    // Change Heading
+    document.querySelector("#page3 h2").innerText =
+    "Choose Your Global Learning Plan";
+
+}
+
+    // Vacation
+    if(type==="vacation"){
+
+        applicationType="Vacation";
+
+        document.getElementById("vacationSection").style.display="block";
 
     }
 
-    if(type === "vacation"){
+    // ECA
+    if(type==="eca"){
 
-        document.getElementById(
-            "vacationSection"
-        ).style.display = "block";
+        applicationType="ECA";
 
-    }
-
-    if(type === "eca"){
-
-        document.getElementById(
-            "ecaSection"
-        ).style.display = "block";
+        document.getElementById("ecaSection").style.display="block";
 
     }
 
-    // CLOSE MOBILE MENU
-    if(window.innerWidth <= 768){
+    if(window.innerWidth<=768){
 
         document
         .getElementById("sidebar")
@@ -1532,7 +1709,16 @@ function showSection(type){
 
     }
 
+    // Reset previous plan selection
+selectedPlan = "";
+selectedAmount = 0;
+
+document.querySelectorAll(".plan-card").forEach(card=>{
+    card.classList.remove("active");
+});
 }
+
+
 
 /* NEXT PAGE */
 
@@ -1742,6 +1928,7 @@ async function submitApplication(){
     });
 
     const data = {
+        applicationType,
 
         studentName:
         document.getElementById(
