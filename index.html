@@ -181,14 +181,45 @@ html, body{
 .dropdown-content{
     display:none;
     position:absolute;
-    top:100%;          /* Attach directly below Login */
+    top:100%;
     right:0;
-    background:white;
-    min-width:200px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.15);
+    background:#fff;
+    min-width:220px;
+    box-shadow:0 8px 20px rgba(0,0,0,.15);
     border-radius:8px;
     overflow:hidden;
-    z-index:999;
+    z-index:2000;
+}
+
+/* Mobile Login Dropdown */
+@media (max-width:768px){
+
+    .dropdown{
+        width:100%;
+        position:relative;
+    }
+
+    .dropdown-content{
+        position:relative;
+        top:0;
+        right:0;
+        width:100%;
+        min-width:100%;
+        border-radius:0;
+        box-shadow:none;
+        background:#1b263b;
+    }
+
+    .dropdown-content a{
+        color:#fff;
+        border-bottom:1px solid rgba(255,255,255,.08);
+        padding-left:35px;
+    }
+
+    .dropdown-content a:hover{
+        background:#243447;
+        color:#ffc300;
+    }
 }
 
 .dropdown-content a{
