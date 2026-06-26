@@ -1638,6 +1638,7 @@ required>
    let selectedPlan = "";
 
 let selectedAmount = 0;
+let pricePerClass = 0;
 
 let finalAmount = 0;
 
@@ -1734,6 +1735,7 @@ function showSection(type){
     // Reset previous plan selection
 selectedPlan = "";
 selectedAmount = 0;
+pricePerClass = 0;
 
 document.querySelectorAll(".plan-card").forEach(card=>{
     card.classList.remove("active");
@@ -1890,30 +1892,27 @@ if(applicationType === "Indian"){
 }else{
 
     // Abroad stores ONLY price per class
-    selectedAmount = amount;
+    pricePerClass = amount;
+selectedAmount = amount;
 
     finalAmount = amount;
 
 }
 
-document.getElementById(
-    "selectedPlanText"
-).innerText =
+if(applicationType === "Indian"){
 
-"Selected Plan : " +
-plan +
+    document.getElementById("selectedPlanText").innerHTML =
 
-" - ₹" + amount +
+    `
+    Selected Plan : ${plan}<br>
+    Subjects : ${subjectCount}<br>
+    Total Amount : ₹${selectedAmount}
+    `;
 
-"\nSubjects : " + subjectCount +
+    localStorage.setItem("totalAmount", selectedAmount);
 
-"\nTotal Amount : ₹" + total;
-
-localStorage.setItem(
-    "totalAmount",
-    total
-);
 }
+
 if(applicationType === "Abroad"){
 
     document.getElementById("abroadClassSelector").style.display = "block";
@@ -1925,6 +1924,7 @@ if(applicationType === "Abroad"){
     document.getElementById("abroadClassSelector").style.display = "none";
 
 }
+}
 
 function calculateMonthlyFee(){
 
@@ -1932,16 +1932,17 @@ function calculateMonthlyFee(){
     parseInt(document.getElementById("classesPerMonth").value);
 
     const monthlyAmount =
-    classes * selectedAmount;
+classes * pricePerClass;
 
     finalAmount = monthlyAmount;
+    selectedAmount = monthlyAmount;
 
     document.getElementById("selectedPlanText").innerHTML =
 
     `
     Selected Plan : ${selectedPlan}<br>
 
-    Price Per Class : ₹${selectedAmount}<br>
+    Price Per Class : ₹${pricePerClass}<br>
 
     Classes Per Month : ${classes}<br>
 
