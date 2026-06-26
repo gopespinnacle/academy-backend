@@ -540,6 +540,32 @@ footer{
 .whatsapp-float:hover{
     transform:scale(1.1);
 }
+
+/* ===== BACK TO TOP ===== */
+
+#backToTop{
+    position:fixed;
+    bottom:100px;
+    right:25px;
+    width:55px;
+    height:55px;
+    border:none;
+    border-radius:50%;
+    background:#0d1b2a;
+    color:#fff;
+    font-size:20px;
+    cursor:pointer;
+    display:none;
+    z-index:1001;
+    box-shadow:0 8px 20px rgba(0,0,0,.25);
+    transition:.3s;
+}
+
+#backToTop:hover{
+    background:#ffc300;
+    color:#000;
+    transform:translateY(-3px);
+}
 .founder-section{
     padding:90px 10%;
     background:#ffffff;
@@ -1058,11 +1084,13 @@ footer{
 <button id="backToTop" onclick="scrollToTop()">
     <i class="fa-solid fa-arrow-up"></i>
 </button>
+
 <a href="https://wa.me/919566911472?text=Hello%20I%20would%20like%20to%20know%20more%20about%20Gopes%20Pinnacle%20Academy"
    class="whatsapp-float"
    target="_blank">
    💬
 </a>
+
 
 <script>
 function toggleMenu(){
@@ -1181,6 +1209,29 @@ function toggleCourse(el, name){
 
 loadCourses();
 
+</script>
+
+<script>
+const backToTop = document.getElementById("backToTop");
+
+window.addEventListener("scroll", function () {
+
+    if (window.pageYOffset > 300) {
+        backToTop.style.display = "flex";
+    } else {
+        backToTop.style.display = "none";
+    }
+
+});
+
+function scrollToTop() {
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
 </script>
 </body>
 </html>
