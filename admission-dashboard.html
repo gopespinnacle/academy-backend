@@ -1497,6 +1497,24 @@ BEST VALUE
                     </p>
 
                 </div>
+                <div id="abroadClassSelector" style="display:none; margin-top:25px;">
+
+    <h3>Classes Per Month</h3>
+
+    <select id="classesPerMonth"
+            onchange="calculateMonthlyFee()">
+
+        <option value="4">4 Classes / Month</option>
+        <option value="8">8 Classes / Month</option>
+        <option value="12">12 Classes / Month</option>
+        <option value="16">16 Classes / Month</option>
+        <option value="20" selected>20 Classes / Month</option>
+        <option value="24">24 Classes / Month</option>
+        <option value="28">28 Classes / Month</option>
+
+    </select>
+
+</div>
 <div style="margin-top:20px;">
 
     <input
@@ -1861,12 +1879,22 @@ document.querySelectorAll(
 'input[name="subjects"]:checked'
 ).length;
 
-const total =
-subjectCount * amount;
+if(applicationType === "Indian"){
 
-selectedAmount = total;
+    const total = subjectCount * amount;
 
-finalAmount = total;
+    selectedAmount = total;
+
+    finalAmount = total;
+
+}else{
+
+    // Abroad stores ONLY price per class
+    selectedAmount = amount;
+
+    finalAmount = amount;
+
+}
 
 document.getElementById(
     "selectedPlanText"
@@ -1885,6 +1913,43 @@ localStorage.setItem(
     "totalAmount",
     total
 );
+}
+if(applicationType === "Abroad"){
+
+    document.getElementById("abroadClassSelector").style.display = "block";
+
+    calculateMonthlyFee();
+
+}else{
+
+    document.getElementById("abroadClassSelector").style.display = "none";
+
+}
+
+function calculateMonthlyFee(){
+
+    const classes =
+    parseInt(document.getElementById("classesPerMonth").value);
+
+    const monthlyAmount =
+    classes * selectedAmount;
+
+    finalAmount = monthlyAmount;
+
+    document.getElementById("selectedPlanText").innerHTML =
+
+    `
+    Selected Plan : ${selectedPlan}<br>
+
+    Price Per Class : ₹${selectedAmount}<br>
+
+    Classes Per Month : ${classes}<br>
+
+    Monthly Fee : ₹${monthlyAmount}
+    `;
+
+    localStorage.setItem("totalAmount", monthlyAmount);
+
 }
 /* PAYMENT */
 
