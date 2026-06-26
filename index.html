@@ -543,28 +543,39 @@ footer{
 
 /* ===== BACK TO TOP ===== */
 
+#/* ===== PREMIUM BACK TO TOP ===== */
+
 #backToTop{
     position:fixed;
     bottom:100px;
     right:25px;
-    width:55px;
-    height:55px;
+    width:52px;
+    height:52px;
     border:none;
     border-radius:50%;
     background:#0d1b2a;
-    color:#fff;
-    font-size:20px;
-    cursor:pointer;
+    color:#ffffff;
     display:none;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
     z-index:1001;
-    box-shadow:0 8px 20px rgba(0,0,0,.25);
-    transition:.3s;
+    box-shadow:0 8px 25px rgba(0,0,0,.25);
+    transition:all .3s ease;
+}
+
+#backToTop i{
+    font-size:18px;
+    color:#fff;
 }
 
 #backToTop:hover{
     background:#ffc300;
-    color:#000;
-    transform:translateY(-3px);
+    transform:translateY(-4px) scale(1.08);
+}
+
+#backToTop:hover i{
+    color:#0d1b2a;
 }
 .founder-section{
     padding:90px 10%;
@@ -1082,7 +1093,7 @@ footer{
 </footer>
 
 <button id="backToTop" onclick="scrollToTop()">
-    <i class="fa-solid fa-arrow-up"></i>
+    <i class="fas fa-chevron-up"></i>
 </button>
 
 <a href="https://wa.me/919566911472?text=Hello%20I%20would%20like%20to%20know%20more%20about%20Gopes%20Pinnacle%20Academy"
