@@ -2260,11 +2260,34 @@ async function applyCoupon(){
 }
 document
 .getElementById("menuToggle")
-.addEventListener("click", ()=>{
+.addEventListener("click", function(e){
+
+    e.stopPropagation();
 
     document
     .getElementById("sidebar")
     .classList.toggle("active");
+
+});
+
+// Close mobile menu when clicking outside
+document.addEventListener("click", function(e){
+
+    const sidebar = document.getElementById("sidebar");
+    const menuBtn = document.getElementById("menuToggle");
+
+    // Only for mobile
+    if(window.innerWidth <= 768){
+
+        if(
+            sidebar.classList.contains("active") &&
+            !sidebar.contains(e.target) &&
+            !menuBtn.contains(e.target)
+        ){
+            sidebar.classList.remove("active");
+        }
+
+    }
 
 });
 </script>
