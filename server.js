@@ -6,8 +6,6 @@ const Recording = require("./models/Recording");
 const ClassSummary = require("./models/ClassSummary");
 const multer = require("multer");
 const curiosityRoutes = require("./routes/curiosityRoutes");
-const teacherApplicationRoutes =
-require("./routes/teacherApplicationRoutes");
 
 // ✅ FIX: KEEP FILE EXTENSION
 const storageFile = multer.diskStorage({
@@ -153,8 +151,6 @@ app.use("/api/founder", founderTimeClashRoutes);
 app.use("/api/student", studentRoutes);
 
 app.use("/api/curiosity", curiosityRoutes);
-
-app.use("/api/founder", teacherApplicationRoutes);
 
 app.use("/api", admissionRoutes);app.use("/api", admissionRoutes);
 app.use(
