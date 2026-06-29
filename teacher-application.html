@@ -66,9 +66,7 @@ button{
 }
 
 .mobileApp{
-
-display:none;
-
+    display:block;
 }
 
 .step{
@@ -252,7 +250,7 @@ Step <span id="stepNo">1</span> of 5
 
 </div>
 
-<div class="step"></div>
+<div class="step">
 
 <label>Upload Resume</label>
 <input type="file" name="resume" required>
@@ -270,6 +268,7 @@ Step <span id="stepNo">1</span> of 5
 <input type="text" name="timing" placeholder="10AM - 11AM" required>
 
 </div>
+<div class="step">
 <div class="section-title">Professional Profile</div>
 
 <!-- Academic Specialization -->
@@ -285,7 +284,9 @@ Step <span id="stepNo">1</span> of 5
 <label><input type="checkbox" name="subjects" value="None"> None</label>
 </div>
 
+
 <!-- Extra Skills -->
+ 
 <label>Extra Skills & Activities</label>
 <div class="checkbox-group">
 <label><input type="checkbox" name="skills" value="Vocal Singing"> Vocal Singing</label>
@@ -310,6 +311,10 @@ Step <span id="stepNo">1</span> of 5
 <label><input type="checkbox" name="languages" value="Hindi"> Hindi</label>
 <label><input type="checkbox" name="languages" value="None"> None</label>
 </div>
+
+</div>
+
+<div class="step">
 <div class="section-title">Terms & Conditions</div>
 
 <div class="checkbox-group">
@@ -330,7 +335,7 @@ Step <span id="stepNo">1</span> of 5
 <label><input type="checkbox" id="finalAgree"> I agree to all terms</label>
 
 </div>
-
+</div>
 <button type="submit">Submit</button>
 
 <div class="mobileButtons">
