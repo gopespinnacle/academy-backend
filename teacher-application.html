@@ -527,18 +527,14 @@ formData.delete("languages");
 
         if(res.ok){
 
-    alert("🎉 Application Submitted Successfully!\n\nOur HR team will review your application and contact you if shortlisted.");
+            alert("Submitted Successfully");
+            this.reset();
 
-    this.reset();
+        }else{
 
-    // Redirect to Home Page
-    window.location.href = "index.html";
+            alert("Upload Failed");
 
-}else{
-
-    alert("Upload Failed");
-
-}
+        }
 
     }catch(err){
 
