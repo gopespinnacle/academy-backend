@@ -527,14 +527,17 @@ formData.delete("languages");
 
         if(res.ok){
 
-            alert("Submitted Successfully");
-            this.reset();
+    alert("Submitted Successfully");
 
-        }else{
+    this.reset();
 
-            alert("Upload Failed");
+    window.location.href = "index.html";
 
-        }
+}else{
+
+    alert("Upload Failed");
+
+}
 
     }catch(err){
 
