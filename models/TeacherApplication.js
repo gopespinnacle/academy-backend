@@ -9,7 +9,15 @@ const teacherApplicationSchema = new mongoose.Schema({
     experience: String,
     presentJob: String,
     timing: String,
-    resume: String,
+    resumeUrl: {
+    type: String,
+    required: true
+},
+
+resumeKey: {
+    type: String,
+    required: true
+},
     subjects: [String],
 skills: [String],
 languages: [String],
