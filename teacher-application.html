@@ -64,17 +64,179 @@ button{
     width: 16px;
     height: 16px;
 }
+
+.mobileApp{
+
+display:none;
+
+}
+
+.step{
+
+display:block;
+
+}
+
+@media(max-width:768px){
+
+.container{
+
+width:100%;
+
+margin:0;
+
+padding:20px;
+
+border-radius:0;
+
+box-shadow:none;
+
+}
+
+.mobileApp{
+
+display:block;
+
+}
+
+.step{
+
+display:none;
+
+animation:fade .35s;
+
+}
+
+.step.active{
+
+display:block;
+
+}
+
+.mobileHeader{
+
+text-align:center;
+
+margin-bottom:20px;
+
+}
+
+.mobileLogo{
+
+width:80px;
+
+margin-bottom:10px;
+
+}
+
+.progressBar{
+
+height:8px;
+
+background:#ddd;
+
+border-radius:10px;
+
+overflow:hidden;
+
+margin-top:8px;
+
+}
+
+#progressFill{
+
+width:20%;
+
+height:100%;
+
+background:#0d6efd;
+
+transition:.3s;
+
+}
+
+.mobileButtons{
+
+display:flex;
+
+justify-content:space-between;
+
+margin-top:25px;
+
+gap:15px;
+
+}
+
+.mobileButtons button{
+
+flex:1;
+
+}
+
+}
+
+@keyframes fade{
+
+from{
+
+opacity:0;
+
+transform:translateX(30px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:none;
+
+}
+
+}
 </style>
 
 </head>
 
 <body>
 
+    <!-- Mobile App Layout -->
+
+<div class="mobileApp">
+
+<div class="mobileHeader">
+
+<img src="images/logo.png" class="mobileLogo">
+
+<h2>Teacher Recruitment</h2>
+
+<p>Gopes Pinnacle Academy</p>
+
+</div>
+
+<div class="progressBox">
+
+<div class="progressText">
+
+Step <span id="stepNo">1</span> of 5
+
+</div>
+
+<div class="progressBar">
+
+<div id="progressFill"></div>
+
+</div>
+
+</div>
+
 <div class="container">
 
 <h2>Teacher Application</h2>
 
 <form id="teacherForm" enctype="multipart/form-data">
+
+<div class="step active">
 
 <label>Teacher Name</label>
 <input type="text" name="teacherName" required>
@@ -87,6 +249,10 @@ button{
 
 <label>Email</label>
 <input type="email" name="email" required>
+
+</div>
+
+<div class="step"></div>
 
 <label>Upload Resume</label>
 <input type="file" name="resume" required>
@@ -102,6 +268,8 @@ button{
 
 <label>Your Working Time For Gopes Pinnacle</label>
 <input type="text" name="timing" placeholder="10AM - 11AM" required>
+
+</div>
 <div class="section-title">Professional Profile</div>
 
 <!-- Academic Specialization -->
@@ -165,11 +333,86 @@ button{
 
 <button type="submit">Submit</button>
 
+<div class="mobileButtons">
+
+<button
+type="button"
+id="backBtn">
+
+← Back
+
+</button>
+
+<button
+type="button"
+id="nextBtn">
+
+Next →
+
+</button>
+
+<button
+type="submit"
+id="submitBtn"
+style="display:none">
+
+Submit Application
+
+</button>
+
+</div>
+
 </form>
 
 </div>
 
+</div>
+
 <script>
+
+    const steps=document.querySelectorAll(".step");
+
+let currentStep=0;
+
+const backBtn=document.getElementById("backBtn");
+const nextBtn=document.getElementById("nextBtn");
+const submitBtn=document.getElementById("submitBtn");
+
+function showStep(){
+
+steps.forEach(s=>s.classList.remove("active"));
+
+steps[currentStep].classList.add("active");
+
+document.getElementById("stepNo").innerText=currentStep+1;
+
+document.getElementById("progressFill").style.width=((currentStep+1)/steps.length*100)+"%";
+
+backBtn.style.display=currentStep==0?"none":"block";
+
+nextBtn.style.display=currentStep==steps.length-1?"none":"block";
+
+submitBtn.style.display=currentStep==steps.length-1?"block":"none";
+
+}
+
+nextBtn.onclick=()=>{
+
+currentStep++;
+
+showStep();
+
+};
+
+backBtn.onclick=()=>{
+
+currentStep--;
+
+showStep();
+
+};
+
+showStep();
 document.getElementById("teacherForm").addEventListener("submit", async function(e){
 
     e.preventDefault();
