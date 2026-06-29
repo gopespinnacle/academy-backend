@@ -176,6 +176,10 @@ document.getElementById("teacherForm").addEventListener("submit", async function
 
     const formData = new FormData(this);
 
+    formData.delete("subjects");
+formData.delete("skills");
+formData.delete("languages");
+
     const subjects = Array.from(
         document.querySelectorAll('input[name="subjects"]:checked')
     ).map(el => el.value);
@@ -193,6 +197,10 @@ document.getElementById("teacherForm").addEventListener("submit", async function
     formData.append("languages", JSON.stringify(languages));
 
     try{
+
+        for (const pair of formData.entries()) {
+    console.log(pair[0], pair[1]);
+}
 
         const res = await fetch(
             "https://academy-backend-eatl.onrender.com/api/founder/teacher-application",
