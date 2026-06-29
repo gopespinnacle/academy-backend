@@ -569,33 +569,69 @@ auth:oauth2Client
 
 // ✅ TEACHER APPLICATION API
 router.post("/teacher-application", upload.single("resume"), async (req, res) => {
-    try {
-const resumeLink = await uploadFile(req.file);
-        const data = {
-    teacherName: req.body.teacherName,
-    whatsapp: req.body.whatsapp,
-    mobile: req.body.mobile,
-    email: req.body.email,
-    education: req.body.education,
-    experience: req.body.experience,
-    presentJob: req.body.presentJob,
-    timing: req.body.timing,
-    resume: resumeLink,
 
-    // ✅ ADD THESE 3 LINES
-    subjects: JSON.parse(req.body.subjects),
-skills: JSON.parse(req.body.skills),
-languages: JSON.parse(req.body.languages)
-};
+    try {
+
+        if (!req.file) {
+
+            return res.status(400).json({
+                success: false,
+                message: "Resume is required"
+            });
+
+        }
+
+        // Upload Resume to AWS S3
+        const result = await uploadFile(req.file);
+
+        const data = {
+
+            teacherName: req.body.teacherName,
+
+            whatsapp: req.body.whatsapp,
+
+            mobile: req.body.mobile,
+
+            email: req.body.email,
+
+            education: req.body.education,
+
+            experience: req.body.experience,
+
+            presentJob: req.body.presentJob,
+
+            timing: req.body.timing,
+
+            resumeUrl: result.Location,
+
+            resumeKey: result.Key,
+
+            subjects: JSON.parse(req.body.subjects || "[]"),
+
+            skills: JSON.parse(req.body.skills || "[]"),
+
+            languages: JSON.parse(req.body.languages || "[]")
+
+        };
 
         await TeacherApplication.create(data);
 
-        res.json({ success: true });
+        res.json({
+            success: true,
+            message: "Teacher Application Submitted Successfully"
+        });
 
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: err.message });
+
+        console.log(err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
     }
+
 });
 // ✅ GET ALL TEACHER APPLICATIONS
 router.get("/teacher-applications", async (req, res) => {
