@@ -70,9 +70,11 @@ display:block;
 }
 
 .step{
+display:none;
+}
 
+.step.active{
 display:block;
-
 }
 
 @media(max-width:768px){
@@ -410,30 +412,40 @@ submitBtn.style.display=currentStep==steps.length-1?"block":"none";
 
 }
 
-nextBtn.onclick = () => {
+nextBtn.onclick = function(){
 
-if(currentStep < steps.length - 1){
+if(currentStep < steps.length-1){
 
 currentStep++;
 
 showStep();
 
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
 }
 
 };
 
-backBtn.onclick = () => {
+backBtn.onclick = function(){
 
-if(currentStep > 0){
+if(currentStep>0){
 
 currentStep--;
 
 showStep();
 
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
 }
 
 };
-
+currentStep = 0;
 showStep();
 document.getElementById("teacherForm").addEventListener("submit", async function(e){
 
