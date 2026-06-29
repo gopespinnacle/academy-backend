@@ -27,6 +27,7 @@ const Attendance = require("../models/Attendance");
 const CompensationClass = require("../models/CompensationClass");
 const Subject = require("../models/Subject");
 const Category = require("../models/Category");
+const { uploadFile } = require("../config/s3");
 
 
 const { protect, authorize } = require("../middleware/authMiddleware");
