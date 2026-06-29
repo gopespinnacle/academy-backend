@@ -9,6 +9,7 @@ const PeriodAssignment = require("../models/PeriodAssignment");
 const PeriodChapter =
 require("../models/PeriodChapter");
 const axios = require("axios");
+const sendWhatsApp = require("../utils/sendWhatsApp");
 const express = require("express");
 const router = express.Router();
 const founderController = require("../controllers/founderController")
@@ -28,6 +29,7 @@ const CompensationClass = require("../models/CompensationClass");
 const Subject = require("../models/Subject");
 const Category = require("../models/Category");
 const { uploadFile } = require("../config/s3");
+
 
 
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -618,12 +620,18 @@ router.post("/teacher-application", upload.single("resume"), async (req, res) =>
 
         };
 
-        await TeacherApplication.create(data);
+        const application = await TeacherApplication.create(data);
 
-        res.json({
-            success: true,
-            message: "Teacher Application Submitted Successfully"
-        });
+// Send WhatsApp confirmation
+await sendWhatsApp(
+    application.mobile,
+    application.teacherName
+);
+
+res.json({
+    success: true,
+    message: "Teacher Application Submitted Successfully"
+});
 
     } catch (err) {
 
