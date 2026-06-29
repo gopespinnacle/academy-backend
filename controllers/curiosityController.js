@@ -13,7 +13,10 @@ exports.uploadContent = async (req, res) => {
             });
         }
 
-        const result = await uploadFile(req.file);
+        const result = await uploadFile(
+    req.file,
+    "curiosity"
+);
 
         
 

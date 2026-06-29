@@ -583,7 +583,10 @@ router.post("/teacher-application", upload.single("resume"), async (req, res) =>
         }
 
         // Upload Resume to AWS S3
-        const result = await uploadFile(req.file);
+        const result = await uploadFile(
+    req.file,
+    "teacher-resumes"
+);
 
         const data = {
 

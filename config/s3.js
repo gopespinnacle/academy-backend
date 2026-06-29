@@ -17,9 +17,10 @@ const client = new S3Client({
 }
 });
 
-exports.uploadFile = async (file) => {
+exports.uploadFile = async (file, folder) => {
 
-    const key = Date.now() + "-" + file.originalname;
+    const key = `${folder}/${Date.now()}-${file.originalname}`;
+
 
     await client.send(new PutObjectCommand({
 
