@@ -165,7 +165,19 @@ border:1px solid #d0d0d0;
 vertical-align:top;
 word-wrap:break-word;
 ">
-${x.studentName || "-"}
+${
+
+x.students && x.students.length > 0
+
+?
+
+x.students.map(s => s.studentName).join("<br>")
+
+:
+
+"-"
+
+}
 </td>
 
 <td style="

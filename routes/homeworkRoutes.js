@@ -89,9 +89,7 @@ await ClassSummary.updateOne(
 
 {
 
-homeworkUniqueId:
-
-req.body.homeworkUniqueId
+_id: req.body.summaryId
 
 },
 
