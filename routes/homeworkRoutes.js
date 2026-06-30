@@ -292,50 +292,27 @@ s.homeworkUniqueId
 
 finalData.push({
 
-summaryId:
-s._id,
+    summaryId: s._id,
 
-homeworkUniqueId:
-s.homeworkUniqueId,
+    homeworkUniqueId: s.homeworkUniqueId,
 
-questionDocs:
+    questionDocs: s.questionDocs || [],
 
-s.questionDocs
+    homeworkStatus: s.homeworkStatus,
 
-||
+    teacherName: s.teacherName,
 
-[],
+    className: s.className,
 
-homeworkStatus:
-s.homeworkStatus,
+    subject: s.subject,
 
-teacherName:
-s.teacherName,
+    homework: s.homework,
 
-studentName:
-s.studentName,
+    date: s.date,
 
-className:
-s.className,
+    students: s.students || [],
 
-subject:
-s.subject,
-
-homework:
-s.homework,
-
-date:
-s.date,
-
-files:
-
-upload ?
-
-upload.files
-
-:
-
-[]
+    files: upload ? upload.files : []
 
 });
 });
