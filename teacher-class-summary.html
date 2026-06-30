@@ -134,9 +134,9 @@ function checkSummaryMode(){
             sessionStorage.getItem("summaryStudents") || "[]"
         );
 
-    students.forEach((name,index)=>{
+    students.forEach((student,index)=>{
 
-        studentBox.innerHTML += `
+    studentBox.innerHTML += `
         <div style="
         border:1px solid #ccc;
         border-radius:8px;
@@ -145,11 +145,11 @@ function checkSummaryMode(){
         background:#fafafa;
         ">
             <b>Student ${index+1}</b><br>
-            ${name}
+            ${student.studentName}
         </div>
-        `;
+    `;
 
-    });
+});
 
     const inTime =
         sessionStorage.getItem("teacherInTime");
