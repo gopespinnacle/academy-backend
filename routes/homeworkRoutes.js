@@ -75,8 +75,8 @@ req.body.className,
 subject:
 req.body.subject,
 
-homeworkUniqueId:
-req.body.homeworkUniqueId,
+summaryId:
+req.body.summaryId,
 
 files:
 uploadedFiles
@@ -198,39 +198,36 @@ let finalData = [];
 summaries.forEach(s=>{
 
 const uploadsForHomework =
-uploads.filter(x =>
+uploads.filter(
 
-x.homeworkUniqueId
+x =>
+
+x.summaryId
 
 ===
 
-s.homeworkUniqueId
+String(s._id)
 
 );
-
 finalData.push({
 
-    summaryId: s._id,
+summaryId: String(s._id),
 
-    homeworkUniqueId: s.homeworkUniqueId,
+teacherName: s.teacherName,
 
-    questionDocs: s.questionDocs || [],
+className: s.className,
 
-    homeworkStatus: s.homeworkStatus,
+subject: s.subject,
 
-    teacherName: s.teacherName,
+homework: s.homework,
 
-    className: s.className,
+date: s.date,
 
-    subject: s.subject,
+students: s.students || [],
 
-    homework: s.homework,
+questionDocs: s.questionDocs || [],
 
-    date: s.date,
-
-    students: s.students || [],
-
-    files: uploadsForHomework
+files: uploadsForHomework
 
 });
 });

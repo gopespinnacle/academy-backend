@@ -9,7 +9,7 @@ className:String,
 
 subject:String,
 
-homeworkUniqueId:String,
+summaryId:String,
 
 files:[
 
