@@ -759,15 +759,16 @@ sessionStorage.setItem(
 
 /* ================= OPEN GOOGLE MEET ================= */
 
-const meetingLink = sessionStorage.getItem("meetingLink");
+const room =
+`academy-${className}-${day}-${startTime.replace(":", "")}`;
 
-if(!meetingLink){
-    alert("Google Meet link not found.");
-    return;
-}
-
-// Open Google Meet
-meetWindow = window.open(meetingLink, "_blank");
+window.location.href =
+`whiteboard.html?room=${encodeURIComponent(room)}
+&role=teacher
+&className=${encodeURIComponent(className)}
+&subject=${encodeURIComponent(subject)}
+&day=${encodeURIComponent(day)}
+&startTime=${encodeURIComponent(startTime)}`;
 
 document.getElementById("endClassBtn").style.display = "block";
 
