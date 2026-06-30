@@ -150,6 +150,14 @@ app.use("/api/founder", founderTimeClashRoutes);
 
 app.use("/api/student", studentRoutes);
 
+const classSessionRoutes =
+require("./routes/classSessionRoutes");
+
+app.use(
+    "/api/class-session",
+    classSessionRoutes
+);
+
 app.use("/api/curiosity", curiosityRoutes);
 
 app.use("/api", admissionRoutes);app.use("/api", admissionRoutes);
@@ -558,19 +566,36 @@ app.post("/api/save-class-summary", async (req, res) => {
     try{
 
     const {
-room,
-className,
-periodTime,
-subject,
-studentName,
-teacherName,
-homework,
-teacherInTime,
-teacherOutTime,
 
-studentId,
-teacherId,
-homeworkUniqueId
+    sessionId,
+
+    room,
+
+    className,
+
+    date,
+
+    day,
+
+    periodStart,
+
+    periodEnd,
+
+    subject,
+
+    teacherId,
+
+    teacherName,
+
+    students,
+
+    teacherInTime,
+
+    teacherOutTime,
+
+    homework,
+
+    classSummary
 
 } = req.body;
 
@@ -601,39 +626,42 @@ new Date(inTime)
 
 );
 
-        const summary = await ClassSummary.create({
+        const summary =
+await ClassSummary.create({
 
-className,
+    sessionId,
 
-studentId,
+    className,
 
-teacherId,
+    date,
 
-homeworkUniqueId,
+    day,
 
-homeworkStatus:
-"Pending",
+    periodStart,
 
-date:
-today.toLocaleDateString(),
+    periodEnd,
 
-periodTime,
+    subject,
 
-subject,
+    teacherId,
 
-studentName,
+    teacherName,
 
-teacherName,
+    students,
 
-teacherInTime:
-inTime,
+    teacherInTime: inTime,
 
-teacherOutTime:
-outTime,
+    teacherOutTime: outTime,
 
-totalMinutes,
+    totalMinutes,
 
-homework
+    homework,
+
+    classSummary,
+
+    homeworkStatus: "Pending",
+
+    status: "Completed"
 
 });
 

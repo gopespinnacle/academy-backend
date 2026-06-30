@@ -108,119 +108,65 @@ if (!token || role !== "teacher") {
     alert("Please login first");
     window.location.href = "teacher-login.html";
 }
-async function checkSummaryMode(){
+function checkSummaryMode(){
 
-const params = new URLSearchParams(window.location.search);
+    document.getElementById("summarySection").style.display = "block";
 
-const showSummary =
-params.get("showSummary");
+    document.getElementById("summaryClass").value =
+        sessionStorage.getItem("summaryClassName") || "";
 
-console.log(
-"Local Grade:",
-sessionStorage.getItem(
-"className"
-)
-);
+    document.getElementById("summaryDate").value =
+        sessionStorage.getItem("summaryDate") || "";
 
-if(showSummary !== "true") return;
+    document.getElementById("summaryTime").value =
+        sessionStorage.getItem("summaryPeriodTime") || "";
 
-document.getElementById("summarySection")
-.style.display = "block";
+    document.getElementById("summarySubject").value =
+        sessionStorage.getItem("summarySubject") || "";
 
-const studentBox =
-document.getElementById("summaryStudent");
+    const studentBox =
+        document.getElementById("summaryStudent");
 
-studentBox.innerHTML = "";
+    studentBox.innerHTML = "";
 
-const students = JSON.parse(
-decodeURIComponent(
-params.get("students")
-));
+    const students =
+        JSON.parse(
+            sessionStorage.getItem("summaryStudents") || "[]"
+        );
 
-studentBox.innerHTML = "";
+    students.forEach((name,index)=>{
 
-students.forEach((name,index)=>{
-
-    studentBox.innerHTML += `
-    <div style="
+        studentBox.innerHTML += `
+        <div style="
         border:1px solid #ccc;
         border-radius:8px;
         padding:10px;
         margin-bottom:10px;
         background:#fafafa;
-    ">
-        <b>Student ${index+1}</b><br>
-        ${name}
-    </div>
-    `;
+        ">
+            <b>Student ${index+1}</b><br>
+            ${name}
+        </div>
+        `;
 
-});
+    });
 
-const foundStudent =
-students.find(x =>
+    const inTime =
+        sessionStorage.getItem("teacherInTime");
 
-x.name
-?.trim()
-.toLowerCase()
+    const outTime =
+        sessionStorage.getItem("teacherOutTime");
 
-===
+    if(inTime && outTime){
 
-studentName
-.trim()
-.toLowerCase()
+        document.getElementById("summaryMeeting").value =
+            new Date(inTime).toLocaleTimeString()
+            +
+            " → "
+            +
+            new Date(outTime).toLocaleTimeString();
 
-);
-
-document.getElementById(
-"summaryClass"
-).value =
-
-foundStudent?.grade
-
-||
-
-params.get(
-"className"
-)
-
-||
-
-"-";
-
-document.getElementById("summaryDate").value =
-new Date().toLocaleDateString();
-
-document.getElementById("summaryTime").value =
-params.get("startTime") || "-";
-document.getElementById(
-"summarySubject"
-).value =
-params.get("subject") || "-";
-
-
-const room = params.get("room");
-
-const inTime =
-sessionStorage.getItem(
-"teacherInTime"
-);
-
-const outTime =
-sessionStorage.getItem(
-"teacherOutTime"
-);
-
-document.getElementById(
-"summaryMeeting"
-).value =
-
-new Date(inTime)
-.toLocaleTimeString()
-
-+ " → " +
-
-new Date(outTime)
-.toLocaleTimeString();
+    }
 
 }
 
@@ -252,65 +198,25 @@ document.getElementById(
 "summarySubject"
 ).value,
 
-studentId:
-sessionStorage.getItem(
-"studentId"
+date:
+document.getElementById("summaryDate").value,
+
+day:
+sessionStorage.getItem("summaryDay"),
+
+periodStart:
+sessionStorage.getItem("summaryStartTime"),
+
+periodEnd:
+sessionStorage.getItem("summaryEndTime"),
+
+students:
+JSON.parse(
+    sessionStorage.getItem("summaryStudents") || "[]"
 ),
 
-teacherId:
-sessionStorage.getItem(
-"teacherId"
-),
-
-homeworkUniqueId:
-
-sessionStorage.getItem(
-"studentId"
-)
-
-+
-
-"_"
-
-+
-
-sessionStorage.getItem(
-"teacherId"
-)
-
-+
-
-"_"
-
-+
-
-document.getElementById(
-"summarySubject"
-).value
-
-+
-
-"_"
-
-+
-
-document.getElementById(
-"summaryTime"
-).value
-.replace(":","")
-
-+
-
-"_"
-
-+
-
-new Date()
-.toLocaleDateString("en-GB")
-.replaceAll("/",""),
-
-studentName:
-document.getElementById("summaryStudent").value,
+sessionId:
+sessionStorage.getItem("classSessionId"),
 
 teacherName:
 sessionStorage.getItem(
@@ -322,52 +228,7 @@ sessionStorage.getItem(
 "teacherId"
 ),
 
-homeworkUniqueId:
 
-document.getElementById(
-"summaryStudent"
-).value
-
-+
-
-"_"
-
-+
-
-sessionStorage.getItem("teacherId")
-
-+
-
-"_"
-
-+
-
-document.getElementById(
-"summarySubject"
-).value
-
-+
-
-"_"
-
-+
-
-document.getElementById(
-"summaryTime"
-).value
-.replace(":","")
-
-+
-
-"_"
-
-+
-
-document.getElementById(
-"summaryDate"
-).value
-.split("/")
-.join(""),
 
 teacherInTime:
 sessionStorage.getItem(

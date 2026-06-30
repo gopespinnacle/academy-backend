@@ -2,48 +2,64 @@ const mongoose = require("mongoose");
 
 const classSummarySchema = new mongoose.Schema({
 
+    sessionId: String,
+
     className: String,
 
     date: String,
 
-    periodTime: String,
+    day: String,
+
+    periodStart: String,
+
+    periodEnd: String,
 
     subject: String,
 
-    studentName: String,
+    teacherId: String,
 
     teacherName: String,
 
-    teacherId: String,
+    students: [
+        {
+            studentId: String,
+            studentName: String
+        }
+    ],
 
-    homeworkUniqueId: String,
+    teacherInTime: String,
 
-    homeworkStatus:{
-type:String,
-default:"Pending"
+    teacherOutTime: String,
 
-},
+    totalMinutes: Number,
 
-questionDocs:[{
+    homework: String,
 
-fileName:String,
+    classSummary: String,
 
-driveFileId:String,
+    homeworkStatus: {
+        type: String,
+        default: "Pending"
+    },
 
-driveLink:String
+    questionDocs: [
+        {
+            fileName: String,
+            driveFileId: String,
+            driveLink: String
+        }
+    ],
 
-}],
-
-teacherInTime: String,
-
-teacherOutTime: String,
-
-totalMinutes: Number,
-
-homework: String
+    status: {
+        type: String,
+        default: "Completed"
+    }
 
 }, {
     timestamps: true
 });
 
-module.exports = mongoose.model("ClassSummary", classSummarySchema);
+module.exports = mongoose.model(
+    "ClassSummary",
+    classSummarySchema
+);

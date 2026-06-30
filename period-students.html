@@ -247,73 +247,7 @@ box-shadow:0 2px 8px rgba(0,0,0,0.1);
 </table>
 <hr style="margin:40px 0;">
 
-<div id="summarySection" style="
-display:none;
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
-margin-top:20px;
-">
 
-<h2>Class Summary</h2>
-
-<div style="margin-bottom:15px;">
-<label><b>Class Name</b></label>
-<input type="text" id="summaryClass"
-readonly
-style="width:100%;padding:10px;">
-</div>
-
-<div style="margin-bottom:15px;">
-<label><b>Date</b></label>
-<input type="text" id="summaryDate"
-readonly
-style="width:100%;padding:10px;">
-</div>
-
-<div style="margin-bottom:15px;">
-<label><b>Time</b></label>
-<input type="text" id="summaryTime"
-readonly
-style="width:100%;padding:10px;">
-</div>
-
-<div style="margin-bottom:15px;">
-<label><b>Student</b></label>
-<input type="text" id="summaryStudent"
-readonly
-style="width:100%;padding:10px;">
-</div>
-
-<div style="margin-bottom:15px;">
-<label><b>Meeting In & Out Time</b></label>
-<input type="text" id="summaryMeeting"
-readonly
-style="width:100%;padding:10px;">
-</div>
-
-<div style="margin-bottom:15px;">
-<label><b>Today's Homework</b></label>
-
-<textarea id="summaryHomework"
-rows="6"
-style="width:100%;padding:10px;"></textarea>
-</div>
-
-<button onclick="saveSummary()" style="
-background:green;
-color:white;
-padding:12px 20px;
-border:none;
-border-radius:8px;
-cursor:pointer;
-">
-Save Summary
-</button>
-
-</div>
-</div>
 
 <script>
 
@@ -408,17 +342,13 @@ document.getElementById("assignedContainer").innerHTML =
 
 }
 
-
 window.onload = function(){
 
-loadPeriodStudents();
+    loadPeriodStudents();
 
-checkClassTime();
-
-checkSummaryMode();
+    checkClassTime();
 
 };
-
 /* 🔥 TIME CONTROL FUNCTION */
 function checkClassTime(){
 
@@ -757,11 +687,118 @@ sessionStorage.setItem(
     new Date().toISOString()
 );
 
+// Save class details for summary
+sessionStorage.setItem(
+    "summaryClassName",
+    className
+);
+
+sessionStorage.setItem(
+    "summarySubject",
+    subject
+);
+
+sessionStorage.setItem(
+    "summaryDate",
+    new Date().toLocaleDateString()
+);
+
+sessionStorage.setItem(
+    "summaryPeriodTime",
+    startTime
+);
+
+sessionStorage.setItem(
+    "summaryDay",
+    day
+);
+
+sessionStorage.setItem(
+    "summaryStartTime",
+    startTime
+);
+
+sessionStorage.setItem(
+    "summaryEndTime",
+    params.get("endTime")
+);
+
+sessionStorage.setItem(
+    "summaryStudents",
+    JSON.stringify(
+
+        periodStudents.map(s => ({
+
+            studentId: s.student._id,
+
+            studentName: s.student.name
+
+        }))
+
+    )
+);
+
 /* ================= OPEN GOOGLE MEET ================= */
 
 const room =
 `academy-${className}-${day}-${startTime.replace(":", "")}`;
 
+sessionStorage.setItem(
+    "room",
+    room
+);
+
+const sessionResponse = await fetch(
+    "https://academy-backend-eatl.onrender.com/api/class-session/create",
+    {
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+            teacherId:
+            sessionStorage.getItem("teacherId"),
+
+            teacherName:
+            sessionStorage.getItem("teacherName"),
+
+            className,
+
+            subject,
+
+            day,
+
+            date:
+            new Date().toLocaleDateString(),
+
+            periodStart:
+            startTime,
+
+            periodEnd:
+            params.get("endTime"),
+
+            room,
+
+            students:
+            JSON.parse(
+                sessionStorage.getItem("summaryStudents")
+            )
+
+        })
+
+    }
+);
+
+const sessionData =
+await sessionResponse.json();
+
+sessionStorage.setItem(
+    "classSessionId",
+    sessionData.sessionId
+);
 window.location.href =
 `whiteboard.html?room=${encodeURIComponent(room)}
 &role=teacher
@@ -810,21 +847,7 @@ async function endClass(){
 
     // Open summary page
     window.location.href =
-    "teacher-class-summary.html" +
-
-    "?showSummary=true" +
-
-    "&className=" + encodeURIComponent(params.get("className")) +
-
-    "&subject=" + encodeURIComponent(params.get("subject")) +
-
-    "&startTime=" + encodeURIComponent(params.get("startTime")) +
-
-    "&students=" + encodeURIComponent(
-JSON.stringify(
-periodStudents.map(x => x.student.name)
-)
-);
+"teacher-class-summary.html";
 
 }
 async function testSaveAttendance(){
@@ -852,151 +875,6 @@ status: "Absent"
 });
 
 alert("Saved in DB ✅");
-
-}
-
-async function checkSummaryMode(){
-
-const params = new URLSearchParams(window.location.search);
-
-const showSummary =
-params.get("showSummary");
-
-if(showSummary !== "true") return;
-
-document.getElementById("summarySection")
-.style.display = "block";
-
-const studentName =
-params.get(
-"student"
-);
-
-const res =
-await fetch(
-"https://academy-backend-eatl.onrender.com/api/students"
-);
-
-const students =
-await res.json();
-
-const foundStudent =
-students.find(x =>
-
-(
-x.studentName ||
-x.name
-)
-
-?.trim()
-.toLowerCase()
-
-===
-
-studentName
-.trim()
-.toLowerCase()
-
-);
-
-console.log(
-"Found Student:",
-foundStudent
-);
-
-document.getElementById(
-"summaryClass"
-).value =
-
-foundStudent?.grade
-
-||
-
-foundStudent?.className
-
-||
-
-params.get(
-"className"
-)
-
-||
-
-"-";
-
-document.getElementById("summaryDate").value =
-new Date().toLocaleDateString();
-
-document.getElementById("summaryTime").value =
-params.get("startTime") || "-";
-
-document.getElementById("summaryStudent").value =
-params.get("student") || "-";
-
-const room = params.get("room");
-
-const response = await fetch(
-"https://academy-backend-eatl.onrender.com/api/get-meeting-time?room=" + room
-);
-
-const data = await response.json();
-
-document.getElementById("summaryMeeting").value =
-data.inTime + " → " +
-new Date(params.get("outTime"))
-.toLocaleTimeString();
-
-}
-
-async function saveSummary(){
-
-const params = new URLSearchParams(window.location.search);
-
-const response = await fetch(
-"https://academy-backend-eatl.onrender.com/api/save-class-summary",
-{
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body: JSON.stringify({
-
-room: params.get("room"),
-
-className:
-document.getElementById("summaryClass").value,
-
-periodTime:
-document.getElementById("summaryTime").value,
-
-studentName:
-document.getElementById("summaryStudent").value,
-
-teacherName:
-params.get("teacher"),
-
-homework:
-document.getElementById("summaryHomework").value
-
-})
-});
-
-const data = await response.json();
-
-if(data.success){
-
-alert("✅ Summary Saved");
-
-window.location.href =
-"teacher-periods.html";
-
-}else{
-
-alert("❌ Save Failed");
-
-}
 
 }
 </script>
