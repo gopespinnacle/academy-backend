@@ -130,22 +130,20 @@ console.log(
 className
 );
 
-const data =
-allData.filter(x =>
+const data = allData.filter(x => {
 
-x.studentName &&
+    if (!x.students || !Array.isArray(x.students))
+        return false;
 
-x.studentName
-.toLowerCase()
-.trim()
+    return x.students.some(student =>
 
-===
+        student.studentName &&
+        student.studentName.trim().toLowerCase() ===
+        studentName.trim().toLowerCase()
 
-studentName
-.toLowerCase()
-.trim()
+    );
 
-);
+});
 
 console.log(
 "Filtered:",
