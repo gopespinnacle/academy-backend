@@ -43,12 +43,14 @@ const classSummarySchema = new mongoose.Schema({
     },
 
     questionDocs: [
-        {
-            fileName: String,
-            driveFileId: String,
-            driveLink: String
-        }
-    ],
+    {
+        fileName: String,
+
+        s3Key: String,
+
+        s3Url: String
+    }
+],
 
     status: {
         type: String,

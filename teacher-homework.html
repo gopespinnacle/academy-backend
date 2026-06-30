@@ -279,7 +279,7 @@ x.questionDocs.map(
 
 <a
 
-href="${doc.driveLink}"
+href="${doc.s3Url}"
 
 target="_blank"
 
@@ -337,13 +337,7 @@ text-align:center;
 
 ${
 
-x.homeworkStatus === "Submitted"
-
-&&
-
-x.files
-
-&&
+x.files &&
 
 x.files.length > 0
 
@@ -351,25 +345,28 @@ x.files.length > 0
 
 `
 
-<div>
+${
 
-<b>
+x.files.map(upload => `
 
-Files (${x.files.length})
+<div style="
+border:1px solid #ddd;
+padding:8px;
+margin-bottom:10px;
+border-radius:6px;
+">
 
-</b>
+<b>${upload.studentName}</b>
 
 <br><br>
 
 ${
 
-x.files.map(
-
-(file,i)=>`
+upload.files.map((file,i)=>`
 
 <a
 
-href="${file.driveLink}"
+href="${file.s3Url}"
 
 target="_blank"
 
@@ -389,13 +386,15 @@ Download ${i+1}
 
 </a>
 
-`
-
-).join("")
+`).join("")
 
 }
 
 </div>
+
+`).join("")
+
+}
 
 `
 
@@ -408,7 +407,7 @@ color:red;
 font-weight:bold;
 ">
 
-Not Submitted
+No Student Submission
 
 </span>
 

@@ -11,35 +11,7 @@ const HomeworkUpload =
 require("../models/HomeworkUpload");
 const ClassSummary =
 require("../models/ClassSummary");
-const stream = require("stream");
-const { google } = require("googleapis");
-
-const oauth2Client =
-new google.auth.OAuth2(
-
-process.env.GOOGLE_CLIENT_ID,
-
-process.env.GOOGLE_CLIENT_SECRET,
-
-process.env.GOOGLE_REDIRECT_URI
-
-);
-
-oauth2Client.setCredentials({
-
-refresh_token:
-process.env.GOOGLE_REFRESH_TOKEN
-
-});
-
-const drive =
-google.drive({
-
-version:"v3",
-
-auth:oauth2Client
-
-});
+const s3 = require("../utils/s3");
 
 router.post(
 "/upload-homework",
@@ -62,81 +34,27 @@ message:"No files uploaded"
 });
 
 }
-let uploadedFiles = [];
+for (const file of req.files) {
 
-for(const file of req.files){
+    console.log(
+        "FILE RECEIVED:",
+        file.originalname
+    );
 
-console.log(
-"FILE RECEIVED:",
-file.originalname
-);
+    const uploaded = await s3.uploadFile(
+        file,
+        "Homework/StudentUploads"
+    );
 
-const bufferStream =
-new stream.PassThrough();
+    uploadedFiles.push({
 
-bufferStream.end(
-file.buffer
-);
+        fileName: file.originalname,
 
-const media = {
+        s3Key: uploaded.Key,
 
-mimeType:
-file.mimetype,
+        s3Url: uploaded.Location
 
-body:
-bufferStream
-
-};
-
-const fileMetadata = {
-
-name:file.originalname,
-
-parents:[
-process.env.GOOGLE_FOLDER_ID
-]
-
-};
-
-const response =
-await drive.files.create({
-
-requestBody:fileMetadata,
-
-media,
-
-fields:"id",
-
-supportsAllDrives:true
-
-});
-
-const fileId =
-response.data.id;
-
-await drive.permissions.create({
-
-fileId,
-
-requestBody:{
-role:"reader",
-type:"anyone"
-}
-
-});
-
-const link =
-`https://drive.google.com/file/d/${fileId}/view`;
-
-uploadedFiles.push({
-
-fileName:file.originalname,
-
-driveFileId:fileId,
-
-driveLink:link
-
-});
+    });
 
 }
 
@@ -279,8 +197,8 @@ let finalData = [];
 
 summaries.forEach(s=>{
 
-const upload =
-uploads.find(x =>
+const uploadsForHomework =
+uploads.filter(x =>
 
 x.homeworkUniqueId
 
@@ -312,7 +230,7 @@ finalData.push({
 
     students: s.students || [],
 
-    files: upload ? upload.files : []
+    files: uploadsForHomework
 
 });
 });
@@ -351,72 +269,27 @@ message:"No files"
 
 let uploadedDocs = [];
 
-for(const file of req.files){
+for (const file of req.files) {
 
-const bufferStream =
-new stream.PassThrough();
+    console.log(
+        "QUESTION DOC:",
+        file.originalname
+    );
 
-bufferStream.end(
-file.buffer
-);
+    const uploaded = await s3.uploadFile(
+        file,
+        "Homework/Questions"
+    );
 
-const response =
+    uploadedDocs.push({
 
-await drive.files.create({
+        fileName: file.originalname,
 
-requestBody:{
+        s3Key: uploaded.Key,
 
-name:file.originalname,
+        s3Url: uploaded.Location
 
-parents:[
-process.env.GOOGLE_FOLDER_ID
-]
-
-},
-
-media:{
-
-mimeType:file.mimetype,
-
-body:bufferStream
-
-},
-
-fields:"id",
-
-supportsAllDrives:true
-
-});
-
-const fileId =
-response.data.id;
-
-await drive.permissions.create({
-
-fileId,
-
-requestBody:{
-
-role:"reader",
-
-type:"anyone"
-
-}
-
-});
-
-uploadedDocs.push({
-
-fileName:
-file.originalname,
-
-driveFileId:
-fileId,
-
-driveLink:
-`https://drive.google.com/file/d/${fileId}/view`
-
-});
+    });
 
 }
 

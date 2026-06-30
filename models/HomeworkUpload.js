@@ -17,9 +17,9 @@ files:[
 
 fileName:String,
 
-driveFileId:String,
+s3Key:String,
 
-driveLink:String
+s3Url:String
 
 }
 
