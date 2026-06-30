@@ -2315,7 +2315,37 @@ window.addEventListener("orientationchange", () => {
 
         handleResize();
 
-    }, 300);
+        if(window.innerWidth > window.innerHeight){
+
+            // Landscape
+            document.getElementById("meetTopBar").style.height = "40px";
+
+            document.getElementById("screenContainer").style.top = "40px";
+            document.getElementById("screenContainer").style.height = "calc(100vh - 40px)";
+
+        }else{
+
+            // Portrait
+            document.getElementById("meetTopBar").style.height = "50px";
+
+            document.getElementById("screenContainer").style.top = "50px";
+            document.getElementById("screenContainer").style.height = "calc(100vh - 60px)";
+
+        }
+
+    },300);
+
+});
+window.addEventListener("load", () => {
+
+    if(window.innerWidth > window.innerHeight){
+
+        document.getElementById("meetTopBar").style.height = "40px";
+
+        document.getElementById("screenContainer").style.top = "40px";
+        document.getElementById("screenContainer").style.height = "calc(100vh - 40px)";
+
+    }
 
 });
 
