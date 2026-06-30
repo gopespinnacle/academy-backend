@@ -11,7 +11,7 @@ const HomeworkUpload =
 require("../models/HomeworkUpload");
 const ClassSummary =
 require("../models/ClassSummary");
-const s3 = require("../utils/s3");
+const s3 = require("../config/s3");
 
 router.post(
 "/upload-homework",
@@ -34,6 +34,8 @@ message:"No files uploaded"
 });
 
 }
+
+let uploadedFiles = [];
 for (const file of req.files) {
 
     console.log(
