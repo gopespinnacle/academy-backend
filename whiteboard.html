@@ -53,15 +53,21 @@ background:black;
 position:absolute;
 
 right:10px;
+
 bottom:10px;
 
-display:flex;
+display:grid;
 
-flex-direction:column;
+grid-template-columns:repeat(2,200px);
+
+grid-auto-rows:120px;
 
 gap:10px;
 
 z-index:99999;
+
+max-width:420px;
+
 }
 
 body {
@@ -1240,12 +1246,7 @@ display:none;
 </video>
 
 <!-- REMOTE VIDEO -->
-<video
-id="remoteVideo"
-autoplay
-playsinline
-webkit-playsinline>
-</video>
+<div id="participantStrip"></div>
 
 <!-- DRAW -->
 <canvas id="screenDraw"></canvas>
@@ -1520,8 +1521,6 @@ await initMedia();
 
 await loadCameraList();
 
-await setupPeer();
-
 /* JOIN ONLY AFTER PEER READY */
 
 socket.emit(
@@ -1567,174 +1566,145 @@ if(savedPDF && pdfOpen === "true"){
 
 
 // SEND OFFER
-async function createOffer(){
+async function createOffer(socketId){
+
+    const pc = peers[socketId];
 
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
-    socket.emit("offer", { room, offer });
+    socket.emit("offer",{
+
+    room,
+
+    targetSocketId: socketId,
+
+    offer
+
+});
 }
 
 // RECEIVE OFFER
-socket.on("offer", async (data) => {
+socket.on("offer", async(data)=>{
 
-    console.log("OFFER RECEIVED");
-    console.log(data);
+    const teacherSocketId = data.teacherSocketId;
 
-    try{
+    await createPeer(teacherSocketId);
 
-        console.log("STEP 1");
+    const pc = peers[teacherSocketId];
 
-        await pc.setRemoteDescription(
-            new RTCSessionDescription(data.offer)
-        );
+    await pc.setRemoteDescription(
 
-        console.log("STEP 2");
+        new RTCSessionDescription(data.offer)
 
-        const answer =
-            await pc.createAnswer();
+    );
 
-        console.log("STEP 3");
+    const answer = await pc.createAnswer();
 
-        await pc.setLocalDescription(
-            answer
-        );
+    await pc.setLocalDescription(answer);
 
-        console.log("STEP 4");
+    socket.emit("answer",{
 
-        socket.emit(
-            "answer",
-            {
-                room,
-                answer
-            }
-        );
+        teacherSocketId,
 
-        console.log("ANSWER SENT");
+        answer
 
-    }catch(err){
-
-        console.log(
-            "OFFER ERROR",
-            err
-        );
-
-    }
+    });
 
 });
 // RECEIVE ANSWER
 
 
-socket.on("userJoined", async(data)=>{
 
-console.log(
-"USER JOINED:",
-data.role
-);
-
-if(
-role==="teacher" &&
-pc
-){
-
-offerCreated=false;
-
-if(
-pc.signalingState !==
-"closed"
-){
-
-await createOffer();
-
-}
-
-}
-
-});
 
 socket.on("answer", async(data)=>{
 
-if(!pc) return;
+    const pc = peers[data.studentSocketId];
 
-if(
-pc.currentRemoteDescription
-){
+    if(!pc) return;
 
-return;
+    await pc.setRemoteDescription(
 
-}
+        new RTCSessionDescription(data.answer)
 
-await pc.setRemoteDescription(
-
-new RTCSessionDescription(
-data.answer
-)
-
-);
-offerCreated=false;
-
-while(pendingCandidates.length){
-
-await pc.addIceCandidate(
-
-new RTCIceCandidate(
-pendingCandidates.shift()
-)
-
-);
-
-}
+    );
 
 });
 
-socket.on("ready", async(data)=>{
+socket.on("studentJoined", async(data)=>{
 
-console.log("READY",data.role);
+    if(role !== "teacher") return;
 
-if(!pc){
-   await setupPeer();
-}
+    console.log("Student Joined:", data);
 
-if(
-role==="teacher" &&
-!offerCreated &&
-pc.signalingState==="stable"
-){
+    const pc = await createPeer(data.socketId);
 
-offerCreated=true;
-
-await createOffer();
-
-}
+    await createOffer(data.socketId);
 
 });
 
+socket.on("existingStudents", async(students)=>{
+
+    if(role !== "teacher") return;
+
+    console.log("Existing Students", students);
+
+    for(const student of students){
+
+        await createPeer(student.socketId);
+
+        await createOffer(student.socketId);
+
+    }
+
+});
+
+socket.on("userDisconnected",(socketId)=>{
+
+    if(peers[socketId]){
+
+        peers[socketId].close();
+
+        delete peers[socketId];
+
+    }
+
+    const video = document.getElementById(
+
+        "remote_" + socketId
+
+    );
+
+    if(video){
+
+        video.remove();
+
+    }
+
+});
 socket.on("ice-candidate", async(data)=>{
 
-if(!pc) return;
+    const pc = peers[data.senderSocketId];
 
-try{
+    if(!pc) return;
 
-if(pc.remoteDescription){
+    try{
 
-await pc.addIceCandidate(
-new RTCIceCandidate(data.candidate)
-);
+        if(pc.remoteDescription){
 
-}else{
+            await pc.addIceCandidate(
 
-pendingCandidates.push(
-data.candidate
-);
+                new RTCIceCandidate(data.candidate)
 
-}
+            );
 
-}
-catch(err){
+        }
 
-console.log(err);
+    }catch(err){
 
-}
+        console.log(err);
+
+    }
 
 });
 
@@ -2091,7 +2061,7 @@ async function initMedia(cameraId = null){
 
 
 }
-let pc;
+const peers = {};
 
 let offerCreated = false;
 
@@ -2135,24 +2105,31 @@ async function switchCamera(deviceId){
 
     await initMedia(deviceId);
 
-    const sender =
-        pc.getSenders().find(
-            s =>
-            s.track &&
-            s.track.kind === "video"
-        );
+    Object.values(peers).forEach(peer=>{
+
+    const sender = peer.getSenders().find(s=>
+
+        s.track &&
+        s.track.kind==="video"
+
+    );
 
     if(sender){
 
         sender.replaceTrack(
-            localStream
-            .getVideoTracks()[0]
-        );
-    }
-}
-async function setupPeer(){
 
-    pc = new RTCPeerConnection({
+            localStream.getVideoTracks()[0]
+
+        );
+
+    }
+
+});
+}
+async function createPeer(socketId){
+
+    const pc = new RTCPeerConnection({
+        
 
         
     iceServers: [
@@ -2170,23 +2147,11 @@ async function setupPeer(){
         }
     ]
 });
+peers[socketId] = pc;
 
 pc.onnegotiationneeded = async()=>{
 
-console.log(
-"NEGOTIATION NEEDED"
-);
-
-if(
-role==="teacher" &&
-!offerCreated
-){
-
-offerCreated=true;
-
-await createOffer();
-
-}
+    console.log("NEGOTIATION NEEDED");
 
 };
     // send your video/audio
@@ -2197,45 +2162,52 @@ await createOffer();
     // receive other person video
     
 
-pc.ontrack = async (event) => {
-    
-console.log("REMOTE TRACK RECEIVED", event.streams);
-console.log(
-"REMOTE VIDEO STREAM:",
-event.streams[0]
-);
+pc.ontrack = (event)=>{
 
-console.log(
-"REMOTE TRACK COUNT:",
-event.streams[0].getTracks()
-);
-    const remoteVideo =
-        document.getElementById("remoteVideo");
+    let video = document.getElementById(
 
-   
-    // ADD NEW STREAM
-    remoteVideo.srcObject = event.streams[0];
-    remoteVideo.style.display="block";
-    console.log(
- "Remote tracks:",
- event.streams[0].getTracks()
-);
+        "remote_" + socketId
 
-    // IMPORTANT FOR MOBILE
-    remoteVideo.autoplay = true;
-    remoteVideo.playsInline = true;
-    remoteVideo.muted = false;
+    );
 
-    try{
-        await remoteVideo.play();
-    }catch(err){
-        console.log("REMOTE VIDEO PLAY ERROR", err);
+    if(!video){
+
+        video = document.createElement("video");
+
+        video.id = "remote_" + socketId;
+
+        video.autoplay = true;
+
+        video.playsInline = true;
+
+        video.controls = false;
+
+        video.muted = false;
+
+        video.style.width = "200px";
+
+video.style.height = "120px";
+
+video.style.objectFit = "cover";
+
+video.style.background = "black";
+
+video.style.border = "2px solid white";
+
+video.style.borderRadius = "10px";
+
+video.style.margin = "0";
+
+        document
+        .getElementById("participantStrip")
+        .appendChild(video);
+
     }
 
-    // FORCE VISIBLE
-    remoteVideo.style.display = "block";
-    remoteVideo.style.visibility = "visible";
-    remoteVideo.style.opacity = "1";
+    video.srcObject = event.streams[0];
+
+    video.play().catch(console.log);
+
 };
 pc.onconnectionstatechange=()=>{
 
@@ -2258,56 +2230,28 @@ pc.oniceconnectionstatechange = () => {
 };
     // 🔥 VERY IMPORTANT (send ICE)
     pc.onicecandidate = (event) => {
-        if(event.candidate){
-            socket.emit("ice-candidate", {
-                room,
-                candidate: event.candidate
-            });
-        }
-    };
+
+    if(event.candidate){
+
+        socket.emit("ice-candidate",{
+
+            targetSocketId: socketId,
+
+            candidate: event.candidate
+
+        });
+
+    }
+
+};
+    return pc;
 }
 
 
 window.addEventListener("resize", handleResize);
 document.addEventListener("visibilitychange", async () => {
 
-    const remoteVideo =
-        document.getElementById("remoteVideo");
-
-    if(remoteVideo.srcObject){
-
-        try{
-            await remoteVideo.play();
-        }catch(err){
-            console.log(err);
-        }
-    }
-});
-window.addEventListener("focus", () => {
-
-    const remoteVideo =
-        document.getElementById("remoteVideo");
-
-    if(remoteVideo.srcObject){
-
-        remoteVideo.play()
-        .catch(err => console.log(err));
-    }
-});
-
-window.addEventListener("pageshow", async () => {
-
-    const remoteVideo =
-        document.getElementById("remoteVideo");
-
-    if(remoteVideo.srcObject){
-
-        try{
-            await remoteVideo.play();
-        }catch(err){
-            console.log(err);
-        }
-    }
+    
 });
 window.addEventListener("orientationchange", () => {
 
@@ -2437,42 +2381,45 @@ pip.style.height =
 screenCanvas.style.zIndex = "99999";
 screenCanvas.style.pointerEvents = "auto";
         // 🔥 THIS WAS MISSING (VERY IMPORTANT)
-        alert(
-"Senders: " +
-pc.getSenders().length
-);
+        Object.values(peers).forEach(peer=>{
 
-const videoSender = pc.getSenders().find(
-s => s.track && s.track.kind === "video"
-);
+    const sender = peer.getSenders().find(s=>
 
-alert(
-"Video Sender Found: " +
-!!videoSender
-);
+        s.track &&
+        s.track.kind==="video"
 
-if(videoSender){
+    );
 
-alert("Replacing Track");
+    if(sender){
 
-await videoSender.replaceTrack(screenTrack);
+        sender.replaceTrack(screenTrack);
 
-alert("Track Replaced");
+    }
 
-}
+});
 
 // 🔥 ADD AUDIO TRACK ALSO
 const audioTrack = screenStream.getAudioTracks()[0];
 
 if(audioTrack){
 
-    const audioSender = pc.getSenders().find(
-        s => s.track && s.track.kind === "audio"
-    );
+    Object.values(peers).forEach(peer=>{
 
-    if(audioSender){
-        audioSender.replaceTrack(audioTrack);
-    }
+        const sender = peer.getSenders().find(s=>
+
+            s.track &&
+            s.track.kind==="audio"
+
+        );
+
+        if(sender){
+
+            sender.replaceTrack(audioTrack);
+
+        }
+
+    });
+
 }
     }catch(err){
         console.log("Screen share error:", err);
@@ -2485,11 +2432,22 @@ async function stopScreenShare(){
 
     const videoTrack = localStream.getVideoTracks()[0];
 
-    const sender = pc.getSenders().find(s => s.track.kind === "video");
+    Object.values(peers).forEach(peer=>{
+
+    const sender = peer.getSenders().find(s=>
+
+        s.track &&
+        s.track.kind==="video"
+
+    );
 
     if(sender){
-        sender.replaceTrack(videoTrack);   // back to camera
+
+        sender.replaceTrack(videoTrack);
+
     }
+
+});
 
     document.getElementById("localVideo").srcObject = localStream;
 
@@ -2661,19 +2619,30 @@ function toggleVideo(btn){
     }
 }
 
-async function startPiP() {
-    const video = document.getElementById("remoteVideo"); 
+async function startPiP(){
 
-    if (!video.srcObject) {
-        alert("Student video not available yet");
+    const video = document.querySelector(
+        "#participantStrip video"
+    );
+
+    if(!video){
+
+        alert("No student video available");
+
         return;
+
     }
 
-    if (!document.pictureInPictureElement) {
+    if(!document.pictureInPictureElement){
+
         await video.requestPictureInPicture();
-    } else {
+
+    }else{
+
         await document.exitPictureInPicture();
+
     }
+
 }
  
 

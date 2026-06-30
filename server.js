@@ -41,6 +41,8 @@ let raisedHands = {};
 let boardLock = {};
 let boardData = {}; // 🔥 STORE DRAWINGS
 let teacherAttendanceMemory = {};
+
+let roomParticipants = {};
 // ROUTES
 const studentAttendanceRoutes = require("./routes/studentattendanceRoutes");
 const founderTimeClashRoutes = require("./routes/founderTimeClashRoutes");
@@ -261,10 +263,27 @@ io.on("connection", (socket) => {
 
 const room = data.room;
 const role = data.role;
+const name = data.name;
 
 socket.join(room);
 
 socket.room = room;
+socket.role = role;
+socket.name = name;
+
+if(!roomParticipants[room]){
+    roomParticipants[room] = [];
+}
+
+roomParticipants[room].push({
+
+    socketId: socket.id,
+
+    role,
+
+    name
+
+});
 
 console.log(
 "USER JOINED ROOM:",
@@ -296,20 +315,36 @@ roomControl[room]
 );
 }
 
-socket.to(room).emit(
-"userJoined",
-{
-role: role,
-socketId: socket.id
-}
-);
+if(role === "teacher"){
 
-socket.to(room).emit(
-"ready",
-{
-role: role
+    const students = roomParticipants[room].filter(
+        p => p.role === "student"
+    );
+
+    socket.emit(
+        "existingStudents",
+        students
+    );
+
+}else{
+
+    const teacher = roomParticipants[room].find(
+        p => p.role === "teacher"
+    );
+
+    if(teacher){
+
+        io.to(teacher.socketId).emit(
+            "studentJoined",
+            {
+                socketId: socket.id,
+                studentName: name
+            }
+        );
+
+    }
+
 }
-);
 
 });
 
@@ -318,39 +353,62 @@ role: role
 
 // TEACHER SEND OFFER
 // TEACHER SEND OFFER
-socket.on("offer", (data) => {
+socket.on("offer",(data)=>{
 
-    console.log(
-        "OFFER RECEIVED:",
-        data.room
-    );
+    io.to(data.targetSocketId).emit(
 
-    socket.to(data.room).emit(
         "offer",
-        {
-            offer: data.offer
-        }
-    );
 
-    console.log(
-        "OFFER FORWARDED:",
-        data.room
+        {
+
+            teacherSocketId: socket.id,
+
+            offer: data.offer
+
+        }
+
     );
 
 });
 
 // STUDENT SEND ANSWER
-socket.on("answer", (data) => {
-    socket.to(data.room).emit("answer", {
-        answer: data.answer
-    });
+// STUDENT SEND ANSWER
+socket.on("answer",(data)=>{
+
+    io.to(data.teacherSocketId).emit(
+
+        "answer",
+
+        {
+
+            answer:data.answer,
+
+            studentSocketId:socket.id
+
+        }
+
+    );
+
 });
 
 // ICE CANDIDATES
-socket.on("ice-candidate", (data) => {
-    socket.to(data.room).emit("ice-candidate", {
-        candidate: data.candidate
-    });
+// ICE CANDIDATES
+socket.on("ice-candidate",(data)=>{
+
+    io.to(data.targetSocketId).emit(
+
+        "ice-candidate",
+
+        {
+
+            candidate:data.candidate,
+
+            senderSocketId:socket.id
+
+        }
+
+    );
+
 });
 /* ================= TEACHER JOIN ================= */
 
@@ -487,7 +545,36 @@ socket.on("lowerHand", (data) => {
 
     io.to(data.room).emit("handList", raisedHands[data.room] || []);
 });
+socket.on("disconnect", () => {
 
+    console.log("User disconnected:", socket.id);
+
+    const room = socket.room;
+
+    if (!room) return;
+
+    // Remove user from participants list
+    if (roomParticipants[room]) {
+
+        roomParticipants[room] =
+            roomParticipants[room].filter(
+
+                p => p.socketId !== socket.id
+
+            );
+
+    }
+
+    // Notify everyone in the room
+    io.to(room).emit(
+
+        "userDisconnected",
+
+        socket.id
+
+    );
+
+});
 /* ================= LOCK BOARD ================= */
 }); 
 const storage = multer.diskStorage({
