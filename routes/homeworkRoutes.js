@@ -295,33 +295,23 @@ for (const file of req.files) {
 
 }
 
-await ClassSummary.updateOne(
+const result = await ClassSummary.updateOne(
 
 {
-
-homeworkUniqueId:
-
-req.body.homeworkUniqueId
-
+    _id: req.body.summaryId
 },
 
 {
-
-$push:{
-
-questionDocs:{
-
-$each:
-
-uploadedDocs
-
-}
-
-}
-
+    $push: {
+        questionDocs: {
+            $each: uploadedDocs
+        }
+    }
 }
 
 );
+
+console.log(result);
 
 res.json({
 

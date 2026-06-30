@@ -234,7 +234,6 @@ cursor:pointer;
 
 <button
 onclick="uploadQuestionDocs(
-'${x.homeworkUniqueId}',
 '${x.summaryId}'
 )"
 style="
@@ -471,7 +470,6 @@ input
 }
 
 async function uploadQuestionDocs(
-homeworkUniqueId,
 summaryId
 ){
 
@@ -502,11 +500,8 @@ input.files[0]
 });
 
 fd.append(
-
-"homeworkUniqueId",
-
-homeworkUniqueId
-
+"summaryId",
+summaryId
 );
 
 const res =
