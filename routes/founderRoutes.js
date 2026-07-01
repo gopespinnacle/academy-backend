@@ -460,61 +460,75 @@ data.forEach(period=>{
     }
 });
 
-router.post("/assign-period", async (req,res)=>{
-    try{
+router.post("/assign-period", auth, async (req, res) => {
 
-        const { teacherId, className, subject, day, startTime, endTime, assignments } = req.body;
+    try {
 
-      await PeriodAssignment.deleteMany({
+        const {
+            teacherId,
+            className,
+            subject,
+            day,
+            startTime,
+            endTime,
+            assignments
+        } = req.body;
 
-    teacher: teacherId,
+        await PeriodAssignment.deleteMany({
+            teacher: teacherId,
+            className,
+            subject,
+            day,
+            startTime,
+            endTime
+        });
 
-    className,
+        const period = new PeriodAssignment({
 
-    day,
+            teacher: teacherId,
 
-    startTime,
+            className,
 
-    endTime
+            subject,
 
-});
+            day,
 
-const period = new PeriodAssignment({
+            startTime,
 
-    teacher: teacherId,
+            endTime,
 
-    className,
+            assignments: assignments.map(a => ({
 
-    subject,
+                student: a.studentId,
 
-    day,
+                subjects: a.subjects || [],
 
-    startTime,
+                languages: a.languages || [],
 
-    endTime,
+                eca: a.eca || []
 
-    assignments: assignments.map(a => ({
+            }))
 
-        student: a.studentId,
+        });
 
-        subjects: a.subjects || [],
+        await period.save();
 
-        languages: a.languages || [],
+        res.json({
+            success: true,
+            assignments: period.assignments
+        });
 
-        eca: a.eca || []
+    } catch (err) {
 
-    }))
+        console.error(err);
 
-});
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
 
-await period.save();
-
-        res.json({ message:"Saved successfully", assignments:data });
-
-    }catch(err){
-        console.log(err);
-        res.status(500).json({ message:"Server error" });
     }
+
 });
 
 router.delete("/delete-schedule/:id", protect, authorize("founder"), async (req, res) => {
