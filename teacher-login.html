@@ -247,9 +247,14 @@ async function loginTeacher() {
         "Content-Type": "application/json"
     },
     body: JSON.stringify({
-        email,
-        password
-    })
+
+    email,
+
+    password,
+
+    role: "teacher"
+
+})
 });
 
 console.log("Response received:", response);
