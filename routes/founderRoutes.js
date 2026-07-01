@@ -465,14 +465,14 @@ router.post("/assign-period", async (req, res) => {
     try {
 
         const {
-            teacherId,
-            className,
-            subject,
-            day,
-            startTime,
-            endTime,
-            assignments
-        } = req.body;
+    teacherId,
+    className,
+    subject,
+    day,
+    startTime,
+    endTime,
+    students
+} = req.body;
 
         await PeriodAssignment.deleteMany({
             teacher: teacherId,
@@ -497,9 +497,9 @@ router.post("/assign-period", async (req, res) => {
 
             endTime,
 
-            assignments: assignments.map(a => ({
+            assignments: students.map(a => ({
 
-                student: a.studentId,
+                student: a.student,
 
                 subjects: a.subjects || [],
 
