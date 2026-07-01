@@ -1349,6 +1349,8 @@ const params = new URLSearchParams(window.location.search);
 const room = params.get("room");
 const role = params.get("role");
 
+const periodId = params.get("periodId");
+
 const token = sessionStorage.getItem("token");
 const teacherRole = sessionStorage.getItem("role");
 /*
@@ -1360,6 +1362,59 @@ if (
     window.location.href = "teacher-login.html";
 }
     */
+
+    (async()=>{
+
+const token =
+sessionStorage.getItem("token");
+
+if(!token){
+
+alert("Login Required");
+
+window.location="index.html";
+
+return;
+
+}
+
+let api;
+
+if(role==="teacher"){
+
+api =
+"https://academy-backend-eatl.onrender.com/api/teacher/verify-class/" + periodId;
+
+}else{
+
+api =
+"https://academy-backend-eatl.onrender.com/api/student/verify-class/" + periodId;
+
+}
+
+const res =
+await fetch(api,{
+
+headers:{
+Authorization:"Bearer "+token
+}
+
+});
+
+const data =
+await res.json();
+
+if(!data.allowed){
+
+alert("Access Denied");
+
+window.location.href="index.html";
+
+return;
+
+}
+
+})();
 const socket = io(
 "https://academy-backend-eatl.onrender.com",
 {
@@ -2038,27 +2093,60 @@ callbackTrack: function(detectState){
 
 async function initMedia(cameraId = null){
 
-    if(localStream){
-        localStream.getTracks().forEach(t => t.stop());
+    try{
+
+        // Stop previous camera & mic
+        if(localStream){
+            localStream.getTracks().forEach(track => track.stop());
+        }
+
+        // Try selected camera
+        localStream = await navigator.mediaDevices.getUserMedia({
+
+            video: cameraId
+                ? {
+                    deviceId:{
+                        exact:cameraId
+                    }
+                }
+                : true,
+
+            audio:true
+
+        });
+
+    }catch(err){
+
+        console.error("Selected camera not available:", err);
+
+        alert("Selected camera not found. Switching to default camera.");
+
+        // Fallback to default camera
+        localStream = await navigator.mediaDevices.getUserMedia({
+
+            video:true,
+            audio:true
+
+        });
+
     }
 
-    localStream =
-    await navigator.mediaDevices.getUserMedia({
+    const localVideo = document.getElementById("localVideo");
 
-        video: cameraId
-        ? { deviceId: { exact: cameraId } }
-        : true,
+    if(localVideo){
 
-        audio:true
-    });
+        localVideo.srcObject = localStream;
 
-    const localVideo =
-        document.getElementById("localVideo");
+        try{
+            await localVideo.play();
+        }catch(e){
+            console.log("Video autoplay blocked", e);
+        }
 
-    localVideo.srcObject = localStream;
+    }
 
-    await localVideo.play();
-
+    // Refresh camera list
+    await loadDevices();
 
 }
 const peers = {};

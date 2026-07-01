@@ -360,4 +360,58 @@ message:"Server Error"
 }
 
 });
+
+
+router.get(
+"/verify-class/:periodId",
+protect,
+authorize("student"),
+async(req,res)=>{
+
+try{
+
+const period =
+await PeriodAssignment
+.findById(req.params.periodId);
+
+if(!period){
+
+return res.status(404).json({
+allowed:false
+});
+
+}
+
+const assigned =
+period.assignments.some(a=>
+
+a.student.toString()===req.user.id
+
+);
+
+if(!assigned){
+
+return res.status(403).json({
+allowed:false
+});
+
+}
+
+res.json({
+
+allowed:true,
+
+period
+
+});
+
+}catch(err){
+
+res.status(500).json({
+allowed:false
+});
+
+}
+
+});
 module.exports = router;

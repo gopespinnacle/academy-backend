@@ -704,4 +704,52 @@ router.get("/pending-compensation", async (req,res)=>{
         res.status(500).json({ message:"Error" });
     }
 });
+
+router.get(
+"/verify-class/:periodId",
+protect,
+authorize("teacher"),
+async(req,res)=>{
+
+try{
+
+const period =
+await PeriodAssignment
+.findById(req.params.periodId);
+
+if(!period){
+
+return res.status(404).json({
+allowed:false
+});
+
+}
+
+if(
+period.teacher.toString() !== req.user.id
+){
+
+return res.status(403).json({
+allowed:false
+});
+
+}
+
+res.json({
+
+allowed:true,
+
+period
+
+});
+
+}catch(err){
+
+res.status(500).json({
+allowed:false
+});
+
+}
+
+});
 module.exports = router;
