@@ -460,7 +460,7 @@ data.forEach(period=>{
     }
 });
 
-router.post("/assign-period", auth, async (req, res) => {
+router.post("/assign-period", async (req, res) => {
 
     try {
 
