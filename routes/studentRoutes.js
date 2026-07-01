@@ -161,8 +161,8 @@ router.get("/my-timetable", protect, authorize("student"), async (req,res)=>{
         const studentId = req.user.id;
 
         const data = await PeriodAssignment.find({
-            student: studentId
-        });
+    "assignments.student": studentId
+});
 
         res.json({ data });
 
@@ -263,9 +263,8 @@ const student = await User.findById(studentId);
 
 /* CLASSES */
 const classes = await PeriodAssignment.find({
-    student: studentId
+    "assignments.student": studentId
 });
-
 /* HOMEWORK */
 const homework = await Homework.find({
     assignedTo: studentId
@@ -321,11 +320,13 @@ if(!period){
 
 /* Extra Security */
 
-if(
-period.student.toString() !== req.user.id
-){
+const assigned = period.assignments.some(a =>
+    a.student.toString() === req.user.id
+);
+
+if (!assigned) {
     return res.status(403).json({
-        message:"Not your class"
+        message: "Not your class"
     });
 }
 

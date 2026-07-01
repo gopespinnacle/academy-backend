@@ -452,11 +452,11 @@ assignments.forEach(a=>{
 
     if(existing){
 
-    if(a.students && a.students.length){
+    existing.students.push(
 
-        existing.students.push(...a.students);
+        ...a.assignments.map(x => x.student)
 
-    }
+    );
 
 }else{
 
@@ -476,7 +476,7 @@ assignments.forEach(a=>{
 
         endTime: a.endTime,
 
-        students: a.assignments.map(x=>x.student)
+        students: a.assignments.map(x => x.student)
 
     });
 
