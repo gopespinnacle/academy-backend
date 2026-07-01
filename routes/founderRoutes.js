@@ -499,7 +499,7 @@ router.post("/assign-period", async (req, res) => {
 
             assignments: students.map(a => ({
 
-                student: a.student,
+                student: a.studentId,
 
                 subjects: a.subjects || [],
 
