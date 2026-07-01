@@ -547,16 +547,53 @@ days.forEach(d => grouped[d] = []);
 
 schedule.forEach(s=>{
 
-    grouped[s.day].push({
-        className: s.className,
-        subject: s.subject,
-        language: s.language,
-        eca: s.eca,
-        day: s.day,
-        startTime: s.startTime,
-        endTime: s.endTime,
-        students: s.student ? [s.student] : []
-    });
+    const existing = grouped[s.day].find(p=>
+
+        p.className === s.className &&
+
+        p.subject === s.subject &&
+
+        p.language === s.language &&
+
+        p.eca === s.eca &&
+
+        p.startTime === s.startTime &&
+
+        p.endTime === s.endTime
+
+    );
+
+    if(existing){
+
+        if(s.student){
+
+            existing.students.push(s.student);
+
+        }
+
+    }else{
+
+        grouped[s.day].push({
+
+            className:s.className,
+
+            subject:s.subject,
+
+            language:s.language,
+
+            eca:s.eca,
+
+            day:s.day,
+
+            startTime:s.startTime,
+
+            endTime:s.endTime,
+
+            students: s.students || []
+
+        });
+
+    }
 
 });
 // 🔥 SORT BY TIME

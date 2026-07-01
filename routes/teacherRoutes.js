@@ -392,11 +392,71 @@ router.get("/all-period-assignments", async (req, res) => {
 
         const teacherId = decoded.id;
 
-        const data = await PeriodAssignment.find({
-            teacher: teacherId
-        }).populate("student", "name");
+        const assignments = await PeriodAssignment.find({
+    teacher: teacherId
+}).populate("student", "name");
 
-        res.json({ data });
+const grouped = [];
+
+assignments.forEach(a=>{
+
+    const existing = grouped.find(x=>
+
+        x.className === a.className &&
+
+        x.subject === a.subject &&
+
+        x.language === a.language &&
+
+        x.eca === a.eca &&
+
+        x.day === a.day &&
+
+        x.startTime === a.startTime &&
+
+        x.endTime === a.endTime
+
+    );
+
+    if(existing){
+
+        if(a.student){
+
+            existing.students.push(a.student);
+
+        }
+
+    }else{
+
+        grouped.push({
+
+            className: a.className,
+
+            subject: a.subject,
+
+            language: a.language,
+
+            eca: a.eca,
+
+            day: a.day,
+
+            startTime: a.startTime,
+
+            endTime: a.endTime,
+
+            students: a.student ? [a.student] : []
+
+        });
+
+    }
+
+});
+
+res.json({
+
+    data: grouped
+
+});
 
     } catch (err) {
         console.log(err); // 🔥 ADD THIS (important)
