@@ -420,21 +420,37 @@ router.post("/get-period-assignments", async (req,res)=>{
         startTime = startTime.trim();
 
         const data = await PeriodAssignment.find({
-            teacher: teacherId,
-            className,
-            subject,
-            day,
-            startTime: { $regex: "^" + startTime }
-        });
+    teacher: teacherId,
+    className,
+    subject,
+    day,
+    startTime: { $regex: "^" + startTime }
+})
+.populate("assignments.student","name");
 
         console.log("FILTERED DATA:", data);
 
-        let assignments = data.map(d => ({
-            student: d.student,
-            subjects: d.subjects || [],
-            languages: d.languages || [],
-            eca: d.eca || []
-        }));
+        let assignments = [];
+
+data.forEach(period=>{
+
+    period.assignments.forEach(a=>{
+
+        assignments.push({
+
+            student: a.student,
+
+            subjects: a.subjects || [],
+
+            languages: a.languages || [],
+
+            eca: a.eca || []
+
+        });
+
+    });
+
+});
 
         res.json({ assignments });
 
@@ -450,27 +466,48 @@ router.post("/assign-period", async (req,res)=>{
         const { teacherId, className, subject, day, startTime, endTime, assignments } = req.body;
 
       await PeriodAssignment.deleteMany({
+
     teacher: teacherId,
+
     className,
+
     day,
+
     startTime,
+
     endTime
+
 });
 
-        const data = assignments.map(a => ({
-            teacher: teacherId,
-            className,
-            subject,
-            day,
-            startTime,
-            endTime,
-            student: a.studentId,
-            subjects: a.subjects,
-            languages: a.languages,
-            eca: a.eca
-        }));
+const period = new PeriodAssignment({
 
-        await PeriodAssignment.insertMany(data);
+    teacher: teacherId,
+
+    className,
+
+    subject,
+
+    day,
+
+    startTime,
+
+    endTime,
+
+    assignments: assignments.map(a => ({
+
+        student: a.studentId,
+
+        subjects: a.subjects || [],
+
+        languages: a.languages || [],
+
+        eca: a.eca || []
+
+    }))
+
+});
+
+await period.save();
 
         res.json({ message:"Saved successfully", assignments:data });
 

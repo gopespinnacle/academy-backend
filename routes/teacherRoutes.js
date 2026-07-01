@@ -357,11 +357,43 @@ console.log("Request Query:", req.query);
 console.log("Mongo Filter:", filter);
 
 const data = await PeriodAssignment.find(filter)
-.populate("student","name");
+.populate("assignments.student","name");
 
 console.log("Students Found:", data);
 
-res.json({ data });
+const finalData = [];
+
+data.forEach(period=>{
+
+    period.assignments.forEach(a=>{
+
+        finalData.push({
+
+            className: period.className,
+
+            subject: period.subject,
+
+            day: period.day,
+
+            startTime: period.startTime,
+
+            endTime: period.endTime,
+
+            student: a.student,
+
+            subjects: a.subjects,
+
+            languages: a.languages,
+
+            eca: a.eca
+
+        });
+
+    });
+
+});
+
+res.json({ data: finalData });
 
     }catch(err){
         res.status(500).json({message:"Error"});
@@ -394,7 +426,7 @@ router.get("/all-period-assignments", async (req, res) => {
 
         const assignments = await PeriodAssignment.find({
     teacher: teacherId
-}).populate("student", "name");
+}).populate("assignments.student","name");
 
 const grouped = [];
 
@@ -420,35 +452,35 @@ assignments.forEach(a=>{
 
     if(existing){
 
-        if(a.student){
+    if(a.students && a.students.length){
 
-            existing.students.push(a.student);
-
-        }
-
-    }else{
-
-        grouped.push({
-
-            className: a.className,
-
-            subject: a.subject,
-
-            language: a.language,
-
-            eca: a.eca,
-
-            day: a.day,
-
-            startTime: a.startTime,
-
-            endTime: a.endTime,
-
-            students: a.student ? [a.student] : []
-
-        });
+        existing.students.push(...a.students);
 
     }
+
+}else{
+
+    grouped.push({
+
+        className: a.className,
+
+        subject: a.subject,
+
+        language: a.language,
+
+        eca: a.eca,
+
+        day: a.day,
+
+        startTime: a.startTime,
+
+        endTime: a.endTime,
+
+        students: a.assignments.map(x=>x.student)
+
+    });
+
+}
 
 });
 
@@ -595,7 +627,7 @@ router.get("/student-compensation", async (req,res)=>{
         const StudentCompensation = require("../models/StudentCompensation");
 
         const data = await StudentCompensation.find()
-        .populate("student","name");
+        .populate("assignments.student","name");
 
         res.json({ data });
 

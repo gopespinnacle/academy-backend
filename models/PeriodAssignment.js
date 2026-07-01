@@ -7,10 +7,12 @@ type: mongoose.Schema.Types.ObjectId,
 ref: "User"
 },
 
-student: {
-type: mongoose.Schema.Types.ObjectId,
-ref: "User"
-},
+students: [
+    {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }
+],
 
 className: String,
 subject: String,
