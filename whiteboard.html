@@ -1523,33 +1523,53 @@ let localStream;
 let currentCameraId = null;
 (async () => {
 
-await initMedia();
+    // Load camera & microphone
+    await initMedia();
+    await loadCameraList();
 
-await loadCameraList();
+    // Verify class access first
+    try {
 
-/* JOIN ONLY AFTER PEER READY */
+        const api =
+    role === "teacher"
+        ? `https://academy-backend-eatl.onrender.com/api/teacher/verify-class/${periodId}`
+        : `https://academy-backend-eatl.onrender.com/api/student/verify-class/${periodId}`;
 
-socket.emit(
-"joinRoom",
-{
-room: room,
-role: role
-}
-);
+const response = await fetch(api, {
+    headers: {
+        Authorization: "Bearer " + token
+    }
+});
 
-console.log(
-    "JOINED ROOM:",
-    room
-);
-if(role === "teacher"){
+        const result = await response.json();
 
-socket.emit(
-"teacherJoined",
-{ room }
-);
+        console.log(result);
 
-}
+        if (!result.allowed) {
+            alert(result.message || "You are not allowed to join this class.");
+            window.location.href = "teacher-dashboard.html";
+            return;
+        }
 
+    } catch (err) {
+
+        console.error(err);
+        alert("Unable to verify class.");
+        return;
+
+    }
+
+    // Join socket only after verification
+    socket.emit("joinRoom", {
+        room,
+        role
+    });
+
+    console.log("JOINED ROOM:", room);
+
+    if (role === "teacher") {
+        socket.emit("teacherJoined", { room });
+    }
 
 })();
 
@@ -2097,7 +2117,7 @@ async function initMedia(cameraId = null){
     }
 
     // Refresh camera list
-    await loadDevices();
+    await loadCameraList();
 
 }
 const peers = {};
