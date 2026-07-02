@@ -462,23 +462,19 @@ assignments.forEach(a=>{
 
     grouped.push({
 
-        className: a.className,
+    periodId: a._id,
 
-        subject: a.subject,
+    className: a.className,
+    subject: a.subject,
+    language: a.language,
+    eca: a.eca,
+    day: a.day,
+    startTime: a.startTime,
+    endTime: a.endTime,
 
-        language: a.language,
+    students: a.assignments.map(x => x.student)
 
-        eca: a.eca,
-
-        day: a.day,
-
-        startTime: a.startTime,
-
-        endTime: a.endTime,
-
-        students: a.assignments.map(x => x.student)
-
-    });
+});
 
 }
 
