@@ -362,9 +362,13 @@ async function loadTimetable(){
 
     const data = await res.json();
 
+    console.log(data.data);
+
     studentData = data.data || [];
 
     renderGrid(studentData); 
+
+
 
 }
 
