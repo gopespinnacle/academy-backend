@@ -355,6 +355,8 @@ function checkClassTime(){
 const params = new URLSearchParams(window.location.search);
 const startTime = params.get("startTime");
 
+const periodId = params.get("periodId");
+
 if(!startTime) return;
 
 const now = new Date();
@@ -801,6 +803,7 @@ sessionStorage.setItem(
 );
 window.location.href =
 `whiteboard.html?room=${encodeURIComponent(room)}
+&periodId=${encodeURIComponent(periodId)}
 &role=teacher
 &className=${encodeURIComponent(className)}
 &subject=${encodeURIComponent(subject)}

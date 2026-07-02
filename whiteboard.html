@@ -1350,7 +1350,9 @@ const room = params.get("room");
 const role = params.get("role");
 
 const periodId = params.get("periodId");
-
+console.log("Period ID:", periodId);
+console.log("Role:", role);
+console.log("Token:", sessionStorage.getItem("token"));
 const token = sessionStorage.getItem("token");
 const teacherRole = sessionStorage.getItem("role");
 /*
@@ -1363,58 +1365,7 @@ if (
 }
     */
 
-    (async()=>{
-
-const token =
-sessionStorage.getItem("token");
-
-if(!token){
-
-alert("Login Required");
-
-window.location="index.html";
-
-return;
-
-}
-
-let api;
-
-if(role==="teacher"){
-
-api =
-"https://academy-backend-eatl.onrender.com/api/teacher/verify-class/" + periodId;
-
-}else{
-
-api =
-"https://academy-backend-eatl.onrender.com/api/student/verify-class/" + periodId;
-
-}
-
-const res =
-await fetch(api,{
-
-headers:{
-Authorization:"Bearer "+token
-}
-
-});
-
-const data =
-await res.json();
-
-if(!data.allowed){
-
-alert("Access Denied");
-
-window.location.href="index.html";
-
-return;
-
-}
-
-})();
+    
 const socket = io(
 "https://academy-backend-eatl.onrender.com",
 {
