@@ -575,23 +575,25 @@ schedule.forEach(s=>{
 
         grouped[s.day].push({
 
-            className:s.className,
+    _id: s._id,
 
-            subject:s.subject,
+    className:s.className,
 
-            language:s.language,
+    subject:s.subject,
 
-            eca:s.eca,
+    language:s.language,
 
-            day:s.day,
+    eca:s.eca,
 
-            startTime:s.startTime,
+    day:s.day,
 
-            endTime:s.endTime,
+    startTime:s.startTime,
 
-            students: s.students || []
+    endTime:s.endTime,
 
-        });
+    students: s.students || []
+
+});
 
     }
 
@@ -657,7 +659,8 @@ if(status !== "live" && status !== "starting-soon"){
 
 window.location.href =
 "period-students.html?" +
-"className=" + encodeURIComponent(s.className) +
+"periodId=" + encodeURIComponent(s._id) +
+"&className=" + encodeURIComponent(s.className) +
 "&subject=" + encodeURIComponent(s.subject || "") +
 "&eca=" + encodeURIComponent(s.eca || "") +
 "&language=" + encodeURIComponent(s.language || "") +
@@ -693,6 +696,7 @@ const mobileCard = `
 <div
 class="mobile-card"
 onclick="openPeriod(
+'${s._id}',
 '${s.className}',
 '${s.subject || ""}',
 '${s.eca || ""}',
@@ -827,6 +831,7 @@ container.appendChild(column);
 }
 
 function openPeriod(
+periodId,
 className,
 subject,
 eca,
@@ -853,7 +858,8 @@ return;
 
 window.location.href =
 "period-students.html?" +
-"className=" + encodeURIComponent(className) +
+"periodId=" + encodeURIComponent(periodId) +
+"&className=" + encodeURIComponent(className) +
 "&subject=" + encodeURIComponent(subject) +
 "&eca=" + encodeURIComponent(eca) +
 "&language=" + encodeURIComponent(language) +

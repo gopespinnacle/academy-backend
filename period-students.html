@@ -604,7 +604,9 @@ Class yet to start
 async function joinClass(){
 console.log("Attendance Marked ✅");
 const params = new URLSearchParams(window.location.search);
+const periodId = params.get("periodId");
 const startTime = params.get("startTime");
+
 
 const now = new Date();
 const [hour, minute] = startTime.split(":");
