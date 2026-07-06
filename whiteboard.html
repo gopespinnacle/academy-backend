@@ -2270,9 +2270,27 @@ video.style.margin = "0";
 
     }
 
-    video.srcObject = event.streams[0];
+    console.log("REMOTE STREAM:", event.streams);
 
-    video.play().catch(console.log);
+console.log(
+"Video Tracks:",
+event.streams[0].getVideoTracks()
+);
+
+console.log(
+"Audio Tracks:",
+event.streams[0].getAudioTracks()
+);
+
+video.srcObject = event.streams[0];
+
+video.onloadedmetadata = ()=>{
+
+    console.log("VIDEO READY");
+
+    video.play();
+
+};
 
 };
 pc.onconnectionstatechange=()=>{
