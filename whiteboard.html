@@ -1601,20 +1601,20 @@ if(savedPDF && pdfOpen === "true"){
 // SEND OFFER
 async function createOffer(socketId){
 
+    console.log("CREATING OFFER FOR:", socketId);
+
     const pc = peers[socketId];
 
     const offer = await pc.createOffer();
+
     await pc.setLocalDescription(offer);
 
     socket.emit("offer",{
+        room,
+        targetSocketId: socketId,
+        offer
+    });
 
-    room,
-
-    targetSocketId: socketId,
-
-    offer
-
-});
 }
 
 // RECEIVE OFFER
@@ -1651,7 +1651,7 @@ socket.on("offer", async(data)=>{
 
 
 socket.on("answer", async(data)=>{
-
+console.log("ANSWER FROM:", data.studentSocketId);
     const pc = peers[data.studentSocketId];
 
     if(!pc) return;
