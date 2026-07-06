@@ -261,6 +261,14 @@ io.on("connection", (socket) => {
 "joinRoom",
 (data)=>{
 
+    console.log("JOIN ROOM EVENT");
+
+console.log("Room:", data.room);
+
+console.log("Role:", data.role);
+
+console.log("Socket:", socket.id);
+
 const room = data.room;
 const role = data.role;
 const name = data.name;

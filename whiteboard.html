@@ -2215,11 +2215,7 @@ async function createPeer(socketId){
 });
 peers[socketId] = pc;
 
-pc.onnegotiationneeded = async()=>{
-
-    console.log("NEGOTIATION NEEDED");
-
-};
+pc.onnegotiationneeded = () => {};
     // send your video/audio
     localStream.getTracks().forEach(track => {
         pc.addTrack(track, localStream);
