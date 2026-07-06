@@ -1352,10 +1352,16 @@ const role = params.get("role");
 const periodId = params.get("periodId");
 console.log("Period ID:", periodId);
 console.log("Role:", role);
-console.log("Token:", sessionStorage.getItem("token"));
-const token = sessionStorage.getItem("token");
-console.log("Student Token:", token);
-const teacherRole = sessionStorage.getItem("role");
+let token;
+
+if (role === "teacher") {
+    token = sessionStorage.getItem("token");
+} else {
+    token = localStorage.getItem("token");
+}
+
+console.log("Role:", role);
+console.log("Token:", token);
 /*
 if (
     role === "teacher" &&
