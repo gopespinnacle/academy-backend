@@ -1664,25 +1664,35 @@ socket.on("answer", async(data)=>{
 
 });
 
-socket.on("studentJoined", async(data)=>{
+socket.on("studentJoined", async (data) => {
 
-    if(role !== "teacher") return;
+    if (role !== "teacher") return;
 
     console.log("Student Joined:", data);
 
-    const pc = await createPeer(data.socketId);
+    // Already connected? Don't create another peer.
+    if (peers[data.socketId]) {
+        console.log("Peer already exists:", data.socketId);
+        return;
+    }
+
+    await createPeer(data.socketId);
 
     await createOffer(data.socketId);
 
 });
 
-socket.on("existingStudents", async(students)=>{
+socket.on("existingStudents", async (students) => {
 
-    if(role !== "teacher") return;
+    if (role !== "teacher") return;
 
     console.log("Existing Students", students);
 
-    for(const student of students){
+    for (const student of students) {
+
+        if (peers[student.socketId]) {
+            continue;
+        }
 
         await createPeer(student.socketId);
 
@@ -2193,6 +2203,9 @@ async function switchCamera(deviceId){
 });
 }
 async function createPeer(socketId){
+      if (peers[socketId]) {
+        return peers[socketId];
+    }
 
     const pc = new RTCPeerConnection({
         
