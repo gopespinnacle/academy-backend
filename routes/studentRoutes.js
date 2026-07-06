@@ -319,7 +319,16 @@ if(!period){
 }
 
 /* Extra Security */
+console.log("Period ID:", req.params.periodId);
+console.log("Student ID:", req.user.id);
 
+const period = await PeriodAssignment.findById(req.params.periodId);
+
+console.log("Period:", period);
+
+if (period) {
+    console.log("Assignments:", period.assignments);
+}
 const assigned = period.assignments.some(a =>
     a.student.toString() === req.user.id
 );
