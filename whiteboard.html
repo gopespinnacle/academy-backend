@@ -2217,6 +2217,17 @@ peers[socketId] = pc;
 
 pc.onnegotiationneeded = () => {};
     // send your video/audio
+    console.log("LOCAL STREAM:", localStream);
+
+console.log(
+    "VIDEO TRACKS:",
+    localStream.getVideoTracks()
+);
+
+console.log(
+    "AUDIO TRACKS:",
+    localStream.getAudioTracks()
+);
     localStream.getTracks().forEach(track => {
         pc.addTrack(track, localStream);
     });
