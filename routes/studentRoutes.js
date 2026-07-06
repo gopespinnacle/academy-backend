@@ -322,8 +322,6 @@ if(!period){
 console.log("Period ID:", req.params.periodId);
 console.log("Student ID:", req.user.id);
 
-const period = await PeriodAssignment.findById(req.params.periodId);
-
 console.log("Period:", period);
 
 if (period) {
