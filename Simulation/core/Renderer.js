@@ -3,6 +3,9 @@
  Virtual Science Lab
  Renderer v2.0
 =========================================================*/
+import BatteryRenderer from "../renderers/BatteryRenderer.js";
+import BulbRenderer from "../renderers/BulbRenderer.js";
+import SwitchRenderer from "../renderers/SwitchRenderer.js";
 
 export default class Renderer {
 
@@ -85,13 +88,19 @@ export default class Renderer {
 
             if (!renderer) return;
 
-            renderer.draw(
+            const renderer = this.registry.get(entity.type);
 
-                entity,
+if (renderer) {
 
-                this.layers.components
+    renderer.draw(
 
-            );
+        entity,
+
+        this.layers.components
+
+    );
+
+}
 
         });
 
