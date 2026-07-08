@@ -1343,6 +1343,10 @@ href="https://cdn.jsdelivr.net/npm/emoji-mart@latest/css/emoji-mart.css">
 
 <script src="https://appstatic.jeeliz.com/faceFilter/jeelizFaceFilter.js"></script>
 
+<script src="assets/js/meeting/meetingUtils.js"></script>
+<script src="assets/js/meeting/meetingSocket.js"></script>
+<script src="assets/js/meeting/meetingWebRTC.js"></script>
+
 <script>
 
 const params = new URLSearchParams(window.location.search);
@@ -1373,13 +1377,8 @@ if (
     */
 
     
-const socket = io(
-"https://academy-backend-eatl.onrender.com",
-{
-transports:["websocket","polling"],
-reconnectionAttempts:5,
-timeout:20000
-}
+const socket = MeetingSocket.connect(
+"https://academy-backend-eatl.onrender.com"
 );
 
 socket.onAny((event, ...args) => {

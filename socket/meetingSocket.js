@@ -1,13 +1,265 @@
-/**
- * ============================================================
- * Gopes Pinnacle Academy
- * Virtual Classroom V2
- * Socket Engine
- * ============================================================
- */
+const meetingMemory = require("../core/meetingMemory");
 
-module.exports = function registerMeetingSocket(io) {
+/*
+==========================================================
+Meeting Socket
+Handles:
+1. Join Room
+2. WebRTC Signaling
+==========================================================
+*/
 
-    console.log("✅ Virtual Classroom Socket Engine Loaded");
+module.exports = function registerMeetingSocket(io){
+
+    io.on("connection",(socket)=>{
+
+        console.log("Socket Connected:",socket.id);
+
+        /*
+        ==================================================
+        JOIN ROOM
+        ==================================================
+        */
+
+        socket.on("joinRoom",(data)=>{
+
+            const room=data.room;
+            const role=data.role;
+            const name=data.name;
+
+            socket.join(room);
+
+            socket.room=room;
+            socket.role=role;
+            socket.name=name;
+
+            if(!meetingMemory.participants[room]){
+                meetingMemory.participants[room]=[];
+            }
+
+            const alreadyExists=
+            meetingMemory.participants[room].find(
+                p=>p.socketId===socket.id
+            );
+
+            if(!alreadyExists){
+
+                meetingMemory.participants[room].push({
+
+                    socketId:socket.id,
+
+                    role,
+
+                    name
+
+                });
+
+            }
+
+            console.log(
+
+                "Joined Room:",
+
+                room,
+
+                role,
+
+                name
+
+            );
+
+            /*
+            Teacher receives existing students
+            */
+
+            if(role==="teacher"){
+
+                const students=
+                meetingMemory.participants[room].filter(
+
+                    p=>p.role==="student"
+
+                );
+
+                socket.emit(
+
+                    "existingStudents",
+
+                    students
+
+                );
+
+            }
+
+            /*
+            Notify teacher
+            */
+
+            else{
+
+                const teacher=
+                meetingMemory.participants[room].find(
+
+                    p=>p.role==="teacher"
+
+                );
+
+                if(teacher){
+
+                    io.to(
+                        teacher.socketId
+                    ).emit(
+
+                        "studentJoined",
+
+                        {
+
+                            socketId:socket.id,
+
+                            studentName:name
+
+                        }
+
+                    );
+
+                }
+
+            }
+
+        });
+
+        /*
+        ==================================================
+        OFFER
+        ==================================================
+        */
+
+        socket.on("offer",(data)=>{
+
+            io.to(
+
+                data.targetSocketId
+
+            ).emit(
+
+                "offer",
+
+                {
+
+                    teacherSocketId:socket.id,
+
+                    offer:data.offer
+
+                }
+
+            );
+
+        });
+
+        /*
+        ==================================================
+        ANSWER
+        ==================================================
+        */
+
+        socket.on("answer",(data)=>{
+
+            io.to(
+
+                data.teacherSocketId
+
+            ).emit(
+
+                "answer",
+
+                {
+
+                    studentSocketId:socket.id,
+
+                    answer:data.answer
+
+                }
+
+            );
+
+        });
+
+        /*
+        ==================================================
+        ICE
+        ==================================================
+        */
+
+        socket.on(
+
+            "ice-candidate",
+
+            (data)=>{
+
+                io.to(
+
+                    data.targetSocketId
+
+                ).emit(
+
+                    "ice-candidate",
+
+                    {
+
+                        senderSocketId:socket.id,
+
+                        candidate:data.candidate
+
+                    }
+
+                );
+
+            }
+
+        );
+
+        /*
+        ==================================================
+        DISCONNECT
+        ==================================================
+        */
+
+        socket.on("disconnect",()=>{
+
+            const room=socket.room;
+
+            if(!room) return;
+
+            if(meetingMemory.participants[room]){
+
+                meetingMemory.participants[room]=
+
+                meetingMemory.participants[room].filter(
+
+                    p=>p.socketId!==socket.id
+
+                );
+
+            }
+
+            io.to(room).emit(
+
+                "userDisconnected",
+
+                socket.id
+
+            );
+
+            console.log(
+
+                "Disconnected:",
+
+                socket.id
+
+            );
+
+        });
+
+    });
 
 };
