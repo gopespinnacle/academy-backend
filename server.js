@@ -368,65 +368,6 @@ if(role === "teacher"){
 
         // ================= WEBRTC =================
 
-// TEACHER SEND OFFER
-// TEACHER SEND OFFER
-socket.on("offer",(data)=>{
-
-    io.to(data.targetSocketId).emit(
-
-        "offer",
-
-        {
-
-            teacherSocketId: socket.id,
-
-            offer: data.offer
-
-        }
-
-    );
-
-});
-
-// STUDENT SEND ANSWER
-// STUDENT SEND ANSWER
-socket.on("answer",(data)=>{
-
-    io.to(data.teacherSocketId).emit(
-
-        "answer",
-
-        {
-
-            answer:data.answer,
-
-            studentSocketId:socket.id
-
-        }
-
-    );
-
-});
-
-// ICE CANDIDATES
-// ICE CANDIDATES
-socket.on("ice-candidate",(data)=>{
-
-    io.to(data.targetSocketId).emit(
-
-        "ice-candidate",
-
-        {
-
-            candidate:data.candidate,
-
-            senderSocketId:socket.id
-
-        }
-
-    );
-
-});
 /* ================= TEACHER JOIN ================= */
 
 socket.on("teacherJoined", (data) => {
