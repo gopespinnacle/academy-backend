@@ -7,6 +7,12 @@ const periodAssignmentSchema = new mongoose.Schema({
         ref:"User"
     },
 
+    assistantTeacher:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:"User",
+    default:null
+},
+
     className:String,
     subject:String,
     day:String,

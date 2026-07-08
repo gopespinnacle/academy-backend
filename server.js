@@ -36,6 +36,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
+const registerMeetingSocket = require("./socket/meetingSocket");
 let roomControl = {};
 let raisedHands = {};
 let boardLock = {};
@@ -114,6 +115,14 @@ const io = new Server(server, {
     ]
 
 });
+
+/*
+============================================================
+Virtual Classroom V2 Socket Engine
+============================================================
+*/
+
+registerMeetingSocket(io);
 
 /* ================= TEST ================= */
 app.get("/", (req, res) => {
