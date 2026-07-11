@@ -13,7 +13,7 @@ router.post("/start", async (req, res) => {
         console.log("Room :", room);
         console.log("Period :", periodId);
 
-        const period = await PeriodAssignment.findById(periodId);
+        const period = await PeriodAssignment.findById(periodId).populate("teacher");
 
         if (!period) {
 
@@ -26,23 +26,28 @@ router.post("/start", async (req, res) => {
 
         const session = await TeacherSession.create({
 
-            teacher: period.teacher,
+    teacher: period.teacher._id,
+    teacherName: period.teacher.name,
 
-            className: period.className,
+    periodId: period._id,
 
-            subject: period.subject,
+    className: period.className,
 
-            date: new Date(),
+    subject: period.subject,
 
-            startTime: period.startTime,
+    day: period.day,
 
-            endTime: period.endTime,
+    date: new Date(),
 
-            teacherJoined: new Date(),
+    startTime: period.startTime,
 
-            classStarted: new Date()
+    endTime: period.endTime,
 
-        });
+    teacherJoined: new Date(),
+
+    classStarted: new Date()
+
+});
 
         res.json({
 
