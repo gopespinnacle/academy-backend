@@ -29,11 +29,12 @@ module.exports = function registerMeetingSocket(io){
 const role = data.role;
 const name = data.name;
 const studentId = data.studentId;
-const sessionId = data.sessionId;
+const periodId = data.periodId;
+
 console.log("========== JOIN ROOM ==========");
 console.log("Role:", role);
 console.log("Student ID:", studentId);
-console.log("Session ID:", sessionId);
+console.log("Period ID:", periodId);
 console.log("================================");
 
 
@@ -108,25 +109,28 @@ console.log("================================");
 
             else{
 
-    if(sessionId && mongoose.Types.ObjectId.isValid(sessionId)){
+    if (periodId && mongoose.Types.ObjectId.isValid(periodId)) {
 
-        await TeacherSession.findByIdAndUpdate(
+    const session = await TeacherSession.findOneAndUpdate(
 
-            sessionId,
+        {
+            periodId: periodId,
+            classEnded: { $exists: false }
+        },
 
-            {
+        {
+            $addToSet: {
+                joinedStudents: studentId
+            }
+        },
 
-                $addToSet:{
+        { new: true }
 
-    joinedStudents: studentId
+    );
+
+    console.log("Updated Session:", session);
 
 }
-
-            }
-
-        );
-
-    }
 
     const teacher =
     meetingMemory.participants[room].find(
