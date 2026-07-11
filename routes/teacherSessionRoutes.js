@@ -7,11 +7,11 @@ router.post("/start", async (req, res) => {
 
     try {
 
-        console.log("Teacher Session Start API Called");
+        const session = await TeacherSession.create(req.body);
 
         res.json({
             success: true,
-            message: "Teacher Session API Working"
+            session
         });
 
     } catch (err) {
@@ -19,7 +19,8 @@ router.post("/start", async (req, res) => {
         console.log(err);
 
         res.status(500).json({
-            success: false
+            success: false,
+            message: err.message
         });
 
     }
