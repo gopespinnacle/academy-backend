@@ -29,7 +29,7 @@ module.exports = function registerMeetingSocket(io){
 const role = data.role;
 const name = data.name;
 const studentId = data.studentId;
-const sessionId = data.sessionId;const sessionId = data.sessionId;
+const sessionId = data.sessionId;
 
             socket.join(room);
 
