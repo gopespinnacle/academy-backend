@@ -144,6 +144,10 @@ console.log("================================");
         console.log("✅ SESSION FOUND");
         console.log("Session:", session._id);
         console.log("Joined Students:", session.joinedStudents);
+        const check = await TeacherSession.findById(session._id);
+
+console.log("Saved in Mongo:");
+console.log(check.joinedStudents);
 
     }
 
