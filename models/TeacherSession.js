@@ -54,23 +54,35 @@ default:0
 meetingLink:String,
 joinedStudents:[
 {
-    student:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"User"
-    },
+student:{
+type:mongoose.Schema.Types.ObjectId,
+ref:"User"
+},
 
-    joinedAt:{
-        type:Date
-    },
+joinedAt:Date,
 
-    leftAt:{
-        type:Date
-    },
+leftAt:Date,
 
-    duration:{
-        type:Number,
-        default:0
-    }
+duration:{
+type:Number,
+default:0
+},
+
+rejoinedCount:{
+type:Number,
+default:0
+},
+
+networkDisconnectTime:{
+type:Number,
+default:0
+},
+
+isOnline:{
+type:Boolean,
+default:true
+}
+
 }
 ],
 joinBufferMinutes:{

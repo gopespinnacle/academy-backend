@@ -120,26 +120,67 @@ socket.periodId = periodId;
         studentId
     });
 
-    const session = await TeacherSession.findOneAndUpdate(
+    const session = await TeacherSession.findOne({
 
-        {
-            periodId: new mongoose.Types.ObjectId(periodId)
-        },
+    periodId: new mongoose.Types.ObjectId(periodId)
 
-        {
-            $push: {
-    joinedStudents: {
-        student: studentId,
-        joinedAt: new Date()
-    }
-}
-        },
+});
 
-        {
-            new: true
-        }
+if(session){
+
+    const existingStudent = session.joinedStudents.find(
+
+        s => s.student.toString() === studentId
 
     );
+
+    if(existingStudent){
+
+    const now = new Date();
+
+    if(existingStudent.leftAt){
+
+        const disconnectedSeconds = Math.floor(
+
+            (now - existingStudent.leftAt) / 1000
+
+        );
+
+        existingStudent.networkDisconnectTime += disconnectedSeconds;
+
+    }
+
+    existingStudent.rejoinedCount += 1;
+
+    existingStudent.isOnline = true;
+
+    existingStudent.joinedAt = now;
+
+    existingStudent.leftAt = null;
+
+}
+
+    else{
+
+        // First time joining
+
+        session.joinedStudents.push({
+
+            student:studentId,
+
+            joinedAt:new Date(),
+
+            isOnline:true
+
+        });
+
+    }
+
+    await session.save();
+
+    console.log("Student Attendance Updated");
+
+}
 
     if (!session) {
 
@@ -307,6 +348,46 @@ const room = socket.room;
 
             }
 
+            if(socket.role === "student" && socket.studentId){
+
+    const session = await TeacherSession.findOne({
+
+        periodId: new mongoose.Types.ObjectId(socket.periodId)
+
+    });
+
+    if(session){
+
+        const student = session.joinedStudents.find(
+
+            s => s.student.toString() === socket.studentId
+
+        );
+
+        if(student){
+
+            student.leftAt = new Date();
+
+            student.isOnline = false;
+
+            const currentSessionSeconds = Math.floor(
+
+    (student.leftAt - student.joinedAt) / 1000
+
+);
+
+student.duration += currentSessionSeconds;
+
+            await session.save();
+
+            console.log("Student disconnected");
+
+        }
+
+    }
+
+}
+
             io.to(room).emit(
 
                 "userDisconnected",
@@ -315,42 +396,37 @@ const room = socket.room;
 
             );
 
-            if(socket.role === "student" && periodId){
+            if(socket.role === "teacher" && periodId){
 
     const session = await TeacherSession.findOne({
 
-        periodId: new mongoose.Types.ObjectId(periodId)
+        periodId:new mongoose.Types.ObjectId(periodId)
 
     });
 
     if(session){
 
-        const joinedStudent = session.joinedStudents.find(
+        session.teacherLeft = new Date();
 
-            s => String(s.student) === String(studentId)
+        session.classEnded = new Date();
+
+        session.teacherDuration = Math.floor(
+
+            (session.teacherLeft - session.teacherJoined)/1000
 
         );
 
-        if(joinedStudent){
+        session.actualClassDuration = session.teacherDuration;
 
-            joinedStudent.leftAt = new Date();
+        await session.save();
 
-            joinedStudent.duration = Math.floor(
-
-                (joinedStudent.leftAt - joinedStudent.joinedAt) / 1000
-
-            );
-
-            await session.save();
-
-            console.log("✅ Student Leave Saved");
-
-        }
+        console.log("✅ Teacher Session Closed");
 
     }
 
 }
 
+            
             console.log(
 
                 "Disconnected:",
@@ -364,3 +440,4 @@ const room = socket.room;
     });
 
 };
+
