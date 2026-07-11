@@ -153,10 +153,7 @@ app.use(
     admissionAccountRoutes
 );
 app.use("/api/teacher", teacherRoutes);
-app.use(
-    "/api/teacher-session",
-    teacherSessionRoutes
-);
+app.use("/api/teacher-session", teacherSessionRoutes);
 
 // ✅ FIRST load MAIN routes
 app.use("/api/founder", founderRoutes);
