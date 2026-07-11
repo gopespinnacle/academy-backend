@@ -1,4 +1,6 @@
 const meetingMemory = require("../core/meetingMemory");
+const TeacherSession = require("../models/TeacherSession");
+const mongoose = require("mongoose");
 
 /*
 ==========================================================
@@ -21,11 +23,13 @@ module.exports = function registerMeetingSocket(io){
         ==================================================
         */
 
-        socket.on("joinRoom",(data)=>{
+        socket.on("joinRoom", async (data)=>{
 
-            const room=data.room;
-            const role=data.role;
-            const name=data.name;
+    const room = data.room;
+const role = data.role;
+const name = data.name;
+const studentId = data.studentId;
+const sessionId = data.sessionId;const sessionId = data.sessionId;
 
             socket.join(room);
 
@@ -97,34 +101,54 @@ module.exports = function registerMeetingSocket(io){
 
             else{
 
-                const teacher=
-                meetingMemory.participants[room].find(
+    if(sessionId && mongoose.Types.ObjectId.isValid(sessionId)){
 
-                    p=>p.role==="teacher"
+        await TeacherSession.findByIdAndUpdate(
 
-                );
+            sessionId,
 
-                if(teacher){
+            {
 
-                    io.to(
-                        teacher.socketId
-                    ).emit(
+                $addToSet:{
 
-                        "studentJoined",
+    joinedStudents: studentId
 
-                        {
-
-                            socketId:socket.id,
-
-                            studentName:name
-
-                        }
-
-                    );
-
-                }
+}
 
             }
+
+        );
+
+    }
+
+    const teacher =
+    meetingMemory.participants[room].find(
+
+        p=>p.role==="teacher"
+
+    );
+
+    if(teacher){
+
+        io.to(
+            teacher.socketId
+        ).emit(
+
+            "studentJoined",
+
+            {
+
+                socketId:socket.id,
+
+                studentName:name
+
+            }
+
+        );
+
+    }
+
+}
 
         });
 
