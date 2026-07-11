@@ -30,9 +30,13 @@ const role = data.role;
 const name = data.name;
 const studentId = data.studentId;
 const sessionId = data.sessionId;
+console.log("========== JOIN ROOM ==========");
+console.log("Role:", role);
+console.log("Student ID:", studentId);
+console.log("Session ID:", sessionId);
+console.log("================================");
 
-console.log("Student ID :", studentId);
-console.log("Session ID :", sessionId);
+
 
             socket.join(room);
 
