@@ -322,6 +322,34 @@ console.log(check.joinedStudents);
         );
 
         /*
+==================================================
+MEDIA STATUS
+==================================================
+*/
+
+socket.on("mediaStatus", (data) => {
+
+    socket.camera = data.camera;
+
+    socket.mic = data.mic;
+
+    const room = socket.room;
+
+    if (!room) return;
+
+    socket.to(room).emit("mediaStatus", {
+
+        socketId: socket.id,
+
+        camera: data.camera,
+
+        mic: data.mic
+
+    });
+
+});
+
+        /*
         ==================================================
         DISCONNECT
         ==================================================
