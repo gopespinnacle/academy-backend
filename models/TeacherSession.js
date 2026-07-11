@@ -82,9 +82,20 @@ attendanceMarkedAt:Date,
 // LIVE CLASS SESSION
 // ===============================
 
-sessionId: String,
+ssessionId: String,
 
 teacherName: String,
+
+periodId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "PeriodAssignment"
+},
+
+chapter: String,
+
+day: String,
+
+period: String,
 
 chapter: String,
 
