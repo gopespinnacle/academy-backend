@@ -45,6 +45,9 @@ console.log("================================");
             socket.role=role;
             socket.name=name;
 
+            socket.studentId = studentId;
+socket.periodId = periodId;
+
             if(!meetingMemory.participants[room]){
                 meetingMemory.participants[room]=[];
             }
@@ -124,9 +127,12 @@ console.log("================================");
         },
 
         {
-            $addToSet: {
-                joinedStudents: studentId
-            }
+            $push: {
+    joinedStudents: {
+        student: studentId,
+        joinedAt: new Date()
+    }
+}
         },
 
         {
@@ -280,9 +286,12 @@ console.log(check.joinedStudents);
         ==================================================
         */
 
-        socket.on("disconnect",()=>{
+        socket.on("disconnect", async ()=>{
 
-            const room=socket.room;
+            const studentId = socket.studentId;
+const periodId = socket.periodId;
+
+const room = socket.room;
 
             if(!room) return;
 
@@ -305,6 +314,42 @@ console.log(check.joinedStudents);
                 socket.id
 
             );
+
+            if(socket.role === "student" && periodId){
+
+    const session = await TeacherSession.findOne({
+
+        periodId: new mongoose.Types.ObjectId(periodId)
+
+    });
+
+    if(session){
+
+        const joinedStudent = session.joinedStudents.find(
+
+            s => String(s.student) === String(studentId)
+
+        );
+
+        if(joinedStudent){
+
+            joinedStudent.leftAt = new Date();
+
+            joinedStudent.duration = Math.floor(
+
+                (joinedStudent.leftAt - joinedStudent.joinedAt) / 1000
+
+            );
+
+            await session.save();
+
+            console.log("✅ Student Leave Saved");
+
+        }
+
+    }
+
+}
 
             console.log(
 

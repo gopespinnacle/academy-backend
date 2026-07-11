@@ -54,8 +54,23 @@ default:0
 meetingLink:String,
 joinedStudents:[
 {
-type:mongoose.Schema.Types.ObjectId,
-ref:"User"
+    student:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"User"
+    },
+
+    joinedAt:{
+        type:Date
+    },
+
+    leftAt:{
+        type:Date
+    },
+
+    duration:{
+        type:Number,
+        default:0
+    }
 }
 ],
 joinBufferMinutes:{
