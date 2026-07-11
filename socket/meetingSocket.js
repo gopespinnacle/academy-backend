@@ -31,6 +31,9 @@ const name = data.name;
 const studentId = data.studentId;
 const sessionId = data.sessionId;
 
+console.log("Student ID :", studentId);
+console.log("Session ID :", sessionId);
+
             socket.join(room);
 
             socket.room=room;
