@@ -111,11 +111,16 @@ console.log("================================");
 
     if (periodId && mongoose.Types.ObjectId.isValid(periodId)) {
 
+    console.log("Searching with:");
+    console.log({
+        periodId,
+        studentId
+    });
+
     const session = await TeacherSession.findOneAndUpdate(
 
         {
-            periodId: periodId,
-            classEnded: { $exists: false }
+            periodId: new mongoose.Types.ObjectId(periodId)
         },
 
         {
@@ -124,11 +129,23 @@ console.log("================================");
             }
         },
 
-        { new: true }
+        {
+            new: true
+        }
 
     );
 
-    console.log("Updated Session:", session);
+    if (!session) {
+
+        console.log("❌ NO SESSION FOUND");
+
+    } else {
+
+        console.log("✅ SESSION FOUND");
+        console.log("Session:", session._id);
+        console.log("Joined Students:", session.joinedStudents);
+
+    }
 
 }
 
