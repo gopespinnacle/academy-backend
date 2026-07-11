@@ -76,7 +76,49 @@ default:false
 }
 ],
 
-attendanceMarkedAt:Date
+attendanceMarkedAt:Date,
+
+// ===============================
+// LIVE CLASS SESSION
+// ===============================
+
+sessionId: String,
+
+teacherName: String,
+
+chapter: String,
+
+day: String,
+
+period: String,
+
+scheduledStart: String,
+
+scheduledEnd: String,
+
+teacherJoined: Date,
+
+teacherLeft: Date,
+
+teacherLateBy: Number,
+
+teacherDuration: Number,
+
+teacherRejoinedCount: {
+    type: Number,
+    default: 0
+},
+
+teacherNetworkDisconnectTime: {
+    type: Number,
+    default: 0
+},
+
+classStarted: Date,
+
+classEnded: Date,
+
+actualClassDuration: Number
 
 },{timestamps:true});
 

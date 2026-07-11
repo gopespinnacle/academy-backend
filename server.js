@@ -48,6 +48,7 @@ let roomParticipants = {};
 const studentAttendanceRoutes = require("./routes/studentattendanceRoutes");
 const founderTimeClashRoutes = require("./routes/founderTimeClashRoutes");
 const authRoutes = require("./routes/authRoutes");
+const teacherSessionRoutes = require("./routes/teacherSessionRoutes");
 const teacherRoutes = require("./routes/teacherRoutes");
 const founderRoutes = require("./routes/founderRoutes");
 const admissionAccountRoutes =
@@ -152,6 +153,10 @@ app.use(
     admissionAccountRoutes
 );
 app.use("/api/teacher", teacherRoutes);
+app.use(
+    "/api/teacher-session",
+    teacherSessionRoutes
+);
 
 // ✅ FIRST load MAIN routes
 app.use("/api/founder", founderRoutes);
