@@ -349,6 +349,19 @@ socket.on("mediaStatus", (data) => {
 
 });
 
+socket.on("muteStudent", (data) => {
+
+    io.to(data.socketId).emit("forceMute");
+
+});
+
+socket.on("stopCamera", (data) => {
+
+    io.to(data.socketId).emit("forceStopCamera");
+
+});
+
+
         /*
         ==================================================
         DISCONNECT
