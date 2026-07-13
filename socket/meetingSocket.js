@@ -425,6 +425,8 @@ socket.on("removeStudent", (data) => {
 
     io.to(data.socketId).emit("removedFromClass");
 
+    io.to(socket.room).emit("userDisconnected", data.socketId);
+
 });
 
 
