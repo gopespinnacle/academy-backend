@@ -61,21 +61,29 @@ socket.periodId = periodId;
 
     meetingMemory.participants[room].push({
 
-        socketId: socket.id,
+    socketId: socket.id,
 
-        role,
+    role,
 
-        name,
+    name,
 
-        micMuted: false,
+    joinedAt: new Date(),
 
-        cameraStopped: false,
+    camera: true,
 
-        micLocked: false,
+    mic: true,
 
-        cameraLocked: false
+    network: "Checking",
 
-    });
+    battery: -1,
+
+    charging: false,
+
+    micLocked: false,
+
+    cameraLocked: false
+
+});
 
 }
 
@@ -97,22 +105,36 @@ socket.periodId = periodId;
 
             if(role==="teacher"){
 
-                const students=
-                meetingMemory.participants[room].filter(
+    const students =
+        meetingMemory.participants[room]
+        .filter(p=>p.role==="student")
+        .map(student => ({
 
-                    p=>p.role==="student"
+            socketId: student.socketId,
 
-                );
+            name: student.name,
 
-                socket.emit(
+            joinedAt: student.joinedAt,
 
-                    "existingStudents",
+            camera: student.camera ?? true,
 
-                    students
+            mic: student.mic ?? true,
 
-                );
+            network: student.network || "Checking",
 
-            }
+            battery: student.battery ?? -1,
+
+            charging: student.charging ?? false,
+
+            micLocked: student.micLocked ?? false,
+
+            cameraLocked: student.cameraLocked ?? false
+
+        }));
+
+    socket.emit("existingStudents", students);
+
+}
 
             /*
             Notify teacher
@@ -345,6 +367,21 @@ socket.on("mediaStatus", (data) => {
 
     if (!room) return;
 
+    // ✅ Update meeting memory
+    const participant = meetingMemory.participants[room]?.find(
+
+        p => p.socketId === socket.id
+
+    );
+
+    if(participant){
+
+        participant.camera = data.camera;
+
+        participant.mic = data.mic;
+
+    }
+
     socket.to(room).emit("mediaStatus", {
 
         socketId: socket.id,
@@ -357,13 +394,23 @@ socket.on("mediaStatus", (data) => {
 
 });
 
-socket.on("networkStatus", (data) => {
+socket.on("networkStatus",(data)=>{
 
     const room = socket.room;
 
     if(!room) return;
 
-    socket.networkQuality = data.quality;
+    const participant = meetingMemory.participants[room]?.find(
+
+        p => p.socketId === socket.id
+
+    );
+
+    if(participant){
+
+        participant.network = data.quality;
+
+    }
 
     socket.to(room).emit("networkStatus",{
 
@@ -375,13 +422,27 @@ socket.on("networkStatus", (data) => {
 
 });
 
-socket.on("batteryStatus", (data) => {
+socket.on("batteryStatus",(data)=>{
 
     const room = socket.room;
 
-    if (!room) return;
+    if(!room) return;
 
-    socket.to(room).emit("batteryStatus", {
+    const participant = meetingMemory.participants[room]?.find(
+
+        p => p.socketId === socket.id
+
+    );
+
+    if(participant){
+
+        participant.battery = data.level;
+
+        participant.charging = data.charging;
+
+    }
+
+    socket.to(room).emit("batteryStatus",{
 
         socketId: socket.id,
 
@@ -429,32 +490,31 @@ socket.on("lockMic", (data) => {
 
     const room = socket.room;
 
-    if(!room) return;
+    if (!room) return;
 
-    const student = meetingMemory.participants[room]?.find(
+    const participant = meetingMemory.participants[room]?.find(
 
         p => p.socketId === data.socketId
 
     );
 
-    if(!student) return;
+    if (!participant) return;
 
-    // Toggle lock state
-    student.micLocked = !student.micLocked;
+    participant.micLocked = !participant.micLocked;
 
-    // Tell only this student
-    io.to(data.socketId).emit("micLockChanged",{
+    io.to(data.socketId).emit("forceMute", {
 
-        locked: student.micLocked
+        muted: participant.micLocked
 
     });
 
-    // Update teacher UI
-    io.to(room).emit("studentControlUpdated",{
+    io.to(room).emit("studentControlUpdated", {
 
-        socketId: student.socketId,
+        socketId: data.socketId,
 
-        micLocked: student.micLocked
+        micLocked: participant.micLocked,
+
+        micMuted: participant.micLocked
 
     });
 
@@ -464,29 +524,31 @@ socket.on("lockCamera", (data) => {
 
     const room = socket.room;
 
-    if(!room) return;
+    if (!room) return;
 
-    const student = meetingMemory.participants[room]?.find(
+    const participant = meetingMemory.participants[room]?.find(
 
         p => p.socketId === data.socketId
 
     );
 
-    if(!student) return;
+    if (!participant) return;
 
-    student.cameraLocked = !student.cameraLocked;
+    participant.cameraLocked = !participant.cameraLocked;
 
-    io.to(data.socketId).emit("cameraLockChanged",{
+    io.to(data.socketId).emit("forceStopCamera", {
 
-        locked: student.cameraLocked
+        stopped: participant.cameraLocked
 
     });
 
-    io.to(room).emit("studentControlUpdated",{
+    io.to(room).emit("studentControlUpdated", {
 
-        socketId: student.socketId,
+        socketId: data.socketId,
 
-        cameraLocked: student.cameraLocked
+        cameraLocked: participant.cameraLocked,
+
+        cameraStopped: participant.cameraLocked
 
     });
 
