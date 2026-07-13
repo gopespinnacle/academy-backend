@@ -389,6 +389,73 @@ socket.on("muteStudent", (data) => {
 
 });
 
+socket.on("lockMic", (data) => {
+
+    const room = socket.room;
+
+    if(!room) return;
+
+    const student = meetingMemory.participants[room]?.find(
+
+        p => p.socketId === data.socketId
+
+    );
+
+    if(!student) return;
+
+    // Toggle lock state
+    student.micLocked = !student.micLocked;
+
+    // Tell only this student
+    io.to(data.socketId).emit("micLockChanged",{
+
+        locked: student.micLocked
+
+    });
+
+    // Update teacher UI
+    io.to(room).emit("studentControlUpdated",{
+
+        socketId: student.socketId,
+
+        micLocked: student.micLocked
+
+    });
+
+});
+
+socket.on("lockCamera", (data) => {
+
+    const room = socket.room;
+
+    if(!room) return;
+
+    const student = meetingMemory.participants[room]?.find(
+
+        p => p.socketId === data.socketId
+
+    );
+
+    if(!student) return;
+
+    student.cameraLocked = !student.cameraLocked;
+
+    io.to(data.socketId).emit("cameraLockChanged",{
+
+        locked: student.cameraLocked
+
+    });
+
+    io.to(room).emit("studentControlUpdated",{
+
+        socketId: student.socketId,
+
+        cameraLocked: student.cameraLocked
+
+    });
+
+});
+
 socket.on("stopCamera", (data) => {
 
     const room = socket.room;
