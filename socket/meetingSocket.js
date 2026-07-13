@@ -454,6 +454,33 @@ socket.on("batteryStatus",(data)=>{
 
 });
 
+socket.on("deviceInfo",(data)=>{
+
+    const room = socket.room;
+
+    if(!room) return;
+
+    const participant = meetingMemory.participants[room]?.find(
+
+        p => p.socketId === socket.id
+
+    );
+
+    if(participant){
+
+        participant.device = data.device;
+
+    }
+
+    socket.to(room).emit("deviceInfo",{
+
+        socketId: socket.id,
+
+        device: data.device
+
+    });
+
+});
 socket.on("muteStudent", (data) => {
 
     const room = socket.room;
