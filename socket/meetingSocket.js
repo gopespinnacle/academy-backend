@@ -59,17 +59,25 @@ socket.periodId = periodId;
 
             if(!alreadyExists){
 
-                meetingMemory.participants[room].push({
+    meetingMemory.participants[room].push({
 
-                    socketId:socket.id,
+        socketId: socket.id,
 
-                    role,
+        role,
 
-                    name
+        name,
 
-                });
+        micMuted: false,
 
-            }
+        cameraStopped: false,
+
+        micLocked: false,
+
+        cameraLocked: false
+
+    });
+
+}
 
             console.log(
 
@@ -351,13 +359,65 @@ socket.on("mediaStatus", (data) => {
 
 socket.on("muteStudent", (data) => {
 
-    io.to(data.socketId).emit("forceMute");
+    const room = socket.room;
+
+    if(!room) return;
+
+    const student = meetingMemory.participants[room]?.find(
+
+        p => p.socketId === data.socketId
+
+    );
+
+    if(!student) return;
+
+    student.micMuted = !student.micMuted;
+
+    io.to(data.socketId).emit("forceMute",{
+
+        muted: student.micMuted
+
+    });
+
+    io.to(room).emit("studentControlUpdated",{
+
+        socketId: student.socketId,
+
+        micMuted: student.micMuted
+
+    });
 
 });
 
 socket.on("stopCamera", (data) => {
 
-    io.to(data.socketId).emit("forceStopCamera");
+    const room = socket.room;
+
+    if(!room) return;
+
+    const student = meetingMemory.participants[room]?.find(
+
+        p => p.socketId === data.socketId
+
+    );
+
+    if(!student) return;
+
+    student.cameraStopped = !student.cameraStopped;
+
+    io.to(data.socketId).emit("forceStopCamera",{
+
+        stopped: student.cameraStopped
+
+    });
+
+    io.to(room).emit("studentControlUpdated",{
+
+        socketId: student.socketId,
+
+        cameraStopped: student.cameraStopped
+
+    });
 
 });
 
