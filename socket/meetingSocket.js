@@ -61,31 +61,47 @@ socket.periodId = periodId;
 
     meetingMemory.participants[room].push({
 
-    socketId: socket.id,
+        socketId: socket.id,
 
-    role,
+        role,
 
-    name,
+        name,
 
-    joinedAt: new Date(),
+        joinedAt: new Date(),
 
-    camera: true,
+        status: "Online",
 
-    mic: true,
+        camera: true,
 
-    network: "Checking",
+        mic: true,
 
-    battery: -1,
+        network: "Checking",
 
-    charging: false,
+        battery: -1,
 
-    micLocked: false,
+        charging: false,
 
-    cameraLocked: false
+        micLocked: false,
 
-});
+        cameraLocked: false
+
+    });
+
+}else{
+
+    alreadyExists.socketId = socket.id;
+
+    alreadyExists.status = "Online";
 
 }
+
+io.to(room).emit("studentStatusChanged",{
+
+    socketId: socket.id,
+
+    status: "Online"
+
+});
 
             console.log(
 
@@ -669,17 +685,18 @@ const room = socket.room;
 
             if(!room) return;
 
-            if(meetingMemory.participants[room]){
+            const participant =
+meetingMemory.participants[room]?.find(
 
-                meetingMemory.participants[room]=
+    p => p.socketId === socket.id
 
-                meetingMemory.participants[room].filter(
+);
 
-                    p=>p.socketId!==socket.id
+if(participant){
 
-                );
+    participant.status = "Reconnecting";
 
-            }
+}
 
             if(socket.role === "student" && socket.studentId){
 
@@ -723,11 +740,15 @@ student.duration += currentSessionSeconds;
 
             io.to(room).emit(
 
-                "userDisconnected",
+    "studentReconnecting",
 
-                socket.id
+    {
 
-            );
+        socketId: socket.id
+
+    }
+
+);
 
             if(socket.role === "teacher" && periodId){
 
