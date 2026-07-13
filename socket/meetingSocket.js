@@ -52,10 +52,16 @@ socket.periodId = periodId;
                 meetingMemory.participants[room]=[];
             }
 
-            const alreadyExists=
-            meetingMemory.participants[room].find(
-                p=>p.socketId===socket.id
-            );
+            const alreadyExists =
+meetingMemory.participants[room].find(
+
+    p =>
+
+        p.role === role &&
+
+        p.name === name
+
+);
 
             if(!alreadyExists){
 
@@ -456,6 +462,10 @@ socket.on("studentReconnecting", () => {
 
 socket.on("studentReconnected", () => {
 
+    console.log("Student Reconnected");
+
+    console.log("Current Socket:", socket.id);
+
     if (!socket.room) return;
 
     socket.to(socket.room).emit("studentReconnected", {
@@ -709,19 +719,42 @@ const room = socket.room;
 
             if(!room) return;
 
-            const participant =
-meetingMemory.participants[room]?.find(
+            if(socket.role === "student"){
 
-    p => p.socketId === socket.id
+    setTimeout(()=>{
 
-);
+        const participant =
+        meetingMemory.participants[room]?.find(
 
-if(participant){
+            p => p.socketId === socket.id
 
-    participant.status = "Reconnecting";
+        );
+
+        // Student rejoined within 15 seconds
+        if(
+            participant &&
+            participant.socketId !== socket.id
+        ){
+            return;
+        }
+
+        // Student really left
+        if(meetingMemory.participants[room]){
+
+            meetingMemory.participants[room] =
+            meetingMemory.participants[room].filter(
+
+                p => p.socketId !== socket.id
+
+            );
+
+        }
+
+        io.to(room).emit("userDisconnected", socket.id);
+
+    },15000);
 
 }
-
             if(socket.role === "student" && socket.studentId){
 
     const session = await TeacherSession.findOne({
