@@ -268,122 +268,14 @@ app.delete("/api/founder/periodassignments/:id", async (req, res) => {
 io.on("connection", (socket) => {
 
 
-    socket.on(
-"joinRoom",
-(data)=>{
-
-    console.log("JOIN ROOM EVENT");
-
-console.log("Room:", data.room);
-
-console.log("Role:", data.role);
-
-console.log("Socket:", socket.id);
-
-const room = data.room;
-const role = data.role;
-const name = data.name;
-
-socket.join(room);
-
-socket.room = room;
-socket.role = role;
-socket.name = name;
-
-if(!roomParticipants[room]){
-    roomParticipants[room] = [];
-}
-
-roomParticipants[room].push({
-
-    socketId: socket.id,
-
-    role,
-
-    name
-
-});
-
-console.log(
-"USER JOINED ROOM:",
-room,
-role
-);
-
-if(boardData[room]){
-socket.emit(
-"loadBoard",
-boardData[room]
-);
-}
-
-if(boardLock[room]){
-socket.emit(
-"boardLocked",
-true
-);
-}
-
-if(roomControl[room]){
-socket.emit(
-"controlChanged",
-{
-studentId:
-roomControl[room]
-}
-);
-}
-
-if(role === "teacher"){
-
-    const students = roomParticipants[room].filter(
-        p => p.role === "student"
-    );
-
-    socket.emit(
-        "existingStudents",
-        students
-    );
-
-}else{
-
-    const teacher = roomParticipants[room].find(
-        p => p.role === "teacher"
-    );
-
-    if(teacher){
-
-        io.to(teacher.socketId).emit(
-            "studentJoined",
-            {
-                socketId: socket.id,
-                studentName: name
-            }
-        );
-
-    }
-
-}
-
-});
+    
 
 
         // ================= WEBRTC =================
 
 /* ================= TEACHER JOIN ================= */
 
-socket.on("teacherJoined", (data) => {
 
-    console.log("🔥 Teacher joined room:", data.room);
-
-    // SAVE IN TIME
-    teacherAttendanceMemory[data.room] = {
-        inTime: new Date()
-    };
-
-    io.to(data.room).emit("teacherIsLive");
-
-});
     /* DRAW */
     // ================= DRAW =================
 socket.on("draw", (data) => {
@@ -505,36 +397,7 @@ socket.on("lowerHand", (data) => {
 
     io.to(data.room).emit("handList", raisedHands[data.room] || []);
 });
-socket.on("disconnect", () => {
 
-    console.log("User disconnected:", socket.id);
-
-    const room = socket.room;
-
-    if (!room) return;
-
-    // Remove user from participants list
-    if (roomParticipants[room]) {
-
-        roomParticipants[room] =
-            roomParticipants[room].filter(
-
-                p => p.socketId !== socket.id
-
-            );
-
-    }
-
-    // Notify everyone in the room
-    io.to(room).emit(
-
-        "userDisconnected",
-
-        socket.id
-
-    );
-
-});
 /* ================= LOCK BOARD ================= */
 }); 
 const storage = multer.diskStorage({
