@@ -442,6 +442,30 @@ socket.on("networkStatus",(data)=>{
 
 });
 
+socket.on("studentReconnecting", () => {
+
+    if (!socket.room) return;
+
+    socket.to(socket.room).emit("studentReconnecting", {
+
+        socketId: socket.id
+
+    });
+
+});
+
+socket.on("studentReconnected", () => {
+
+    if (!socket.room) return;
+
+    socket.to(socket.room).emit("studentReconnected", {
+
+        socketId: socket.id
+
+    });
+
+});
+
 socket.on("batteryStatus",(data)=>{
 
     const room = socket.room;
