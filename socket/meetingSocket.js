@@ -106,31 +106,35 @@ socket.periodId = periodId;
             if(role==="teacher"){
 
     const students =
-        meetingMemory.participants[room]
-        .filter(p=>p.role==="student")
-        .map(student => ({
+meetingMemory.participants[room]
+.filter(p => p.role === "student")
+.map(student => ({
 
-            socketId: student.socketId,
+    socketId: student.socketId,
 
-            name: student.name,
+    name: student.name,
 
-            joinedAt: student.joinedAt,
+    joinedAt: student.joinedAt,
 
-            camera: student.camera ?? true,
+    camera: student.camera ?? true,
 
-            mic: student.mic ?? true,
+    mic: student.mic ?? true,
 
-            network: student.network || "Checking",
+    network: student.network || "Checking",
 
-            battery: student.battery ?? -1,
+    battery: student.battery ?? -1,
 
-            charging: student.charging ?? false,
+    charging: student.charging ?? false,
 
-            micLocked: student.micLocked ?? false,
+    device: student.device || "Unknown",
 
-            cameraLocked: student.cameraLocked ?? false
+    visibility: student.visibility || "Active",
 
-        }));
+    micLocked: student.micLocked ?? false,
+
+    cameraLocked: student.cameraLocked ?? false
+
+}));
 
     socket.emit("existingStudents", students);
 
