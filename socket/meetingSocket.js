@@ -357,6 +357,24 @@ socket.on("mediaStatus", (data) => {
 
 });
 
+socket.on("networkStatus", (data) => {
+
+    const room = socket.room;
+
+    if(!room) return;
+
+    socket.networkQuality = data.quality;
+
+    socket.to(room).emit("networkStatus",{
+
+        socketId: socket.id,
+
+        quality: data.quality
+
+    });
+
+});
+
 socket.on("muteStudent", (data) => {
 
     const room = socket.room;
