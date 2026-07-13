@@ -421,6 +421,12 @@ socket.on("stopCamera", (data) => {
 
 });
 
+socket.on("removeStudent", (data) => {
+
+    io.to(data.socketId).emit("removedFromClass");
+
+});
+
 
         /*
         ==================================================
