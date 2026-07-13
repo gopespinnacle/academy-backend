@@ -375,6 +375,24 @@ socket.on("networkStatus", (data) => {
 
 });
 
+socket.on("batteryStatus", (data) => {
+
+    const room = socket.room;
+
+    if (!room) return;
+
+    socket.to(room).emit("batteryStatus", {
+
+        socketId: socket.id,
+
+        level: data.level,
+
+        charging: data.charging
+
+    });
+
+});
+
 socket.on("muteStudent", (data) => {
 
     const room = socket.room;
