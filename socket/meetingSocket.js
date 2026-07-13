@@ -481,6 +481,34 @@ socket.on("deviceInfo",(data)=>{
     });
 
 });
+
+socket.on("visibilityStatus",(data)=>{
+
+    const room = socket.room;
+
+    if(!room) return;
+
+    const participant = meetingMemory.participants[room]?.find(
+
+        p => p.socketId === socket.id
+
+    );
+
+    if(participant){
+
+        participant.visibility = data.visibility;
+
+    }
+
+    socket.to(room).emit("visibilityStatus",{
+
+        socketId: socket.id,
+
+        visibility: data.visibility
+
+    });
+
+});
 socket.on("muteStudent", (data) => {
 
     const room = socket.room;
