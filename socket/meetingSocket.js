@@ -63,7 +63,9 @@ meetingMemory.participants[room].find(
 
 );
 
-            if(!alreadyExists){
+const oldSocketId = alreadyExists ? alreadyExists.socketId : null;
+
+if(!alreadyExists){
 
     meetingMemory.participants[room].push({
 
@@ -98,6 +100,18 @@ meetingMemory.participants[room].find(
     alreadyExists.socketId = socket.id;
 
     alreadyExists.status = "Online";
+
+    io.to(room).emit("studentSocketChanged",{
+
+        oldSocketId: oldSocketId,
+
+        newSocketId: socket.id,
+
+        role: role,
+
+        name: name
+
+    });
 
 }
 
@@ -263,25 +277,19 @@ console.log(check.joinedStudents);
 
     );
 
-    if(teacher){
+    if (teacher) {
 
-        io.to(
-            teacher.socketId
-        ).emit(
+    io.to(teacher.socketId).emit("studentJoined", {
 
-            "studentJoined",
+        socketId: socket.id,
 
-            {
+        studentName: name,
 
-                socketId:socket.id,
+        reconnect: alreadyExists ? true : false
 
-                studentName:name
+    });
 
-            }
-
-        );
-
-    }
+}
 
 }
 
