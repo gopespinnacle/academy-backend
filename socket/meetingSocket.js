@@ -303,6 +303,13 @@ console.log(check.joinedStudents);
 
         socket.on("offer",(data)=>{
 
+            console.log(
+        "SERVER RECEIVED OFFER",
+        socket.id,
+        "->",
+        data.targetSocketId
+    );
+
             io.to(
 
                 data.targetSocketId
