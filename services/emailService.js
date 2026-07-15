@@ -1,57 +1,16 @@
-const nodemailer = require("nodemailer");
-const dns = require("dns");
+const SibApiV3Sdk = require("@getbrevo/brevo");
+
 
 const buildFacultyApplicationEmail =
 require("../emailTemplates/facultyApplicationEmail");
 
-const transporter = nodemailer.createTransport({
+const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-    host: process.env.EMAIL_HOST,
+const apiKey = apiInstance.authentications["apiKey"];
 
-    port: 465,
+apiKey.apiKey = process.env.BREVO_API_KEY;
 
-    secure: true,
 
-    family: 4,
-
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-
-    connectionTimeout: 10000,
-
-    greetingTimeout: 10000,
-
-    socketTimeout: 10000,
-
-    tls: {
-        rejectUnauthorized: false
-    },
-
-    lookup(hostname, options, callback) {
-        return dns.lookup(hostname, { family: 4 }, callback);
-    }
-
-});
-transporter.verify(function(error, success){
-
-    if(error){
-
-        console.log("====================================");
-        console.log("SMTP VERIFY FAILED");
-        console.log(error);
-        console.log("====================================");
-
-    }else{
-
-        console.log("====================================");
-        console.log("SMTP READY");
-        console.log("====================================");
-
-    }
-
-});
 async function sendFacultyApplicationEmail(application){
 
     const html =
@@ -59,35 +18,83 @@ async function sendFacultyApplicationEmail(application){
 
     // Teacher Email
 
-    await transporter.sendMail({
+    // Teacher Email
 
-    from: `"Gopes Pinnacle Academy" <${process.env.EMAIL_USER}>`,
+await apiInstance.sendTransacEmail({
 
-    replyTo: process.env.EMAIL_USER,
+    sender: {
 
-    to: application.email,
+        name: "Gopes Pinnacle Academy",
 
-    bcc: process.env.EMAIL_USER,
+        email: "info@gopespinnacle.com"
+
+    },
+
+    to: [
+
+        {
+
+            email: application.email
+
+        }
+
+    ],
+
+    bcc: [
+
+        {
+
+            email: process.env.FOUNDER_EMAIL
+
+        }
+
+    ],
+
+    replyTo: {
+
+        email: "info@gopespinnacle.com"
+
+    },
 
     subject: `Faculty Application Received | ${application.applicationId}`,
 
-    html
+    htmlContent: html
 
 });
 
     // Founder Email
 
-   await transporter.sendMail({
+   // Founder Email
 
-    from: `"Gopes Pinnacle Academy" <${process.env.EMAIL_USER}>`,
+await apiInstance.sendTransacEmail({
 
-    replyTo: process.env.EMAIL_USER,
+    sender: {
 
-    to: process.env.FOUNDER_EMAIL,
+        name: "Gopes Pinnacle Academy",
+
+        email: "info@gopespinnacle.com"
+
+    },
+
+    to: [
+
+        {
+
+            email: process.env.FOUNDER_EMAIL
+
+        }
+
+    ],
+
+    replyTo: {
+
+        email: "info@gopespinnacle.com"
+
+    },
 
     subject: `New Faculty Application | ${application.applicationId}`,
 
-    html
+    htmlContent: html
 
 });
 
