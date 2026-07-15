@@ -1,7 +1,9 @@
 console.log("FOUNDER ROUTES LOADED");
 console.log("🔥 ADMISSION ROUTE FILE LOADED");
 const fs = require("fs");
-
+const {
+    sendFacultyApplicationEmail
+} = require("../services/emailService");
 const facultyAgreement =
 require("../agreement/facultyAgreement");
 const TeacherApplication = require("../models/TeacherApplication");
@@ -738,6 +740,24 @@ console.log(data);
 console.log("================================");
 
         const application = await TeacherApplication.create(data);
+        try {
+
+    await sendFacultyApplicationEmail(application);
+
+    console.log("====================================");
+    console.log("Faculty Application Emails Sent");
+    console.log("Teacher :", application.email);
+    console.log("Founder :", process.env.FOUNDER_EMAIL);
+    console.log("====================================");
+
+} catch (error) {
+
+    console.log("====================================");
+    console.log("Faculty Email Sending Failed");
+    console.log(error);
+    console.log("====================================");
+
+}
 
 // Send WhatsApp confirmation
 await sendWhatsApp(
