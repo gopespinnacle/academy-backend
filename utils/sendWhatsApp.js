@@ -69,4 +69,48 @@ if (type === "teacher") {
 
 }
 
+async function testWhatsApp() {
+
+    try {
+
+        await sendWhatsApp(
+
+            "9566911472",
+
+            {
+
+                teacherName: "Vishnu Gopeka",
+
+                applicationId: "TEST-0001",
+
+                email: "info@gopespinnacle.com",
+
+                mobile: "9566911472",
+
+                education: "M.E.",
+
+                timing: "6 PM - 7 PM"
+
+            },
+
+            "teacher"
+
+        );
+
+        console.log("================================");
+        console.log("WHATSAPP TEST SUCCESS");
+        console.log("================================");
+
+    } catch (error) {
+
+        console.log("================================");
+        console.log("WHATSAPP TEST FAILED");
+        console.log(error.response?.data || error.message);
+        console.log("================================");
+
+    }
+
+}
+testWhatsApp();
+
 module.exports = sendWhatsApp;
