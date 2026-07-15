@@ -20,7 +20,24 @@ const transporter = nodemailer.createTransport({
     }
 
 });
+transporter.verify(function(error, success){
 
+    if(error){
+
+        console.log("====================================");
+        console.log("SMTP VERIFY FAILED");
+        console.log(error);
+        console.log("====================================");
+
+    }else{
+
+        console.log("====================================");
+        console.log("SMTP READY");
+        console.log("====================================");
+
+    }
+
+});
 async function sendFacultyApplicationEmail(application){
 
     const html =
