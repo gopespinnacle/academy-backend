@@ -4,6 +4,8 @@ const fs = require("fs");
 const {
     sendFacultyApplicationEmail
 } = require("../services/emailService");
+
+const sendWhatsApp = require("../services/sendWhatsApp");
 const facultyAgreement =
 require("../agreement/facultyAgreement");
 const TeacherApplication = require("../models/TeacherApplication");
@@ -16,7 +18,7 @@ const PeriodAssignment = require("../models/PeriodAssignment");
 const PeriodChapter =
 require("../models/PeriodChapter");
 const axios = require("axios");
-const sendWhatsApp = require("../utils/sendWhatsApp");
+
 const express = require("express");
 const router = express.Router();
 const founderController = require("../controllers/founderController")
@@ -767,19 +769,44 @@ sendFacultyApplicationEmail(application)
 
 });
 
-// Send WhatsApp in Background
+// ============================
+// WhatsApp to Teacher
+// ============================
+
 sendWhatsApp(
     application.mobile,
-    application.teacherName
+    application,
+    "teacher"
 )
 .then(() => {
 
-    console.log("WhatsApp Sent");
+    console.log("Teacher WhatsApp Sent");
 
 })
 .catch((error) => {
 
-    console.log("WhatsApp Error");
+    console.log("Teacher WhatsApp Error");
+    console.log(error);
+
+});
+
+// ============================
+// WhatsApp to Founder
+// ============================
+
+sendWhatsApp(
+    process.env.FOUNDER_MOBILE,
+    application,
+    "founder"
+)
+.then(() => {
+
+    console.log("Founder WhatsApp Sent");
+
+})
+.catch((error) => {
+
+    console.log("Founder WhatsApp Error");
     console.log(error);
 
 });

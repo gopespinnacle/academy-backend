@@ -1,8 +1,30 @@
-const axios = require("axios");
 
-async function sendWhatsApp(mobile, teacherName) {
+const axios = require("axios");
+const {
+
+buildTeacherApplicationMessage,
+
+buildFounderApplicationMessage
+
+} = require("../utils/whatsappTemplates");
+
+
+
+async function sendWhatsApp(mobile, application, type = "teacher") {
 
     try {
+
+        let message;
+
+if (type === "teacher") {
+
+    message = buildTeacherApplicationMessage(application);
+
+} else {
+
+    message = buildFounderApplicationMessage(application);
+
+}
 
         await axios.post(
 
@@ -16,22 +38,8 @@ async function sendWhatsApp(mobile, teacherName) {
                 type: "text",
 
                 text: {
-                    body:
-`🎉 Thank You for Applying to Gopes Pinnacle Academy
-
-Dear ${teacherName},
-
-Thank you for your interest in joining Gopes Pinnacle Academy.
-
-We have successfully received your teaching application and resume.
-
-Our recruitment team will carefully review your profile. If your qualifications match our current requirements, we will contact you regarding the next stage of the recruitment process.
-
-Warm Regards,
-
-Gopes Pinnacle Academy
-www.gopespinnacle.com`
-                }
+    body: message
+}
 
             },
 
