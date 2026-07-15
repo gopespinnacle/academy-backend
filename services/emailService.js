@@ -1,15 +1,11 @@
-const SibApiV3Sdk = require("@getbrevo/brevo");
-
+const { BrevoClient } = require("@getbrevo/brevo");
 
 const buildFacultyApplicationEmail =
 require("../emailTemplates/facultyApplicationEmail");
 
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
-
-apiInstance.setApiKey(
-    SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
-    process.env.BREVO_API_KEY
-);
+const brevo = new BrevoClient({
+    apiKey: process.env.BREVO_API_KEY
+});
 
 
 async function sendFacultyApplicationEmail(application){
@@ -21,7 +17,7 @@ async function sendFacultyApplicationEmail(application){
 
     // Teacher Email
 
-await apiInstance.sendTransacEmail({
+await brevo.transactionalEmails.sendTransacEmail({
 
     sender: {
 
@@ -67,7 +63,7 @@ await apiInstance.sendTransacEmail({
 
    // Founder Email
 
-await apiInstance.sendTransacEmail({
+await brevo.transactionalEmails.sendTransacEmail({
 
     sender: {
 
