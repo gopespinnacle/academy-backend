@@ -657,8 +657,7 @@ async function getNextApplicationId(){
 
     );
 
-    return
-`GPA-FA-${datePart}-${String(counter.sequenceValue).padStart(4,"0")}`;
+   return `GPA-FA-${datePart}-${String(counter.sequenceValue).padStart(4, "0")}`;
 
 }
 
