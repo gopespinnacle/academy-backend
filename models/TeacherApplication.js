@@ -21,6 +21,40 @@ resumeKey: {
     subjects: [String],
 skills: [String],
 languages: [String],
+// =========================
+// Application Information
+// =========================
+applicationId: {
+    type: String,
+    unique: true
+},
+
+applicationStatus: {
+    type: String,
+    default: "Pending"
+},
+
+agreementAccepted: {
+    type: Boolean,
+    default: false
+},
+
+agreementVersion: {
+    type: String,
+    default: "v1.0"
+},
+
+agreementAcceptedOn: {
+    type: Date
+},
+
+agreementAcceptedStatement: {
+    type: String
+},
+
+agreementContent: {
+    type: String
+},
     createdAt: {
         type: Date,
         default: Date.now

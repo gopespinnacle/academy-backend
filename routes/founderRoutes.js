@@ -2,6 +2,8 @@ console.log("FOUNDER ROUTES LOADED");
 console.log("🔥 ADMISSION ROUTE FILE LOADED");
 const fs = require("fs");
 const TeacherApplication = require("../models/TeacherApplication");
+const Counter =
+require("../models/Counter");
 const Admission = require("../models/Admission");
 const AdmissionEnquiry =
 require("../models/AdmissionEnquiry");
@@ -622,10 +624,51 @@ auth:oauth2Client
 });
 
 // ✅ TEACHER APPLICATION API
+async function getNextApplicationId(){
+
+    const today = new Date();
+
+    const yyyy = today.getFullYear();
+
+    const mm = String(today.getMonth()+1).padStart(2,"0");
+
+    const dd = String(today.getDate()).padStart(2,"0");
+
+    const datePart = `${yyyy}${mm}${dd}`;
+
+    const counterId =
+    `teacherApplication-${datePart}`;
+
+    const counter =
+    await Counter.findByIdAndUpdate(
+
+        counterId,
+
+        {
+            $inc:{
+                sequenceValue:1
+            }
+        },
+
+        {
+            new:true,
+            upsert:true
+        }
+
+    );
+
+    return
+`GPA-FA-${datePart}-${String(counter.sequenceValue).padStart(4,"0")}`;
+
+}
+
 router.post("/teacher-application", upload.single("resume"), async (req, res) => {
 
     try {
 
+        const applicationId = await getNextApplicationId();
+
+       
         if (!req.file) {
 
             return res.status(400).json({
@@ -642,6 +685,8 @@ router.post("/teacher-application", upload.single("resume"), async (req, res) =>
 );
 
         const data = {
+
+            applicationId,
 
             teacherName: req.body.teacherName,
 
