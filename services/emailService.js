@@ -6,9 +6,10 @@ require("../emailTemplates/facultyApplicationEmail");
 
 const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-const apiKey = apiInstance.authentications["apiKey"];
-
-apiKey.apiKey = process.env.BREVO_API_KEY;
+apiInstance.setApiKey(
+    SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+    process.env.BREVO_API_KEY
+);
 
 
 async function sendFacultyApplicationEmail(application){
