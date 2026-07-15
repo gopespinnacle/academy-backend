@@ -867,3 +867,34 @@ student.duration += currentSessionSeconds;
 
 };
 
+async function lockLandscape(){
+
+    if (!window.matchMedia("(display-mode: standalone)").matches) {
+
+        return;
+
+    }
+
+    if (!screen.orientation) {
+
+        return;
+
+    }
+
+    try{
+
+        await screen.orientation.lock("landscape");
+
+        console.log("Landscape Locked");
+
+    }
+    catch(e){
+
+        console.log("Cannot lock orientation");
+
+    }
+
+}
+
+window.addEventListener("load",lockLandscape);
+
