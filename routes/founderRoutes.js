@@ -1,6 +1,9 @@
 console.log("FOUNDER ROUTES LOADED");
 console.log("🔥 ADMISSION ROUTE FILE LOADED");
 const fs = require("fs");
+
+const facultyAgreement =
+require("../agreement/facultyAgreement");
 const TeacherApplication = require("../models/TeacherApplication");
 const Counter =
 require("../models/Counter");
@@ -711,7 +714,18 @@ router.post("/teacher-application", upload.single("resume"), async (req, res) =>
 
             skills: JSON.parse(req.body.skills || "[]"),
 
-            languages: JSON.parse(req.body.languages || "[]")
+            languages: JSON.parse(req.body.languages || "[]"),
+
+            agreementAccepted: true,
+
+agreementAcceptedOn: new Date(),
+
+agreementVersion: "v1.0",
+
+agreementAcceptedStatement:
+"I have read, understood and agree to the Freelance Educator Terms & Conditions.",
+
+agreementContent:facultyAgreement
 
         };
 
