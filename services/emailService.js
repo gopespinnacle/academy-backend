@@ -1,7 +1,10 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns");
 
 const buildFacultyApplicationEmail =
 require("../emailTemplates/facultyApplicationEmail");
+
+const dns = require("dns");
 
 const transporter = nodemailer.createTransport({
 
@@ -11,12 +14,11 @@ const transporter = nodemailer.createTransport({
 
     secure: true,
 
+    family: 4,
+
     auth: {
-
         user: process.env.EMAIL_USER,
-
         pass: process.env.EMAIL_PASS
-
     },
 
     connectionTimeout: 10000,
@@ -26,9 +28,11 @@ const transporter = nodemailer.createTransport({
     socketTimeout: 10000,
 
     tls: {
-
         rejectUnauthorized: false
+    },
 
+    lookup(hostname, options, callback) {
+        return dns.lookup(hostname, { family: 4 }, callback);
     }
 
 });
