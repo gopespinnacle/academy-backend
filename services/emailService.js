@@ -4,8 +4,6 @@ const dns = require("dns");
 const buildFacultyApplicationEmail =
 require("../emailTemplates/facultyApplicationEmail");
 
-const dns = require("dns");
-
 const transporter = nodemailer.createTransport({
 
     host: process.env.EMAIL_HOST,
