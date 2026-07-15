@@ -5,7 +5,7 @@ const {
     sendFacultyApplicationEmail
 } = require("../services/emailService");
 
-const sendWhatsApp = require("../services/sendWhatsApp");
+const sendWhatsApp = require("../utils/sendWhatsApp");
 const facultyAgreement =
 require("../agreement/facultyAgreement");
 const TeacherApplication = require("../models/TeacherApplication");
