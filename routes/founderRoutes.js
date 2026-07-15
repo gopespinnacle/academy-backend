@@ -716,6 +716,14 @@ router.post("/teacher-application", upload.single("resume"), async (req, res) =>
 
         };
 
+        console.log("Generated Application ID:", applicationId);
+console.log(data);
+
+console.log("================================");
+console.log("DATA TO SAVE");
+console.log(data);
+console.log("================================");
+
         const application = await TeacherApplication.create(data);
 
 // Send WhatsApp confirmation
