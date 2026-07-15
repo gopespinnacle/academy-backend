@@ -31,7 +31,7 @@ applicationId: {
 
 applicationStatus: {
     type: String,
-    default: "Pending"
+    default: "Received"
 },
 
 agreementAccepted: {
