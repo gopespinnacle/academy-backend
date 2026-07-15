@@ -740,9 +740,16 @@ console.log(data);
 console.log("================================");
 
         const application = await TeacherApplication.create(data);
-        try {
 
-    await sendFacultyApplicationEmail(application);
+// Send response immediately
+res.json({
+    success: true,
+    message: "Teacher Application Submitted Successfully"
+});
+
+// Send Email in Background
+sendFacultyApplicationEmail(application)
+.then(() => {
 
     console.log("====================================");
     console.log("Faculty Application Emails Sent");
@@ -750,26 +757,32 @@ console.log("================================");
     console.log("Founder :", process.env.FOUNDER_EMAIL);
     console.log("====================================");
 
-} catch (error) {
+})
+.catch((error) => {
 
     console.log("====================================");
     console.log("Faculty Email Sending Failed");
     console.log(error);
     console.log("====================================");
 
-}
-
-// Send WhatsApp confirmation
-await sendWhatsApp(
-    application.mobile,
-    application.teacherName
-);
-
-res.json({
-    success: true,
-    message: "Teacher Application Submitted Successfully"
 });
 
+// Send WhatsApp in Background
+sendWhatsApp(
+    application.mobile,
+    application.teacherName
+)
+.then(() => {
+
+    console.log("WhatsApp Sent");
+
+})
+.catch((error) => {
+
+    console.log("WhatsApp Error");
+    console.log(error);
+
+});
     } catch (err) {
 
         console.log(err);
