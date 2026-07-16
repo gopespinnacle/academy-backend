@@ -6,6 +6,9 @@ require("../utils/sendFounderErrorMail");
 
 router.post("/report-client-error", async (req, res) => {
 
+    console.log("✅ CLIENT ERROR ROUTE HIT");
+    console.log(req.body);
+
     try{
 
         await sendFounderErrorMail(req.body);
