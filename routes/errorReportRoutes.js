@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
-const sendFounderErrorMail = require("../utils/sendFounderErrorMail");
+const sendFounderErrorMail =
+require("../utils/sendFounderErrorMail");
 
-router.post("/report-client-error", async (req,res)=>{
+router.post("/report-client-error", async (req, res) => {
 
     try{
 
@@ -15,7 +16,7 @@ router.post("/report-client-error", async (req,res)=>{
 
     }catch(err){
 
-        console.error(err);
+        console.error("Founder Error Mail:", err);
 
         res.status(500).json({
             success:false
