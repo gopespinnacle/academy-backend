@@ -61,6 +61,8 @@ module.exports = async function(data){
 </table>
 
 `;
+console.log("BREVO_SENDER =", process.env.BREVO_SENDER);
+    console.log("FOUNDER_EMAIL =", process.env.FOUNDER_EMAIL);
 
     await axios.post(
 
