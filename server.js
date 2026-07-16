@@ -398,6 +398,20 @@ socket.on("lowerHand", (data) => {
     io.to(data.room).emit("handList", raisedHands[data.room] || []);
 });
 
+// ================= SCREEN SHARE =================
+
+socket.on("screenShareStarted", ({ room }) => {
+
+    socket.to(room).emit("screenShareStarted");
+
+});
+
+socket.on("screenShareStopped", ({ room }) => {
+
+    socket.to(room).emit("screenShareStopped");
+
+});
+
 /* ================= LOCK BOARD ================= */
 }); 
 const storage = multer.diskStorage({
