@@ -51,6 +51,7 @@ const authRoutes = require("./routes/authRoutes");
 const teacherSessionRoutes = require("./routes/teacherSessionRoutes");
 const teacherRoutes = require("./routes/teacherRoutes");
 const founderRoutes = require("./routes/founderRoutes");
+const errorReportRoutes = require("./routes/errorReportRoutes");
 const admissionAccountRoutes =
 require("./routes/admissionAccountRoutes");
 const studentRoutes = require("./routes/studentRoutes");
@@ -157,6 +158,8 @@ app.use("/api/teacher-session", teacherSessionRoutes);
 
 // ✅ FIRST load MAIN routes
 app.use("/api/founder", founderRoutes);
+
+app.use("/api/founder", errorReportRoutes);
 
 // ✅ THEN load additional routes
 app.use("/api/founder", founderTimeClashRoutes);
