@@ -63,42 +63,61 @@ module.exports = async function(data){
 `;
 console.log("BREVO_SENDER =", process.env.BREVO_SENDER);
     console.log("FOUNDER_EMAIL =", process.env.FOUNDER_EMAIL);
+    console.log("SENDING TO:", process.env.FOUNDER_EMAIL);
+    console.log({
+    sender: process.env.BREVO_SENDER,
+    receiver: process.env.FOUNDER_EMAIL
+});
 
-    await axios.post(
+    try{
 
-        "https://api.brevo.com/v3/smtp/email",
+        await axios.post(
 
-        {
+            "https://api.brevo.com/v3/smtp/email",
 
-            sender:{
-                name:"Gopes Pinnacle Academy",
-                email:process.env.BREVO_SENDER
+            {
+
+                sender:{
+                    name:"Gopes Pinnacle Academy",
+                    email:process.env.BREVO_SENDER
+                },
+
+                to:[
+                    {
+                        email:process.env.FOUNDER_EMAIL
+                    }
+                ],
+
+                subject:"🚨 Teacher Application Error",
+
+                htmlContent:html
+
             },
 
-            to:[
-                {
-                    email:process.env.FOUNDER_EMAIL
+            {
+
+                headers:{
+
+                    "api-key":process.env.BREVO_API_KEY,
+
+                    "Content-Type":"application/json"
+
                 }
-            ],
-
-            subject:"🚨 Teacher Application Error",
-
-            htmlContent:html
-
-        },
-
-        {
-
-            headers:{
-
-                "api-key":process.env.BREVO_API_KEY,
-
-                "Content-Type":"application/json"
 
             }
 
-        }
+        );
 
-    );
+    }catch(err){
+
+        console.log("============== BREVO ERROR ==============");
+        console.log(err.response?.data);
+        console.log("=========================================");
+
+        throw err;
+
+    }
+
+    // 👆 TO HERE
 
 };
