@@ -496,23 +496,45 @@ router.post("/create-homework", async (req, res) => {
 
 try{
 
-const lessonPlan = new LessonPlan({
+let lessonPlan = await LessonPlan.findOne({
 
-teacherId:req.body.teacherId,
+    teacherId: req.body.teacherId,
 
-teacherName:req.body.teacherName,
+    className: req.body.className,
 
-className:req.body.className,
+    subject: req.body.subject,
 
-subject:req.body.subject,
-
-date:req.body.date,
-
-lessons:req.body.lessons || []
+    date: req.body.date
 
 });
 
-await lessonPlan.save();
+if(lessonPlan){
+
+    lessonPlan.lessons.push(...(req.body.lessons || []));
+
+    await lessonPlan.save();
+
+}else{
+
+    lessonPlan = new LessonPlan({
+
+        teacherId:req.body.teacherId,
+
+        teacherName:req.body.teacherName,
+
+        className:req.body.className,
+
+        subject:req.body.subject,
+
+        date:req.body.date,
+
+        lessons:req.body.lessons || []
+
+    });
+
+    await lessonPlan.save();
+
+}
 
 res.json({
 
