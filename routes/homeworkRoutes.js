@@ -559,23 +559,31 @@ if (period && period.assignments.length > 0) {
 
         const studentId = assignment.student._id;
 
-        const alreadyExists = await Homework.findOne({
+        for (const lesson of lessonPlan.lessons) {
 
-            lessonPlan: lessonPlan._id,
-
-            student: studentId
-
-        });
-
-        if (!alreadyExists) {
-
-            await Homework.create({
+            const alreadyExists = await Homework.findOne({
 
                 lessonPlan: lessonPlan._id,
 
-                student: studentId
+                student: studentId,
+
+                topicId: lesson.topicId
 
             });
+
+            if (!alreadyExists) {
+
+                await Homework.create({
+
+                    lessonPlan: lessonPlan._id,
+
+                    student: studentId,
+
+                    topicId: lesson.topicId
+
+                });
+
+            }
 
         }
 
@@ -882,17 +890,36 @@ const studentId = req.params.studentId;
 
 const data = await Homework.find({
 
-student:studentId
+    student: studentId
 
 })
-
 .populate("lessonPlan")
+.sort({ createdAt: -1 });
 
-.sort({
+const finalData = data.map(hw => {
 
-createdAt:-1
+    const plan = hw.lessonPlan.toObject();
+
+    plan.lessons = plan.lessons.filter(
+        lesson => lesson.topicId === hw.topicId
+    );
+
+    return {
+        ...hw.toObject(),
+        lessonPlan: plan
+    };
 
 });
+
+res.json({
+
+    success: true,
+
+    data: finalData
+
+});
+
+return;
 
 res.json({
 
@@ -941,11 +968,15 @@ message:"No files uploaded"
 
 const topicId = req.body.topicId;
 
-const homework = await Homework.findById(
+const homework = await Homework.findOne({
 
-req.body.homeworkId
+    lessonPlan: req.body.lessonPlanId,
 
-);
+    student: req.body.studentId,
+
+    topicId: req.body.topicId
+
+});
 
 
 
@@ -987,7 +1018,7 @@ s3Url:uploaded.Location
 
 }
 
-homework.submittedFiles = uploadedFiles;
+homework.submittedFiles.push(...uploadedFiles);
 
 homework.topicId = topicId;
 
