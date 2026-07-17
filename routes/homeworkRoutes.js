@@ -918,4 +918,32 @@ message:err.message
 
 });
 
+router.get("/teacher-submissions/:lessonPlanId", async (req, res) => {
+
+    try {
+
+        const submissions = await Homework.find({
+            lessonPlan: req.params.lessonPlanId
+        })
+        .populate("student", "studentName name admissionNo")
+        .lean();
+
+        res.json({
+            success: true,
+            submissions
+        });
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+});
+
 module.exports = router;
