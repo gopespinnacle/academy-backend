@@ -330,5 +330,162 @@ message:err.message
 
 });
 
-module.exports =
-router;
+router.post(
+
+"/upload-reviewed-docs",
+
+upload.array("files"),
+
+async(req,res)=>{
+
+try{
+
+if(
+
+!req.files ||
+
+req.files.length===0
+
+){
+
+return res.json({
+
+success:false,
+
+message:"No files uploaded"
+
+});
+
+}
+
+let uploadedDocs=[];
+
+for(const file of req.files){
+
+console.log(
+
+"REVIEW DOC:",
+
+file.originalname
+
+);
+
+const uploaded=
+
+await s3.uploadFile(
+
+file,
+
+"Homework/ReviewedDocs"
+
+);
+
+uploadedDocs.push({
+
+fileName:file.originalname,
+
+s3Key:uploaded.Key,
+
+s3Url:uploaded.Location,
+
+uploadedAt:new Date()
+
+});
+
+}
+
+await ClassSummary.updateOne(
+
+{
+
+_id:req.body.summaryId,
+
+"reviewedDocs.studentId":
+
+req.body.studentId
+
+},
+
+{
+
+$push:{
+
+"reviewedDocs.$.files":{
+
+$each:uploadedDocs
+
+}
+
+}
+
+}
+
+);
+
+await ClassSummary.updateOne(
+
+{
+
+_id:req.body.summaryId,
+
+reviewedDocs:{
+
+$not:{
+
+$elemMatch:{
+
+studentId:req.body.studentId
+
+}
+
+}
+
+}
+
+},
+
+{
+
+$push:{
+
+reviewedDocs:{
+
+studentId:req.body.studentId,
+
+studentName:req.body.studentName,
+
+files:uploadedDocs
+
+}
+
+}
+
+}
+
+);
+
+res.json({
+
+success:true,
+
+message:"Reviewed documents uploaded."
+
+});
+
+}catch(err){
+
+console.log(err);
+
+res.json({
+
+success:false,
+
+message:err.message
+
+});
+
+}
+
+});
+
+module.exports = router;

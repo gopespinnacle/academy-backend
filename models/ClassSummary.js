@@ -52,6 +52,40 @@ const classSummarySchema = new mongoose.Schema({
     }
 ],
 
+reviewedDocs: [
+
+{
+
+studentId: String,
+
+studentName: String,
+
+files: [
+
+{
+
+fileName: String,
+
+s3Key: String,
+
+s3Url: String,
+
+uploadedAt: {
+
+type: Date,
+
+default: Date.now
+
+}
+
+}
+
+]
+
+}
+
+],
+
     status: {
         type: String,
         default: "Completed"
