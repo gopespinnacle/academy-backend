@@ -798,4 +798,48 @@ message:err.message
 
 });
 
+router.get("/student-homework/:studentId", async (req,res)=>{
+
+try{
+
+const studentId = req.params.studentId;
+
+const data = await Homework.find({
+
+student:studentId
+
+})
+
+.populate("lessonPlan")
+
+.sort({
+
+createdAt:-1
+
+});
+
+res.json({
+
+success:true,
+
+data
+
+});
+
+}catch(err){
+
+console.log(err);
+
+res.status(500).json({
+
+success:false,
+
+message:err.message
+
+});
+
+}
+
+});
+
 module.exports = router;
