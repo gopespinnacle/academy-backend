@@ -25,6 +25,16 @@ const lessonSchema = new mongoose.Schema({
         }
     ],
 
+    homeworkDocuments:[{
+
+fileName:String,
+
+s3Key:String,
+
+s3Url:String
+
+}],
+
     videoLinks: [
         String
     ]
