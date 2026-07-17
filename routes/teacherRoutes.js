@@ -748,4 +748,46 @@ allowed:false
 }
 
 });
+
+router.get("/homework-classes/:teacherId", async (req, res) => {
+
+try{
+
+const teacherId = req.params.teacherId;
+
+const periods = await PeriodAssignment.find({
+
+teacher: teacherId
+
+}).sort({
+
+day:1,
+
+startTime:1
+
+});
+
+res.json({
+
+success:true,
+
+data:periods
+
+});
+
+}catch(err){
+
+console.error(err);
+
+res.status(500).json({
+
+success:false,
+
+message:err.message
+
+});
+
+}
+
+});
 module.exports = router;
