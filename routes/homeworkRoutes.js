@@ -538,4 +538,76 @@ message:"Server Error"
 
 });
 
+router.post(
+
+"/upload-lesson-material",
+
+upload.array("files"),
+
+async(req,res)=>{
+
+try{
+
+if(!req.files || req.files.length===0){
+
+return res.json({
+
+success:false,
+
+message:"No files uploaded"
+
+});
+
+}
+
+let uploadedDocs=[];
+
+for(const file of req.files){
+
+const uploaded=
+
+await s3.uploadFile(
+
+file,
+
+"Homework/LessonMaterials"
+
+);
+
+uploadedDocs.push({
+
+fileName:file.originalname,
+
+s3Key:uploaded.Key,
+
+s3Url:uploaded.Location
+
+});
+
+}
+
+res.json({
+
+success:true,
+
+files:uploadedDocs
+
+});
+
+}catch(err){
+
+console.log(err);
+
+res.json({
+
+success:false,
+
+message:err.message
+
+});
+
+}
+
+});
+
 module.exports = router;
