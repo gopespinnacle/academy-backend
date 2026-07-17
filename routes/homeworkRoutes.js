@@ -11,6 +11,7 @@ const HomeworkUpload =
 require("../models/HomeworkUpload");
 const ClassSummary =
 require("../models/ClassSummary");
+const LessonPlan = require("../models/LessonPlan");
 const s3 = require("../config/s3");
 
 router.post(
@@ -484,6 +485,52 @@ res.json({
 success:false,
 
 message:err.message
+
+});
+
+}
+
+});
+
+router.post("/create-homework", async (req, res) => {
+
+try{
+
+const lessonPlan = new LessonPlan({
+
+teacherId:req.body.teacherId,
+
+teacherName:req.body.teacherName,
+
+className:req.body.className,
+
+subject:req.body.subject,
+
+date:req.body.date,
+
+lessons:req.body.lessons || []
+
+});
+
+await lessonPlan.save();
+
+res.json({
+
+success:true,
+
+message:"Homework Created"
+
+});
+
+}catch(err){
+
+console.error(err);
+
+res.status(500).json({
+
+success:false,
+
+message:"Server Error"
 
 });
 
