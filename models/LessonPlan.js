@@ -7,6 +7,11 @@ const lessonSchema = new mongoose.Schema({
         default: ""
     },
 
+    topicId:{
+    type:String,
+    default:""
+},
+
     topicSummary: {
         type: String,
         default: ""

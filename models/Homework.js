@@ -42,6 +42,14 @@ const homeworkSchema = new mongoose.Schema({
 
     }],
 
+    topicId:{
+
+    type:String,
+
+    default:""
+
+},
+
     reviewFiles:[{
 
         fileName:String,

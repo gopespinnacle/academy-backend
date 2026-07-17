@@ -939,11 +939,15 @@ message:"No files uploaded"
 
 }
 
+const topicId = req.body.topicId;
+
 const homework = await Homework.findById(
 
 req.body.homeworkId
 
 );
+
+
 
 if(!homework){
 
@@ -984,6 +988,8 @@ s3Url:uploaded.Location
 }
 
 homework.submittedFiles = uploadedFiles;
+
+homework.topicId = topicId;
 
 homework.status = "Submitted";
 
