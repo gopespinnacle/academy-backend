@@ -12,6 +12,8 @@ require("../models/HomeworkUpload");
 const ClassSummary =
 require("../models/ClassSummary");
 const LessonPlan = require("../models/LessonPlan");
+const Homework = require("../models/Homework");
+const PeriodAssignment = require("../models/PeriodAssignment");
 const s3 = require("../config/s3");
 
 router.post(
@@ -533,6 +535,51 @@ if(lessonPlan){
     });
 
     await lessonPlan.save();
+
+}
+
+// Find the assigned students for this period
+const period = await PeriodAssignment.findOne({
+
+    teacher: req.body.teacherId,
+
+    className: req.body.className,
+
+    subject: req.body.subject,
+
+    day: req.body.day,
+
+    startTime: req.body.startTime
+
+}).populate("assignments.student");
+
+if (period && period.assignments.length > 0) {
+
+    for (const assignment of period.assignments) {
+
+        const studentId = assignment.student._id;
+
+        const alreadyExists = await Homework.findOne({
+
+            lessonPlan: lessonPlan._id,
+
+            student: studentId
+
+        });
+
+        if (!alreadyExists) {
+
+            await Homework.create({
+
+                lessonPlan: lessonPlan._id,
+
+                student: studentId
+
+            });
+
+        }
+
+    }
 
 }
 

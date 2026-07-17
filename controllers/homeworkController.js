@@ -1,5 +1,7 @@
 const Homework = require("../models/Homework");
 const User = require("../models/User");
+const LessonPlan = require("../models/LessonPlan");
+const PeriodAssignment = require("../models/PeriodAssignment");
 
 /* CREATE HOMEWORK (TEACHER) */
 exports.createHomework = async (teacherId, data) => {
