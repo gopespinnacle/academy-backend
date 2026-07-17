@@ -610,4 +610,46 @@ message:err.message
 
 });
 
+router.get("/lesson-plans", async (req, res) => {
+
+try{
+
+const teacherId = req.query.teacherId;
+
+const plans = await LessonPlan.find({
+
+teacherId: teacherId
+
+}).sort({
+
+date:-1,
+
+createdAt:-1
+
+});
+
+res.json({
+
+success:true,
+
+data:plans
+
+});
+
+}catch(err){
+
+console.log(err);
+
+res.status(500).json({
+
+success:false,
+
+message:err.message
+
+});
+
+}
+
+});
+
 module.exports = router;
