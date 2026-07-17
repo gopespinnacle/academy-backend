@@ -918,6 +918,103 @@ message:err.message
 
 });
 
+
+router.post(
+"/student-upload-homework",
+upload.array("files"),
+
+async(req,res)=>{
+
+try{
+
+if(!req.files || req.files.length===0){
+
+return res.json({
+
+success:false,
+
+message:"No files uploaded"
+
+});
+
+}
+
+const homework = await Homework.findById(
+
+req.body.homeworkId
+
+);
+
+if(!homework){
+
+return res.json({
+
+success:false,
+
+message:"Homework not found"
+
+});
+
+}
+
+let uploadedFiles=[];
+
+for(const file of req.files){
+
+const uploaded=
+
+await s3.uploadFile(
+
+file,
+
+"Homework/StudentUploads"
+
+);
+
+uploadedFiles.push({
+
+fileName:file.originalname,
+
+s3Key:uploaded.Key,
+
+s3Url:uploaded.Location
+
+});
+
+}
+
+homework.submittedFiles = uploadedFiles;
+
+homework.status = "Submitted";
+
+homework.submittedAt = new Date();
+
+await homework.save();
+
+res.json({
+
+success:true,
+
+message:"Homework uploaded successfully."
+
+});
+
+}catch(err){
+
+console.log(err);
+
+res.json({
+
+success:false,
+
+message:err.message
+
+});
+
+}
+
+});
+
 router.get("/teacher-submissions/:lessonPlanId", async (req, res) => {
 
     try {
