@@ -652,4 +652,81 @@ message:err.message
 
 });
 
+router.get("/lesson-plan/:id", async (req,res)=>{
+
+try{
+
+const lessonPlan =
+await LessonPlan.findById(req.params.id);
+
+if(!lessonPlan){
+
+return res.status(404).json({
+
+success:false,
+message:"Lesson Plan not found"
+
+});
+
+}
+
+res.json({
+
+success:true,
+data:lessonPlan
+
+});
+
+}catch(err){
+
+res.status(500).json({
+
+success:false,
+message:err.message
+
+});
+
+}
+
+});
+
+router.put("/lesson-plan/:id", async(req,res)=>{
+
+try{
+
+const updated =
+await LessonPlan.findByIdAndUpdate(
+
+req.params.id,
+
+req.body,
+
+{
+
+new:true
+
+}
+
+);
+
+res.json({
+
+success:true,
+data:updated
+
+});
+
+}catch(err){
+
+res.status(500).json({
+
+success:false,
+message:err.message
+
+});
+
+}
+
+});
+
 module.exports = router;
