@@ -537,7 +537,9 @@ if(lessonPlan){
     await lessonPlan.save();
 
 }
+console.log("UPDATED LESSON PLAN");
 
+console.log(updated);
 // Find the assigned students for this period
 const period = await PeriodAssignment.findOne({
 
@@ -861,6 +863,9 @@ new:true
 
 );
 
+console.log("UPDATED LESSON PLAN");
+console.log(updated);
+
 const period = await PeriodAssignment.findOne({
 
 teacher: updated.teacherId,
@@ -874,6 +879,9 @@ day: updated.day,
 startTime: updated.startTime
 
 }).populate("assignments.student");
+
+console.log("PERIOD FOUND");
+console.log(period);
 
 if(period && period.assignments.length){
 
