@@ -540,6 +540,18 @@ if(lessonPlan){
 console.log("UPDATED LESSON PLAN");
 
 console.log(updated);
+
+console.log("LESSON COUNT:", updated.lessons.length);
+
+updated.lessons.forEach((lesson,index)=>{
+
+    console.log(
+        index,
+        lesson.topic,
+        lesson.topicId
+    );
+
+});
 // Find the assigned students for this period
 const period = await PeriodAssignment.findOne({
 
