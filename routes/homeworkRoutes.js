@@ -549,15 +549,7 @@ lessonPlan.lessons.forEach((lesson,index)=>{
 
 });
 
-updated.lessons.forEach((lesson,index)=>{
 
-    console.log(
-        index,
-        lesson.topic,
-        lesson.topicId
-    );
-
-});
 // Find the assigned students for this period
 const period = await PeriodAssignment.findOne({
 
