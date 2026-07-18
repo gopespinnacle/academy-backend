@@ -859,19 +859,15 @@ router.put("/lesson-plan/:id", async(req,res)=>{
 
 try{
 
-const updated = await LessonPlan.findByIdAndUpdate(
+await LessonPlan.findByIdAndUpdate(
 
-req.params.id,
+    req.params.id,
 
-req.body,
-
-{
-
-new:true
-
-}
+    req.body
 
 );
+
+const updated = await LessonPlan.findById(req.params.id);
 
 console.log("UPDATED LESSON PLAN");
 console.log(updated);
