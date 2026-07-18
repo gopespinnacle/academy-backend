@@ -888,7 +888,7 @@ startTime: updated.startTime
 
 console.log("PERIOD FOUND");
 console.log(period);
-return res.json(period);
+
 
 console.log("Teacher :", updated.teacherId);
 console.log("Class   :", updated.className);
