@@ -539,9 +539,15 @@ if(lessonPlan){
 }
 console.log("UPDATED LESSON PLAN");
 
-console.log(updated);
+console.log(lessonPlan);
 
-console.log("LESSON COUNT:", updated.lessons.length);
+console.log("LESSON COUNT:", lessonPlan.lessons.length);
+
+lessonPlan.lessons.forEach((lesson,index)=>{
+
+    console.log(index, lesson.topic, lesson.topicId);
+
+});
 
 updated.lessons.forEach((lesson,index)=>{
 
@@ -894,6 +900,12 @@ startTime: updated.startTime
 
 console.log("PERIOD FOUND");
 console.log(period);
+
+console.log("Teacher :", updated.teacherId);
+console.log("Class   :", updated.className);
+console.log("Subject :", updated.subject);
+console.log("Day     :", updated.day);
+console.log("Start   :", updated.startTime);
 
 if(period && period.assignments.length){
 
