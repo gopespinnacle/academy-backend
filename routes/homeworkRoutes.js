@@ -847,8 +847,7 @@ router.put("/lesson-plan/:id", async(req,res)=>{
 
 try{
 
-const updated =
-await LessonPlan.findByIdAndUpdate(
+const updated = await LessonPlan.findByIdAndUpdate(
 
 req.params.id,
 
@@ -862,18 +861,76 @@ new:true
 
 );
 
+const period = await PeriodAssignment.findOne({
+
+teacher: updated.teacherId,
+
+className: updated.className,
+
+subject: updated.subject,
+
+day: updated.day,
+
+startTime: updated.startTime
+
+}).populate("assignments.student");
+
+if(period && period.assignments.length){
+
+for(const assignment of period.assignments){
+
+const studentId = assignment.student._id;
+
+for(const lesson of updated.lessons){
+
+const exists = await Homework.findOne({
+
+lessonPlan: updated._id,
+
+student: studentId,
+
+topicId: lesson.topicId
+
+});
+
+if(!exists){
+
+await Homework.create({
+
+lessonPlan: updated._id,
+
+student: studentId,
+
+topicId: lesson.topicId,
+
+status:"Pending"
+
+});
+
+}
+
+}
+
+}
+
+}
+
 res.json({
 
 success:true,
+
 data:updated
 
 });
 
 }catch(err){
 
+console.log(err);
+
 res.status(500).json({
 
 success:false,
+
 message:err.message
 
 });
