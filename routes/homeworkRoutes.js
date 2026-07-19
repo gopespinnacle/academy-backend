@@ -1252,4 +1252,47 @@ message:err.message
 
 });
 
+
+router.post("/delete-reviewed-file", async (req, res) => {
+
+    try {
+
+        const { homeworkId, s3Key } = req.body;
+
+        const homework = await Homework.findById(homeworkId);
+
+        if (!homework) {
+
+            return res.json({
+                success: false,
+                message: "Homework not found"
+            });
+
+        }
+
+        homework.reviewFiles =
+            homework.reviewFiles.filter(
+                file => file.s3Key !== s3Key
+            );
+
+        await homework.save();
+
+        res.json({
+            success: true,
+            message: "Reviewed file deleted successfully."
+        });
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+});
+
 module.exports = router;
