@@ -658,7 +658,11 @@ server.listen(PORT, () => {
 const homeworkRoutes =
 require("./routes/homeworkRoutes");
 
+const aiAssessmentRoutes = require("./routes/aiAssessmentRoutes");
+
 app.use(
 "/api",
 homeworkRoutes
 );
+
+app.use("/api/ai-assessment", aiAssessmentRoutes);
