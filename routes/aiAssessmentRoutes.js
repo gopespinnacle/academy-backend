@@ -8,7 +8,7 @@ const upload = multer({
 });
 
 const aiAssessmentController =
-    require("../controllers/aiAssessmentController");
+require("../controllers/AIAssessmentController");
 
 /*
 ====================================================
