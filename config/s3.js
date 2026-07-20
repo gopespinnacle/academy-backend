@@ -1,7 +1,7 @@
 console.log("Bucket:", process.env.AWS_BUCKET);
 console.log("Region:", process.env.AWS_REGION);
-console.log("Access:", process.env.AWS_ACCESS_KEY_ID ? "YES" : "NO");
-console.log("Secret:", process.env.AWS_SECRET_ACCESS_KEY ? "YES" : "NO");
+console.log("Access:", process.env.AWS_ACCESS_KEY ? "YES" : "NO");
+console.log("Secret:", process.env.AWS_SECRET_KEY ? "YES" : "NO");
 
 const {
     S3Client,
