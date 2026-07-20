@@ -199,18 +199,17 @@ await assessment.save();
 
        return res.json({
 
-    success:true,
+    success: true,
 
-    message:
-        "Question Bank generated successfully.",
+    message: "Question Bank generated successfully.",
 
     assessment,
 
-    questionBankId:
-        questionBank._id,
+    questionBank,
 
-    totalQuestions:
-        questionBank.totalQuestions
+    questionBankId: questionBank._id,
+
+    totalQuestions: questionBank.totalQuestions
 
 });
 
