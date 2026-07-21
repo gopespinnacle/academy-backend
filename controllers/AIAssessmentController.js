@@ -230,3 +230,195 @@ await assessment.save();
     }
 
 };
+
+/*
+====================================================
+Get Question Bank
+====================================================
+*/
+
+exports.getQuestionBank = async (req, res) => {
+
+    try {
+
+        const { id } = req.params;
+
+        const questionBank = await QuestionBank.findById(id);
+
+        if (!questionBank) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Question Bank not found."
+
+            });
+
+        }
+
+        return res.json({
+
+            success: true,
+
+            questionBank
+
+        });
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
+
+};
+
+/*
+====================================================
+Update Question Bank
+====================================================
+*/
+
+exports.updateQuestionBank = async (req, res) => {
+
+    try {
+
+        const { id } = req.params;
+
+        const { questions } = req.body;
+
+        const questionBank = await QuestionBank.findById(id);
+
+        if (!questionBank) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Question Bank not found."
+
+            });
+
+        }
+
+        questionBank.questions = questions;
+
+        questionBank.totalQuestions = questions.length;
+
+        await questionBank.save();
+
+        return res.json({
+
+            success: true,
+
+            message: "Question Bank updated successfully.",
+
+            questionBank
+
+        });
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
+
+};
+
+/*
+====================================================
+Get Latest Question Bank
+====================================================
+*/
+
+exports.getLatestQuestionBank = async (req, res) => {
+
+    try {
+
+        const {
+            className,
+            subject,
+            chapter
+        } = req.query;
+
+        if (!className || !subject || !chapter) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message: "className, subject and chapter are required."
+
+            });
+
+        }
+
+        const questionBank = await QuestionBank.findOne({
+
+            className,
+            subject,
+            chapter
+
+        }).sort({
+
+            version: -1
+
+        });
+
+        if (!questionBank) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Question Bank not found."
+
+            });
+
+        }
+
+        return res.json({
+
+            success: true,
+
+            questionBank
+
+        });
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
+
+};

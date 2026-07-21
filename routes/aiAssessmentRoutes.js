@@ -19,7 +19,22 @@ Upload Chapter
 router.post(
     "/upload-chapter",
     upload.single("file"),
-    aiAssessmentController.uploadChapter
+    AIAssessmentController.uploadChapter
+);
+
+router.get(
+    "/question-bank/:id",
+    AIAssessmentController.getQuestionBank
+);
+
+router.get(
+    "/question-bank",
+    AIAssessmentController.getLatestQuestionBank
+);
+
+router.put(
+    "/question-bank/:id",
+    AIAssessmentController.updateQuestionBank
 );
 
 module.exports = router;
