@@ -7,7 +7,7 @@ const upload = multer({
     storage: multer.memoryStorage()
 });
 
-const aiAssessmentController =
+const AIAssessmentController =
 require("../controllers/AIAssessmentController");
 
 /*
