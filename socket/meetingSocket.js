@@ -394,6 +394,24 @@ console.log(check.joinedStudents);
 
         /*
 ==================================================
+START SCREEN PEER
+==================================================
+*/
+
+socket.on("startScreenPeer", (data) => {
+
+    io.to(data.targetSocketId).emit("startScreenPeer", {
+
+        teacherSocketId: socket.id
+
+    });
+
+});
+
+        /*
+
+
+==================================================
 MEDIA STATUS
 ==================================================
 */
