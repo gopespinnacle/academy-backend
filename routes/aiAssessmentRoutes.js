@@ -47,7 +47,7 @@ router.post(
 
     "/generate-paper",
 
-    aiAssessmentController.generateQuestionPaper
+    AIAssessmentController.generateQuestionPaper
 
 );
 
