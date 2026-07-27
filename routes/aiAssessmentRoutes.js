@@ -37,4 +37,18 @@ router.put(
     AIAssessmentController.updateQuestionBank
 );
 
+/*
+====================================================
+Generate Question Paper
+====================================================
+*/
+
+router.post(
+
+    "/generate-paper",
+
+    aiAssessmentController.generateQuestionPaper
+
+);
+
 module.exports = router;

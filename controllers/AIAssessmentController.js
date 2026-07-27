@@ -3,6 +3,7 @@ const s3 = require("../config/s3");
 const pdfExtractor = require("../services/pdfExtractor");
 const openAIService = require("../services/openAIService");
 const QuestionBank = require("../models/QuestionBank");
+const QuestionPaper = require("../models/QuestionPaper");
 
 /*
 ====================================================
@@ -412,6 +413,122 @@ exports.getLatestQuestionBank = async (req, res) => {
         console.error(err);
 
         return res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
+
+};
+/*
+====================================================
+Generate Question Paper
+====================================================
+*/
+
+exports.generateQuestionPaper = async (req, res) => {
+
+    try {
+
+        const {
+
+            questionBankId,
+            totalMarks,
+            paperTitle,
+            duration,
+            difficulty
+
+        } = req.body;
+
+        const questionBank =
+        await QuestionBank.findById(questionBankId);
+
+        if (!questionBank) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Question Bank not found."
+
+            });
+
+        }
+
+        let selectedQuestions = [];
+
+        let currentMarks = 0;
+
+        for (const q of questionBank.questions) {
+
+            if (currentMarks >= totalMarks)
+                break;
+
+            selectedQuestions.push({
+
+                questionId: q._id,
+
+                question: q.question,
+
+                answer: q.answer,
+
+                type: q.type,
+
+                marks: q.marks,
+
+                difficulty: q.difficulty
+
+            });
+
+            currentMarks += q.marks;
+
+        }
+
+        const paper =
+        await QuestionPaper.create({
+
+            questionBank: questionBank._id,
+
+            className: questionBank.className,
+
+            subject: questionBank.subject,
+
+            chapter: questionBank.chapter,
+
+            paperTitle,
+
+            totalMarks,
+
+            duration,
+
+            difficulty,
+
+            questions: selectedQuestions,
+
+            createdBy: questionBank.generatedBy
+
+        });
+
+        res.json({
+
+            success: true,
+
+            message: "Question Paper generated successfully.",
+
+            paper
+
+        });
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
 
             success: false,
 
