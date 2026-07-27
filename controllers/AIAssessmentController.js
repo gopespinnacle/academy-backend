@@ -346,6 +346,67 @@ exports.updateQuestionBank = async (req, res) => {
 
 };
 
+exports.generateQuestionPaper = async (req, res) => {
+
+    try {
+
+        const { questionBankId } = req.body;
+
+        const QuestionBank =
+        require("../models/QuestionBank");
+
+        const questionBank =
+        await QuestionBank.findById(questionBankId);
+
+        if (!questionBank) {
+
+            return res.json({
+
+                success: false,
+
+                message: "Question Bank not found."
+
+            });
+
+        }
+
+        return res.json({
+
+            success: true,
+
+            message: "Question Paper Generated Successfully.",
+
+            questionPaper: {
+
+                className: questionBank.className,
+
+                subject: questionBank.subject,
+
+                chapter: questionBank.chapter,
+
+                questions: questionBank.questions
+
+            }
+
+        });
+
+    }
+    catch (err) {
+
+        console.log(err);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
+
+};
+
 /*
 ====================================================
 Get Latest Question Bank
