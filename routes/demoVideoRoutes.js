@@ -67,6 +67,15 @@ router.put(
     "/:id",
     updateVideo
 );
+/*
+=========================================
+GET SINGLE VIDEO
+=========================================
+*/
 
+router.get(
+    "/:id",
+    getVideo
+);
 router.post("/:id/view", incrementViews);
 module.exports = router;
