@@ -790,4 +790,39 @@ message:err.message
 }
 
 });
+
+/* ================= TEACHER CALENDAR ================= */
+
+router.get("/calendar", protect, authorize("teacher"), async (req, res) => {
+
+    try {
+
+        const periods = await PeriodAssignment.find({
+            teacher: req.user.id
+        })
+        .select(
+            "className subject language eca day startTime endTime"
+        )
+        .sort({
+            day: 1,
+            startTime: 1
+        });
+
+        res.json({
+            success: true,
+            data: periods
+        });
+
+    } catch (err) {
+
+        console.error(err);
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to load calendar."
+        });
+
+    }
+
+});
 module.exports = router;
