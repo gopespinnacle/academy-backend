@@ -289,6 +289,18 @@ console.log(check.joinedStudents);
 
     });
 
+    // 🔥 If the student rejoined, ask the teacher to
+    // recreate the screen-share peer.
+    if (alreadyExists) {
+
+        io.to(teacher.socketId).emit("screenPeerReady", {
+
+            studentSocketId: socket.id
+
+        });
+
+    }
+
 }
 
 }
