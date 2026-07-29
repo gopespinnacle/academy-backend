@@ -408,9 +408,61 @@ socket.on("startScreenPeer", (data) => {
 
 });
 
-        /*
+/*
+==================================================
+SCREEN OFFER
+==================================================
+*/
 
+socket.on("screen-offer", (data) => {
 
+    io.to(data.targetSocketId).emit("screen-offer", {
+
+        teacherSocketId: socket.id,
+
+        offer: data.offer
+
+    });
+
+});
+
+/*
+==================================================
+SCREEN ANSWER
+==================================================
+*/
+
+socket.on("screen-answer", (data) => {
+
+    io.to(data.teacherSocketId).emit("screen-answer", {
+
+        studentSocketId: socket.id,
+
+        answer: data.answer
+
+    });
+
+});
+
+/*
+==================================================
+SCREEN ICE
+==================================================
+*/
+
+socket.on("screen-ice-candidate", (data) => {
+
+    io.to(data.targetSocketId).emit("screen-ice-candidate", {
+
+        senderSocketId: socket.id,
+
+        candidate: data.candidate
+
+    });
+
+});
+
+ /*
 ==================================================
 MEDIA STATUS
 ==================================================
