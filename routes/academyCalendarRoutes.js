@@ -8,7 +8,9 @@ const {
 
     getEvents,
 
-    updateEvent
+    updateEvent,
+
+    deleteEvent
 
 } = require("../controllers/academyCalendarController");
 
@@ -45,4 +47,14 @@ router.put(
     updateEvent
 );
 
+/*
+=========================================
+DELETE EVENT
+=========================================
+*/
+
+router.delete(
+    "/:id",
+    deleteEvent
+);
 module.exports = router;
