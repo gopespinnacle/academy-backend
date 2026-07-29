@@ -53,6 +53,7 @@ const teacherSessionRoutes = require("./routes/teacherSessionRoutes");
 const teacherRoutes = require("./routes/teacherRoutes");
 const founderRoutes = require("./routes/founderRoutes");
 const demoVideoRoutes = require("./routes/demoVideoRoutes");
+const academyCalendarRoutes = require("./routes/academyCalendarRoutes");
 const errorReportRoutes = require("./routes/errorReportRoutes");
 const admissionAccountRoutes =
 require("./routes/admissionAccountRoutes");
@@ -158,6 +159,7 @@ app.use(
 app.use("/api/teacher", teacherRoutes);
 app.use("/api/teacher-session", teacherSessionRoutes);
 app.use("/api/demo-videos", demoVideoRoutes);
+app.use("/api/academy-calendar", academyCalendarRoutes);
 
 // ✅ FIRST load MAIN routes
 app.use("/api/founder", founderRoutes);
