@@ -422,6 +422,60 @@ socket.on("screenShareStopped", ({ room }) => {
 
 });
 
+// ================= SCREEN PEER READY =================
+
+socket.on("screenPeerReady",(data)=>{
+
+    io.to(data.teacherSocketId).emit("screenPeerReady",{
+
+        studentSocketId:socket.id
+
+    });
+
+});
+
+// ================= SCREEN OFFER =================
+
+socket.on("screen-offer",(data)=>{
+
+    io.to(data.targetSocketId).emit("screen-offer",{
+
+        teacherSocketId:socket.id,
+
+        offer:data.offer
+
+    });
+
+});
+
+// ================= SCREEN ANSWER =================
+
+socket.on("screen-answer",(data)=>{
+
+    io.to(data.teacherSocketId).emit("screen-answer",{
+
+        studentSocketId:socket.id,
+
+        answer:data.answer
+
+    });
+
+});
+
+// ================= SCREEN ICE =================
+
+socket.on("screen-ice-candidate",(data)=>{
+
+    io.to(data.targetSocketId).emit("screen-ice-candidate",{
+
+        senderSocketId:socket.id,
+
+        candidate:data.candidate
+
+    });
+
+});
+
 /* ================= LOCK BOARD ================= */
 }); 
 const storage = multer.diskStorage({
