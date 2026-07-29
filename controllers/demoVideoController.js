@@ -331,3 +331,109 @@ if(existingVideo){
     }
 
 };
+
+exports.saveVideo = async (req, res) => {
+
+    try {
+
+        const existingVideo = await DemoVideo.findOne({
+
+            title: req.body.title,
+            grade: req.body.grade,
+            subject: req.body.subject
+
+        });
+
+        if (existingVideo) {
+
+            return res.status(400).json({
+
+                success: false,
+                message: "A demo video with the same title already exists for this Grade and Subject."
+
+            });
+
+        }
+
+        const video = await DemoVideo.create({
+
+            title: req.body.title,
+
+            teacherName: req.body.teacherName,
+
+            grade: req.body.grade,
+
+            subject: req.body.subject,
+
+            videoUrl: req.body.videoUrl,
+
+            fileName: req.body.fileName,
+
+            duration: req.body.duration,
+
+            views: 0
+
+        });
+
+        res.json({
+
+            success: true,
+
+            message: "Video saved successfully.",
+
+            data: video
+
+        });
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Save failed."
+
+        });
+
+    }
+
+};
+
+
+exports.generateUploadUrl = async (req, res) => {
+
+    try {
+
+        const { fileName, contentType } = req.body;
+
+        const result = await getUploadUrl(fileName, contentType);
+
+        res.json({
+
+            success: true,
+
+            uploadUrl: result.uploadUrl,
+
+            videoUrl: result.videoUrl,
+
+            key: result.key
+
+        });
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Unable to generate upload URL."
+
+        });
+
+    }
+
+};

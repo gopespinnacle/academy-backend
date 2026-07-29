@@ -1,16 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const multer = require("multer");
 
-const storage = multer.memoryStorage();
-
-const upload = multer({
-    storage,
-    limits: {
-        fileSize: 1024 * 1024 * 1024 // 1 GB
-    }
-});
 
 const {
     uploadDemoVideo,
@@ -19,7 +10,9 @@ const {
     updateVideo,
     getVideo,
     incrementViews,
-    duplicateVideo
+    duplicateVideo,
+    generateUploadUrl,
+    saveVideo
 } = require("../controllers/demoVideoController");
 
 /*
@@ -29,9 +22,23 @@ UPLOAD DEMO VIDEO
 */
 
 router.post(
-    "/upload",
-    upload.single("video"),
-    uploadDemoVideo
+    "/upload-url",
+    generateUploadUrl
+);
+
+router.post(
+    "/save",
+    saveVideo
+);
+
+router.post(
+    "/upload-url",
+    generateUploadUrl
+);
+
+router.post(
+    "/save",
+    saveVideo
 );
 /*
 =========================================
