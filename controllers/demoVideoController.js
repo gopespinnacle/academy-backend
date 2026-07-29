@@ -1,7 +1,8 @@
 const DemoVideo = require("../models/DemoVideo");
 const {
     uploadFile,
-    deleteFile
+    deleteFile,
+    getUploadUrl
 } = require("../config/s3");
 
 exports.uploadDemoVideo = async (req, res) => {
