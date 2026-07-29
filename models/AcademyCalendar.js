@@ -52,14 +52,26 @@ const academyCalendarSchema = new mongoose.Schema({
     },
 
     color: {
-        type: String,
-        default: "#0d6efd"
-    },
+    type: String,
+    default: "#0d6efd"
+},
 
-    createdBy: {
-        type: String,
-        default: "Founder"
-    }
+audience: {
+
+    type: [String],
+
+    default: [
+
+        "Founder"
+
+    ]
+
+},
+
+createdBy: {
+    type: String,
+    default: "Founder"
+}
 
 }, {
     timestamps: true
