@@ -6,7 +6,9 @@ const {
 
     addEvent,
 
-    getEvents
+    getEvents,
+
+    updateEvent
 
 } = require("../controllers/academyCalendarController");
 
@@ -30,6 +32,17 @@ GET EVENTS
 router.get(
     "/list",
     getEvents
+);
+
+/*
+=========================================
+UPDATE EVENT
+=========================================
+*/
+
+router.put(
+    "/:id",
+    updateEvent
 );
 
 module.exports = router;

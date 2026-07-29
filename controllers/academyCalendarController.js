@@ -61,3 +61,61 @@ exports.getEvents = async (req, res) => {
     }
 
 };
+
+/*
+=========================================
+UPDATE EVENT
+=========================================
+*/
+
+exports.updateEvent = async (req, res) => {
+
+    try {
+
+        const event = await AcademyCalendar.findByIdAndUpdate(
+
+            req.params.id,
+
+            req.body,
+
+            { new: true }
+
+        );
+
+        if (!event) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Event not found."
+
+            });
+
+        }
+
+        res.json({
+
+            success: true,
+
+            message: "Event updated successfully.",
+
+            data: event
+
+        });
+
+    } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Unable to update event."
+
+        });
+
+    }
+
+};
