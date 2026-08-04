@@ -289,17 +289,14 @@ console.log(check.joinedStudents);
 
     });
 
-    // 🔥 If the student rejoined, ask the teacher to
-    // recreate the screen-share peer.
-    if (alreadyExists) {
+    // Tell the teacher that this student is ready
+    // for screen sharing (works for NEW and REJOINED students)
 
-        io.to(teacher.socketId).emit("screenPeerReady", {
+    io.to(teacher.socketId).emit("screenPeerReady", {
 
-            studentSocketId: socket.id
+        studentSocketId: socket.id
 
-        });
-
-    }
+    });
 
 }
 
