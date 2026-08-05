@@ -14,7 +14,7 @@ exports.getTeachers = async (req, res) => {
         }*/
 
         const teachers = await User.find({ role: "teacher" })
-        .select("name email subject eca language mobile whatsapp experience salaryMonth sessionsWeek salarySession meetingLink createdAt");
+        .select("name email subject eca language mobile whatsapp experience salaryMonth sessionsWeek salarySession meetingLink createdAt menuPermissions");
 
         res.json({ teachers });
 
