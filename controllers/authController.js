@@ -111,7 +111,10 @@ exports.loginUser = async (req, res) => {
     studentId: user.studentId,
     studentName: user.name,
     className: user.grade,
-    meetingLink: user.meetingLink
+    meetingLink: user.meetingLink,
+
+    // ✅ NEW
+    menuPermissions: user.menuPermissions
 }
 });
 
