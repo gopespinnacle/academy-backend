@@ -289,15 +289,7 @@ console.log(check.joinedStudents);
 
     });
 
-    // Tell the teacher that this student is ready
-    // for screen sharing (works for NEW and REJOINED students)
-
-    io.to(teacher.socketId).emit("screenPeerReady", {
-
-        studentSocketId: socket.id
-
-    });
-
+    
 }
 
 }
