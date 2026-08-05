@@ -1140,4 +1140,14 @@ message:err.message
 }
 
 });
+
+router.put(
+    "/teacher/:id/menu-permissions",
+    founderController.updateTeacherMenuPermissions
+);
+
+router.put(
+    "/teacher/:id/toggle-screen-share",
+    founderController.toggleScreenShare
+);
 module.exports = router;

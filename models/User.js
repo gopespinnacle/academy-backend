@@ -111,6 +111,47 @@ ref: "User"
         }
     ]
 
+    ,
+
+menuPermissions: {
+
+    dashboard: {
+        type: Boolean,
+        default: true
+    },
+
+    myClasses: {
+        type: Boolean,
+        default: true
+    },
+
+    attendance: {
+        type: Boolean,
+        default: true
+    },
+
+    aiAssessment: {
+        type: Boolean,
+        default: true
+    },
+
+    homework: {
+        type: Boolean,
+        default: true
+    },
+
+    calendar: {
+        type: Boolean,
+        default: true
+    },
+
+    marksEntry: {
+        type: Boolean,
+        default: true
+    }
+
+}
+
 }, { timestamps: true });
 
 

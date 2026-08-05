@@ -22,3 +22,99 @@ exports.getTeachers = async (req, res) => {
         res.status(500).json({ message: "Error fetching teachers" });
     }
 };
+
+exports.updateTeacherMenuPermissions = async (req, res) => {
+
+    try {
+
+        const teacher = await User.findById(req.params.id);
+
+        if (!teacher) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Teacher not found."
+
+            });
+
+        }
+
+        teacher.menuPermissions = req.body.menuPermissions;
+
+        await teacher.save();
+
+        res.json({
+
+            success: true,
+
+            message: "Menu permissions updated successfully."
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Internal Server Error"
+
+        });
+
+    }
+
+};
+
+exports.toggleScreenShare = async (req, res) => {
+
+    try {
+
+        const teacher = await User.findById(req.params.id);
+
+        if (!teacher) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Teacher not found."
+
+            });
+
+        }
+
+        teacher.allowScreenShare = !teacher.allowScreenShare;
+
+        await teacher.save();
+
+        res.json({
+
+            success: true,
+
+            allowScreenShare: teacher.allowScreenShare
+
+        });
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Internal Server Error"
+
+        });
+
+    }
+
+};
