@@ -433,13 +433,33 @@ socket.on("screenShareStopped", ({ room }) => {
 
 // ================= SCREEN PEER READY =================
 
-socket.on("screenPeerReady",(data)=>{
+socket.on("screenPeerReady", (data) => {
 
-    io.to(data.teacherSocketId).emit("screenPeerReady",{
+    io.to(data.teacherSocketId).emit("screenPeerReady", {
 
-        studentSocketId:socket.id
+        studentSocketId: socket.id
 
     });
+
+    // If teacher is already sharing screen,
+    // immediately tell the teacher to create
+    // a new screen peer for this student.
+
+    const room = Array.from(socket.rooms).find(r => r !== socket.id);
+
+    if (
+        room &&
+        meetingMemory.screenShare[room]
+    ) {
+
+        io.to(meetingMemory.screenShare[room].teacherSocketId)
+            .emit("screenPeerReady", {
+
+                studentSocketId: socket.id
+
+            });
+
+    }
 
 });
 
