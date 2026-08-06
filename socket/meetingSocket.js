@@ -369,6 +369,22 @@ console.log(check.joinedStudents);
         });
 
         /*
+==================================================
+STUDENT READY
+==================================================
+*/
+
+socket.on("studentReady", (data) => {
+
+    io.to(data.teacherSocketId).emit("studentReady", {
+
+        teacherSocketId: data.teacherSocketId
+
+    });
+
+});
+
+        /*
         ==================================================
         ICE
         ==================================================
