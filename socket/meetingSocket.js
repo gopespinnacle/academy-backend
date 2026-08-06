@@ -173,6 +173,15 @@ meetingMemory.participants[room]
 }));
 
     socket.emit("existingStudents", students);
+    students.forEach(student => {
+
+    socket.emit("userJoined", {
+
+        socketId: student.socketId
+
+    });
+
+});
 
 }
 
