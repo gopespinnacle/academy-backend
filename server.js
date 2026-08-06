@@ -412,11 +412,20 @@ socket.on("lowerHand", (data) => {
 
 socket.on("screenShareStarted", ({ room }) => {
 
+    // Save active screen share
+    meetingMemory.screenShare[room] = {
+
+        teacherSocketId: socket.id
+
+    };
+
     socket.to(room).emit("screenShareStarted");
 
 });
 
 socket.on("screenShareStopped", ({ room }) => {
+
+    delete meetingMemory.screenShare[room];
 
     socket.to(room).emit("screenShareStopped");
 

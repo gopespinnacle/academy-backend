@@ -188,6 +188,19 @@ meetingMemory.participants[room]
             /*
             Notify teacher
             */
+           if (
+    role === "student" &&
+    meetingMemory.screenShare[room]
+) {
+
+    io.to(socket.id).emit("screenAlreadySharing", {
+
+        teacherSocketId:
+            meetingMemory.screenShare[room].teacherSocketId
+
+    });
+
+}
 
             else{
 
