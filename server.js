@@ -279,7 +279,6 @@ app.delete("/api/founder/periodassignments/:id", async (req, res) => {
 io.on("connection", (socket) => {
 
 
-    
 
 
         // ================= WEBRTC =================
@@ -409,102 +408,7 @@ socket.on("lowerHand", (data) => {
     io.to(data.room).emit("handList", raisedHands[data.room] || []);
 });
 
-// ================= SCREEN SHARE =================
 
-socket.on("screenShareStarted", ({ room }) => {
-
-    // Save active screen share
-    meetingMemory.screenShare[room] = {
-
-        teacherSocketId: socket.id
-
-    };
-
-    socket.to(room).emit("screenShareStarted");
-
-});
-
-socket.on("screenShareStopped", ({ room }) => {
-
-    delete meetingMemory.screenShare[room];
-
-    socket.to(room).emit("screenShareStopped");
-
-});
-
-// ================= SCREEN PEER READY =================
-
-socket.on("screenPeerReady", (data) => {
-
-    io.to(data.teacherSocketId).emit("screenPeerReady", {
-
-        studentSocketId: socket.id
-
-    });
-
-    // If teacher is already sharing screen,
-    // immediately tell the teacher to create
-    // a new screen peer for this student.
-
-    const room = Array.from(socket.rooms).find(r => r !== socket.id);
-
-    if (
-        room &&
-        meetingMemory.screenShare[room]
-    ) {
-
-        io.to(meetingMemory.screenShare[room].teacherSocketId)
-            .emit("screenPeerReady", {
-
-                studentSocketId: socket.id
-
-            });
-
-    }
-
-});
-
-// ================= SCREEN OFFER =================
-
-socket.on("screen-offer",(data)=>{
-
-    io.to(data.targetSocketId).emit("screen-offer",{
-
-        teacherSocketId:socket.id,
-
-        offer:data.offer
-
-    });
-
-});
-
-// ================= SCREEN ANSWER =================
-
-socket.on("screen-answer",(data)=>{
-
-    io.to(data.teacherSocketId).emit("screen-answer",{
-
-        studentSocketId:socket.id,
-
-        answer:data.answer
-
-    });
-
-});
-
-// ================= SCREEN ICE =================
-
-socket.on("screen-ice-candidate",(data)=>{
-
-    io.to(data.targetSocketId).emit("screen-ice-candidate",{
-
-        senderSocketId:socket.id,
-
-        candidate:data.candidate
-
-    });
-
-});
 
 /* ================= LOCK BOARD ================= */
 }); 

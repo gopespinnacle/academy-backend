@@ -439,15 +439,7 @@ START SCREEN PEER
 ==================================================
 */
 
-socket.on("startScreenPeer", (data) => {
 
-    io.to(data.targetSocketId).emit("startScreenPeer", {
-
-        teacherSocketId: socket.id
-
-    });
-
-});
 
 /*
 ==================================================
@@ -498,6 +490,54 @@ socket.on("screen-ice-candidate", (data) => {
         senderSocketId: socket.id,
 
         candidate: data.candidate
+
+    });
+
+});
+
+/*
+==================================================
+SCREEN SHARE STARTED
+==================================================
+*/
+
+socket.on("screenShareStarted", ({ room }) => {
+
+    meetingMemory.screenShare[room] = {
+
+        teacherSocketId: socket.id
+
+    };
+
+    socket.to(room).emit("screenShareStarted");
+
+});
+
+/*
+==================================================
+SCREEN SHARE STOPPED
+==================================================
+*/
+
+socket.on("screenShareStopped", ({ room }) => {
+
+    delete meetingMemory.screenShare[room];
+
+    socket.to(room).emit("screenShareStopped");
+
+});
+
+/*
+==================================================
+SCREEN PEER READY
+==================================================
+*/
+
+socket.on("screenPeerReady", (data) => {
+
+    io.to(data.teacherSocketId).emit("screenPeerReady", {
+
+        studentSocketId: socket.id
 
     });
 
