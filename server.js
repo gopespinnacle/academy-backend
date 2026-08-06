@@ -38,6 +38,7 @@ const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io");
 const registerMeetingSocket = require("./socket/meetingSocket");
+const meetingMemory = require("./core/meetingMemory");
 let roomControl = {};
 let raisedHands = {};
 let boardLock = {};
