@@ -220,11 +220,13 @@ meetingMemory.participants[room]
 
 if(session){
 
-    const existingStudent = session.joinedStudents.find(
-
-        s => s.student.toString() === studentId
-
-    );
+    const existingStudent =
+    studentId
+        ? session.joinedStudents.find(s =>
+            s.student &&
+            s.student.toString() === studentId
+        )
+        : null;
 
     if(existingStudent){
 
