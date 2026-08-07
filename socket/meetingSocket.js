@@ -188,7 +188,7 @@ meetingMemory.participants[room]
             /*
             Notify teacher
             */
-           if (
+          if (
     role === "student" &&
     meetingMemory.screenShare[room]
 ) {
@@ -196,7 +196,7 @@ meetingMemory.participants[room]
     io.to(socket.id).emit("screenAlreadySharing", {
 
         teacherSocketId:
-            meetingMemory.screenShare[room].teacherSocketId
+        meetingMemory.screenShare[room].teacherSocketId
 
     });
 
@@ -433,16 +433,28 @@ socket.on("studentReady", (data) => {
 
         );
 
-        /*
+   /*
 ==================================================
-START SCREEN PEER
+NEW SCREEN SHARE SIGNALING
 ==================================================
 */
-socket.on("startScreenPeer", (data) => {
 
-    io.to(data.targetSocketId).emit("startScreenPeer", {
+/*
+Teacher started sharing
+*/
+socket.on("screen-start", ({ room }) => {
 
-        teacherSocketId: data.teacherSocketId
+    meetingMemory.screenShare[room] = {
+
+    teacherSocketId: socket.id,
+
+    startedAt: Date.now()
+
+};
+
+    socket.to(room).emit("screen-start", {
+
+        teacherSocketId: socket.id
 
     });
 
@@ -450,14 +462,37 @@ socket.on("startScreenPeer", (data) => {
 
 
 /*
-==================================================
-SCREEN OFFER
-==================================================
+Teacher stopped sharing
 */
+socket.on("screen-stop", ({ room }) => {
 
+    delete meetingMemory.screenShare[room];
+
+    socket.to(room).emit("screen-stop");
+
+});
+
+
+/*
+Student requests screen
+*/
+socket.on("screen-request", ({ teacherSocketId }) => {
+
+    io.to(teacherSocketId).emit("screen-request", {
+
+        studentSocketId: socket.id
+
+    });
+
+});
+
+
+/*
+Teacher sends offer
+*/
 socket.on("screen-offer", (data) => {
 
-    io.to(data.targetSocketId).emit("screen-offer", {
+    io.to(data.studentSocketId).emit("screen-offer", {
 
         teacherSocketId: socket.id,
 
@@ -467,12 +502,10 @@ socket.on("screen-offer", (data) => {
 
 });
 
-/*
-==================================================
-SCREEN ANSWER
-==================================================
-*/
 
+/*
+Student sends answer
+*/
 socket.on("screen-answer", (data) => {
 
     io.to(data.teacherSocketId).emit("screen-answer", {
@@ -485,15 +518,13 @@ socket.on("screen-answer", (data) => {
 
 });
 
+
 /*
-==================================================
-SCREEN ICE
-==================================================
+ICE Candidate
 */
+socket.on("screen-ice", (data) => {
 
-socket.on("screen-ice-candidate", (data) => {
-
-    io.to(data.targetSocketId).emit("screen-ice-candidate", {
+    io.to(data.targetSocketId).emit("screen-ice", {
 
         senderSocketId: socket.id,
 
@@ -502,59 +533,6 @@ socket.on("screen-ice-candidate", (data) => {
     });
 
 });
-
-/*
-==================================================
-SCREEN SHARE STARTED
-==================================================
-*/
-
-socket.on("screenShareStarted", ({ room }) => {
-
-    meetingMemory.screenShare[room] = {
-
-        teacherSocketId: socket.id
-
-    };
-
-    socket.to(room).emit("screenShareStarted", {
-
-    teacherSocketId: socket.id
-
-});
-
-});
-
-/*
-==================================================
-SCREEN SHARE STOPPED
-==================================================
-*/
-
-socket.on("screenShareStopped", ({ room }) => {
-
-    delete meetingMemory.screenShare[room];
-
-    socket.to(room).emit("screenShareStopped");
-
-});
-
-/*
-==================================================
-SCREEN PEER READY
-==================================================
-*/
-
-socket.on("screenPeerReady", (data) => {
-
-    io.to(data.teacherSocketId).emit("screenPeerReady", {
-
-        studentSocketId: socket.id
-
-    });
-
-});
-
  /*
 ==================================================
 MEDIA STATUS
