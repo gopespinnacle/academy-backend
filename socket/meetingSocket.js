@@ -517,7 +517,11 @@ socket.on("screenShareStarted", ({ room }) => {
 
     };
 
-    socket.to(room).emit("screenShareStarted");
+    socket.to(room).emit("screenShareStarted", {
+
+    teacherSocketId: socket.id
+
+});
 
 });
 
