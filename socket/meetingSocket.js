@@ -438,7 +438,15 @@ socket.on("studentReady", (data) => {
 START SCREEN PEER
 ==================================================
 */
+socket.on("startScreenPeer", (data) => {
 
+    io.to(data.targetSocketId).emit("startScreenPeer", {
+
+        teacherSocketId: data.teacherSocketId
+
+    });
+
+});
 
 
 /*
