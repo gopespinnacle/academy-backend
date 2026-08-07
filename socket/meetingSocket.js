@@ -492,6 +492,8 @@ Teacher sends offer
 */
 socket.on("screen-offer", (data) => {
 
+    console.log("SERVER RECEIVED SCREEN OFFER", data);
+
     io.to(data.studentSocketId).emit("screen-offer", {
 
         teacherSocketId: socket.id,
