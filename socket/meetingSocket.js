@@ -925,9 +925,10 @@ const room = socket.room;
 
         const student = session.joinedStudents.find(
 
-            s => s.student.toString() === socket.studentId
+    s => s.student &&
+         s.student.toString() === socket.studentId
 
-        );
+);
 
         if(student){
 
