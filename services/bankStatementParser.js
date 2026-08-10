@@ -438,6 +438,40 @@ date to appear in the transaction-table area.
 ==========================================================
 */
 
+/*
+==========================================================
+FIND REAL TRANSACTION ROWS
+==========================================================
+
+IMPORTANT:
+
+A bank statement contains many dates that are NOT
+transactions.
+
+Examples:
+
+- Account opening date
+- Statement period
+- Statement From / To
+- Summary dates
+- Page dates
+- Header dates
+
+Therefore:
+
+DATE ALONE IS NOT ENOUGH.
+
+A real transaction must also have either:
+
+1. A bank transaction keyword
+OR
+2. A monetary value in the transaction columns
+OR
+3. A bank reference / UPI reference
+
+==========================================================
+*/
+
 function findTransactionRows(
     rows,
     pageWidth
@@ -448,18 +482,19 @@ function findTransactionRows(
 
     /*
     ------------------------------------------------------
-    DATE DETECTION RANGE
-    ------------------------------------------------------
-
-    Allow dates across the left portion of the page.
-
-    This is more tolerant of different SBI / BOB layouts.
+    DATE AREA
     ------------------------------------------------------
     */
 
     const leftLimit =
         pageWidth * 0.40;
 
+
+    /*
+    ------------------------------------------------------
+    CHECK EVERY PDF ROW
+    ------------------------------------------------------
+    */
 
     for (
         let i = 0;
@@ -473,20 +508,28 @@ function findTransactionRows(
 
         /*
         --------------------------------------------------
-        FIND DATE IN THIS ROW
+        FIND DATE
         --------------------------------------------------
         */
 
         const dateItem =
-            row.items.find(item => {
+            row.items.find(
+                item => {
 
-                return (
-                    item.x <= leftLimit &&
-                    isDate(item.text)
-                );
+                    return (
+                        item.x <= leftLimit &&
+                        isDate(item.text)
+                    );
 
-            });
+                }
+            );
 
+
+        /*
+        --------------------------------------------------
+        NO DATE = NOT A TRANSACTION
+        --------------------------------------------------
+        */
 
         if (
             !dateItem
@@ -499,18 +542,175 @@ function findTransactionRows(
 
         /*
         --------------------------------------------------
-        IGNORE OBVIOUS HEADER / ACCOUNT DATES
+        BUILD ROW TEXT
         --------------------------------------------------
+        */
 
-        A real transaction row normally has additional
-        content after the date.
+        const rowText =
+            cleanText(
+                row.items
+                    .map(
+                        item =>
+                            item.text
+                    )
+                    .join(" ")
+            );
 
-        We therefore require at least one more item.
+
+        const upperText =
+            rowText.toUpperCase();
+
+
+        /*
+        --------------------------------------------------
+        IGNORE STATEMENT / ACCOUNT INFORMATION
         --------------------------------------------------
         */
 
         if (
-            row.items.length < 2
+            upperText.includes(
+                "STATEMENT FROM"
+            ) ||
+            upperText.includes(
+                "STATEMENT TO"
+            ) ||
+            upperText.includes(
+                "ACCOUNT OPENED"
+            ) ||
+            upperText.includes(
+                "ACCOUNT OPENING"
+            ) ||
+            upperText.includes(
+                "STATEMENT PERIOD"
+            ) ||
+            upperText.includes(
+                "ACCOUNT INFORMATION"
+            )
+        ) {
+
+            continue;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        IGNORE TABLE HEADERS
+        --------------------------------------------------
+        */
+
+        if (
+            upperText.includes("DETAILS") &&
+            upperText.includes("BALANCE")
+        ) {
+
+            continue;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        LOOK FOR TRANSACTION KEYWORDS
+        --------------------------------------------------
+        */
+
+        const hasTransactionKeyword =
+            upperText.includes("UPI/DR") ||
+            upperText.includes("UPI/CR") ||
+            upperText.includes("WDL TFR") ||
+            upperText.includes("DEP TFR") ||
+            upperText.includes("NEFT") ||
+            upperText.includes("RTGS") ||
+            upperText.includes("IMPS") ||
+            upperText.includes("ATM") ||
+            upperText.includes("POS") ||
+            upperText.includes("CASH") ||
+            upperText.includes("CHEQUE") ||
+            upperText.includes("CHQ") ||
+            upperText.includes("TRANSFER") ||
+            upperText.includes("WITHDRAWAL") ||
+            upperText.includes("DEPOSIT");
+
+
+        /*
+        --------------------------------------------------
+        LOOK FOR MONEY IN RIGHT SIDE
+        --------------------------------------------------
+
+        The right side normally contains:
+
+        Debit | Credit | Balance
+        --------------------------------------------------
+        */
+
+        const hasRightSideAmount =
+            row.items.some(
+                item => {
+
+                    if (
+                        item.x <
+                        pageWidth * 0.55
+                    ) {
+
+                        return false;
+
+                    }
+
+
+                    return (
+                        parseAmount(
+                            item.text
+                        ) !== null
+                    );
+
+                }
+            );
+
+
+        /*
+        --------------------------------------------------
+        LOOK FOR BANK REFERENCE
+        --------------------------------------------------
+        */
+
+        const hasBankReference =
+            row.items.some(
+                item => {
+
+                    const text =
+                        String(
+                            item.text || ""
+                        )
+                        .trim();
+
+
+                    return (
+                        /^\d{8,16}$/.test(
+                            text
+                        )
+                    );
+
+                }
+            );
+
+
+        /*
+        --------------------------------------------------
+        REAL TRANSACTION TEST
+        --------------------------------------------------
+
+        A date by itself is NOT enough.
+
+        The row must contain some evidence that it
+        belongs to a transaction.
+        --------------------------------------------------
+        */
+
+        if (
+            !hasTransactionKeyword &&
+            !hasRightSideAmount &&
+            !hasBankReference
         ) {
 
             continue;
