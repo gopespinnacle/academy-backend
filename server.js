@@ -169,7 +169,7 @@ app.use("/api/academy-calendar", academyCalendarRoutes);
 app.use("/api/founder", founderRoutes);
 
 app.use(
-    "/api/founder",
+    "/api/founder/bank-statements",
     bankStatementRoutes
 );
 

@@ -3,62 +3,50 @@
 GOPES PINNACLE ACADEMY
 BANK STATEMENT ROUTES
 ==========================================================
-
-Purpose:
-
-1. Receive SBI / BOB statement PDFs.
-2. Process the PDF temporarily.
-3. Extract transaction information.
-4. Store BankStatement + BankTransaction in MongoDB.
-5. Delete the temporary uploaded file.
-
-IMPORTANT:
-
-The original bank statement is NOT permanently stored.
-
-Supported banks:
-- SBI
-- BOB
-==========================================================
 */
 
 const express = require("express");
+
 const router = express.Router();
 
 const multer = require("multer");
+
 const fs = require("fs");
+
 const path = require("path");
 
 const mongoose = require("mongoose");
 
-const BankStatement = require("../models/BankStatement");
-const BankTransaction = require("../models/BankTransaction");
+const BankStatement =
+    require("../models/BankStatement");
+
+const BankTransaction =
+    require("../models/BankTransaction");
+
+const {
+    parseBankStatementPdf
+} =
+    require("../services/bankStatementParser");
 
 
 /*
 ==========================================================
-MULTER CONFIGURATION
-==========================================================
-
-We use a temporary directory only.
-
-The uploaded PDF will be deleted after processing.
+TEMPORARY BANK STATEMENT DIRECTORY
 ==========================================================
 */
 
-const tempDirectory = path.join(
-    __dirname,
-    "../temp-bank-statements"
-);
+const tempDirectory =
+    path.join(
+        __dirname,
+        "../temp-bank-statements"
+    );
 
 
-/*
-----------------------------------------------------------
-Create temporary directory if it does not exist.
-----------------------------------------------------------
-*/
-
-if (!fs.existsSync(tempDirectory)) {
+if (
+    !fs.existsSync(
+        tempDirectory
+    )
+) {
 
     fs.mkdirSync(
         tempDirectory,
@@ -71,93 +59,113 @@ if (!fs.existsSync(tempDirectory)) {
 
 
 /*
-----------------------------------------------------------
-Temporary disk storage
-----------------------------------------------------------
+==========================================================
+MULTER
+==========================================================
 */
 
-const storage = multer.diskStorage({
+const storage =
+    multer.diskStorage({
 
-    destination: function (req, file, cb) {
+        destination:
+            function (
+                req,
+                file,
+                cb
+            ) {
 
-        cb(
-            null,
-            tempDirectory
-        );
+                cb(
+                    null,
+                    tempDirectory
+                );
 
-    },
+            },
+
+        filename:
+            function (
+                req,
+                file,
+                cb
+            ) {
+
+                const uniqueName =
+                    Date.now() +
+                    "-" +
+                    Math.round(
+                        Math.random() *
+                        1000000000
+                    ) +
+                    path.extname(
+                        file.originalname
+                    );
+
+                cb(
+                    null,
+                    uniqueName
+                );
+
+            }
+
+    });
 
 
-    filename: function (req, file, cb) {
+const upload =
+    multer({
 
-        const uniqueName =
-            Date.now() +
-            "-" +
-            Math.round(Math.random() * 1000000000) +
-            path.extname(file.originalname);
+        storage,
 
-        cb(
-            null,
-            uniqueName
-        );
+        limits: {
 
-    }
+            fileSize:
+                15 * 1024 * 1024
 
-});
+        },
+
+        fileFilter:
+            function (
+                req,
+                file,
+                cb
+            ) {
+
+                const extension =
+                    path.extname(
+                        file.originalname
+                    ).toLowerCase();
+
+
+                if (
+                    extension !== ".pdf"
+                ) {
+
+                    return cb(
+                        new Error(
+                            "Only PDF bank statements are supported."
+                        )
+                    );
+
+                }
+
+
+                cb(
+                    null,
+                    true
+                );
+
+            }
+
+    });
 
 
 /*
 ==========================================================
-FILE FILTER
+DELETE TEMPORARY FILE
 ==========================================================
 */
 
-const upload = multer({
-
-    storage: storage,
-
-    limits: {
-
-        fileSize: 15 * 1024 * 1024
-
-    },
-
-    fileFilter: function (req, file, cb) {
-
-        const extension =
-            path.extname(
-                file.originalname
-            ).toLowerCase();
-
-
-        if (extension !== ".pdf") {
-
-            return cb(
-                new Error(
-                    "Only PDF bank statements are supported."
-                )
-            );
-
-        }
-
-
-        cb(
-            null,
-            true
-        );
-
-    }
-
-});
-
-
-/*
-==========================================================
-HELPER
-==========================================================
-*/
-
-function deleteTemporaryFile(filePath) {
+function deleteTemporaryFile(
+    filePath
+) {
 
     if (
         filePath &&
@@ -187,16 +195,20 @@ function deleteTemporaryFile(filePath) {
 
 /*
 ==========================================================
-BANK VALIDATION
+NORMALIZE BANK
 ==========================================================
 */
 
-function normalizeBank(bank) {
+function normalizeBank(
+    bank
+) {
 
     const value =
-        String(bank || "")
-            .trim()
-            .toUpperCase();
+        String(
+            bank || ""
+        )
+        .trim()
+        .toUpperCase();
 
 
     if (
@@ -216,50 +228,51 @@ function normalizeBank(bank) {
 
 /*
 ==========================================================
-UPLOAD BANK STATEMENT
+UPLOAD + PROCESS BANK STATEMENT
 ==========================================================
 
 POST:
 
-/api/bank-statements/upload
+/api/founder/upload
 
-Form fields:
+Form-data:
 
 bank
 statementPeriod
+pdfPassword
 statement
-
-Example:
-
-bank = SBI
-
-statementPeriod = August 2026
-
-statement = SBI.pdf
 ==========================================================
 */
 
 router.post(
     "/upload",
     upload.single("statement"),
-    async function (req, res) {
+    async function (
+        req,
+        res
+    ) {
 
-        let temporaryFile = null;
+        let temporaryFile =
+            null;
 
-        let statementRecord = null;
-
+        let statementRecord =
+            null;
 
         try {
 
             /*
-            --------------------------------------------------
-            Validate uploaded file
-            --------------------------------------------------
+            ------------------------------------------------
+            FILE
+            ------------------------------------------------
             */
 
-            if (!req.file) {
+            if (
+                !req.file
+            ) {
 
-                return res.status(400).json({
+                return res.status(
+                    400
+                ).json({
 
                     success: false,
 
@@ -276,9 +289,9 @@ router.post(
 
 
             /*
-            --------------------------------------------------
-            Validate bank
-            --------------------------------------------------
+            ------------------------------------------------
+            BANK
+            ------------------------------------------------
             */
 
             const bank =
@@ -287,14 +300,18 @@ router.post(
                 );
 
 
-            if (!bank) {
+            if (
+                !bank
+            ) {
 
                 deleteTemporaryFile(
                     temporaryFile
                 );
 
 
-                return res.status(400).json({
+                return res.status(
+                    400
+                ).json({
 
                     success: false,
 
@@ -307,25 +324,30 @@ router.post(
 
 
             /*
-            --------------------------------------------------
-            Statement period
-            --------------------------------------------------
+            ------------------------------------------------
+            STATEMENT PERIOD
+            ------------------------------------------------
             */
 
             const statementPeriod =
                 String(
-                    req.body.statementPeriod || ""
+                    req.body.statementPeriod ||
+                    ""
                 ).trim();
 
 
-            if (!statementPeriod) {
+            if (
+                !statementPeriod
+            ) {
 
                 deleteTemporaryFile(
                     temporaryFile
                 );
 
 
-                return res.status(400).json({
+                return res.status(
+                    400
+                ).json({
 
                     success: false,
 
@@ -338,21 +360,38 @@ router.post(
 
 
             /*
-            --------------------------------------------------
-            Create BankStatement record
-            --------------------------------------------------
+            ------------------------------------------------
+            PASSWORD
+
+            IMPORTANT:
+            We only use this during processing.
+
+            We NEVER save it.
+            ------------------------------------------------
+            */
+
+            const pdfPassword =
+                String(
+                    req.body.pdfPassword ||
+                    ""
+                );
+
+
+            /*
+            ------------------------------------------------
+            CREATE STATEMENT RECORD
+            ------------------------------------------------
             */
 
             statementRecord =
                 await BankStatement.create({
 
-                    bank: bank,
+                    bank,
 
                     fileName:
                         req.file.originalname,
 
-                    statementPeriod:
-                        statementPeriod,
+                    statementPeriod,
 
                     transactionCount: 0,
 
@@ -369,37 +408,168 @@ router.post(
 
 
             /*
-            ==================================================
-            IMPORTANT
-            ==================================================
-
-            The actual PDF parser will be added in the
-            next block after we test the exact SBI/BOB
-            PDF structure.
-
-            For now we deliberately stop here.
-
-            We do NOT want to save incorrect transaction
-            data based on guessed PDF positions.
-            ==================================================
+            =================================================
+            PARSE PDF
+            =================================================
             */
 
+            const result =
+                await parseBankStatementPdf({
 
-            return res.status(200).json({
+                    filePath:
+                        temporaryFile,
+
+                    bank,
+
+                    password:
+                        pdfPassword
+
+                });
+
+
+            /*
+            ------------------------------------------------
+            Validate transaction extraction
+            ------------------------------------------------
+            */
+
+            if (
+                !result.transactions ||
+                result.transactions.length === 0
+            ) {
+
+                throw new Error(
+                    "No bank transactions could be extracted from this PDF."
+                );
+
+            }
+
+
+            /*
+            =================================================
+            PREPARE TRANSACTIONS
+            =================================================
+            */
+
+            const transactionDocuments =
+                result.transactions.map(
+                    transaction => ({
+
+                        statementId:
+                            statementRecord._id,
+
+                        bank:
+                            transaction.bank,
+
+                        transactionDate:
+                            transaction.transactionDate,
+
+                        description:
+                            transaction.description,
+
+                        bankReference:
+                            transaction.bankReference,
+
+                        debit:
+                            transaction.debit || 0,
+
+                        credit:
+                            transaction.credit || 0,
+
+                        balance:
+                            transaction.balance,
+
+                        transactionType:
+                            transaction.transactionType,
+
+                        reconciliationStatus:
+                            "UNMATCHED",
+
+                        studentPaymentId:
+                            null
+
+                    })
+                );
+
+
+            /*
+            =================================================
+            SAVE TRANSACTIONS
+            =================================================
+            */
+
+            await BankTransaction.insertMany(
+                transactionDocuments
+            );
+
+
+            /*
+            =================================================
+            UPDATE STATEMENT
+            =================================================
+            */
+
+            await BankStatement.findByIdAndUpdate(
+
+                statementRecord._id,
+
+                {
+
+                    transactionCount:
+                        transactionDocuments.length,
+
+                    status:
+                        "IMPORTED",
+
+                    errorMessage:
+                        ""
+
+                }
+
+            );
+
+
+            /*
+            =================================================
+            DELETE ORIGINAL TEMPORARY PDF
+            =================================================
+            */
+
+            deleteTemporaryFile(
+                temporaryFile
+            );
+
+
+            temporaryFile =
+                null;
+
+
+            /*
+            =================================================
+            SUCCESS
+            =================================================
+            */
+
+            return res.json({
 
                 success: true,
 
                 message:
-                    "Bank statement received successfully. PDF parser is ready for the next block.",
+                    "Bank statement imported successfully.",
 
                 statementId:
                     statementRecord._id,
 
-                bank:
-                    bank,
+                bank,
 
                 fileName:
-                    req.file.originalname
+                    req.file.originalname,
+
+                pageCount:
+                    result.pageCount,
+
+                transactionCount:
+                    transactionDocuments.length
 
             });
 
@@ -407,15 +577,15 @@ router.post(
         catch (error) {
 
             console.error(
-                "Bank statement upload error:",
+                "Bank statement processing error:",
                 error
             );
 
 
             /*
-            --------------------------------------------------
-            Delete temporary file
-            --------------------------------------------------
+            ------------------------------------------------
+            DELETE TEMPORARY PDF
+            ------------------------------------------------
             */
 
             deleteTemporaryFile(
@@ -424,13 +594,41 @@ router.post(
 
 
             /*
-            --------------------------------------------------
-            If a BankStatement record was created,
-            mark it as FAILED.
-            --------------------------------------------------
+            ------------------------------------------------
+            Mark statement failed
+            ------------------------------------------------
             */
 
-            if (statementRecord) {
+            if (
+                statementRecord
+            ) {
+
+                let errorMessage =
+                    error.message ||
+                    "Bank statement processing failed.";
+
+
+                if (
+                    error.message ===
+                    "PDF_PASSWORD_REQUIRED"
+                ) {
+
+                    errorMessage =
+                        "This PDF is password protected. Please enter the PDF password.";
+
+                }
+
+
+                if (
+                    error.message ===
+                    "PDF_PASSWORD_INCORRECT"
+                ) {
+
+                    errorMessage =
+                        "The PDF password is incorrect.";
+
+                }
+
 
                 try {
 
@@ -440,21 +638,22 @@ router.post(
 
                         {
 
-                            status: "FAILED",
+                            status:
+                                "FAILED",
 
-                            errorMessage:
-                                error.message ||
-                                "Bank statement processing failed."
+                            errorMessage
 
                         }
 
                     );
 
                 }
-                catch (updateError) {
+                catch (
+                    updateError
+                ) {
 
                     console.error(
-                        "Unable to update statement status:",
+                        "Unable to update statement failure:",
                         updateError.message
                     );
 
@@ -463,13 +662,27 @@ router.post(
             }
 
 
-            return res.status(500).json({
+            return res.status(
+                500
+            ).json({
 
                 success: false,
 
                 message:
-                    error.message ||
-                    "Bank statement processing failed."
+                    error.message ===
+                    "PDF_PASSWORD_REQUIRED"
+
+                        ? "Please enter the PDF password."
+
+                        : error.message ===
+                          "PDF_PASSWORD_INCORRECT"
+
+                            ? "Incorrect PDF password."
+
+                            : (
+                                error.message ||
+                                "Bank statement processing failed."
+                              )
 
             });
 
@@ -481,27 +694,25 @@ router.post(
 
 /*
 ==========================================================
-GET IMPORTED BANK STATEMENTS
-==========================================================
-
-GET:
-
-/api/bank-statements
-
-Used later by founder-bank-statements.html
+GET ALL BANK STATEMENTS
 ==========================================================
 */
 
 router.get(
     "/",
-    async function (req, res) {
+    async function (
+        req,
+        res
+    ) {
 
         try {
 
             const statements =
                 await BankStatement.find()
                     .sort({
+
                         createdAt: -1
+
                     });
 
 
@@ -509,8 +720,7 @@ router.get(
 
                 success: true,
 
-                statements:
-                    statements
+                statements
 
             });
 
@@ -523,7 +733,9 @@ router.get(
             );
 
 
-            return res.status(500).json({
+            return res.status(
+                500
+            ).json({
 
                 success: false,
 
@@ -542,16 +754,14 @@ router.get(
 ==========================================================
 GET TRANSACTIONS FOR ONE STATEMENT
 ==========================================================
-
-GET:
-
-/api/bank-statements/:statementId/transactions
-==========================================================
 */
 
 router.get(
     "/:statementId/transactions",
-    async function (req, res) {
+    async function (
+        req,
+        res
+    ) {
 
         try {
 
@@ -565,7 +775,9 @@ router.get(
                 )
             ) {
 
-                return res.status(400).json({
+                return res.status(
+                    400
+                ).json({
 
                     success: false,
 
@@ -580,13 +792,13 @@ router.get(
             const transactions =
                 await BankTransaction.find({
 
-                    statementId:
-                        statementId
+                    statementId
 
                 })
                 .sort({
 
-                    transactionDate: 1
+                    transactionDate: 1,
+                    createdAt: 1
 
                 });
 
@@ -595,8 +807,7 @@ router.get(
 
                 success: true,
 
-                transactions:
-                    transactions
+                transactions
 
             });
 
@@ -609,7 +820,9 @@ router.get(
             );
 
 
-            return res.status(500).json({
+            return res.status(
+                500
+            ).json({
 
                 success: false,
 
@@ -630,4 +843,5 @@ EXPORT
 ==========================================================
 */
 
-module.exports = router;
+module.exports =
+    router;
