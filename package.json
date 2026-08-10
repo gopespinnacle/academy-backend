@@ -15,6 +15,7 @@
     "@aws-sdk/lib-storage": "^3.1075.0",
     "@aws-sdk/s3-request-presigner": "^3.1097.0",
     "@getbrevo/brevo": "^6.0.2",
+    "@napi-rs/canvas": "^1.0.5",
     "axios": "^1.16.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
@@ -37,6 +38,7 @@
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^6.2.108",
     "socket.io": "^4.8.3",
+    "tesseract.js": "^7.0.0",
     "uuid": "^14.0.1"
   }
 }

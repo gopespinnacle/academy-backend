@@ -22,6 +22,13 @@ BankTransaction compatible objects.
 
 const fs = require("fs");
 
+const { createCanvas } =
+    require("@napi-rs/canvas");
+
+const {
+    createWorker
+} = require("tesseract.js");
+
 
 /*
 ==========================================================
@@ -419,12 +426,15 @@ function groupItemsIntoRows(
 FIND TRANSACTION ROW STARTS
 ==========================================================
 
-A transaction row normally starts with a date in the
-left-most table column.
+A transaction row normally starts with a date.
 
-We intentionally use the PDF coordinate rather than
-simply searching the entire text because the statement
-contains many other dates in the header.
+Different SBI / BOB PDF statements can place the first
+date at slightly different X positions.
+
+Therefore we do NOT depend on a very strict 22% limit.
+
+We still protect against header dates by requiring the
+date to appear in the transaction-table area.
 ==========================================================
 */
 
@@ -436,8 +446,19 @@ function findTransactionRows(
     const dateRows = [];
 
 
+    /*
+    ------------------------------------------------------
+    DATE DETECTION RANGE
+    ------------------------------------------------------
+
+    Allow dates across the left portion of the page.
+
+    This is more tolerant of different SBI / BOB layouts.
+    ------------------------------------------------------
+    */
+
     const leftLimit =
-        pageWidth * 0.22;
+        pageWidth * 0.40;
 
 
     for (
@@ -450,6 +471,12 @@ function findTransactionRows(
             rows[i];
 
 
+        /*
+        --------------------------------------------------
+        FIND DATE IN THIS ROW
+        --------------------------------------------------
+        */
+
         const dateItem =
             row.items.find(item => {
 
@@ -461,18 +488,51 @@ function findTransactionRows(
             });
 
 
-        if (dateItem) {
+        if (
+            !dateItem
+        ) {
 
-            dateRows.push({
-
-                index: i,
-
-                date:
-                    dateItem.text
-
-            });
+            continue;
 
         }
+
+
+        /*
+        --------------------------------------------------
+        IGNORE OBVIOUS HEADER / ACCOUNT DATES
+        --------------------------------------------------
+
+        A real transaction row normally has additional
+        content after the date.
+
+        We therefore require at least one more item.
+        --------------------------------------------------
+        */
+
+        if (
+            row.items.length < 2
+        ) {
+
+            continue;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        STORE TRANSACTION START
+        --------------------------------------------------
+        */
+
+        dateRows.push({
+
+            index:
+                i,
+
+            date:
+                dateItem.text
+
+        });
 
     }
 
@@ -801,15 +861,13 @@ PARSE PDF
 async function parseBankStatementPdf({
     filePath,
     bank,
-    password
+    password = ""
 }) {
 
     /*
-    ------------------------------------------------------
-    Load PDF.js dynamically.
-
-    pdfjs-dist is ESM in current versions.
-    ------------------------------------------------------
+    ======================================================
+    LOAD PDF.JS
+    ======================================================
     */
 
     const pdfjsLib =
@@ -818,11 +876,23 @@ async function parseBankStatementPdf({
         );
 
 
+    /*
+    ======================================================
+    READ PDF FILE
+    ======================================================
+    */
+
     const fileBuffer =
         fs.readFileSync(
             filePath
         );
 
+
+    /*
+    ======================================================
+    PASSWORD HANDLING
+    ======================================================
+    */
 
     let passwordError = null;
 
@@ -843,50 +913,60 @@ async function parseBankStatementPdf({
             isEvalSupported: false,
 
             onPassword:
-    function (
-        updatePassword,
-        reason
-    ) {
+                function (
+                    updatePassword,
+                    reason
+                ) {
 
-        /*
-        PDF.js password reasons:
+                    /*
+                    PDF.js password reasons:
 
-        1 = NEED_PASSWORD
-        2 = INCORRECT_PASSWORD
-        */
+                    1 = NEED_PASSWORD
+                    2 = INCORRECT_PASSWORD
+                    */
 
-        if (!password) {
+                    if (
+                        !password
+                    ) {
 
-            passwordError =
-                new Error(
-                    "PDF_PASSWORD_REQUIRED"
-                );
+                        passwordError =
+                            new Error(
+                                "PDF_PASSWORD_REQUIRED"
+                            );
 
-            return;
+                        return;
 
-        }
+                    }
 
-        if (
-            reason === 1
-        ) {
 
-            updatePassword(
-                password
-            );
+                    if (
+                        reason === 1
+                    ) {
 
-            return;
+                        updatePassword(
+                            password
+                        );
 
-        }
+                        return;
 
-        passwordError =
-            new Error(
-                "PDF_PASSWORD_INCORRECT"
-            );
+                    }
 
-    }
+
+                    passwordError =
+                        new Error(
+                            "PDF_PASSWORD_INCORRECT"
+                        );
+
+                }
 
         });
 
+
+    /*
+    ======================================================
+    OPEN PDF
+    ======================================================
+    */
 
     let pdf;
 
@@ -912,12 +992,114 @@ async function parseBankStatementPdf({
     }
 
 
+    /*
+    ======================================================
+    CHECK FOR TEXT LAYER
+    ======================================================
+    */
+
+    let hasTextLayer = false;
+
+
+    for (
+        let pageNumber = 1;
+        pageNumber <=
+            Math.min(
+                pdf.numPages,
+                2
+            );
+        pageNumber++
+    ) {
+
+        const testPage =
+            await pdf.getPage(
+                pageNumber
+            );
+
+
+        const testText =
+            await testPage.getTextContent({
+
+                normalizeWhitespace: false,
+
+                disableCombineTextItems: false
+
+            });
+
+
+        if (
+            testText.items &&
+            testText.items.some(
+                item =>
+                    item.str &&
+                    item.str.trim()
+            )
+        ) {
+
+            hasTextLayer = true;
+
+            break;
+
+        }
+
+    }
+
+
+    console.log(
+        "📄 PDF text layer:",
+        hasTextLayer
+            ? "YES"
+            : "NO"
+    );
+
+
+    /*
+    ======================================================
+    OCR FALLBACK FOR IMAGE-BASED PDF
+    ======================================================
+    */
+
+    if (
+        !hasTextLayer
+    ) {
+
+        console.log(
+            "📷 Image-based PDF detected."
+        );
+
+
+        const ocrTransactions =
+            await extractTransactionsUsingOCR(
+                pdf,
+                bank
+            );
+
+
+        return {
+
+            pageCount:
+                pdf.numPages,
+
+            transactions:
+                ocrTransactions
+
+        };
+
+    }
+
+
+    /*
+    ======================================================
+    PROCESS TEXT-BASED PDF
+    ======================================================
+    */
+
     const transactions = [];
 
 
     /*
     ======================================================
-    PROCESS EACH PAGE
+    PROCESS EVERY PAGE
     ======================================================
     */
 
@@ -935,7 +1117,9 @@ async function parseBankStatementPdf({
 
         const viewport =
             page.getViewport({
+
                 scale: 1
+
             });
 
 
@@ -949,11 +1133,23 @@ async function parseBankStatementPdf({
             });
 
 
+        /*
+        --------------------------------------------------
+        GROUP PDF TEXT ITEMS INTO ROWS
+        --------------------------------------------------
+        */
+
         const rows =
             groupItemsIntoRows(
                 textContent.items
             );
 
+
+        /*
+        --------------------------------------------------
+        FIND TRANSACTION STARTS
+        --------------------------------------------------
+        */
 
         const transactionStarts =
             findTransactionRows(
@@ -964,17 +1160,14 @@ async function parseBankStatementPdf({
 
         /*
         --------------------------------------------------
-        Create groups:
-
-        Transaction start
-             ↓
-        next transaction start
+        CREATE TRANSACTION GROUPS
         --------------------------------------------------
         */
 
         for (
             let i = 0;
-            i < transactionStarts.length;
+            i <
+            transactionStarts.length;
             i++
         ) {
 
@@ -1001,6 +1194,12 @@ async function parseBankStatementPdf({
                 );
 
 
+            /*
+            ------------------------------------------------
+            EXTRACT TRANSACTION
+            ------------------------------------------------
+            */
+
             const transaction =
                 extractTransaction(
                     rowGroup,
@@ -1024,6 +1223,12 @@ async function parseBankStatementPdf({
     }
 
 
+    /*
+    ======================================================
+    FINAL RESULT
+    ======================================================
+    */
+
     return {
 
         pageCount:
@@ -1035,6 +1240,682 @@ async function parseBankStatementPdf({
 
 }
 
+/*
+==========================================================
+OCR FALLBACK
+==========================================================
+*/
+
+async function extractTransactionsUsingOCR(
+    pdf,
+    bank
+) {
+
+    console.log(
+        "📷 Image-based PDF detected."
+    );
+
+    console.log(
+        "🔎 OCR FALLBACK STARTED"
+    );
+
+    const worker =
+        await createWorker("eng");
+
+    const transactions = [];
+
+    try {
+
+        for (
+            let pageNumber = 1;
+            pageNumber <= pdf.numPages;
+            pageNumber++
+        ) {
+
+            console.log(
+                `🔎 OCR page ${pageNumber}/${pdf.numPages}`
+            );
+
+            const page =
+                await pdf.getPage(
+                    pageNumber
+                );
+
+            /*
+            ------------------------------------------------
+            Render PDF page as image
+            ------------------------------------------------
+            */
+
+            const viewport =
+                page.getViewport({
+                    scale: 2.5
+                });
+
+            const canvas =
+                createCanvas(
+                    Math.ceil(viewport.width),
+                    Math.ceil(viewport.height)
+                );
+
+            const context =
+                canvas.getContext("2d");
+
+            await page.render({
+
+                canvasContext:
+                    context,
+
+                viewport
+
+            }).promise;
+
+
+            /*
+            ------------------------------------------------
+            Convert page to PNG
+            ------------------------------------------------
+            */
+
+            const imageBuffer =
+                canvas.toBuffer(
+                    "image/png"
+                );
+
+
+            /*
+            ------------------------------------------------
+            OCR
+            ------------------------------------------------
+            */
+
+            const result =
+                await worker.recognize(
+                    imageBuffer
+                );
+
+            const words =
+                result.data.words || [];
+
+            console.log(
+                `🔎 OCR words found: ${words.length}`
+            );
+
+
+            /*
+            ------------------------------------------------
+            Group OCR words into rows
+            ------------------------------------------------
+            */
+
+            const rows = [];
+
+            const tolerance = 12;
+
+
+            for (
+                const word of words
+            ) {
+
+                if (
+                    !word.text ||
+                    !word.text.trim()
+                ) {
+
+                    continue;
+
+                }
+
+
+                const x =
+                    Number(
+                        word.bbox?.x0 || 0
+                    );
+
+                const y =
+                    Number(
+                        word.bbox?.y0 || 0
+                    );
+
+
+                let row = null;
+
+
+                for (
+                    const existing of rows
+                ) {
+
+                    if (
+                        Math.abs(
+                            existing.y - y
+                        ) <= tolerance
+                    ) {
+
+                        row = existing;
+
+                        break;
+
+                    }
+
+                }
+
+
+                if (!row) {
+
+                    row = {
+
+                        y,
+
+                        items: []
+
+                    };
+
+                    rows.push(row);
+
+                }
+
+
+                row.items.push({
+
+                    text:
+                        cleanText(
+                            word.text
+                        ),
+
+                    x,
+
+                    y
+
+                });
+
+            }
+
+
+            rows.sort(
+                (a, b) =>
+                    a.y - b.y
+            );
+
+
+            rows.forEach(
+                row => {
+
+                    row.items.sort(
+                        (a, b) =>
+                            a.x - b.x
+                    );
+
+                    row.text =
+                        row.items
+                            .map(
+                                item =>
+                                    item.text
+                            )
+                            .join(" ");
+
+                }
+            );
+
+
+            /*
+            ------------------------------------------------
+            Find transaction starting rows
+            ------------------------------------------------
+            */
+
+            const dateRows = [];
+
+
+            for (
+                let i = 0;
+                i < rows.length;
+                i++
+            ) {
+
+                const row =
+                    rows[i];
+
+
+                const dateItem =
+                    row.items.find(
+                        item =>
+                            item.x <
+                                viewport.width *
+                                0.18 &&
+                            isDate(
+                                item.text
+                            )
+                    );
+
+
+                if (dateItem) {
+
+                    dateRows.push({
+
+                        index: i,
+
+                        date:
+                            dateItem.text
+
+                    });
+
+                }
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            Extract transactions
+            ------------------------------------------------
+            */
+
+            for (
+                let i = 0;
+                i < dateRows.length;
+                i++
+            ) {
+
+                const start =
+                    dateRows[i].index;
+
+
+                const end =
+                    i + 1 <
+                    dateRows.length
+
+                        ? dateRows[
+                            i + 1
+                        ].index
+
+                        : rows.length;
+
+
+                const rowGroup =
+                    rows.slice(
+                        start,
+                        end
+                    );
+
+
+                const transaction =
+                    extractOCRTransaction(
+                        rowGroup,
+                        bank,
+                        viewport.width
+                    );
+
+
+                if (
+                    transaction
+                ) {
+
+                    transactions.push(
+                        transaction
+                    );
+
+                }
+
+            }
+
+        }
+
+    }
+    finally {
+
+        await worker.terminate();
+
+    }
+
+
+    console.log(
+        `✅ OCR transactions found: ${transactions.length}`
+    );
+
+
+    return transactions;
+
+}
+
+
+/*
+==========================================================
+OCR TRANSACTION EXTRACTION
+==========================================================
+*/
+
+function extractOCRTransaction(
+    rowGroup,
+    bank,
+    pageWidth
+) {
+
+    const allItems =
+        rowGroup.flatMap(
+            row => row.items
+        );
+
+
+    /*
+    ------------------------------------------------------
+    DATE
+    ------------------------------------------------------
+    */
+
+    const dateItem =
+        allItems.find(
+            item =>
+                item.x <
+                    pageWidth * 0.18 &&
+                isDate(
+                    item.text
+                )
+        );
+
+
+    if (!dateItem) {
+
+        return null;
+
+    }
+
+
+    const transactionDate =
+        parseDate(
+            dateItem.text
+        );
+
+
+    if (!transactionDate) {
+
+        return null;
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    DESCRIPTION
+    ------------------------------------------------------
+    */
+
+    const descriptionItems =
+        allItems.filter(
+            item =>
+                item.x >
+                    pageWidth * 0.12 &&
+                item.x <
+                    pageWidth * 0.58 &&
+                !isDate(
+                    item.text
+                )
+        );
+
+
+    const description =
+        cleanText(
+            descriptionItems
+                .map(
+                    item =>
+                        item.text
+                )
+                .join(" ")
+        );
+
+
+    /*
+    ------------------------------------------------------
+    AMOUNTS
+
+    SBI / BOB:
+
+    Debit | Credit | Balance
+    ------------------------------------------------------
+    */
+
+    const amountItems =
+        allItems
+            .filter(
+                item =>
+                    item.x >=
+                    pageWidth * 0.55
+            )
+            .map(
+                item => ({
+
+                    ...item,
+
+                    amount:
+                        parseOCRAmount(
+                            item.text
+                        )
+
+                })
+            )
+            .filter(
+                item =>
+                    item.amount !== null
+            )
+            .sort(
+                (a, b) =>
+                    a.x - b.x
+            );
+
+
+    if (
+        amountItems.length === 0
+    ) {
+
+        return null;
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    RIGHT-MOST NUMBER = BALANCE
+    ------------------------------------------------------
+    */
+
+    const balanceItem =
+        amountItems[
+            amountItems.length - 1
+        ];
+
+
+    const balance =
+        balanceItem.amount;
+
+
+    let debit = 0;
+
+    let credit = 0;
+
+
+    /*
+    ------------------------------------------------------
+    AMOUNTS BEFORE BALANCE
+
+    Debit column is left of Credit column.
+    ------------------------------------------------------
+    */
+
+    const movementItems =
+        amountItems.filter(
+            item =>
+                item !== balanceItem
+        );
+
+
+    for (
+        const item of movementItems
+    ) {
+
+        if (
+            item.x <
+            pageWidth * 0.72
+        ) {
+
+            debit =
+                item.amount;
+
+        }
+        else {
+
+            credit =
+                item.amount;
+
+        }
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    BANK REFERENCE
+    ------------------------------------------------------
+    */
+
+    const bankReference =
+        extractBankReference(
+            description
+        );
+
+
+    /*
+    ------------------------------------------------------
+    IGNORE HEADER ROWS
+    ------------------------------------------------------
+    */
+
+    const upperDescription =
+        description.toUpperCase();
+
+
+    if (
+        upperDescription.includes(
+            "DETAILS"
+        ) &&
+        upperDescription.includes(
+            "BALANCE"
+        )
+    ) {
+
+        return null;
+
+    }
+
+
+    return {
+
+        bank,
+
+        transactionDate,
+
+        description,
+
+        bankReference,
+
+        debit,
+
+        credit,
+
+        balance,
+
+        transactionType:
+            getTransactionType(
+                debit,
+                credit,
+                description
+            )
+
+    };
+
+}
+
+
+/*
+==========================================================
+OCR AMOUNT
+==========================================================
+*/
+
+function parseOCRAmount(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return null;
+
+    }
+
+
+    let text =
+        String(value)
+            .trim()
+            .replace(/[₹Rs.]/gi, "")
+            .replace(/,/g, "")
+            .trim();
+
+
+    text =
+        text
+            .replace(
+                /^O(?=\d)/i,
+                "0"
+            )
+            .replace(
+                /^I(?=\d)/i,
+                "1"
+            )
+            .replace(
+                /^l(?=\d)/i,
+                "1"
+            );
+
+
+    if (
+        text === "" ||
+        text === "-" ||
+        text === "–"
+    ) {
+
+        return null;
+
+    }
+
+
+    if (
+        !/^\d+(?:\.\d{1,2})?$/.test(
+            text
+        )
+    ) {
+
+        return null;
+
+    }
+
+
+    const number =
+        Number(text);
+
+
+    if (
+        Number.isNaN(number)
+    ) {
+
+        return null;
+
+    }
+
+
+    return number;
+
+}
 
 module.exports = {
 
