@@ -677,81 +677,7 @@ function extractTransaction(
     ------------------------------------------------------
     */
 
-    let debit = 0;
-    let credit = 0;
-
-
-    if (
-        amountItems.length >= 2
-    ) {
-
-        const middleAmounts =
-            amountItems.slice(
-                0,
-                -1
-            );
-
-
-        if (
-            middleAmounts.length === 1
-        ) {
-
-            /*
-            If only one amount exists, we cannot safely
-            determine whether it is Debit or Credit only
-            from its value.
-
-            Later we can use the exact column X position.
-            */
-
-            const amount =
-                middleAmounts[0].amount;
-
-            const x =
-                middleAmounts[0].x;
-
-
-            /*
-            Credit column is normally to the right of
-            Debit column.
-
-            */
-
-            if (
-                x >
-                pageWidth * 0.74
-            ) {
-
-                credit = amount;
-
-            }
-            else {
-
-                debit = amount;
-
-            }
-
-        }
-        else {
-
-            /*
-            More than one amount:
-
-            first = Debit
-            second = Credit
-            */
-
-            debit =
-                middleAmounts[0].amount || 0;
-
-            credit =
-                middleAmounts[1].amount || 0;
-
-        }
-
-    }
-
-
+   
     /*
     ------------------------------------------------------
     DESCRIPTION
@@ -832,6 +758,137 @@ if (
 ) {
 
     return null;
+
+}
+
+/*
+------------------------------------------------------
+DEBIT / CREDIT DETECTION
+
+SBI transaction descriptions explicitly identify:
+
+UPI/DR = DEBIT
+UPI/CR = CREDIT
+DEP TFR = CREDIT
+WDL TFR = DEBIT
+
+Use description first.
+Use PDF column position only as fallback.
+------------------------------------------------------
+*/
+
+const transactionText =
+    description.toUpperCase();
+
+
+const isDebitTransaction =
+    transactionText.includes("UPI/DR/") ||
+    transactionText.includes("WDL TFR") ||
+    transactionText.includes("WITHDRAWAL");
+
+
+const isCreditTransaction =
+    transactionText.includes("UPI/CR/") ||
+    transactionText.includes("DEP TFR") ||
+    transactionText.includes("DEPOSIT");
+
+
+const middleAmounts =
+    amountItems.slice(
+        0,
+        -1
+    );
+
+
+/*
+------------------------------------------------------
+CLEAR DEBIT
+------------------------------------------------------
+*/
+
+if (
+    isDebitTransaction &&
+    !isCreditTransaction
+) {
+
+    if (
+        middleAmounts.length > 0
+    ) {
+
+        debit =
+            middleAmounts[0].amount;
+
+    }
+
+}
+
+
+/*
+------------------------------------------------------
+CLEAR CREDIT
+------------------------------------------------------
+*/
+
+else if (
+    isCreditTransaction &&
+    !isDebitTransaction
+) {
+
+    if (
+        middleAmounts.length > 0
+    ) {
+
+        credit =
+            middleAmounts[0].amount;
+
+    }
+
+}
+
+
+/*
+------------------------------------------------------
+FALLBACK
+------------------------------------------------------
+*/
+
+else if (
+    middleAmounts.length === 1
+) {
+
+    const amount =
+        middleAmounts[0].amount;
+
+    const x =
+        middleAmounts[0].x;
+
+
+    if (
+        x >
+        pageWidth * 0.64
+    ) {
+
+        credit = amount;
+
+    }
+    else {
+
+        debit = amount;
+
+    }
+
+}
+
+
+else if (
+    middleAmounts.length >= 2
+) {
+
+    debit =
+        middleAmounts[0].amount || 0;
+
+    credit =
+        middleAmounts[1].amount || 0;
 
 }
 
