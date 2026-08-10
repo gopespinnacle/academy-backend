@@ -782,6 +782,28 @@ function extractTransaction(
         );
 
 
+        /*
+------------------------------------------------------
+IGNORE SBI STATEMENT HEADER / ACCOUNT INFORMATION
+------------------------------------------------------
+*/
+
+const upperDescription =
+    description.toUpperCase();
+
+if (
+    upperDescription.includes("STATEMENT FROM") ||
+    upperDescription.includes("STATEMENT TO") ||
+    upperDescription.includes("ACCOUNT OPENED") ||
+    upperDescription.includes("ACCOUNT OPENING") ||
+    upperDescription.includes("STATEMENT PERIOD")
+) {
+
+    return null;
+
+}
+
+
     /*
     ------------------------------------------------------
     CHEQUE / REFERENCE AREA
