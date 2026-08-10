@@ -35,6 +35,7 @@
     "nodemailer": "^9.0.3",
     "openai": "^6.48.0",
     "pdf-parse": "^1.1.1",
+    "pdfjs-dist": "^6.2.108",
     "socket.io": "^4.8.3",
     "uuid": "^14.0.1"
   }

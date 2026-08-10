@@ -53,6 +53,9 @@ const authRoutes = require("./routes/authRoutes");
 const teacherSessionRoutes = require("./routes/teacherSessionRoutes");
 const teacherRoutes = require("./routes/teacherRoutes");
 const founderRoutes = require("./routes/founderRoutes");
+
+const bankStatementRoutes =
+require("./routes/bankStatementRoutes");
 const demoVideoRoutes = require("./routes/demoVideoRoutes");
 const academyCalendarRoutes = require("./routes/academyCalendarRoutes");
 const errorReportRoutes = require("./routes/errorReportRoutes");
@@ -164,6 +167,11 @@ app.use("/api/academy-calendar", academyCalendarRoutes);
 
 // ✅ FIRST load MAIN routes
 app.use("/api/founder", founderRoutes);
+
+app.use(
+    "/api/founder",
+    bankStatementRoutes
+);
 
 app.use("/api/founder", errorReportRoutes);
 
