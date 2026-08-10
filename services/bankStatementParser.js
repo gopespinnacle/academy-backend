@@ -1490,16 +1490,38 @@ async function extractTransactionsUsingOCR(
 
                 if (dateItem) {
 
-                    dateRows.push({
+    const rowText =
+        cleanText(row.text).toUpperCase();
 
-                        index: i,
+    /*
+    ------------------------------------------------------
+    IGNORE SBI STATEMENT HEADER / ACCOUNT INFORMATION
+    ------------------------------------------------------
+    */
 
-                        date:
-                            dateItem.text
+    if (
+        rowText.includes("STATEMENT FROM") ||
+        rowText.includes("STATEMENT TO") ||
+        rowText.includes("ACCOUNT OPENED") ||
+        rowText.includes("ACCOUNT OPENING") ||
+        rowText.includes("STATEMENT PERIOD")
+    ) {
 
-                    });
+        continue;
 
-                }
+    }
+
+
+    dateRows.push({
+
+        index: i,
+
+        date:
+            dateItem.text
+
+    });
+
+}
 
             }
 
