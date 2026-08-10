@@ -548,6 +548,12 @@ EXTRACT ONE TRANSACTION
 ==========================================================
 */
 
+/*
+==========================================================
+EXTRACT ONE TRANSACTION
+==========================================================
+*/
+
 function extractTransaction(
     rowGroup,
     bank,
@@ -562,7 +568,7 @@ function extractTransaction(
 
     /*
     ------------------------------------------------------
-    Find dates
+    FIND DATE
     ------------------------------------------------------
     */
 
@@ -597,92 +603,7 @@ function extractTransaction(
 
     /*
     ------------------------------------------------------
-    BOB:
-    first date = Transaction Date
-    second date = Value Date
-
-    SBI:
-    first date = Value Date
-    second date = Post Date
-    ------------------------------------------------------
-    */
-
-
-    /*
-    ------------------------------------------------------
-    Find monetary values in the right side of the table.
-
-    We use X position so numbers inside UPI descriptions
-    are not mistaken for Debit/Credit/Balance.
-    ------------------------------------------------------
-    */
-
-    const amountItems =
-        allItems
-            .filter(item => {
-
-                return (
-                    item.x >=
-                    pageWidth * 0.58
-                );
-
-            })
-            .filter(item => {
-
-                return (
-                    parseAmount(item.text) !== null
-                );
-
-            })
-            .map(item => ({
-
-                ...item,
-
-                amount:
-                    parseAmount(item.text)
-
-            }))
-            .sort(
-                (a, b) => a.x - b.x
-            );
-
-
-    /*
-    ------------------------------------------------------
-    Balance is the right-most monetary value.
-    ------------------------------------------------------
-    */
-
-    let balance = null;
-
-    if (amountItems.length > 0) {
-
-        balance =
-            amountItems[
-                amountItems.length - 1
-            ].amount;
-
-    }
-
-
-    /*
-    ------------------------------------------------------
-    Debit / Credit
-
-    We use the amount positions before Balance.
-
-    Usually:
-
-    Debit | Credit | Balance
-    ------------------------------------------------------
-    */
-
-   
-    /*
-    ------------------------------------------------------
     DESCRIPTION
-
-    Keep text between date area and amount columns.
     ------------------------------------------------------
     */
 
@@ -708,35 +629,48 @@ function extractTransaction(
         );
 
 
-        /*
-------------------------------------------------------
-IGNORE SBI STATEMENT HEADER / ACCOUNT INFORMATION
-------------------------------------------------------
-*/
-
-const upperDescription =
-    description.toUpperCase();
-
-if (
-    upperDescription.includes("STATEMENT FROM") ||
-    upperDescription.includes("STATEMENT TO") ||
-    upperDescription.includes("ACCOUNT OPENED") ||
-    upperDescription.includes("ACCOUNT OPENING") ||
-    upperDescription.includes("STATEMENT PERIOD")
-) {
-
-    return null;
-
-}
+    const upperDescription =
+        description.toUpperCase();
 
 
     /*
     ------------------------------------------------------
-    CHEQUE / REFERENCE AREA
+    IGNORE SBI STATEMENT HEADER / ACCOUNT INFORMATION
+    ------------------------------------------------------
+    */
 
-    For now we use the description-based extraction
-    because SBI and BOB UPI references are embedded
-    inside the Details / Description field.
+    if (
+        upperDescription.includes("STATEMENT FROM") ||
+        upperDescription.includes("STATEMENT TO") ||
+        upperDescription.includes("ACCOUNT OPENED") ||
+        upperDescription.includes("ACCOUNT OPENING") ||
+        upperDescription.includes("STATEMENT PERIOD")
+    ) {
+
+        return null;
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    IGNORE TABLE HEADER
+    ------------------------------------------------------
+    */
+
+    if (
+        upperDescription.includes("DETAILS") &&
+        upperDescription.includes("BALANCE")
+    ) {
+
+        return null;
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    BANK REFERENCE
     ------------------------------------------------------
     */
 
@@ -748,154 +682,304 @@ if (
 
     /*
     ------------------------------------------------------
-    Ignore obvious table headers
+    TRANSACTION TYPE
+
+    SBI examples:
+
+    UPI/DR = DEBIT
+    UPI/CR = CREDIT
+    WDL TFR = DEBIT
+    DEP TFR = CREDIT
     ------------------------------------------------------
     */
 
-    if (
-    upperDescription.includes("DETAILS") &&
-    upperDescription.includes("BALANCE")
-) {
-
-    return null;
-
-}
-
-/*
-------------------------------------------------------
-DEBIT / CREDIT DETECTION
-
-SBI transaction descriptions explicitly identify:
-
-UPI/DR = DEBIT
-UPI/CR = CREDIT
-DEP TFR = CREDIT
-WDL TFR = DEBIT
-
-Use description first.
-Use PDF column position only as fallback.
-------------------------------------------------------
-*/
-
-const transactionText =
-    description.toUpperCase();
+    const transactionText =
+        upperDescription;
 
 
-const isDebitTransaction =
-    transactionText.includes("UPI/DR/") ||
-    transactionText.includes("WDL TFR") ||
-    transactionText.includes("WITHDRAWAL");
+    const isDebitTransaction =
+        transactionText.includes("UPI/DR/") ||
+        transactionText.includes("WDL TFR") ||
+        transactionText.includes("WITHDRAWAL");
 
 
-const isCreditTransaction =
-    transactionText.includes("UPI/CR/") ||
-    transactionText.includes("DEP TFR") ||
-    transactionText.includes("DEPOSIT");
-
-
-const middleAmounts =
-    amountItems.slice(
-        0,
-        -1
-    );
-
-
-/*
-------------------------------------------------------
-CLEAR DEBIT
-------------------------------------------------------
-*/
-
-if (
-    isDebitTransaction &&
-    !isCreditTransaction
-) {
-
-    if (
-        middleAmounts.length > 0
-    ) {
-
-        debit =
-            middleAmounts[0].amount;
-
-    }
-
-}
-
-
-/*
-------------------------------------------------------
-CLEAR CREDIT
-------------------------------------------------------
-*/
-
-else if (
-    isCreditTransaction &&
-    !isDebitTransaction
-) {
-
-    if (
-        middleAmounts.length > 0
-    ) {
-
-        credit =
-            middleAmounts[0].amount;
-
-    }
-
-}
-
-
-/*
-------------------------------------------------------
-FALLBACK
-------------------------------------------------------
-*/
-
-else if (
-    middleAmounts.length === 1
-) {
-
-    const amount =
-        middleAmounts[0].amount;
-
-    const x =
-        middleAmounts[0].x;
-
-
-    if (
-        x >
-        pageWidth * 0.64
-    ) {
-
-        credit = amount;
-
-    }
-    else {
-
-        debit = amount;
-
-    }
-
-}
-
-
-else if (
-    middleAmounts.length >= 2
-) {
-
-    debit =
-        middleAmounts[0].amount || 0;
-
-    credit =
-        middleAmounts[1].amount || 0;
-
-}
+    const isCreditTransaction =
+        transactionText.includes("UPI/CR/") ||
+        transactionText.includes("DEP TFR") ||
+        transactionText.includes("DEPOSIT");
 
 
     /*
     ------------------------------------------------------
-    Build transaction
+    FIND MONETARY VALUES
+
+    IMPORTANT:
+
+    We only look at the right side of the statement.
+
+    The RIGHT-MOST amount is Balance.
+
+    The amount immediately BEFORE Balance is the actual
+    transaction amount.
+
+    This prevents account numbers / UPI reference numbers
+    from being treated as Debit.
+    ------------------------------------------------------
+    */
+
+    const amountItems =
+        allItems
+            .filter(item => {
+
+                return (
+                    item.x >=
+                    pageWidth * 0.58
+                );
+
+            })
+            .map(item => {
+
+                const amount =
+                    parseAmount(
+                        item.text
+                    );
+
+                return {
+
+                    ...item,
+
+                    amount
+
+                };
+
+            })
+            .filter(item => {
+
+                return (
+                    item.amount !== null
+                );
+
+            })
+            .sort(
+                (a, b) =>
+                    a.x - b.x
+            );
+
+
+    /*
+    ------------------------------------------------------
+    WE NEED AT LEAST:
+
+    Movement Amount
+    +
+    Balance
+
+    ------------------------------------------------------
+    */
+
+    if (
+        amountItems.length < 2
+    ) {
+
+        return null;
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    RIGHT-MOST AMOUNT = BALANCE
+    ------------------------------------------------------
+    */
+
+    const balanceItem =
+        amountItems[
+            amountItems.length - 1
+        ];
+
+
+    const balance =
+        balanceItem.amount;
+
+
+    /*
+    ------------------------------------------------------
+    ALL AMOUNTS BEFORE BALANCE
+
+    These may contain:
+
+    - account numbers
+    - reference numbers
+    - actual transaction amount
+
+    Therefore we DO NOT automatically take [0].
+    ------------------------------------------------------
+    */
+
+    const movementItems =
+        amountItems.slice(
+            0,
+            -1
+        );
+
+
+    if (
+        movementItems.length === 0
+    ) {
+
+        return null;
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    IMPORTANT FIX
+
+    The ACTUAL transaction amount is the
+    RIGHT-MOST monetary value before Balance.
+
+    Example:
+
+    WRONG OLD LOGIC:
+
+    [989415115300] [2500] [6801]
+          ↑           ↑      ↑
+      account/noise  credit balance
+
+    Old code selected:
+
+    989415115300 ❌
+
+    New code selects:
+
+    2500 ✅
+    ------------------------------------------------------
+    */
+
+    const transactionAmountItem =
+        movementItems[
+            movementItems.length - 1
+        ];
+
+
+    const transactionAmount =
+        transactionAmountItem.amount;
+
+
+    /*
+    ------------------------------------------------------
+    INITIAL VALUES
+    ------------------------------------------------------
+    */
+
+    let debit = 0;
+
+    let credit = 0;
+
+
+    /*
+    ------------------------------------------------------
+    EXPLICIT SBI DEBIT
+    ------------------------------------------------------
+    */
+
+    if (
+        isDebitTransaction &&
+        !isCreditTransaction
+    ) {
+
+        debit =
+            transactionAmount;
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    EXPLICIT SBI CREDIT
+    ------------------------------------------------------
+    */
+
+    else if (
+        isCreditTransaction &&
+        !isDebitTransaction
+    ) {
+
+        credit =
+            transactionAmount;
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    FALLBACK
+
+    If description does not clearly say DR / CR,
+    use the position of the transaction amount.
+
+    Debit is normally left of Credit.
+    ------------------------------------------------------
+    */
+
+    else {
+
+        const x =
+            transactionAmountItem.x;
+
+
+        if (
+            x >=
+            pageWidth * 0.72
+        ) {
+
+            credit =
+                transactionAmount;
+
+        }
+        else {
+
+            debit =
+                transactionAmount;
+
+        }
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    SAFETY
+
+    A transaction should NOT have both Debit and Credit.
+    ------------------------------------------------------
+    */
+
+    if (
+        debit > 0 &&
+        credit > 0
+    ) {
+
+        if (
+            isCreditTransaction
+        ) {
+
+            debit = 0;
+
+        }
+        else {
+
+            credit = 0;
+
+        }
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    BUILD TRANSACTION
     ------------------------------------------------------
     */
 
@@ -925,7 +1009,6 @@ else if (
     };
 
 }
-
 
 /*
 ==========================================================
