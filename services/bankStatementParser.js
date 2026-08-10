@@ -1545,11 +1545,103 @@ async function parseBankStatementPdf({
                     : rows.length;
 
 
-            const rowGroup =
-                rows.slice(
-                    start,
-                    end
-                );
+            /*
+--------------------------------------------------
+STOP TRANSACTION BEFORE STATEMENT SUMMARY
+--------------------------------------------------
+
+The last SBI transaction is followed by:
+
+Statement Summary
+Brought Forward
+Dr Count
+Cr Count
+Total Debits
+Total Credits
+Closing Balance
+
+These are NOT transaction data.
+
+The previous code allowed the last transaction
+to continue until rows.length, which caused the
+Statement Summary amounts to be added to the
+last transaction.
+
+--------------------------------------------------
+*/
+
+let safeEnd =
+    end;
+
+
+/*
+--------------------------------------------------
+SEARCH INSIDE THIS TRANSACTION GROUP
+--------------------------------------------------
+*/
+
+for (
+    let rowIndex = start;
+    rowIndex < end;
+    rowIndex++
+) {
+
+    const row =
+        rows[rowIndex];
+
+
+    const rowText =
+        String(
+            row.text || ""
+        )
+        .toUpperCase();
+
+
+    /*
+    --------------------------------------------------
+    STATEMENT SUMMARY START
+    --------------------------------------------------
+    */
+
+    if (
+        rowText.includes(
+            "STATEMENT SUMMARY"
+        ) ||
+        rowText.includes(
+            "BROUGHT FORWARD"
+        ) ||
+        rowText.includes(
+            "TOTAL DEBITS"
+        ) ||
+        rowText.includes(
+            "TOTAL CREDITS"
+        ) ||
+        rowText.includes(
+            "CLOSING BALANCE"
+        )
+    ) {
+
+        safeEnd =
+            rowIndex;
+
+        break;
+
+    }
+
+}
+
+
+/*
+--------------------------------------------------
+CREATE CLEAN TRANSACTION GROUP
+--------------------------------------------------
+*/
+
+const rowGroup =
+    rows.slice(
+        start,
+        safeEnd
+    );
 
 
             /*
