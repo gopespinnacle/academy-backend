@@ -1016,166 +1016,191 @@ function extractTransaction(
     ------------------------------------------------------
     */
 
-    const movementItems =
-        amountItems.slice(
-            0,
-            -1
-        );
+    /*
+------------------------------------------------------
+DEBIT / CREDIT AMOUNT DETECTION
+------------------------------------------------------
+
+SBI layout:
+
+Debit | Credit | Balance
+
+IMPORTANT:
+
+The right-most amount is ALWAYS the Balance.
+
+The transaction amount is the RIGHT-MOST amount
+before Balance.
+
+Example:
+
+Reference       Debit       Credit       Balance
+622221958066    2,750.00       -          7,341.00
+
+Therefore:
+
+Balance          = 7,341.00
+Transaction      = 2,750.00
+
+------------------------------------------------------
+*/
+
+const movementItems =
+    amountItems.slice(
+        0,
+        -1
+    );
+
+
+/*
+------------------------------------------------------
+NO TRANSACTION AMOUNT
+------------------------------------------------------
+*/
+
+if (
+    movementItems.length === 0
+) {
+
+    return null;
+
+}
+
+
+/*
+------------------------------------------------------
+ACTUAL TRANSACTION AMOUNT
+
+IMPORTANT:
+
+Use the RIGHT-MOST monetary value before Balance.
+
+This prevents account/reference numbers appearing
+earlier in the row from being mistaken for money.
+
+------------------------------------------------------
+*/
+
+const transactionAmountItem =
+    movementItems[
+        movementItems.length - 1
+    ];
+
+
+const transactionAmount =
+    transactionAmountItem.amount;
+
+
+/*
+------------------------------------------------------
+INITIAL VALUES
+------------------------------------------------------
+*/
+
+let debit = 0;
+
+let credit = 0;
+
+
+
+
+/*
+------------------------------------------------------
+DEBIT
+------------------------------------------------------
+*/
+
+if (
+    isDebitTransaction &&
+    !isCreditTransaction
+) {
+
+    debit =
+        transactionAmount;
+
+}
+
+
+/*
+------------------------------------------------------
+CREDIT
+------------------------------------------------------
+*/
+
+else if (
+    isCreditTransaction &&
+    !isDebitTransaction
+) {
+
+    credit =
+        transactionAmount;
+
+}
+
+
+/*
+------------------------------------------------------
+FALLBACK
+
+If description does not tell us DR / CR,
+use the actual PDF column position.
+
+Debit column is normally left of Credit.
+------------------------------------------------------
+*/
+
+else {
+
+    const x =
+        transactionAmountItem.x;
 
 
     if (
-        movementItems.length === 0
-    ) {
-
-        return null;
-
-    }
-
-
-    /*
-    ------------------------------------------------------
-    IMPORTANT FIX
-
-    The ACTUAL transaction amount is the
-    RIGHT-MOST monetary value before Balance.
-
-    Example:
-
-    WRONG OLD LOGIC:
-
-    [989415115300] [2500] [6801]
-          ↑           ↑      ↑
-      account/noise  credit balance
-
-    Old code selected:
-
-    989415115300 ❌
-
-    New code selects:
-
-    2500 ✅
-    ------------------------------------------------------
-    */
-
-    const transactionAmountItem =
-        movementItems[
-            movementItems.length - 1
-        ];
-
-
-    const transactionAmount =
-        transactionAmountItem.amount;
-
-
-    /*
-    ------------------------------------------------------
-    INITIAL VALUES
-    ------------------------------------------------------
-    */
-
-    let debit = 0;
-
-    let credit = 0;
-
-
-    /*
-    ------------------------------------------------------
-    EXPLICIT SBI DEBIT
-    ------------------------------------------------------
-    */
-
-    if (
-        isDebitTransaction &&
-        !isCreditTransaction
-    ) {
-
-        debit =
-            transactionAmount;
-
-    }
-
-
-    /*
-    ------------------------------------------------------
-    EXPLICIT SBI CREDIT
-    ------------------------------------------------------
-    */
-
-    else if (
-        isCreditTransaction &&
-        !isDebitTransaction
+        x >=
+        pageWidth * 0.72
     ) {
 
         credit =
             transactionAmount;
 
     }
-
-
-    /*
-    ------------------------------------------------------
-    FALLBACK
-
-    If description does not clearly say DR / CR,
-    use the position of the transaction amount.
-
-    Debit is normally left of Credit.
-    ------------------------------------------------------
-    */
-
     else {
 
-        const x =
-            transactionAmountItem.x;
-
-
-        if (
-            x >=
-            pageWidth * 0.72
-        ) {
-
-            credit =
-                transactionAmount;
-
-        }
-        else {
-
-            debit =
-                transactionAmount;
-
-        }
+        debit =
+            transactionAmount;
 
     }
 
+}
 
-    /*
-    ------------------------------------------------------
-    SAFETY
 
-    A transaction should NOT have both Debit and Credit.
-    ------------------------------------------------------
-    */
+/*
+------------------------------------------------------
+SAFETY
+
+A transaction cannot be both Debit and Credit.
+------------------------------------------------------
+*/
+
+if (
+    debit > 0 &&
+    credit > 0
+) {
 
     if (
-        debit > 0 &&
-        credit > 0
+        isCreditTransaction
     ) {
 
-        if (
-            isCreditTransaction
-        ) {
+        debit = 0;
 
-            debit = 0;
+    }
+    else {
 
-        }
-        else {
-
-            credit = 0;
-
-        }
+        credit = 0;
 
     }
 
+}
 
     /*
     ------------------------------------------------------
