@@ -748,7 +748,155 @@ router.get(
 
     }
 );
+/*
+==========================================================
+DELETE ONE BANK STATEMENT
+==========================================================
 
+DELETE:
+
+/api/founder/:statementId
+
+IMPORTANT:
+- Deletes all transactions belonging to the statement
+- Deletes the statement record
+- Original PDF is NOT stored permanently
+==========================================================
+*/
+
+router.delete(
+    "/:statementId",
+    async function (
+        req,
+        res
+    ) {
+
+        try {
+
+            const statementId =
+                req.params.statementId;
+
+
+            /*
+            ------------------------------------------------
+            VALIDATE ID
+            ------------------------------------------------
+            */
+
+            if (
+                !mongoose.Types.ObjectId.isValid(
+                    statementId
+                )
+            ) {
+
+                return res.status(
+                    400
+                ).json({
+
+                    success: false,
+
+                    message:
+                        "Invalid bank statement ID."
+
+                });
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            CHECK STATEMENT EXISTS
+            ------------------------------------------------
+            */
+
+            const statement =
+                await BankStatement.findById(
+                    statementId
+                );
+
+
+            if (
+                !statement
+            ) {
+
+                return res.status(
+                    404
+                ).json({
+
+                    success: false,
+
+                    message:
+                        "Bank statement not found."
+
+                });
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            DELETE ALL TRANSACTIONS
+            ------------------------------------------------
+            */
+
+            await BankTransaction.deleteMany({
+
+                statementId:
+                    statementId
+
+            });
+
+
+            /*
+            ------------------------------------------------
+            DELETE STATEMENT
+            ------------------------------------------------
+            */
+
+            await BankStatement.findByIdAndDelete(
+                statementId
+            );
+
+
+            /*
+            ------------------------------------------------
+            SUCCESS
+            ------------------------------------------------
+            */
+
+            return res.json({
+
+                success: true,
+
+                message:
+                    "Bank statement and its transactions deleted successfully."
+
+            });
+
+        }
+        catch (error) {
+
+            console.error(
+                "Delete bank statement error:",
+                error
+            );
+
+
+            return res.status(
+                500
+            ).json({
+
+                success: false,
+
+                message:
+                    "Unable to delete bank statement."
+
+            });
+
+        }
+
+    }
+);
 
 /*
 ==========================================================
