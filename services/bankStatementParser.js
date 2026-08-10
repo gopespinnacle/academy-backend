@@ -843,38 +843,47 @@ async function parseBankStatementPdf({
             isEvalSupported: false,
 
             onPassword:
-                function (
-                    updatePassword,
-                    reason
-                ) {
+    function (
+        updatePassword,
+        reason
+    ) {
 
-                    /*
-                    PDF.js password reasons:
+        /*
+        PDF.js password reasons:
 
-                    1 = NEED_PASSWORD
-                    2 = INCORRECT_PASSWORD
-                    */
+        1 = NEED_PASSWORD
+        2 = INCORRECT_PASSWORD
+        */
 
-                    if (
-                        !password
-                    ) {
+        if (!password) {
 
-                        passwordError =
-                            new Error(
-                                "PDF_PASSWORD_REQUIRED"
-                            );
+            passwordError =
+                new Error(
+                    "PDF_PASSWORD_REQUIRED"
+                );
 
-                        return;
+            return;
 
-                    }
+        }
 
+        if (
+            reason === 1
+        ) {
 
-                    passwordError =
-                        new Error(
-                            "PDF_PASSWORD_INCORRECT"
-                        );
+            updatePassword(
+                password
+            );
 
-                }
+            return;
+
+        }
+
+        passwordError =
+            new Error(
+                "PDF_PASSWORD_INCORRECT"
+            );
+
+    }
 
         });
 
