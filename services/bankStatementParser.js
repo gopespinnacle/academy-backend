@@ -826,18 +826,14 @@ if (
     ------------------------------------------------------
     */
 
-    const upperDescription =
-        description.toUpperCase();
-
-
     if (
-        upperDescription.includes("DETAILS") &&
-        upperDescription.includes("BALANCE")
-    ) {
+    upperDescription.includes("DETAILS") &&
+    upperDescription.includes("BALANCE")
+) {
 
-        return null;
+    return null;
 
-    }
+}
 
 
     /*
