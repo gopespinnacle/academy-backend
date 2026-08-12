@@ -159,6 +159,89 @@ async function getNextStudentId(){
 
 }
 
+async function getNextStudentId(){
+
+    const counter =
+        await Counter.findByIdAndUpdate(
+
+            "student",
+
+            {
+                $inc:{
+                    sequenceValue:1
+                }
+            },
+
+            {
+                new:true,
+                upsert:true
+            }
+
+        );
+
+    return `GPA-${String(counter.sequenceValue).padStart(4, "0")}`;
+
+}
+
+/* ================= EXISTING STUDENT ID MIGRATION ================= */
+
+router.post(
+    "/generate-missing-student-ids",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const students = await User.find({
+                role: "student",
+                $or: [
+                    { studentId: { $exists: false } },
+                    { studentId: null },
+                    { studentId: "" }
+                ]
+            }).sort({ createdAt: 1 });
+
+            const generatedIds = [];
+
+            for (const student of students) {
+
+                const studentId = await getNextStudentId();
+
+                student.studentId = studentId;
+
+                await student.save();
+
+                generatedIds.push({
+                    name: student.name,
+                    studentId
+                });
+
+            }
+
+            res.json({
+                success: true,
+                count: generatedIds.length,
+                students: generatedIds
+            });
+
+        } catch (error) {
+
+            console.log(
+                "STUDENT ID MIGRATION ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message: "Error generating student IDs"
+            });
+
+        }
+
+    }
+);
+
 /* ================= STUDENT CRUD ================= */
 
 router.get("/students", async (req,res)=>{
