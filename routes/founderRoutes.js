@@ -1197,9 +1197,7 @@ router.get(
                         student.name,
 
                     actualFee:
-                        record
-                            ? record.actualFee
-                            : Number(student.monthlyFee || 0),
+    Number(student.monthlyFee || 0),
 
                     feePaid:
                         record
@@ -1483,6 +1481,10 @@ router.post(
             // ================= UPDATE MONTHLY FEE =================
 
             else {
+
+
+                feeRecord.actualFee =
+    Number(student.monthlyFee || 0);
 
                 feeRecord.feePaid =
                     paidAmount;
