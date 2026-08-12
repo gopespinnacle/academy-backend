@@ -133,6 +133,32 @@ router.get("/analytics", async (req, res) => {
     }
 });
 
+/* ================= STUDENT ID GENERATOR ================= */
+
+async function getNextStudentId(){
+
+    const counter =
+        await Counter.findByIdAndUpdate(
+
+            "student",
+
+            {
+                $inc:{
+                    sequenceValue:1
+                }
+            },
+
+            {
+                new:true,
+                upsert:true
+            }
+
+        );
+
+    return `GPA-${String(counter.sequenceValue).padStart(4, "0")}`;
+
+}
+
 /* ================= STUDENT CRUD ================= */
 
 router.get("/students", async (req,res)=>{
@@ -142,7 +168,18 @@ router.get("/students", async (req,res)=>{
 
 router.post("/student", protect, authorize("founder"), async (req,res)=>{
     try{
-        const { name, grade, board, mobile, subject, eca, language } = req.body;
+        const {
+    name,
+    grade,
+    board,
+    mobile,
+    monthlyFee,
+    subject,
+    eca,
+    language
+} = req.body;
+
+const studentId = await getNextStudentId();
 
         const email =
         name.toLowerCase().replace(/\s/g,"") +
@@ -152,22 +189,33 @@ router.post("/student", protect, authorize("founder"), async (req,res)=>{
         const password = Math.random().toString(36).slice(-6);
 
         const student = new User({
-            name, email, password,
-            grade, board, mobile,
-            role:"student",
-            loginEmail: email,
-            loginPassword: password,
-            subject: subject || [],
-            eca: eca || [],
-            language: language || []
-        });
+    name,
+    email,
+    password,
 
+    grade,
+    board,
+    mobile,
+
+    studentId,
+    monthlyFee: Number(monthlyFee) || 0,
+
+    role:"student",
+
+    loginEmail: email,
+    loginPassword: password,
+
+    subject: subject || [],
+    eca: eca || [],
+    language: language || []
+});
         await student.save();
 
-        res.json({
-            message:"Student added successfully",
-            login:{ email, password }
-        });
+       res.json({
+    message:"Student added successfully",
+    studentId,
+    login:{ email, password }
+});
 
     }catch(error){
         res.status(500).json({ message:"Server error" });

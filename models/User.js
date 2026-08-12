@@ -51,6 +51,19 @@ whatsapp: {
     type: String
 },
 
+// ================= STUDENT FEE SYSTEM =================
+
+studentId: {
+    type: String,
+    unique: true,
+    sparse: true
+},
+
+monthlyFee: {
+    type: Number,
+    default: 0
+},
+
 meetingLink: {
     type: String,
     default: ""
