@@ -517,6 +517,308 @@ router.post(
 
     }
 );
+
+// ==========================================================
+// UPDATE FINANCE TRANSACTION
+// ==========================================================
+
+router.put(
+    "/finance-transaction/:id",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const {
+                date,
+                type,
+                category,
+                subCategory,
+                description,
+                amount
+            } = req.body;
+
+
+            // ================= VALIDATION =================
+
+            if (
+                !date ||
+                !type ||
+                !category ||
+                !subCategory ||
+                amount === undefined
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Date, type, category, sub category and amount are required."
+
+                });
+
+            }
+
+
+            if (
+                !["Income", "Expense"].includes(type)
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Invalid transaction type."
+
+                });
+
+            }
+
+
+            const transactionDate =
+                new Date(date);
+
+
+            if (
+                Number.isNaN(
+                    transactionDate.getTime()
+                )
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Invalid transaction date."
+
+                });
+
+            }
+
+
+            const transactionAmount =
+                Number(amount);
+
+
+            if (
+                !Number.isFinite(
+                    transactionAmount
+                ) ||
+                transactionAmount < 0
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Invalid transaction amount."
+
+                });
+
+            }
+
+
+            // ================= CHECK CATEGORY =================
+
+            const financeCategory =
+                await FinanceCategory.findOne({
+
+                    type: type,
+
+                    category: category,
+
+                    active: true
+
+                });
+
+
+            if (!financeCategory) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Invalid finance category."
+
+                });
+
+            }
+
+
+            if (
+                !financeCategory.subCategories.includes(
+                    subCategory
+                )
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Invalid finance sub category."
+
+                });
+
+            }
+
+
+            // ================= FIND TRANSACTION =================
+
+            const transaction =
+                await IncomeExpense.findById(
+                    req.params.id
+                );
+
+
+            if (!transaction) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "Finance transaction not found."
+
+                });
+
+            }
+
+
+            // ================= UPDATE =================
+
+            transaction.date =
+                transactionDate;
+
+            transaction.type =
+                type;
+
+            transaction.category =
+                category;
+
+            transaction.subCategory =
+                subCategory;
+
+            transaction.description =
+                description || "";
+
+            transaction.amount =
+                transactionAmount;
+
+
+            await transaction.save();
+
+
+            // ================= RESPONSE =================
+
+            return res.status(200).json({
+
+                success: true,
+
+                message:
+                    "Finance transaction updated successfully.",
+
+                transaction
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "UPDATE FINANCE TRANSACTION ERROR:",
+                error
+            );
+
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to update finance transaction."
+
+            });
+
+        }
+
+    }
+);
+
+// ==========================================================
+// DELETE FINANCE TRANSACTION
+// ==========================================================
+
+router.delete(
+    "/finance-transaction/:id",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const transaction =
+                await IncomeExpense.findById(
+                    req.params.id
+                );
+
+
+            if (!transaction) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "Finance transaction not found."
+
+                });
+
+            }
+
+
+            await IncomeExpense.findByIdAndDelete(
+                req.params.id
+            );
+
+
+            return res.status(200).json({
+
+                success: true,
+
+                message:
+                    "Finance transaction deleted successfully."
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "DELETE FINANCE TRANSACTION ERROR:",
+                error
+            );
+
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to delete finance transaction."
+
+            });
+
+        }
+
+    }
+);
 /* ================= FINANCE TRANSACTION REPORT ================= */
 
 router.get(
