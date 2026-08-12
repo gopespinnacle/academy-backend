@@ -26,6 +26,7 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
 const User = require("../models/User");
+const MonthlyFee = require("../models/MonthlyFee");
 const Marks = require("../models/Marks");
 const Assessment = require("../models/Assessment");
 const AuditLog = require("../models/AuditLog");
@@ -248,6 +249,174 @@ router.get("/students", async (req,res)=>{
     const students = await User.find({ role: "student" });
     res.json({ students });
 });
+
+/* ================= MONTHLY FEE REPORT ================= */
+
+router.get(
+    "/fee-report",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const month = Number(req.query.month);
+            const year = Number(req.query.year);
+
+            if (
+                !month ||
+                !year ||
+                month < 1 ||
+                month > 12
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Valid month and year are required"
+                });
+            }
+
+            // Get all students
+            const students = await User.find({
+                role: "student"
+            }).sort({
+                name: 1
+            });
+
+            // Get existing fee records for selected month
+            const feeRecords = await MonthlyFee.find({
+                month,
+                year
+            });
+
+            // Create quick lookup by student MongoDB ID
+            const feeMap = {};
+
+            feeRecords.forEach(record => {
+
+                feeMap[
+                    record.student.toString()
+                ] = record;
+
+            });
+
+            const report = students.map(student => {
+
+                const record =
+                    feeMap[student._id.toString()];
+
+                return {
+
+                    studentId:
+                        student.studentId || "",
+
+                    studentName:
+                        student.name,
+
+                    actualFee:
+                        record
+                            ? record.actualFee
+                            : Number(student.monthlyFee || 0),
+
+                    feePaid:
+                        record
+                            ? record.feePaid
+                            : 0,
+
+                    teacherFee:
+                        record
+                            ? record.teacherFee
+                            : 0,
+
+                    academyFee:
+                        record
+                            ? record.academyFee
+                            : 0,
+
+                    paymentStatus:
+                        record
+                            ? record.paymentStatus
+                            : "Pending",
+
+                    paymentDate:
+                        record
+                            ? record.paymentDate
+                            : null,
+
+                    paymentReference:
+                        record
+                            ? record.paymentReference
+                            : "",
+
+                    feeRecordId:
+                        record
+                            ? record._id
+                            : null
+
+                };
+
+            });
+
+            // ================= TOTALS =================
+
+            const totals = report.reduce(
+                (total, student) => {
+
+                    total.actualFee +=
+                        Number(student.actualFee || 0);
+
+                    total.feePaid +=
+                        Number(student.feePaid || 0);
+
+                    total.teacherFee +=
+                        Number(student.teacherFee || 0);
+
+                    total.academyFee +=
+                        Number(student.academyFee || 0);
+
+                    return total;
+
+                },
+                {
+                    actualFee: 0,
+                    feePaid: 0,
+                    teacherFee: 0,
+                    academyFee: 0
+                }
+            );
+
+            res.json({
+
+                success: true,
+
+                month,
+
+                year,
+
+                report,
+
+                totals
+
+            });
+
+        } catch (error) {
+
+            console.log(
+                "FEE REPORT ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message: "Error loading fee report"
+
+            });
+
+        }
+
+    }
+);
 
 router.post("/student", protect, authorize("founder"), async (req,res)=>{
     try{
