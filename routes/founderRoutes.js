@@ -517,7 +517,321 @@ router.post(
 
     }
 );
+/* ================= FINANCE TRANSACTION REPORT ================= */
 
+router.get(
+    "/finance-transactions",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const {
+                view,
+                date,
+                month,
+                year,
+                type,
+                category,
+                subCategory
+            } = req.query;
+
+
+            // ==================================================
+            // VALIDATE VIEW
+            // ==================================================
+
+            if (
+                view !== "day" &&
+                view !== "month"
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "View must be day or month"
+
+                });
+
+            }
+
+
+            let startDate;
+            let endDate;
+
+
+            // ==================================================
+            // DAY VIEW
+            // ==================================================
+
+            if (view === "day") {
+
+                if (!date) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "Date is required for day view"
+
+                    });
+
+                }
+
+
+                // IST midnight
+
+                startDate =
+                    new Date(
+                        `${date}T00:00:00+05:30`
+                    );
+
+
+                // Next IST midnight
+
+                endDate =
+                    new Date(
+                        `${date}T00:00:00+05:30`
+                    );
+
+                endDate.setDate(
+                    endDate.getDate() + 1
+                );
+
+
+            }
+
+
+            // ==================================================
+            // MONTH VIEW
+            // ==================================================
+
+            if (view === "month") {
+
+                const selectedMonth =
+                    Number(month);
+
+                const selectedYear =
+                    Number(year);
+
+
+                if (
+                    !selectedMonth ||
+                    !selectedYear ||
+                    selectedMonth < 1 ||
+                    selectedMonth > 12
+                ) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "Valid month and year are required"
+
+                    });
+
+                }
+
+
+                // JavaScript month is zero-based
+
+                startDate =
+                    new Date(
+                        `${selectedYear}-${String(selectedMonth).padStart(2, "0")}-01T00:00:00+05:30`
+                    );
+
+
+                // First day of next month
+
+                if (selectedMonth === 12) {
+
+                    endDate =
+                        new Date(
+                            `${selectedYear + 1}-01-01T00:00:00+05:30`
+                        );
+
+                } else {
+
+                    endDate =
+                        new Date(
+                            `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}-01T00:00:00+05:30`
+                        );
+
+                }
+
+            }
+
+
+            // ==================================================
+            // BUILD QUERY
+            // ==================================================
+
+            const query = {
+
+                date: {
+
+                    $gte: startDate,
+
+                    $lt: endDate
+
+                }
+
+            };
+
+
+            // Optional Type filter
+
+            if (
+                type === "Income" ||
+                type === "Expense"
+            ) {
+
+                query.type = type;
+
+            }
+
+
+            // Optional Category filter
+
+            if (category) {
+
+                query.category =
+                    category;
+
+            }
+
+
+            // Optional Sub Category filter
+
+            if (subCategory) {
+
+                query.subCategory =
+                    subCategory;
+
+            }
+
+
+            // ==================================================
+            // GET TRANSACTIONS
+            // ==================================================
+
+            const transactions =
+                await IncomeExpense.find(query)
+
+                    .populate(
+                        "createdBy",
+                        "name email"
+                    )
+
+                    .sort({
+                        date: -1,
+                        createdAt: -1
+                    });
+
+
+            // ==================================================
+            // CALCULATE TOTALS
+            // ==================================================
+
+            let totalIncome = 0;
+
+            let totalExpense = 0;
+
+
+            transactions.forEach(
+                transaction => {
+
+                    const amount =
+                        Number(
+                            transaction.amount || 0
+                        );
+
+
+                    if (
+                        transaction.type ===
+                        "Income"
+                    ) {
+
+                        totalIncome +=
+                            amount;
+
+                    }
+
+
+                    if (
+                        transaction.type ===
+                        "Expense"
+                    ) {
+
+                        totalExpense +=
+                            amount;
+
+                    }
+
+                }
+            );
+
+
+            const netBalance =
+                totalIncome -
+                totalExpense;
+
+
+            // ==================================================
+            // RESPONSE
+            // ==================================================
+
+            res.json({
+
+                success: true,
+
+                view,
+
+                startDate,
+
+                endDate,
+
+                transactions,
+
+                totals: {
+
+                    totalIncome,
+
+                    totalExpense,
+
+                    netBalance
+
+                }
+
+            });
+
+
+        } catch (error) {
+
+            console.log(
+                "FINANCE TRANSACTION REPORT ERROR:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Error loading finance transactions"
+
+            });
+
+        }
+
+    }
+);
 /* ================= MONTHLY FEE REPORT ================= */
 
 router.get(
