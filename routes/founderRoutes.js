@@ -418,6 +418,245 @@ router.get(
     }
 );
 
+/* ================= SAVE MONTHLY FEE ================= */
+
+router.post(
+    "/fee-record",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const {
+                studentId,
+                month,
+                year,
+                feePaid,
+                teacherFee
+            } = req.body;
+
+
+            // ================= VALIDATION =================
+
+            if (!studentId) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Student ID is required"
+                });
+
+            }
+
+
+            const selectedMonth = Number(month);
+            const selectedYear = Number(year);
+
+            if (
+                !selectedMonth ||
+                !selectedYear ||
+                selectedMonth < 1 ||
+                selectedMonth > 12
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid month or year"
+                });
+
+            }
+
+
+            const paidAmount =
+                Number(feePaid);
+
+            const teacherAmount =
+                Number(teacherFee);
+
+
+            if (
+                !Number.isFinite(paidAmount) ||
+                paidAmount < 0
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid Fee Paid amount"
+                });
+
+            }
+
+
+            if (
+                !Number.isFinite(teacherAmount) ||
+                teacherAmount < 0
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid Teacher Fee amount"
+                });
+
+            }
+
+
+            if (teacherAmount > paidAmount) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Fee to Teacher cannot be greater than Fee Paid"
+                });
+
+            }
+
+
+            // ================= FIND STUDENT =================
+
+            const student = await User.findOne({
+                role: "student",
+                studentId: studentId
+            });
+
+
+            if (!student) {
+
+                return res.status(404).json({
+                    success: false,
+                    message: "Student not found"
+                });
+
+            }
+
+
+            // ================= FIND EXISTING RECORD =================
+
+            let feeRecord =
+                await MonthlyFee.findOne({
+
+                    student: student._id,
+
+                    month: selectedMonth,
+
+                    year: selectedYear
+
+                });
+
+
+            // ================= ACADEMY FEE =================
+
+            const academyAmount =
+                paidAmount - teacherAmount;
+
+
+            // ================= CREATE =================
+
+            if (!feeRecord) {
+
+                feeRecord = new MonthlyFee({
+
+                    student: student._id,
+
+                    studentId: student.studentId,
+
+                    studentName: student.name,
+
+                    month: selectedMonth,
+
+                    year: selectedYear,
+
+                    actualFee:
+                        Number(student.monthlyFee || 0),
+
+                    feePaid:
+                        paidAmount,
+
+                    teacherFee:
+                        teacherAmount,
+
+                    academyFee:
+                        academyAmount,
+
+                    paymentStatus:
+                        paidAmount === 0
+                            ? "Pending"
+                            : paidAmount >= Number(student.monthlyFee || 0)
+                                ? "Paid"
+                                : "Partial",
+
+                    paymentDate:
+                        paidAmount > 0
+                            ? new Date()
+                            : null
+
+                });
+
+            }
+
+            // ================= UPDATE =================
+
+            else {
+
+                feeRecord.feePaid =
+                    paidAmount;
+
+                feeRecord.teacherFee =
+                    teacherAmount;
+
+                feeRecord.academyFee =
+                    academyAmount;
+
+                feeRecord.paymentStatus =
+                    paidAmount === 0
+                        ? "Pending"
+                        : paidAmount >= feeRecord.actualFee
+                            ? "Paid"
+                            : "Partial";
+
+                feeRecord.paymentDate =
+                    paidAmount > 0
+                        ? new Date()
+                        : null;
+
+            }
+
+
+            await feeRecord.save();
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Monthly fee saved successfully",
+
+                feeRecord
+
+            });
+
+
+        } catch (error) {
+
+            console.log(
+                "SAVE MONTHLY FEE ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Error saving monthly fee"
+
+            });
+
+        }
+
+    }
+);
+
 router.post("/student", protect, authorize("founder"), async (req,res)=>{
     try{
         const {
