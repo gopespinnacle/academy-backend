@@ -1304,6 +1304,8 @@ router.get(
 
 /* ================= SAVE MONTHLY FEE ================= */
 
+/* ================= SAVE MONTHLY FEE + FINANCE ================= */
+
 router.post(
     "/fee-record",
     protect,
@@ -1413,7 +1415,7 @@ router.post(
             }
 
 
-            // ================= FIND EXISTING RECORD =================
+            // ================= FIND EXISTING FEE RECORD =================
 
             let feeRecord =
                 await MonthlyFee.findOne({
@@ -1433,7 +1435,7 @@ router.post(
                 paidAmount - teacherAmount;
 
 
-            // ================= CREATE =================
+            // ================= CREATE MONTHLY FEE =================
 
             if (!feeRecord) {
 
@@ -1477,7 +1479,8 @@ router.post(
 
             }
 
-            // ================= UPDATE =================
+
+            // ================= UPDATE MONTHLY FEE =================
 
             else {
 
@@ -1508,12 +1511,214 @@ router.post(
             await feeRecord.save();
 
 
+            // ==========================================================
+            // FINANCE INTEGRATION
+            // ==========================================================
+
+            /*
+             * We use a unique internal marker inside description.
+             *
+             * This allows us to find the exact finance transaction
+             * again when the Founder edits the monthly fee.
+             *
+             * No duplicate transactions will be created.
+             */
+
+
+            const financeDate =
+                feeRecord.paymentDate || new Date();
+
+
+            // ==========================================================
+            // 1. FEE PAID → INCOME
+            // ==========================================================
+
+            const incomeMarker =
+                `[MONTHLY_FEE:${feeRecord._id}:FEE_PAID]`;
+
+
+            const incomeDescription =
+                `${student.name} ${incomeMarker}`;
+
+
+            const existingIncome =
+                await IncomeExpense.findOne({
+
+                    type: "Income",
+
+                    category: "Student Fees",
+
+                    subCategory: "Monthly Tuition Fees",
+
+                    description: incomeDescription
+
+                });
+
+
+            if (paidAmount > 0) {
+
+                if (existingIncome) {
+
+                    existingIncome.date =
+                        financeDate;
+
+                    existingIncome.amount =
+                        paidAmount;
+
+                    existingIncome.createdBy =
+                        req.user
+                            ? req.user._id
+                            : null;
+
+                    await existingIncome.save();
+
+                }
+
+                else {
+
+                    await IncomeExpense.create({
+
+                        date:
+                            financeDate,
+
+                        type:
+                            "Income",
+
+                        category:
+                            "Student Fees",
+
+                        subCategory:
+                            "Monthly Tuition Fees",
+
+                        description:
+                            incomeDescription,
+
+                        amount:
+                            paidAmount,
+
+                        createdBy:
+                            req.user
+                                ? req.user._id
+                                : null
+
+                    });
+
+                }
+
+            }
+
+            else {
+
+                if (existingIncome) {
+
+                    await IncomeExpense.findByIdAndDelete(
+                        existingIncome._id
+                    );
+
+                }
+
+            }
+
+
+            // ==========================================================
+            // 2. TEACHER FEE → EXPENSE
+            // ==========================================================
+
+            const teacherMarker =
+                `[MONTHLY_FEE:${feeRecord._id}:TEACHER_FEE]`;
+
+
+            const teacherDescription =
+                `${student.name} ${teacherMarker}`;
+
+
+            const existingTeacherExpense =
+                await IncomeExpense.findOne({
+
+                    type: "Expense",
+
+                    category: "Teacher Payments",
+
+                    subCategory: "Teacher Fees",
+
+                    description: teacherDescription
+
+                });
+
+
+            if (teacherAmount > 0) {
+
+                if (existingTeacherExpense) {
+
+                    existingTeacherExpense.date =
+                        financeDate;
+
+                    existingTeacherExpense.amount =
+                        teacherAmount;
+
+                    existingTeacherExpense.createdBy =
+                        req.user
+                            ? req.user._id
+                            : null;
+
+                    await existingTeacherExpense.save();
+
+                }
+
+                else {
+
+                    await IncomeExpense.create({
+
+                        date:
+                            financeDate,
+
+                        type:
+                            "Expense",
+
+                        category:
+                            "Teacher Payments",
+
+                        subCategory:
+                            "Teacher Fees",
+
+                        description:
+                            teacherDescription,
+
+                        amount:
+                            teacherAmount,
+
+                        createdBy:
+                            req.user
+                                ? req.user._id
+                                : null
+
+                    });
+
+                }
+
+            }
+
+            else {
+
+                if (existingTeacherExpense) {
+
+                    await IncomeExpense.findByIdAndDelete(
+                        existingTeacherExpense._id
+                    );
+
+                }
+
+            }
+
+
+            // ================= RESPONSE =================
+
             res.json({
 
                 success: true,
 
                 message:
-                    "Monthly fee saved successfully",
+                    "Monthly fee and finance records saved successfully",
 
                 feeRecord
 
@@ -1523,7 +1728,7 @@ router.post(
         } catch (error) {
 
             console.log(
-                "SAVE MONTHLY FEE ERROR:",
+                "SAVE MONTHLY FEE + FINANCE ERROR:",
                 error
             );
 
@@ -1532,7 +1737,7 @@ router.post(
                 success: false,
 
                 message:
-                    "Error saving monthly fee"
+                    "Error saving monthly fee and finance records"
 
             });
 
