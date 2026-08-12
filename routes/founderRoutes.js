@@ -29,6 +29,7 @@ const User = require("../models/User");
 const MonthlyFee = require("../models/MonthlyFee");
 
 const FinanceCategory = require("../models/FinanceCategory");
+const IncomeExpense = require("../models/IncomeExpense");
 const Marks = require("../models/Marks");
 const Assessment = require("../models/Assessment");
 const AuditLog = require("../models/AuditLog");
@@ -292,6 +293,223 @@ router.get(
 
                 message:
                     "Error loading finance categories"
+
+            });
+
+        }
+
+    }
+);
+
+
+/* ================= SAVE INCOME / EXPENSE ================= */
+
+router.post(
+    "/finance-transaction",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const {
+                date,
+                type,
+                category,
+                subCategory,
+                description,
+                amount
+            } = req.body;
+
+
+            // ================= BASIC VALIDATION =================
+
+            if (!date) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Date is required"
+                });
+
+            }
+
+
+            if (
+                type !== "Income" &&
+                type !== "Expense"
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid transaction type"
+                });
+
+            }
+
+
+            if (!category) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Category is required"
+                });
+
+            }
+
+
+            if (!subCategory) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Sub Category is required"
+                });
+
+            }
+
+
+            // ================= DATE VALIDATION =================
+
+            const transactionDate =
+                new Date(date);
+
+
+            if (
+                Number.isNaN(
+                    transactionDate.getTime()
+                )
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid transaction date"
+                });
+
+            }
+
+
+            // ================= AMOUNT VALIDATION =================
+
+            const transactionAmount =
+                Number(amount);
+
+
+            if (
+                !Number.isFinite(
+                    transactionAmount
+                ) ||
+                transactionAmount < 0
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid transaction amount"
+                });
+
+            }
+
+
+            // ================= VERIFY CATEGORY =================
+
+            const financeCategory =
+                await FinanceCategory.findOne({
+
+                    type,
+
+                    category,
+
+                    active: true
+
+                });
+
+
+            if (!financeCategory) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Selected Category does not exist"
+                });
+
+            }
+
+
+            // ================= VERIFY SUB CATEGORY =================
+
+            const subCategoryExists =
+                financeCategory.subCategories
+                    .includes(subCategory);
+
+
+            if (!subCategoryExists) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Selected Sub Category does not belong to the selected Category"
+                });
+
+            }
+
+
+            // ================= CREATE TRANSACTION =================
+
+            const transaction =
+                new IncomeExpense({
+
+                    date:
+                        transactionDate,
+
+                    type,
+
+                    category,
+
+                    subCategory,
+
+                    description:
+                        description || "",
+
+                    amount:
+                        transactionAmount,
+
+                    createdBy:
+                        req.user
+                            ? req.user._id
+                            : null
+
+                });
+
+
+            await transaction.save();
+
+
+            // ================= RESPONSE =================
+
+            res.status(201).json({
+
+                success: true,
+
+                message:
+                    "Income / Expense saved successfully",
+
+                transaction
+
+            });
+
+
+        } catch (error) {
+
+            console.log(
+                "SAVE FINANCE TRANSACTION ERROR:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Error saving income / expense"
 
             });
 
