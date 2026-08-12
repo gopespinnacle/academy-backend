@@ -351,14 +351,45 @@ const financeCategories = [
         ]
     },
 
-    {
-        type: "Expense",
-        category: "Miscellaneous Expense",
-        subCategories: [
-            "Miscellaneous",
-            "Other"
-        ]
-    }
+   {
+    type: "Expense",
+    category: "Children Personality Development",
+    subCategories: [
+        "Dance",
+        "Archery",
+        "Music",
+        "Abacus"
+    ]
+},
+
+{
+    type: "Expense",
+    category: "Personal Expenses",
+    subCategories: [
+        "RD",
+        "Chit",
+        "Dance",
+        "Archery",
+        "Music",
+        "Wifi",
+        "God",
+        "Temple",
+        "Snacks",
+        "Petrol",
+        "Phone",
+        "Pollachi",
+        "Gift"
+    ]
+},
+
+{
+    type: "Expense",
+    category: "Miscellaneous Expense",
+    subCategories: [
+        "Miscellaneous",
+        "Other"
+    ]
+}
 
 ];
 
