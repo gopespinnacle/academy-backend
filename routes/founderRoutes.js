@@ -27,6 +27,8 @@ const mongoose = require("mongoose");
 
 const User = require("../models/User");
 const MonthlyFee = require("../models/MonthlyFee");
+
+const FinanceCategory = require("../models/FinanceCategory");
 const Marks = require("../models/Marks");
 const Assessment = require("../models/Assessment");
 const AuditLog = require("../models/AuditLog");
@@ -249,6 +251,54 @@ router.get("/students", async (req,res)=>{
     const students = await User.find({ role: "student" });
     res.json({ students });
 });
+
+/* ================= FINANCE CATEGORIES ================= */
+
+router.get(
+    "/finance-categories",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const categories =
+                await FinanceCategory.find({
+                    active: true
+                })
+                .sort({
+                    type: 1,
+                    category: 1
+                });
+
+            res.json({
+
+                success: true,
+
+                categories
+
+            });
+
+        } catch (error) {
+
+            console.log(
+                "FINANCE CATEGORY ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Error loading finance categories"
+
+            });
+
+        }
+
+    }
+);
 
 /* ================= MONTHLY FEE REPORT ================= */
 
