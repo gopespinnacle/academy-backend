@@ -21,6 +21,7 @@ const StudentAnswer = require("../models/StudentAnswer");
 const Assessment = require("../models/Assessment");
 const ExamActivity = require("../models/ExamActivity");
 const ExamCamera = require("../models/ExamCamera");
+const TeacherLeave = require("../models/TeacherLeave");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const TeacherSchedule = require("../models/TeacherSchedule");
 const mongoose = require("mongoose");
@@ -421,4 +422,562 @@ allowed:false
 }
 
 });
+
+/* =========================================================
+   STUDENT - ACADEMIC CONTINUITY NOTICE
+   ========================================================= */
+
+router.get(
+    "/academic-continuity/:studentId",
+    async (req, res) => {
+
+        try {
+
+            const studentId =
+                req.params.studentId;
+
+
+            if (!studentId) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Student ID is required."
+
+                });
+
+            }
+
+
+            /*
+            =================================================
+            FIND APPROVED TEACHER LEAVES
+            =================================================
+            */
+
+            const approvedLeaves =
+                await TeacherLeave.find({
+
+                    status: "Approved"
+
+                })
+                .sort({
+                    date: 1,
+                    createdAt: -1
+                });
+
+
+            /*
+            =================================================
+            FIND THE PERIODS WHERE THIS STUDENT IS ASSIGNED
+            =================================================
+            */
+
+            const studentPeriods =
+                await PeriodAssignment.find({
+
+                    "assignments.student":
+                        studentId
+
+                });
+
+
+            if (
+                !studentPeriods.length ||
+                !approvedLeaves.length
+            ) {
+
+                return res.json({
+
+                    success: true,
+
+                    data: []
+
+                });
+
+            }
+
+
+            /*
+            =================================================
+            MATCH APPROVED LEAVE WITH STUDENT'S PERIOD
+            =================================================
+            */
+
+            const notices = [];
+
+
+            for (
+                const leave
+                of approvedLeaves
+            ) {
+
+
+                /*
+                ------------------------------------------------
+                Prefer the exact periodAssignment reference
+                ------------------------------------------------
+                */
+
+                let matchedPeriod =
+                    null;
+
+
+                if (
+                    leave.periodAssignment
+                ) {
+
+                    matchedPeriod =
+                        studentPeriods.find(
+                            period =>
+                                String(
+                                    period._id
+                                ) ===
+                                String(
+                                    leave.periodAssignment
+                                )
+                        );
+
+                }
+
+
+                /*
+                ------------------------------------------------
+                Fallback matching
+                ------------------------------------------------
+                */
+
+                if (!matchedPeriod) {
+
+                    matchedPeriod =
+                        studentPeriods.find(
+                            period =>
+
+                                String(
+                                    period.teacher
+                                ) ===
+                                String(
+                                    leave.teacher
+                                )
+
+                                &&
+
+                                String(
+                                    period.className
+                                ).trim()
+                                ===
+                                String(
+                                    leave.className
+                                ).trim()
+
+                                &&
+
+                                String(
+                                    period.subject || ""
+                                ).trim()
+                                ===
+                                String(
+                                    leave.subject || ""
+                                ).trim()
+
+                                &&
+
+                                String(
+                                    period.day
+                                ).trim()
+                                ===
+                                String(
+                                    leave.day
+                                ).trim()
+
+                                &&
+
+                                String(
+                                    period.startTime
+                                ).trim()
+                                ===
+                                String(
+                                    leave.startTime
+                                ).trim()
+
+                        );
+
+                }
+
+
+                if (!matchedPeriod) {
+
+                    continue;
+
+                }
+
+
+                /*
+                =================================================
+                BUILD STUDENT NOTICE
+                =================================================
+                */
+
+                notices.push({
+
+                    leaveId:
+                        leave._id,
+
+                    leaveDate:
+                        leave.date,
+
+                    leaveDay:
+                        leave.day,
+
+                    className:
+                        leave.className,
+
+                    subject:
+                        leave.subject,
+
+                    startTime:
+                        leave.startTime,
+
+                    endTime:
+                        leave.endTime,
+
+                    teacherName:
+                        leave.teacherName,
+
+                    leaveCategory:
+                        leave.leaveCategory,
+
+                    leaveSubcategory:
+                        leave.leaveSubcategory,
+
+                    explanation:
+                        leave.explanation || "",
+
+                    compensationDate:
+                        leave.compensationDate
+                        || null,
+
+                    compensationStartTime:
+                        leave.compensationStartTime
+                        || null,
+
+                    compensationEndTime:
+                        leave.compensationEndTime
+                        || null
+
+                });
+
+            }
+
+
+            res.json({
+
+                success: true,
+
+                data: notices
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "ACADEMIC CONTINUITY ERROR:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to load academic continuity notices."
+
+            });
+
+        }
+
+    }
+);/* =========================================================
+   STUDENT - ACADEMIC CONTINUITY NOTICE
+   ========================================================= */
+
+router.get(
+    "/academic-continuity/:studentId",
+    async (req, res) => {
+
+        try {
+
+            const studentId =
+                req.params.studentId;
+
+
+            if (!studentId) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Student ID is required."
+
+                });
+
+            }
+
+
+            /*
+            =================================================
+            FIND APPROVED TEACHER LEAVES
+            =================================================
+            */
+
+            const approvedLeaves =
+                await TeacherLeave.find({
+
+                    status: "Approved"
+
+                })
+                .sort({
+                    date: 1,
+                    createdAt: -1
+                });
+
+
+            /*
+            =================================================
+            FIND THE PERIODS WHERE THIS STUDENT IS ASSIGNED
+            =================================================
+            */
+
+            const studentPeriods =
+                await PeriodAssignment.find({
+
+                    "assignments.student":
+                        studentId
+
+                });
+
+
+            if (
+                !studentPeriods.length ||
+                !approvedLeaves.length
+            ) {
+
+                return res.json({
+
+                    success: true,
+
+                    data: []
+
+                });
+
+            }
+
+
+            /*
+            =================================================
+            MATCH APPROVED LEAVE WITH STUDENT'S PERIOD
+            =================================================
+            */
+
+            const notices = [];
+
+
+            for (
+                const leave
+                of approvedLeaves
+            ) {
+
+
+                /*
+                ------------------------------------------------
+                Prefer the exact periodAssignment reference
+                ------------------------------------------------
+                */
+
+                let matchedPeriod =
+                    null;
+
+
+                if (
+                    leave.periodAssignment
+                ) {
+
+                    matchedPeriod =
+                        studentPeriods.find(
+                            period =>
+                                String(
+                                    period._id
+                                ) ===
+                                String(
+                                    leave.periodAssignment
+                                )
+                        );
+
+                }
+
+
+                /*
+                ------------------------------------------------
+                Fallback matching
+                ------------------------------------------------
+                */
+
+                if (!matchedPeriod) {
+
+                    matchedPeriod =
+                        studentPeriods.find(
+                            period =>
+
+                                String(
+                                    period.teacher
+                                ) ===
+                                String(
+                                    leave.teacher
+                                )
+
+                                &&
+
+                                String(
+                                    period.className
+                                ).trim()
+                                ===
+                                String(
+                                    leave.className
+                                ).trim()
+
+                                &&
+
+                                String(
+                                    period.subject || ""
+                                ).trim()
+                                ===
+                                String(
+                                    leave.subject || ""
+                                ).trim()
+
+                                &&
+
+                                String(
+                                    period.day
+                                ).trim()
+                                ===
+                                String(
+                                    leave.day
+                                ).trim()
+
+                                &&
+
+                                String(
+                                    period.startTime
+                                ).trim()
+                                ===
+                                String(
+                                    leave.startTime
+                                ).trim()
+
+                        );
+
+                }
+
+
+                if (!matchedPeriod) {
+
+                    continue;
+
+                }
+
+
+                /*
+                =================================================
+                BUILD STUDENT NOTICE
+                =================================================
+                */
+
+                notices.push({
+
+                    leaveId:
+                        leave._id,
+
+                    leaveDate:
+                        leave.date,
+
+                    leaveDay:
+                        leave.day,
+
+                    className:
+                        leave.className,
+
+                    subject:
+                        leave.subject,
+
+                    startTime:
+                        leave.startTime,
+
+                    endTime:
+                        leave.endTime,
+
+                    teacherName:
+                        leave.teacherName,
+
+                    leaveCategory:
+                        leave.leaveCategory,
+
+                    leaveSubcategory:
+                        leave.leaveSubcategory,
+
+                    explanation:
+                        leave.explanation || "",
+
+                    compensationDate:
+                        leave.compensationDate
+                        || null,
+
+                    compensationStartTime:
+                        leave.compensationStartTime
+                        || null,
+
+                    compensationEndTime:
+                        leave.compensationEndTime
+                        || null
+
+                });
+
+            }
+
+
+            res.json({
+
+                success: true,
+
+                data: notices
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "ACADEMIC CONTINUITY ERROR:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to load academic continuity notices."
+
+            });
+
+        }
+
+    }
+);
 module.exports = router;
