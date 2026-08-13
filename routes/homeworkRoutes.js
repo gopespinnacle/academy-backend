@@ -960,66 +960,92 @@ message:err.message
 
 });
 
-router.get("/student-homework/:studentId", async (req,res)=>{
+router.get("/student-homework/:studentId", async (req, res) => {
 
-try{
+    try {
 
-const studentId = req.params.studentId;
+        const studentId = req.params.studentId;
 
-const data = await Homework.find({
+        console.log("STUDENT HOMEWORK REQUEST");
+        console.log("Student ID:", studentId);
 
-    student: studentId
+        if (!studentId) {
 
-})
-.populate("lessonPlan")
-.sort({ createdAt: -1 });
+            return res.status(400).json({
+                success: false,
+                message: "Student ID is required"
+            });
 
-const finalData = data.map(hw => {
+        }
 
-    const plan = hw.lessonPlan.toObject();
+        const data = await Homework.find({
+            student: studentId
+        })
+        .populate("lessonPlan")
+        .sort({
+            createdAt: -1
+        });
 
-    plan.lessons = plan.lessons.filter(
-        lesson => lesson.topicId === hw.topicId
-    );
+        const finalData = [];
 
-    return {
-        ...hw.toObject(),
-        lessonPlan: plan
-    };
+        for (const hw of data) {
 
-});
+            if (!hw.lessonPlan) {
 
-res.json({
+                console.log(
+                    "Skipping homework because lessonPlan is missing:",
+                    hw._id
+                );
 
-    success: true,
+                continue;
 
-    data: finalData
+            }
 
-});
+            const plan = hw.lessonPlan.toObject();
 
-return;
+            plan.lessons = (plan.lessons || []).filter(
+                lesson => lesson.topicId === hw.topicId
+            );
 
-res.json({
+            finalData.push({
 
-success:true,
+                ...hw.toObject(),
 
-data
+                lessonPlan: plan
 
-});
+            });
 
-}catch(err){
+        }
 
-console.log(err);
+        console.log(
+            "Student homework count:",
+            finalData.length
+        );
 
-res.status(500).json({
+        res.json({
 
-success:false,
+            success: true,
 
-message:err.message
+            data: finalData
 
-});
+        });
 
-}
+    } catch (err) {
+
+        console.error(
+            "STUDENT HOMEWORK ERROR:",
+            err
+        );
+
+        res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
 
 });
 
