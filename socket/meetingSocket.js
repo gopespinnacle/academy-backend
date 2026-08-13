@@ -1,1015 +1,2914 @@
-const meetingMemory = require("../core/meetingMemory");
-const TeacherSession = require("../models/TeacherSession");
-const mongoose = require("mongoose");
+/*
+==========================================================
+GOPES PINNACLE ACADEMY
+MEETING SOCKET
+==========================================================
+
+PURPOSE
+
+This module handles:
+
+1. Participant joining
+2. Participant identification
+3. Classroom capacity
+4. Founder / Teacher / Student roles
+5. Participant list
+6. Participant join notifications
+7. Participant leave notifications
+8. Generic WebRTC signaling
+9. Screen-share signaling
+10. Media status
+11. Network status
+12. Battery status
+13. Device information
+14. Visibility status
+15. Teacher controls
+16. Student reconnect handling
+17. Teacher / student attendance
+
+CLASSROOM LIMIT
+
+Founder  = 1
+Teachers = 2
+Students = 10
+
+TOTAL = 13
+
+==========================================================
+*/
+
+const meetingMemory =
+    require("../core/meetingMemory");
+
+const TeacherSession =
+    require("../models/TeacherSession");
+
+const mongoose =
+    require("mongoose");
+
 
 /*
 ==========================================================
-Meeting Socket
-Handles:
-1. Join Room
-2. WebRTC Signaling
+CLASSROOM CAPACITY
 ==========================================================
 */
 
-module.exports = function registerMeetingSocket(io){
+const MAX_FOUNDERS = 1;
 
-    io.on("connection",(socket)=>{
+const MAX_TEACHERS = 2;
 
-        console.log("Socket Connected:",socket.id);
+const MAX_STUDENTS = 10;
 
-        /*
-        ==================================================
-        JOIN ROOM
-        ==================================================
-        */
+const MAX_PARTICIPANTS =
+    MAX_FOUNDERS +
+    MAX_TEACHERS +
+    MAX_STUDENTS;
 
-        socket.on("joinRoom", async (data)=>{
 
-    const room = data.room;
-const role = data.role;
-const name = data.name;
-const studentId = data.studentId;
-const periodId = data.periodId;
-
-console.log("========== JOIN ROOM ==========");
-console.log("Role:", role);
-console.log("Student ID:", studentId);
-console.log("Period ID:", periodId);
-console.log("================================");
-
-
-
-            socket.join(room);
-
-            socket.room=room;
-            socket.role=role;
-            socket.name=name;
-
-            socket.studentId = studentId;
-socket.periodId = periodId;
-
-            if(!meetingMemory.participants[room]){
-                meetingMemory.participants[room]=[];
-            }
-
-            const alreadyExists =
-meetingMemory.participants[room].find(
-
-    p =>
-
-        p.role === role &&
-
-        p.name === name
-
-);
-
-const oldSocketId = alreadyExists ? alreadyExists.socketId : null;
-
-if(!alreadyExists){
-
-    meetingMemory.participants[room].push({
-
-        socketId: socket.id,
-
-        role,
-
-        name,
-
-        joinedAt: new Date(),
-
-        status: "Online",
-
-        camera: true,
-
-        mic: true,
-
-        network: "Checking",
-
-        battery: -1,
-
-        charging: false,
-
-        micLocked: false,
-
-        cameraLocked: false
-
-    });
-
-}else{
-
-    alreadyExists.socketId = socket.id;
-
-    alreadyExists.status = "Online";
-
-    io.to(room).emit("studentSocketChanged",{
-
-        oldSocketId: oldSocketId,
-
-        newSocketId: socket.id,
-
-        role: role,
-
-        name: name
-
-    });
-
-}
-
-io.to(room).emit("studentStatusChanged",{
-
-    socketId: socket.id,
-
-    status: "Online"
-
-});
-
-            console.log(
-
-                "Joined Room:",
-
-                room,
-
-                role,
-
-                name
-
-            );
-
-            /*
-            Teacher receives existing students
-            */
-
-            if(role==="teacher"){
-
-    const students =
-meetingMemory.participants[room]
-.filter(p => p.role === "student")
-.map(student => ({
-
-    socketId: student.socketId,
-
-    name: student.name,
-
-    joinedAt: student.joinedAt,
-
-    camera: student.camera ?? true,
-
-    mic: student.mic ?? true,
-
-    network: student.network || "Checking",
-
-    battery: student.battery ?? -1,
-
-    charging: student.charging ?? false,
-
-    device: student.device || "Unknown",
-
-    visibility: student.visibility || "Active",
-
-    micLocked: student.micLocked ?? false,
-
-    cameraLocked: student.cameraLocked ?? false
-
-}));
-
-    socket.emit("existingStudents", students);
-    students.forEach(student => {
-
-    socket.emit("userJoined", {
-
-        socketId: student.socketId
-
-    });
-
-});
-
-}
-
-            /*
-            Notify teacher
-            */
-          if (
-    role === "student" &&
-    meetingMemory.screenShare[room]
-) {
-
-    io.to(socket.id).emit("screenAlreadySharing", {
-
-        teacherSocketId:
-        meetingMemory.screenShare[room].teacherSocketId
-
-    });
-
-}
-
-            else{
-
-    if (periodId && mongoose.Types.ObjectId.isValid(periodId)) {
-
-    console.log("Searching with:");
-    console.log({
-        periodId,
-        studentId
-    });
-
-    const session = await TeacherSession.findOne({
-
-    periodId: new mongoose.Types.ObjectId(periodId)
-
-});
-
-if(session){
-
-    const existingStudent =
-    studentId
-        ? session.joinedStudents.find(s =>
-            s.student &&
-            s.student.toString() === studentId
-        )
-        : null;
-
-    if(existingStudent){
-
-    const now = new Date();
-
-    if(existingStudent.leftAt){
-
-        const disconnectedSeconds = Math.floor(
-
-            (now - existingStudent.leftAt) / 1000
-
-        );
-
-        existingStudent.networkDisconnectTime += disconnectedSeconds;
-
-    }
-
-    existingStudent.rejoinedCount += 1;
-
-    existingStudent.isOnline = true;
-
-    existingStudent.joinedAt = now;
-
-    existingStudent.leftAt = null;
-
-}
-
-    else{
-
-        // First time joining
-
-        session.joinedStudents.push({
-
-            student:studentId,
-
-            joinedAt:new Date(),
-
-            isOnline:true
-
-        });
-
-    }
-
-    await session.save();
-
-    console.log("Student Attendance Updated");
-
-}
-
-    if (!session) {
-
-        console.log("❌ NO SESSION FOUND");
-
-    } else {
-
-        console.log("✅ SESSION FOUND");
-        console.log("Session:", session._id);
-        console.log("Joined Students:", session.joinedStudents);
-        const check = await TeacherSession.findById(session._id);
-
-console.log("Saved in Mongo:");
-console.log(check.joinedStudents);
-
-    }
-
-}
-
-    const teacher =
-    meetingMemory.participants[room].find(
-
-        p=>p.role==="teacher"
-
-    );
-
-    if (teacher) {
-
-    io.to(teacher.socketId).emit("studentJoined", {
-
-        socketId: socket.id,
-
-        studentName: name,
-
-        reconnect: alreadyExists ? true : false
-
-    });
-
-    
-}
-
-}
-
-        });
-
-        /*
-        ==================================================
-        OFFER
-        ==================================================
-        */
-
-        socket.on("offer",(data)=>{
-
-            console.log(
-        "SERVER RECEIVED OFFER",
-        socket.id,
-        "->",
-        data.targetSocketId
-    );
-
-            io.to(
-
-                data.targetSocketId
-
-            ).emit(
-
-                "offer",
-
-                {
-
-                    teacherSocketId:socket.id,
-
-                    offer:data.offer
-
-                }
-
-            );
-
-        });
-
-        /*
-        ==================================================
-        ANSWER
-        ==================================================
-        */
-
-        socket.on("answer",(data)=>{
-
-            io.to(
-
-                data.teacherSocketId
-
-            ).emit(
-
-                "answer",
-
-                {
-
-                    studentSocketId:socket.id,
-
-                    answer:data.answer
-
-                }
-
-            );
-
-        });
-
-        /*
-==================================================
-STUDENT READY
-==================================================
+/*
+==========================================================
+VALID ROLES
+==========================================================
 */
 
-socket.on("studentReady", (data) => {
+const VALID_ROLES = [
+    "founder",
+    "teacher",
+    "student"
+];
 
-    io.to(data.teacherSocketId).emit("studentReady", {
 
-        studentSocketId: socket.id
+/*
+==========================================================
+GET ROOM PARTICIPANTS
+==========================================================
+*/
 
-    });
+function getParticipants(room) {
 
-});
+    if (
+        !meetingMemory.participants ||
+        !meetingMemory.participants[room]
+    ) {
 
-        /*
-        ==================================================
-        ICE
-        ==================================================
-        */
+        return [];
 
-        socket.on(
+    }
 
-            "ice-candidate",
+    return meetingMemory.participants[room];
 
-            (data)=>{
+}
 
-                io.to(
 
-                    data.targetSocketId
+/*
+==========================================================
+GET ONLINE PARTICIPANTS
 
-                ).emit(
+Only participants with a valid current socket are counted.
+==========================================================
+*/
 
-                    "ice-candidate",
+function getOnlineParticipants(room) {
 
-                    {
+    return getParticipants(room)
+        .filter(
+            participant =>
+                participant &&
+                participant.status === "Online"
+        );
 
-                        senderSocketId:socket.id,
+}
 
-                        candidate:data.candidate
+
+/*
+==========================================================
+COUNT ROLE
+==========================================================
+*/
+
+function countRole(room, role) {
+
+    return getOnlineParticipants(room)
+        .filter(
+            participant =>
+                participant.role === role
+        )
+        .length;
+
+}
+
+
+/*
+==========================================================
+BUILD PUBLIC PARTICIPANT DATA
+
+This is what frontend receives.
+
+Private database information is NOT exposed.
+==========================================================
+*/
+
+function publicParticipant(participant) {
+
+    return {
+
+        socketId:
+            participant.socketId,
+
+        userId:
+            participant.userId || null,
+
+        studentId:
+            participant.studentId || null,
+
+        name:
+            participant.name || "Unknown",
+
+        role:
+            participant.role,
+
+        joinedAt:
+            participant.joinedAt,
+
+        status:
+            participant.status || "Online",
+
+        camera:
+            participant.camera ?? true,
+
+        mic:
+            participant.mic ?? true,
+
+        network:
+            participant.network || "Checking",
+
+        battery:
+            participant.battery ?? -1,
+
+        charging:
+            participant.charging ?? false,
+
+        device:
+            participant.device || "Unknown",
+
+        visibility:
+            participant.visibility || "Active",
+
+        micLocked:
+            participant.micLocked ?? false,
+
+        cameraLocked:
+            participant.cameraLocked ?? false,
+
+        micMuted:
+            participant.micMuted ?? false,
+
+        cameraStopped:
+            participant.cameraStopped ?? false
+
+    };
+
+}
+
+
+/*
+==========================================================
+BUILD PARTICIPANT LIST
+==========================================================
+*/
+
+function buildParticipantList(room) {
+
+    return getOnlineParticipants(room)
+        .map(publicParticipant);
+
+}
+
+
+/*
+==========================================================
+CHECK CLASSROOM CAPACITY
+==========================================================
+*/
+
+function checkCapacity(room, role, reconnecting) {
+
+    /*
+    ------------------------------------------------------
+    RECONNECTING PARTICIPANT
+
+    Reconnection does not consume an additional seat.
+    ------------------------------------------------------
+    */
+
+    if (reconnecting) {
+
+        return {
+            allowed: true
+        };
+
+    }
+
+
+    const total =
+        getOnlineParticipants(room).length;
+
+
+    /*
+    ------------------------------------------------------
+    TOTAL LIMIT
+    ------------------------------------------------------
+    */
+
+    if (total >= MAX_PARTICIPANTS) {
+
+        return {
+
+            allowed: false,
+
+            reason:
+                "Classroom is full. Maximum 13 participants are allowed."
+
+        };
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    FOUNDER LIMIT
+    ------------------------------------------------------
+    */
+
+    if (
+        role === "founder" &&
+        countRole(room, "founder") >= MAX_FOUNDERS
+    ) {
+
+        return {
+
+            allowed: false,
+
+            reason:
+                "Only 1 Founder can join this classroom."
+
+        };
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    TEACHER LIMIT
+    ------------------------------------------------------
+    */
+
+    if (
+        role === "teacher" &&
+        countRole(room, "teacher") >= MAX_TEACHERS
+    ) {
+
+        return {
+
+            allowed: false,
+
+            reason:
+                "Only 2 Teachers can join this classroom."
+
+        };
+
+    }
+
+
+    /*
+    ------------------------------------------------------
+    STUDENT LIMIT
+    ------------------------------------------------------
+    */
+
+    if (
+        role === "student" &&
+        countRole(room, "student") >= MAX_STUDENTS
+    ) {
+
+        return {
+
+            allowed: false,
+
+            reason:
+                "Only 10 Students can join this classroom."
+
+        };
+
+    }
+
+
+    return {
+
+        allowed: true
+
+    };
+
+}
+
+
+/*
+==========================================================
+REGISTER MEETING SOCKET
+==========================================================
+*/
+
+module.exports =
+function registerMeetingSocket(io) {
+
+
+    /*
+    ======================================================
+    NEW SOCKET CONNECTION
+    ======================================================
+    */
+
+    io.on(
+        "connection",
+        (socket) => {
+
+
+            console.log(
+                "=========================================="
+            );
+
+            console.log(
+                "MEETING SOCKET CONNECTED"
+            );
+
+            console.log(
+                "Socket ID:",
+                socket.id
+            );
+
+            console.log(
+                "=========================================="
+            );
+
+
+            /*
+            ==================================================
+            JOIN ROOM
+            ==================================================
+            */
+
+            socket.on(
+                "joinRoom",
+                async (data = {}) => {
+
+
+                    /*
+                    --------------------------------------------------
+                    READ DATA
+                    --------------------------------------------------
+                    */
+
+                    const room =
+                        typeof data.room === "string"
+                            ? data.room.trim()
+                            : "";
+
+                    const role =
+                        typeof data.role === "string"
+                            ? data.role.trim().toLowerCase()
+                            : "";
+
+                    const name =
+                        typeof data.name === "string"
+                            ? data.name.trim()
+                            : "";
+
+                    const studentId =
+                        data.studentId || null;
+
+                    const periodId =
+                        data.periodId || null;
+
+                    const userId =
+                        data.userId || null;
+
+
+                    /*
+                    --------------------------------------------------
+                    BASIC VALIDATION
+                    --------------------------------------------------
+                    */
+
+                    if (!room) {
+
+                        socket.emit(
+                            "joinRejected",
+                            {
+                                reason:
+                                    "Meeting room is required."
+                            }
+                        );
+
+                        return;
 
                     }
 
-                );
 
-            }
+                    if (!VALID_ROLES.includes(role)) {
 
-        );
+                        socket.emit(
+                            "joinRejected",
+                            {
+                                reason:
+                                    "Invalid meeting role."
+                            }
+                        );
 
-   /*
-==================================================
-NEW SCREEN SHARE SIGNALING
-==================================================
-*/
+                        return;
 
-/*
-Teacher started sharing
-*/
-socket.on("screen-start", ({ room }) => {
+                    }
 
-    meetingMemory.screenShare[room] = {
 
-    teacherSocketId: socket.id,
+                    if (!name) {
 
-    startedAt: Date.now()
+                        socket.emit(
+                            "joinRejected",
+                            {
+                                reason:
+                                    "Participant name is required."
+                            }
+                        );
 
-};
+                        return;
 
-    socket.to(room).emit("screen-start", {
+                    }
 
-        teacherSocketId: socket.id
 
-    });
+                    /*
+                    --------------------------------------------------
+                    LOG JOIN REQUEST
+                    --------------------------------------------------
+                    */
 
-});
+                    console.log(
+                        "=========================================="
+                    );
 
+                    console.log(
+                        "JOIN ROOM REQUEST"
+                    );
 
-/*
-Teacher stopped sharing
-*/
-socket.on("screen-stop", ({ room }) => {
+                    console.log(
+                        "Room:",
+                        room
+                    );
 
-    delete meetingMemory.screenShare[room];
+                    console.log(
+                        "Role:",
+                        role
+                    );
 
-    socket.to(room).emit("screen-stop");
+                    console.log(
+                        "Name:",
+                        name
+                    );
 
-});
+                    console.log(
+                        "User ID:",
+                        userId
+                    );
 
+                    console.log(
+                        "Student ID:",
+                        studentId
+                    );
 
-/*
-Student requests screen
-*/
-socket.on("screen-request", ({ teacherSocketId }) => {
+                    console.log(
+                        "Period ID:",
+                        periodId
+                    );
 
-    io.to(teacherSocketId).emit("screen-request", {
+                    console.log(
+                        "=========================================="
+                    );
 
-        studentSocketId: socket.id
 
-    });
+                    /*
+                    --------------------------------------------------
+                    MAKE SURE ROOM ARRAY EXISTS
+                    --------------------------------------------------
+                    */
 
-});
+                    if (
+                        !meetingMemory.participants[room]
+                    ) {
 
+                        meetingMemory.participants[room] = [];
 
-/*
-Teacher sends offer
-*/
-socket.on("screen-offer", (data) => {
+                    }
 
-    console.log("SERVER RECEIVED SCREEN OFFER", data);
 
-    io.to(data.studentSocketId).emit("screen-offer", {
+                    /*
+                    --------------------------------------------------
+                    FIND EXISTING PARTICIPANT
 
-        teacherSocketId: socket.id,
+                    Prefer stable ID.
 
-        offer: data.offer
+                    Student:
+                        studentId
 
-    });
+                    Others:
+                        userId
 
-});
+                    Fallback:
+                        role + name
+                    --------------------------------------------------
+                    */
 
+                    let existingParticipant = null;
 
-/*
-Student sends answer
-*/
-socket.on("screen-answer", (data) => {
 
-    io.to(data.teacherSocketId).emit("screen-answer", {
+                    if (studentId) {
 
-        studentSocketId: socket.id,
+                        existingParticipant =
+                            meetingMemory.participants[room]
+                                .find(
+                                    participant =>
+                                        participant.studentId &&
+                                        participant.studentId.toString() ===
+                                            studentId.toString()
+                                );
 
-        answer: data.answer
+                    }
 
-    });
 
-});
+                    if (
+                        !existingParticipant &&
+                        userId
+                    ) {
 
+                        existingParticipant =
+                            meetingMemory.participants[room]
+                                .find(
+                                    participant =>
+                                        participant.userId &&
+                                        participant.userId.toString() ===
+                                            userId.toString()
+                                );
 
-/*
-ICE Candidate
-*/
-socket.on("screen-ice", (data) => {
+                    }
 
-    io.to(data.targetSocketId).emit("screen-ice", {
 
-        senderSocketId: socket.id,
+                    if (!existingParticipant) {
 
-        candidate: data.candidate
+                        existingParticipant =
+                            meetingMemory.participants[room]
+                                .find(
+                                    participant =>
+                                        participant.role === role &&
+                                        participant.name === name
+                                );
 
-    });
+                    }
 
-});
- /*
-==================================================
-MEDIA STATUS
-==================================================
-*/
 
-socket.on("mediaStatus", (data) => {
+                    const reconnecting =
+                        !!existingParticipant;
 
-    socket.camera = data.camera;
 
-    socket.mic = data.mic;
+                    /*
+                    --------------------------------------------------
+                    CHECK CAPACITY
+                    --------------------------------------------------
+                    */
 
-    const room = socket.room;
+                    const capacity =
+                        checkCapacity(
+                            room,
+                            role,
+                            reconnecting
+                        );
 
-    if (!room) return;
 
-    // ✅ Update meeting memory
-    const participant = meetingMemory.participants[room]?.find(
+                    if (!capacity.allowed) {
 
-        p => p.socketId === socket.id
+                        console.warn(
+                            "JOIN REJECTED:",
+                            capacity.reason
+                        );
 
-    );
 
-    if(participant){
+                        socket.emit(
+                            "joinRejected",
+                            {
+                                reason:
+                                    capacity.reason
+                            }
+                        );
 
-        participant.camera = data.camera;
 
-        participant.mic = data.mic;
+                        return;
 
-    }
+                    }
 
-    socket.to(room).emit("mediaStatus", {
 
-        socketId: socket.id,
+                    /*
+                    --------------------------------------------------
+                    JOIN SOCKET.IO ROOM
+                    --------------------------------------------------
+                    */
 
-        camera: data.camera,
+                    socket.join(room);
 
-        mic: data.mic
+                    socket.room =
+                        room;
 
-    });
+                    socket.role =
+                        role;
 
-});
+                    socket.name =
+                        name;
 
-socket.on("networkStatus",(data)=>{
+                    socket.studentId =
+                        studentId;
 
-    const room = socket.room;
+                    socket.periodId =
+                        periodId;
 
-    if(!room) return;
+                    socket.userId =
+                        userId;
 
-    const participant = meetingMemory.participants[room]?.find(
 
-        p => p.socketId === socket.id
+                    /*
+                    --------------------------------------------------
+                    SAVE OLD SOCKET ID
 
-    );
+                    Used for reconnect notification.
+                    --------------------------------------------------
+                    */
 
-    if(participant){
+                    const oldSocketId =
+                        existingParticipant
+                            ? existingParticipant.socketId
+                            : null;
 
-        participant.network = data.quality;
 
-    }
+                    /*
+                    --------------------------------------------------
+                    REGISTER / UPDATE PARTICIPANT
+                    --------------------------------------------------
+                    */
 
-    socket.to(room).emit("networkStatus",{
+                    if (!existingParticipant) {
 
-        socketId: socket.id,
 
-        quality: data.quality
+                        meetingMemory.participants[room]
+                            .push({
 
-    });
+                                socketId:
+                                    socket.id,
 
-});
+                                userId:
+                                    userId,
 
-socket.on("studentReconnecting", () => {
+                                studentId:
+                                    studentId,
 
-    if (!socket.room) return;
+                                role:
+                                    role,
 
-    socket.to(socket.room).emit("studentReconnecting", {
+                                name:
+                                    name,
 
-        socketId: socket.id
+                                joinedAt:
+                                    new Date(),
 
-    });
+                                status:
+                                    "Online",
 
-});
+                                camera:
+                                    true,
 
-socket.on("studentReconnected", () => {
+                                mic:
+                                    true,
 
-    console.log("Student Reconnected");
+                                network:
+                                    "Checking",
 
-    console.log("Current Socket:", socket.id);
+                                battery:
+                                    -1,
 
-    if (!socket.room) return;
+                                charging:
+                                    false,
 
-    socket.to(socket.room).emit("studentReconnected", {
+                                device:
+                                    "Unknown",
 
-        socketId: socket.id
+                                visibility:
+                                    "Active",
 
-    });
+                                micLocked:
+                                    false,
 
-});
+                                cameraLocked:
+                                    false,
 
-socket.on("batteryStatus",(data)=>{
+                                micMuted:
+                                    false,
 
-    const room = socket.room;
+                                cameraStopped:
+                                    false
 
-    if(!room) return;
+                            });
 
-    const participant = meetingMemory.participants[room]?.find(
 
-        p => p.socketId === socket.id
+                    } else {
 
-    );
 
-    if(participant){
+                        /*
+                        --------------------------------------------------
+                        RECONNECT
 
-        participant.battery = data.level;
+                        Keep the same participant record.
+                        Change only the socket identity/state.
+                        --------------------------------------------------
+                        */
 
-        participant.charging = data.charging;
+                        existingParticipant.socketId =
+                            socket.id;
 
-    }
+                        existingParticipant.status =
+                            "Online";
 
-    socket.to(room).emit("batteryStatus",{
+                        existingParticipant.name =
+                            name;
 
-        socketId: socket.id,
+                        existingParticipant.role =
+                            role;
 
-        level: data.level,
+                        existingParticipant.userId =
+                            userId;
 
-        charging: data.charging
+                        existingParticipant.studentId =
+                            studentId;
 
-    });
 
-});
+                        /*
+                        Reset temporary connection state.
+                        */
 
-socket.on("deviceInfo",(data)=>{
+                        existingParticipant.network =
+                            "Checking";
 
-    const room = socket.room;
 
-    if(!room) return;
+                        /*
+                        Preserve existing camera/mic
+                        state if available.
+                        */
 
-    const participant = meetingMemory.participants[room]?.find(
+                        if (
+                            existingParticipant.camera === undefined
+                        ) {
 
-        p => p.socketId === socket.id
+                            existingParticipant.camera =
+                                true;
 
-    );
+                        }
 
-    if(participant){
+                        if (
+                            existingParticipant.mic === undefined
+                        ) {
 
-        participant.device = data.device;
+                            existingParticipant.mic =
+                                true;
 
-    }
+                        }
 
-    socket.to(room).emit("deviceInfo",{
 
-        socketId: socket.id,
+                        /*
+                        --------------------------------------------------
+                        TELL EXISTING USERS THAT THIS PARTICIPANT
+                        GOT A NEW SOCKET ID.
+                        --------------------------------------------------
+                        */
 
-        device: data.device
+                        io.to(room).emit(
+                            "participantReconnected",
+                            {
 
-    });
+                                oldSocketId:
+                                    oldSocketId,
 
-});
+                                participant:
+                                    publicParticipant(
+                                        existingParticipant
+                                    )
 
-socket.on("visibilityStatus",(data)=>{
+                            }
+                        );
 
-    const room = socket.room;
+                    }
 
-    if(!room) return;
 
-    const participant = meetingMemory.participants[room]?.find(
+                    /*
+                    ==================================================
+                    JOIN ACCEPTED
+                    ==================================================
+                    */
 
-        p => p.socketId === socket.id
+                    socket.emit(
+                        "joinAccepted",
+                        {
 
-    );
+                            room:
+                                room,
 
-    if(participant){
+                            socketId:
+                                socket.id,
 
-        participant.visibility = data.visibility;
+                            role:
+                                role,
 
-    }
+                            name:
+                                name,
 
-    socket.to(room).emit("visibilityStatus",{
+                            reconnecting:
+                                reconnecting,
 
-        socketId: socket.id,
+                            maxParticipants:
+                                MAX_PARTICIPANTS,
 
-        visibility: data.visibility
+                            maxFounders:
+                                MAX_FOUNDERS,
 
-    });
+                            maxTeachers:
+                                MAX_TEACHERS,
 
-});
-socket.on("muteStudent", (data) => {
+                            maxStudents:
+                                MAX_STUDENTS
 
-    const room = socket.room;
+                        }
+                    );
 
-    if(!room) return;
 
-    const student = meetingMemory.participants[room]?.find(
+                    /*
+                    ==================================================
+                    SEND EXISTING PARTICIPANTS TO NEW USER
+                    ==================================================
 
-        p => p.socketId === data.socketId
+                    Exclude current socket.
 
-    );
+                    This works for:
 
-    if(!student) return;
+                    Founder
+                    Teacher
+                    Student
+                    ==================================================
+                    */
 
-    student.micMuted = !student.micMuted;
+                    const existingParticipants =
+                        buildParticipantList(room)
+                            .filter(
+                                participant =>
+                                    participant.socketId !==
+                                    socket.id
+                            );
 
-    io.to(data.socketId).emit("forceMute",{
 
-        muted: student.micMuted
+                    socket.emit(
+                        "participantList",
+                        {
 
-    });
+                            participants:
+                                existingParticipants
 
-    io.to(room).emit("studentControlUpdated",{
+                        }
+                    );
 
-        socketId: student.socketId,
 
-        micMuted: student.micMuted
+                    /*
+                    ==================================================
+                    NOTIFY EVERY OTHER PARTICIPANT
+                    ==================================================
+                    */
 
-    });
+                    if (!reconnecting) {
 
-});
+                        const currentParticipant =
+                            meetingMemory.participants[room]
+                                .find(
+                                    participant =>
+                                        participant.socketId ===
+                                        socket.id
+                                );
 
-socket.on("lockMic", (data) => {
 
-    const room = socket.room;
+                        if (currentParticipant) {
 
-    if (!room) return;
+                            socket.to(room).emit(
+                                "participantJoined",
+                                {
 
-    const participant = meetingMemory.participants[room]?.find(
+                                    participant:
+                                        publicParticipant(
+                                            currentParticipant
+                                        )
 
-        p => p.socketId === data.socketId
+                                }
+                            );
 
-    );
+                        }
 
-    if (!participant) return;
+                    } else {
 
-    participant.micLocked = !participant.micLocked;
+                        /*
+                        --------------------------------------------------
+                        RECONNECT NOTIFICATION
+                        --------------------------------------------------
+                        */
 
-    io.to(data.socketId).emit("forceMute", {
+                        const currentParticipant =
+                            meetingMemory.participants[room]
+                                .find(
+                                    participant =>
+                                        participant.socketId ===
+                                        socket.id
+                                );
 
-        muted: participant.micLocked
 
-    });
+                        if (currentParticipant) {
 
-    io.to(room).emit("studentControlUpdated", {
+                            socket.to(room).emit(
+                                "participantReconnected",
+                                {
 
-        socketId: data.socketId,
+                                    oldSocketId:
+                                        oldSocketId,
 
-        micLocked: participant.micLocked,
+                                    participant:
+                                        publicParticipant(
+                                            currentParticipant
+                                        )
 
-        micMuted: participant.micLocked
+                                }
+                            );
 
-    });
+                        }
 
-});
+                    }
 
-socket.on("lockCamera", (data) => {
 
-    const room = socket.room;
+                    /*
+                    ==================================================
+                    SEND COMPLETE CURRENT ROOM STATE
+                    ==================================================
+                    */
 
-    if (!room) return;
+                    io.to(room).emit(
+                        "roomParticipants",
+                        {
 
-    const participant = meetingMemory.participants[room]?.find(
+                            participants:
+                                buildParticipantList(room),
 
-        p => p.socketId === data.socketId
+                            counts: {
 
-    );
+                                founder:
+                                    countRole(
+                                        room,
+                                        "founder"
+                                    ),
 
-    if (!participant) return;
+                                teachers:
+                                    countRole(
+                                        room,
+                                        "teacher"
+                                    ),
 
-    participant.cameraLocked = !participant.cameraLocked;
+                                students:
+                                    countRole(
+                                        room,
+                                        "student"
+                                    ),
 
-    io.to(data.socketId).emit("forceStopCamera", {
+                                total:
+                                    getOnlineParticipants(
+                                        room
+                                    ).length
 
-        stopped: participant.cameraLocked
+                            },
 
-    });
+                            capacity: {
 
-    io.to(room).emit("studentControlUpdated", {
+                                founders:
+                                    MAX_FOUNDERS,
 
-        socketId: data.socketId,
+                                teachers:
+                                    MAX_TEACHERS,
 
-        cameraLocked: participant.cameraLocked,
+                                students:
+                                    MAX_STUDENTS,
 
-        cameraStopped: participant.cameraLocked
+                                total:
+                                    MAX_PARTICIPANTS
 
-    });
+                            }
 
-});
+                        }
+                    );
 
-socket.on("stopCamera", (data) => {
 
-    const room = socket.room;
+                    /*
+                    ==================================================
+                    LOG CURRENT ROOM
+                    ==================================================
+                    */
 
-    if(!room) return;
+                    console.log(
+                        "ROOM PARTICIPANTS:",
+                        buildParticipantList(room)
+                    );
 
-    const student = meetingMemory.participants[room]?.find(
 
-        p => p.socketId === data.socketId
+                    /*
+                    ==================================================
+                    STUDENT ATTENDANCE
+                    ==================================================
+                    */
 
-    );
+                    if (
+                        role === "student" &&
+                        periodId &&
+                        mongoose.Types.ObjectId.isValid(
+                            periodId
+                        )
+                    ) {
 
-    if(!student) return;
+                        try {
 
-    student.cameraStopped = !student.cameraStopped;
+                            console.log(
+                                "Searching TeacherSession:"
+                            );
 
-    io.to(data.socketId).emit("forceStopCamera",{
+                            console.log({
+                                periodId,
+                                studentId
+                            });
 
-        stopped: student.cameraStopped
 
-    });
+                            const session =
+                                await TeacherSession.findOne({
 
-    io.to(room).emit("studentControlUpdated",{
+                                    periodId:
+                                        new mongoose.Types.ObjectId(
+                                            periodId
+                                        )
 
-        socketId: student.socketId,
+                                });
 
-        cameraStopped: student.cameraStopped
 
-    });
+                            if (session) {
 
-});
 
-socket.on("removeStudent", (data) => {
+                                const existingStudent =
+                                    studentId
+                                        ? session.joinedStudents.find(
+                                            student =>
+                                                student.student &&
+                                                student.student
+                                                    .toString() ===
+                                                    studentId.toString()
+                                        )
+                                        : null;
 
-    io.to(data.socketId).emit("removedFromClass");
 
-    io.to(socket.room).emit("userDisconnected", data.socketId);
+                                if (existingStudent) {
 
-});
 
+                                    const now =
+                                        new Date();
 
-        /*
-        ==================================================
-        DISCONNECT
-        ==================================================
-        */
 
-        socket.on("disconnect", async ()=>{
+                                    if (
+                                        existingStudent.leftAt
+                                    ) {
 
-            const studentId = socket.studentId;
-const periodId = socket.periodId;
+                                        const disconnectedSeconds =
+                                            Math.floor(
+                                                (
+                                                    now -
+                                                    existingStudent.leftAt
+                                                ) / 1000
+                                            );
 
-const room = socket.room;
 
-            if(!room) return;
+                                        existingStudent.networkDisconnectTime =
+                                            (
+                                                existingStudent
+                                                    .networkDisconnectTime ||
+                                                0
+                                            ) +
+                                            disconnectedSeconds;
 
-            if(socket.role === "student"){
+                                    }
 
-    setTimeout(()=>{
 
-        const participant =
-        meetingMemory.participants[room]?.find(
+                                    existingStudent.rejoinedCount =
+                                        (
+                                            existingStudent
+                                                .rejoinedCount ||
+                                            0
+                                        ) + 1;
 
-            p => p.socketId === socket.id
 
-        );
+                                    existingStudent.isOnline =
+                                        true;
 
-        // Student rejoined within 15 seconds
-        if(
-            participant &&
-            participant.socketId !== socket.id
-        ){
-            return;
-        }
 
-        // Student really left
-        if(meetingMemory.participants[room]){
+                                    existingStudent.joinedAt =
+                                        now;
 
-            meetingMemory.participants[room] =
-            meetingMemory.participants[room].filter(
 
-                p => p.socketId !== socket.id
+                                    existingStudent.leftAt =
+                                        null;
 
+
+                                } else {
+
+
+                                    /*
+                                    First student join.
+                                    */
+
+                                    session.joinedStudents.push({
+
+                                        student:
+                                            studentId,
+
+                                        joinedAt:
+                                            new Date(),
+
+                                        isOnline:
+                                            true
+
+                                    });
+
+                                }
+
+
+                                await session.save();
+
+
+                                console.log(
+                                    "Student Attendance Updated"
+                                );
+
+                            } else {
+
+                                console.log(
+                                    "NO SESSION FOUND"
+                                );
+
+                            }
+
+                        } catch (error) {
+
+                            console.error(
+                                "Student attendance update error:",
+                                error
+                            );
+
+                        }
+
+                    }
+
+
+                    /*
+                    ==================================================
+                    SCREEN SHARE ALREADY ACTIVE
+                    ==================================================
+                    */
+
+                    if (
+                        role !== "teacher" &&
+                        meetingMemory.screenShare &&
+                        meetingMemory.screenShare[room]
+                    ) {
+
+                        socket.emit(
+                            "screenAlreadySharing",
+                            {
+
+                                teacherSocketId:
+                                    meetingMemory
+                                        .screenShare[room]
+                                        .teacherSocketId
+
+                            }
+                        );
+
+                    }
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            GENERIC WEBRTC OFFER
+            ======================================================
+
+            Works for:
+
+            Founder ↔ Teacher
+            Founder ↔ Student
+            Teacher ↔ Teacher
+            Teacher ↔ Student
+            Student ↔ Student
+
+            ======================================================
+            */
+
+            socket.on(
+                "offer",
+                (data = {}) => {
+
+
+                    const targetSocketId =
+                        data.targetSocketId;
+
+
+                    if (!targetSocketId) {
+
+                        console.warn(
+                            "Offer missing targetSocketId"
+                        );
+
+                        return;
+
+                    }
+
+
+                    console.log(
+                        "SERVER RECEIVED OFFER",
+                        socket.id,
+                        "->",
+                        targetSocketId
+                    );
+
+
+                    io.to(targetSocketId).emit(
+                        "offer",
+                        {
+
+                            senderSocketId:
+                                socket.id,
+
+                            senderRole:
+                                socket.role,
+
+                            senderName:
+                                socket.name,
+
+                            offer:
+                                data.offer
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            ANSWER
+            ======================================================
+            */
+
+            socket.on(
+                "answer",
+                (data = {}) => {
+
+
+                    const targetSocketId =
+                        data.targetSocketId ||
+                        data.teacherSocketId;
+
+
+                    if (!targetSocketId) {
+
+                        console.warn(
+                            "Answer missing targetSocketId"
+                        );
+
+                        return;
+
+                    }
+
+
+                    io.to(targetSocketId).emit(
+                        "answer",
+                        {
+
+                            senderSocketId:
+                                socket.id,
+
+                            senderRole:
+                                socket.role,
+
+                            senderName:
+                                socket.name,
+
+                            answer:
+                                data.answer
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            STUDENT READY
+
+            Kept for compatibility with existing frontend code.
+
+            ======================================================
+            */
+
+            socket.on(
+                "studentReady",
+                (data = {}) => {
+
+
+                    if (
+                        !data.teacherSocketId
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    io.to(
+                        data.teacherSocketId
+                    ).emit(
+                        "studentReady",
+                        {
+
+                            studentSocketId:
+                                socket.id
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            ICE CANDIDATE
+            ======================================================
+            */
+
+            socket.on(
+                "ice-candidate",
+                (data = {}) => {
+
+
+                    const targetSocketId =
+                        data.targetSocketId;
+
+
+                    if (!targetSocketId) {
+
+                        console.warn(
+                            "ICE missing targetSocketId"
+                        );
+
+                        return;
+
+                    }
+
+
+                    io.to(targetSocketId).emit(
+                        "ice-candidate",
+                        {
+
+                            senderSocketId:
+                                socket.id,
+
+                            candidate:
+                                data.candidate
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            SCREEN SHARE
+            ======================================================
+            */
+
+            socket.on(
+                "screen-start",
+                ({ room } = {}) => {
+
+
+                    if (!room) return;
+
+
+                    /*
+                    Only teachers can start screen sharing.
+                    */
+
+                    if (
+                        socket.role !== "teacher"
+                    ) {
+
+                        console.warn(
+                            "Non-teacher attempted screen share:",
+                            socket.id
+                        );
+
+                        return;
+
+                    }
+
+
+                    /*
+                    Only one screen share at a time.
+                    */
+
+                    if (
+                        meetingMemory.screenShare &&
+                        meetingMemory.screenShare[room]
+                    ) {
+
+                        socket.emit(
+                            "screen-start-rejected",
+                            {
+
+                                reason:
+                                    "Another teacher is already sharing the screen."
+
+                            }
+                        );
+
+                        return;
+
+                    }
+
+
+                    if (
+                        !meetingMemory.screenShare
+                    ) {
+
+                        meetingMemory.screenShare = {};
+
+                    }
+
+
+                    meetingMemory.screenShare[room] = {
+
+                        teacherSocketId:
+                            socket.id,
+
+                        startedAt:
+                            Date.now()
+
+                    };
+
+
+                    socket.to(room).emit(
+                        "screen-start",
+                        {
+
+                            teacherSocketId:
+                                socket.id
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            SCREEN STOP
+            ======================================================
+            */
+
+            socket.on(
+                "screen-stop",
+                ({ room } = {}) => {
+
+
+                    if (!room) return;
+
+
+                    const currentShare =
+                        meetingMemory
+                            .screenShare &&
+                        meetingMemory
+                            .screenShare[room];
+
+
+                    /*
+                    Only the teacher who started the
+                    screen share can stop it.
+                    */
+
+                    if (
+                        currentShare &&
+                        currentShare.teacherSocketId ===
+                            socket.id
+                    ) {
+
+                        delete meetingMemory
+                            .screenShare[room];
+
+
+                        socket.to(room).emit(
+                            "screen-stop"
+                        );
+
+                    }
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            SCREEN REQUEST
+            ======================================================
+            */
+
+            socket.on(
+                "screen-request",
+                ({ teacherSocketId } = {}) => {
+
+
+                    if (!teacherSocketId) return;
+
+
+                    io.to(
+                        teacherSocketId
+                    ).emit(
+                        "screen-request",
+                        {
+
+                            studentSocketId:
+                                socket.id
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            SCREEN OFFER
+            ======================================================
+            */
+
+            socket.on(
+                "screen-offer",
+                (data = {}) => {
+
+
+                    if (
+                        !data.studentSocketId
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    io.to(
+                        data.studentSocketId
+                    ).emit(
+                        "screen-offer",
+                        {
+
+                            teacherSocketId:
+                                socket.id,
+
+                            offer:
+                                data.offer
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            SCREEN ANSWER
+            ======================================================
+            */
+
+            socket.on(
+                "screen-answer",
+                (data = {}) => {
+
+
+                    const targetSocketId =
+                        data.teacherSocketId ||
+                        data.targetSocketId;
+
+
+                    if (!targetSocketId) {
+
+                        return;
+
+                    }
+
+
+                    io.to(
+                        targetSocketId
+                    ).emit(
+                        "screen-answer",
+                        {
+
+                            studentSocketId:
+                                socket.id,
+
+                            answer:
+                                data.answer
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            SCREEN ICE
+            ======================================================
+            */
+
+            socket.on(
+                "screen-ice",
+                (data = {}) => {
+
+
+                    if (
+                        !data.targetSocketId
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    io.to(
+                        data.targetSocketId
+                    ).emit(
+                        "screen-ice",
+                        {
+
+                            senderSocketId:
+                                socket.id,
+
+                            candidate:
+                                data.candidate
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            MEDIA STATUS
+            ======================================================
+            */
+
+            socket.on(
+                "mediaStatus",
+                (data = {}) => {
+
+
+                    socket.camera =
+                        data.camera;
+
+                    socket.mic =
+                        data.mic;
+
+
+                    const room =
+                        socket.room;
+
+
+                    if (!room) return;
+
+
+                    const participant =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    socket.id
+                            );
+
+
+                    if (participant) {
+
+                        participant.camera =
+                            data.camera;
+
+                        participant.mic =
+                            data.mic;
+
+                    }
+
+
+                    socket.to(room).emit(
+                        "mediaStatus",
+                        {
+
+                            socketId:
+                                socket.id,
+
+                            camera:
+                                data.camera,
+
+                            mic:
+                                data.mic
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            NETWORK STATUS
+            ======================================================
+            */
+
+            socket.on(
+                "networkStatus",
+                (data = {}) => {
+
+
+                    const room =
+                        socket.room;
+
+
+                    if (!room) return;
+
+
+                    const participant =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    socket.id
+                            );
+
+
+                    if (participant) {
+
+                        participant.network =
+                            data.quality;
+
+                    }
+
+
+                    socket.to(room).emit(
+                        "networkStatus",
+                        {
+
+                            socketId:
+                                socket.id,
+
+                            quality:
+                                data.quality
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            STUDENT RECONNECTING
+            ======================================================
+            */
+
+            socket.on(
+                "studentReconnecting",
+                () => {
+
+
+                    if (!socket.room)
+                        return;
+
+
+                    socket.to(
+                        socket.room
+                    ).emit(
+                        "studentReconnecting",
+                        {
+
+                            socketId:
+                                socket.id
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            STUDENT RECONNECTED
+            ======================================================
+            */
+
+            socket.on(
+                "studentReconnected",
+                () => {
+
+
+                    if (!socket.room)
+                        return;
+
+
+                    console.log(
+                        "Participant Reconnected:",
+                        socket.id
+                    );
+
+
+                    socket.to(
+                        socket.room
+                    ).emit(
+                        "studentReconnected",
+                        {
+
+                            socketId:
+                                socket.id
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            BATTERY STATUS
+            ======================================================
+            */
+
+            socket.on(
+                "batteryStatus",
+                (data = {}) => {
+
+
+                    const room =
+                        socket.room;
+
+
+                    if (!room) return;
+
+
+                    const participant =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    socket.id
+                            );
+
+
+                    if (participant) {
+
+                        participant.battery =
+                            data.level;
+
+                        participant.charging =
+                            data.charging;
+
+                    }
+
+
+                    socket.to(room).emit(
+                        "batteryStatus",
+                        {
+
+                            socketId:
+                                socket.id,
+
+                            level:
+                                data.level,
+
+                            charging:
+                                data.charging
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            DEVICE INFO
+            ======================================================
+            */
+
+            socket.on(
+                "deviceInfo",
+                (data = {}) => {
+
+
+                    const room =
+                        socket.room;
+
+
+                    if (!room) return;
+
+
+                    const participant =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    socket.id
+                            );
+
+
+                    if (participant) {
+
+                        participant.device =
+                            data.device;
+
+                    }
+
+
+                    socket.to(room).emit(
+                        "deviceInfo",
+                        {
+
+                            socketId:
+                                socket.id,
+
+                            device:
+                                data.device
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            VISIBILITY STATUS
+            ======================================================
+            */
+
+            socket.on(
+                "visibilityStatus",
+                (data = {}) => {
+
+
+                    const room =
+                        socket.room;
+
+
+                    if (!room) return;
+
+
+                    const participant =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    socket.id
+                            );
+
+
+                    if (participant) {
+
+                        participant.visibility =
+                            data.visibility;
+
+                    }
+
+
+                    socket.to(room).emit(
+                        "visibilityStatus",
+                        {
+
+                            socketId:
+                                socket.id,
+
+                            visibility:
+                                data.visibility
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            MUTE STUDENT
+            ======================================================
+            */
+
+            socket.on(
+                "muteStudent",
+                (data = {}) => {
+
+
+                    const room =
+                        socket.room;
+
+
+                    if (!room) return;
+
+
+                    const student =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    data.socketId &&
+                                    p.role ===
+                                    "student"
+                            );
+
+
+                    if (!student)
+                        return;
+
+
+                    student.micMuted =
+                        !student.micMuted;
+
+
+                    io.to(
+                        data.socketId
+                    ).emit(
+                        "forceMute",
+                        {
+
+                            muted:
+                                student.micMuted
+
+                        }
+                    );
+
+
+                    io.to(room).emit(
+                        "studentControlUpdated",
+                        {
+
+                            socketId:
+                                student.socketId,
+
+                            micMuted:
+                                student.micMuted
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            LOCK MICROPHONE
+            ======================================================
+            */
+
+            socket.on(
+                "lockMic",
+                (data = {}) => {
+
+
+                    const room =
+                        socket.room;
+
+
+                    if (!room) return;
+
+
+                    const participant =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    data.socketId &&
+                                    p.role ===
+                                    "student"
+                            );
+
+
+                    if (!participant)
+                        return;
+
+
+                    participant.micLocked =
+                        !participant.micLocked;
+
+
+                    io.to(
+                        data.socketId
+                    ).emit(
+                        "forceMute",
+                        {
+
+                            muted:
+                                participant.micLocked
+
+                        }
+                    );
+
+
+                    io.to(room).emit(
+                        "studentControlUpdated",
+                        {
+
+                            socketId:
+                                participant.socketId,
+
+                            micLocked:
+                                participant.micLocked,
+
+                            micMuted:
+                                participant.micLocked
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            LOCK CAMERA
+            ======================================================
+            */
+
+            socket.on(
+                "lockCamera",
+                (data = {}) => {
+
+
+                    const room =
+                        socket.room;
+
+
+                    if (!room) return;
+
+
+                    const participant =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    data.socketId &&
+                                    p.role ===
+                                    "student"
+                            );
+
+
+                    if (!participant)
+                        return;
+
+
+                    participant.cameraLocked =
+                        !participant.cameraLocked;
+
+
+                    io.to(
+                        data.socketId
+                    ).emit(
+                        "forceStopCamera",
+                        {
+
+                            stopped:
+                                participant.cameraLocked
+
+                        }
+                    );
+
+
+                    io.to(room).emit(
+                        "studentControlUpdated",
+                        {
+
+                            socketId:
+                                participant.socketId,
+
+                            cameraLocked:
+                                participant.cameraLocked,
+
+                            cameraStopped:
+                                participant.cameraLocked
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            STOP CAMERA
+            ======================================================
+            */
+
+            socket.on(
+                "stopCamera",
+                (data = {}) => {
+
+
+                    const room =
+                        socket.room;
+
+
+                    if (!room) return;
+
+
+                    const student =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    data.socketId &&
+                                    p.role ===
+                                    "student"
+                            );
+
+
+                    if (!student)
+                        return;
+
+
+                    student.cameraStopped =
+                        !student.cameraStopped;
+
+
+                    io.to(
+                        data.socketId
+                    ).emit(
+                        "forceStopCamera",
+                        {
+
+                            stopped:
+                                student.cameraStopped
+
+                        }
+                    );
+
+
+                    io.to(room).emit(
+                        "studentControlUpdated",
+                        {
+
+                            socketId:
+                                student.socketId,
+
+                            cameraStopped:
+                                student.cameraStopped
+
+                        }
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            REMOVE STUDENT
+            ======================================================
+            */
+
+            socket.on(
+                "removeStudent",
+                (data = {}) => {
+
+
+                    const room =
+                        socket.room;
+
+
+                    if (!room) return;
+
+
+                    const student =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    data.socketId &&
+                                    p.role ===
+                                    "student"
+                            );
+
+
+                    if (!student)
+                        return;
+
+
+                    io.to(
+                        data.socketId
+                    ).emit(
+                        "removedFromClass"
+                    );
+
+
+                    io.to(room).emit(
+                        "userDisconnected",
+                        data.socketId
+                    );
+
+                }
+            );
+
+
+            /*
+            ======================================================
+            DISCONNECT
+            ======================================================
+            */
+
+            socket.on(
+                "disconnect",
+                async () => {
+
+
+                    const room =
+                        socket.room;
+
+                    const role =
+                        socket.role;
+
+                    const studentId =
+                        socket.studentId;
+
+                    const periodId =
+                        socket.periodId;
+
+
+                    if (!room)
+                        return;
+
+
+                    console.log(
+                        "=========================================="
+                    );
+
+                    console.log(
+                        "MEETING PARTICIPANT DISCONNECTED"
+                    );
+
+                    console.log(
+                        "Socket:",
+                        socket.id
+                    );
+
+                    console.log(
+                        "Role:",
+                        role
+                    );
+
+                    console.log(
+                        "Name:",
+                        socket.name
+                    );
+
+                    console.log(
+                        "Room:",
+                        room
+                    );
+
+                    console.log(
+                        "=========================================="
+                    );
+
+
+                    /*
+                    ==================================================
+                    MARK PARTICIPANT OFFLINE FIRST
+                    ==================================================
+                    */
+
+                    const participant =
+                        getParticipants(room)
+                            .find(
+                                p =>
+                                    p.socketId ===
+                                    socket.id
+                            );
+
+
+                    if (participant) {
+
+                        participant.status =
+                            "Offline";
+
+                    }
+
+
+                    /*
+                    ==================================================
+                    STUDENT DATABASE ATTENDANCE
+
+                    Preserve existing attendance behavior.
+                    ==================================================
+                    */
+
+                    if (
+                        role === "student" &&
+                        studentId &&
+                        periodId &&
+                        mongoose.Types.ObjectId.isValid(
+                            periodId
+                        )
+                    ) {
+
+                        try {
+
+                            const session =
+                                await TeacherSession.findOne({
+
+                                    periodId:
+                                        new mongoose.Types.ObjectId(
+                                            periodId
+                                        )
+
+                                });
+
+
+                            if (session) {
+
+                                const student =
+                                    session.joinedStudents.find(
+                                        s =>
+                                            s.student &&
+                                            s.student
+                                                .toString() ===
+                                                studentId.toString()
+                                    );
+
+
+                                if (student) {
+
+                                    student.leftAt =
+                                        new Date();
+
+                                    student.isOnline =
+                                        false;
+
+
+                                    const currentSessionSeconds =
+                                        Math.floor(
+                                            (
+                                                student.leftAt -
+                                                student.joinedAt
+                                            ) / 1000
+                                        );
+
+
+                                    student.duration =
+                                        (
+                                            student.duration ||
+                                            0
+                                        ) +
+                                        currentSessionSeconds;
+
+
+                                    await session.save();
+
+
+                                    console.log(
+                                        "Student disconnected - attendance updated"
+                                    );
+
+                                }
+
+                            }
+
+                        } catch (error) {
+
+                            console.error(
+                                "Student disconnect attendance error:",
+                                error
+                            );
+
+                        }
+
+                    }
+
+
+                    /*
+                    ==================================================
+                    NOTIFY ROOM THAT PARTICIPANT IS TEMPORARILY
+                    DISCONNECTED.
+
+                    We keep the participant for 15 seconds so a
+                    reconnect does not immediately remove the card.
+                    ==================================================
+                    */
+
+                    socket.to(room).emit(
+                        "participantReconnecting",
+                        {
+
+                            socketId:
+                                socket.id,
+
+                            role:
+                                role,
+
+                            name:
+                                socket.name
+
+                        }
+                    );
+
+
+                    /*
+                    ==================================================
+                    15 SECOND RECONNECT WINDOW
+                    ==================================================
+                    */
+
+                    setTimeout(
+                        async () => {
+
+
+                            if (
+                                !meetingMemory.participants[room]
+                            ) {
+
+                                return;
+
+                            }
+
+
+                            /*
+                            Find participant by identity,
+                            NOT by old socket ID.
+
+                            This is critical for reconnect.
+                            */
+
+                            let currentParticipant =
+                                null;
+
+
+                            if (studentId) {
+
+                                currentParticipant =
+                                    meetingMemory.participants[room]
+                                        .find(
+                                            p =>
+                                                p.studentId &&
+                                                p.studentId.toString() ===
+                                                    studentId.toString()
+                                        );
+
+                            }
+
+
+                            if (
+                                !currentParticipant &&
+                                socket.userId
+                            ) {
+
+                                currentParticipant =
+                                    meetingMemory.participants[room]
+                                        .find(
+                                            p =>
+                                                p.userId &&
+                                                p.userId.toString() ===
+                                                    socket.userId.toString()
+                                        );
+
+                            }
+
+
+                            if (!currentParticipant) {
+
+                                currentParticipant =
+                                    meetingMemory.participants[room]
+                                        .find(
+                                            p =>
+                                                p.role === role &&
+                                                p.name ===
+                                                    socket.name
+                                        );
+
+                            }
+
+
+                            /*
+                            --------------------------------------------------
+                            PARTICIPANT RECONNECTED
+
+                            The participant now has a different socket ID.
+                            Do NOT remove them.
+                            --------------------------------------------------
+                            */
+
+                            if (
+                                currentParticipant &&
+                                currentParticipant.socketId !==
+                                    socket.id &&
+                                currentParticipant.status ===
+                                    "Online"
+                            ) {
+
+                                console.log(
+                                    "Reconnect detected - keeping participant:",
+                                    currentParticipant.name
+                                );
+
+                                return;
+
+                            }
+
+
+                            /*
+                            --------------------------------------------------
+                            REALLY LEFT
+                            --------------------------------------------------
+                            */
+
+                            if (
+                                meetingMemory.participants[room]
+                            ) {
+
+                                meetingMemory.participants[room] =
+                                    meetingMemory.participants[room]
+                                        .filter(
+                                            p =>
+                                                p.socketId !==
+                                                socket.id
+                                        );
+
+                            }
+
+
+                            /*
+                            Notify everyone.
+                            */
+
+                            io.to(room).emit(
+                                "participantLeft",
+                                {
+
+                                    socketId:
+                                        socket.id,
+
+                                    role:
+                                        role,
+
+                                    name:
+                                        socket.name
+
+                                }
+                            );
+
+
+                            /*
+                            Keep compatibility with old frontend.
+                            */
+
+                            io.to(room).emit(
+                                "userDisconnected",
+                                socket.id
+                            );
+
+
+                            /*
+                            --------------------------------------------------
+                            IF ROOM IS EMPTY
+
+                            Clean temporary memory.
+                            --------------------------------------------------
+                            */
+
+                            if (
+                                getParticipants(room)
+                                    .length === 0
+                            ) {
+
+                                delete meetingMemory
+                                    .participants[room];
+
+
+                                if (
+                                    meetingMemory.screenShare &&
+                                    meetingMemory.screenShare[room]
+                                ) {
+
+                                    delete meetingMemory
+                                        .screenShare[room];
+
+                                }
+
+
+                                console.log(
+                                    "Empty room cleaned:",
+                                    room
+                                );
+
+                                return;
+
+                            }
+
+
+                            /*
+                            --------------------------------------------------
+                            TEACHER ATTENDANCE
+
+                            Only close the TeacherSession when NO TEACHER
+                            remains online in this room.
+
+                            This supports 2 teachers.
+                            --------------------------------------------------
+                            */
+
+                            if (
+                                role === "teacher" &&
+                                periodId &&
+                                mongoose.Types.ObjectId.isValid(
+                                    periodId
+                                )
+                            ) {
+
+
+                                const onlineTeachers =
+                                    countRole(
+                                        room,
+                                        "teacher"
+                                    );
+
+
+                                if (
+                                    onlineTeachers === 0
+                                ) {
+
+                                    try {
+
+                                        const session =
+                                            await TeacherSession.findOne({
+
+                                                periodId:
+                                                    new mongoose.Types.ObjectId(
+                                                        periodId
+                                                    )
+
+                                            });
+
+
+                                        if (session) {
+
+                                            session.teacherLeft =
+                                                new Date();
+
+                                            session.classEnded =
+                                                new Date();
+
+
+                                            if (
+                                                session.teacherJoined
+                                            ) {
+
+                                                session.teacherDuration =
+                                                    Math.floor(
+                                                        (
+                                                            session.teacherLeft -
+                                                            session.teacherJoined
+                                                        ) / 1000
+                                                    );
+
+                                                session.actualClassDuration =
+                                                    session.teacherDuration;
+
+                                            }
+
+
+                                            await session.save();
+
+
+                                            console.log(
+                                                "All teachers left - Teacher Session Closed"
+                                            );
+
+                                        }
+
+                                    } catch (error) {
+
+                                        console.error(
+                                            "Teacher session close error:",
+                                            error
+                                        );
+
+                                    }
+
+                                } else {
+
+                                    console.log(
+                                        "One or more teachers still online. Session remains active."
+                                    );
+
+                                }
+
+                            }
+
+                        },
+                        15000
+                    );
+
+                }
             );
 
         }
-
-        io.to(room).emit("userDisconnected", socket.id);
-
-    },15000);
-
-}
-            if(socket.role === "student" && socket.studentId){
-
-    const session = await TeacherSession.findOne({
-
-        periodId: new mongoose.Types.ObjectId(socket.periodId)
-
-    });
-
-    if(session){
-
-        const student = session.joinedStudents.find(
-
-    s => s.student &&
-         s.student.toString() === socket.studentId
-
-);
-
-        if(student){
-
-            student.leftAt = new Date();
-
-            student.isOnline = false;
-
-            const currentSessionSeconds = Math.floor(
-
-    (student.leftAt - student.joinedAt) / 1000
-
-);
-
-student.duration += currentSessionSeconds;
-
-            await session.save();
-
-            console.log("Student disconnected");
-
-        }
-
-    }
-
-}
-
-            io.to(room).emit(
-
-    "studentReconnecting",
-
-    {
-
-        socketId: socket.id
-
-    }
-
-);
-
-            if(socket.role === "teacher" && periodId){
-
-    const session = await TeacherSession.findOne({
-
-        periodId:new mongoose.Types.ObjectId(periodId)
-
-    });
-
-    if(session){
-
-        session.teacherLeft = new Date();
-
-        session.classEnded = new Date();
-
-        session.teacherDuration = Math.floor(
-
-            (session.teacherLeft - session.teacherJoined)/1000
-
-        );
-
-        session.actualClassDuration = session.teacherDuration;
-
-        await session.save();
-
-        console.log("✅ Teacher Session Closed");
-
-    }
-
-}
-
-            
-            console.log(
-
-                "Disconnected:",
-
-                socket.id
-
-            );
-
-        });
-
-    });
+    );
 
 };
-
-
-
