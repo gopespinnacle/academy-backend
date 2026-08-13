@@ -26,6 +26,7 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
 const User = require("../models/User");
+const TeacherLeave = require("../models/TeacherLeave");
 const MonthlyFee = require("../models/MonthlyFee");
 
 const FinanceCategory = require("../models/FinanceCategory");
@@ -2772,4 +2773,265 @@ router.put(
     "/teacher/:id/toggle-screen-share",
     founderController.toggleScreenShare
 );
+/* =========================================================
+   FOUNDER - TEACHER LEAVE REQUESTS
+   ========================================================= */
+
+router.get(
+    "/teacher-leaves",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const leaves =
+                await TeacherLeave.find({})
+                .populate(
+                    "teacher",
+                    "name email"
+                )
+                .populate(
+                    "periodAssignment",
+                    "className subject day startTime endTime"
+                )
+                .sort({
+                    status: 1,
+                    date: 1,
+                    createdAt: -1
+                });
+
+            res.json({
+
+                success: true,
+
+                data: leaves
+
+            });
+
+        } catch (err) {
+
+            console.error(
+                "FOUNDER TEACHER LEAVES ERROR:",
+                err
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to load teacher leave requests."
+
+            });
+
+        }
+
+    }
+);
+
+/* =========================================================
+   FOUNDER - APPROVE TEACHER LEAVE
+   ========================================================= */
+
+router.put(
+    "/teacher-leaves/:id/approve",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const leave =
+                await TeacherLeave.findById(
+                    req.params.id
+                );
+
+            if (!leave) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "Leave request not found."
+
+                });
+
+            }
+
+
+            if (
+                leave.status !== "Pending"
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Only pending leave requests can be approved."
+
+                });
+
+            }
+
+
+            leave.status =
+                "Approved";
+
+            leave.approvedBy =
+                req.user.id;
+
+            leave.approvedAt =
+                new Date();
+
+            leave.rejectedBy =
+                null;
+
+            leave.rejectedAt =
+                null;
+
+            leave.founderComment =
+                req.body.comment || "";
+
+
+            await leave.save();
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Teacher leave approved successfully.",
+
+                data:
+                    leave
+
+            });
+
+        } catch (err) {
+
+            console.error(
+                "APPROVE TEACHER LEAVE ERROR:",
+                err
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to approve teacher leave."
+
+            });
+
+        }
+
+    }
+);
+
+/* =========================================================
+   FOUNDER - REJECT TEACHER LEAVE
+   ========================================================= */
+
+router.put(
+    "/teacher-leaves/:id/reject",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const leave =
+                await TeacherLeave.findById(
+                    req.params.id
+                );
+
+            if (!leave) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "Leave request not found."
+
+                });
+
+            }
+
+
+            if (
+                leave.status !== "Pending"
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Only pending leave requests can be rejected."
+
+                });
+
+            }
+
+
+            leave.status =
+                "Rejected";
+
+            leave.rejectedBy =
+                req.user.id;
+
+            leave.rejectedAt =
+                new Date();
+
+            leave.approvedBy =
+                null;
+
+            leave.approvedAt =
+                null;
+
+            leave.founderComment =
+                req.body.comment || "";
+
+
+            await leave.save();
+
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Teacher leave rejected.",
+
+                data:
+                    leave
+
+            });
+
+        } catch (err) {
+
+            console.error(
+                "REJECT TEACHER LEAVE ERROR:",
+                err
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to reject teacher leave."
+
+            });
+
+        }
+
+    }
+);
+
 module.exports = router;
