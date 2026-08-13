@@ -18,6 +18,7 @@ const ExamActivity = require("../models/ExamActivity");
 const ExamCamera = require("../models/ExamCamera");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const TeacherSchedule = require("../models/TeacherSchedule");
+const TeacherLeave = require("../models/TeacherLeave");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
 
@@ -825,4 +826,466 @@ router.get("/calendar", protect, authorize("teacher"), async (req, res) => {
     }
 
 });
+
+
+/* =========================================================
+   TEACHER LEAVE - PERIODS
+   ========================================================= */
+
+router.get(
+    "/leave-periods",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+
+        try {
+
+            const periods = await PeriodAssignment.find({
+                teacher: req.user.id
+            })
+            .select(
+                "className subject language eca day startTime endTime assignments"
+            )
+            .populate(
+                "assignments.student",
+                "name studentName"
+            )
+            .sort({
+                day: 1,
+                startTime: 1
+            });
+
+            res.json({
+
+                success: true,
+
+                data: periods
+
+            });
+
+        } catch (err) {
+
+            console.error(
+                "LEAVE PERIODS ERROR:",
+                err
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to load teacher periods."
+
+            });
+
+        }
+
+    }
+);
+
+/* =========================================================
+   TEACHER LEAVE - APPLY
+   ========================================================= */
+
+router.post(
+    "/apply-leave",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+
+        try {
+
+            const {
+
+                periodAssignmentId,
+
+                date,
+                day,
+
+                leaveCategory,
+                leaveSubcategory,
+
+                explanation,
+
+                compensationDate,
+                compensationStartTime,
+                compensationEndTime
+
+            } = req.body;
+
+
+            /* ================= REQUIRED ================= */
+
+            if (!periodAssignmentId) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Period is required."
+
+                });
+
+            }
+
+            if (!date || !day) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Leave date and day are required."
+
+                });
+
+            }
+
+            if (!leaveCategory) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Leave category is required."
+
+                });
+
+            }
+
+            if (!leaveSubcategory) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Leave subcategory is required."
+
+                });
+
+            }
+
+
+            /* ================= GET PERIOD ================= */
+
+            const period =
+                await PeriodAssignment.findById(
+                    periodAssignmentId
+                );
+
+            if (!period) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "Period not found."
+
+                });
+
+            }
+
+
+            /* ================= TEACHER SECURITY ================= */
+
+            if (
+                period.teacher.toString()
+                !== req.user.id.toString()
+            ) {
+
+                return res.status(403).json({
+
+                    success: false,
+
+                    message:
+                        "You are not authorized to apply leave for this period."
+
+                });
+
+            }
+
+
+            /* ================= DUPLICATE CHECK ================= */
+
+            const existingLeave =
+                await TeacherLeave.findOne({
+
+                    teacher: req.user.id,
+
+                    periodAssignment:
+                        period._id,
+
+                    date: date,
+
+                    status: {
+                        $in: [
+                            "Pending",
+                            "Approved"
+                        ]
+                    }
+
+                });
+
+            if (existingLeave) {
+
+                return res.status(409).json({
+
+                    success: false,
+
+                    message:
+                        "A leave request already exists for this period and date."
+
+                });
+
+            }
+
+
+            /* ================= COMPENSATION ================= */
+
+            if (
+                compensationDate ||
+                compensationStartTime ||
+                compensationEndTime
+            ) {
+
+                if (
+                    !compensationDate ||
+                    !compensationStartTime ||
+                    !compensationEndTime
+                ) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "Please provide complete compensation class date and time."
+
+                    });
+
+                }
+
+                const leaveDate =
+                    new Date(date + "T00:00:00");
+
+                const compDate =
+                    new Date(
+                        compensationDate +
+                        "T00:00:00"
+                    );
+
+                if (
+                    isNaN(leaveDate.getTime()) ||
+                    isNaN(compDate.getTime())
+                ) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "Invalid compensation date."
+
+                    });
+
+                }
+
+                if (compDate < leaveDate) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "Compensation class cannot be before the leave date."
+
+                    });
+
+                }
+
+            }
+
+
+            /* ================= TEACHER ================= */
+
+            const teacher =
+                await User.findById(
+                    req.user.id
+                );
+
+            if (!teacher) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "Teacher account not found."
+
+                });
+
+            }
+
+
+            /* ================= SAVE ================= */
+
+            const leave =
+                await TeacherLeave.create({
+
+                    teacher:
+                        teacher._id,
+
+                    teacherName:
+                        teacher.name ||
+                        teacher.teacherName ||
+                        "",
+
+
+                    periodAssignment:
+                        period._id,
+
+                    className:
+                        period.className,
+
+                    subject:
+                        period.subject || "",
+
+
+                    date:
+                        date,
+
+                    day:
+                        day,
+
+                    startTime:
+                        period.startTime,
+
+                    endTime:
+                        period.endTime,
+
+
+                    leaveCategory:
+                        leaveCategory,
+
+                    leaveSubcategory:
+                        leaveSubcategory,
+
+                    explanation:
+                        explanation || "",
+
+
+                    compensationDate:
+                        compensationDate || "",
+
+                    compensationStartTime:
+                        compensationStartTime || "",
+
+                    compensationEndTime:
+                        compensationEndTime || "",
+
+
+                    status:
+                        "Pending"
+
+                });
+
+
+            /* ================= RESPONSE ================= */
+
+            res.status(201).json({
+
+                success: true,
+
+                message:
+                    "Leave submitted for Founder approval.",
+
+                data:
+                    leave
+
+            });
+
+        } catch (err) {
+
+            console.error(
+                "APPLY LEAVE ERROR:",
+                err
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    err.message
+
+            });
+
+        }
+
+    }
+);
+
+/* =========================================================
+   TEACHER LEAVE - MY REQUESTS
+   ========================================================= */
+
+router.get(
+    "/my-leaves",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+
+        try {
+
+            const leaves =
+                await TeacherLeave.find({
+
+                    teacher:
+                        req.user.id
+
+                })
+                .populate(
+                    "periodAssignment",
+                    "className subject day startTime endTime"
+                )
+                .sort({
+                    date: -1,
+                    createdAt: -1
+                });
+
+
+            res.json({
+
+                success: true,
+
+                data:
+                    leaves
+
+            });
+
+        } catch (err) {
+
+            console.error(
+                "MY LEAVES ERROR:",
+                err
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to load leave requests."
+
+            });
+
+        }
+
+    }
+);
 module.exports = router;
