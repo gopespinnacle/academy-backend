@@ -1384,15 +1384,7 @@ router.post(
             }
 
 
-            if (teacherAmount > paidAmount) {
-
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Fee to Teacher cannot be greater than Fee Paid"
-                });
-
-            }
+            
 
 
             // ================= FIND STUDENT =================
