@@ -2713,24 +2713,58 @@ function registerMeetingSocket(io) {
 
 
                             /*
-                            --------------------------------------------------
-                            REALLY LEFT
-                            --------------------------------------------------
-                            */
+--------------------------------------------------
+REALLY LEFT
+--------------------------------------------------
+*/
 
-                            if (
-                                meetingMemory.participants[room]
-                            ) {
+if (
+    meetingMemory.participants[room]
+) {
 
-                                meetingMemory.participants[room] =
-                                    meetingMemory.participants[room]
-                                        .filter(
-                                            p =>
-                                                p.socketId !==
-                                                socket.id
-                                        );
+    meetingMemory.participants[room] =
+        meetingMemory.participants[room]
+            .filter(
+                p =>
+                    p.socketId !==
+                    socket.id
+            );
 
-                            }
+}
+
+
+/*
+--------------------------------------------------
+SCREEN SHARE CLEANUP
+
+If the teacher who owned the screen share
+has REALLY left the classroom, remove the
+screen-share ownership.
+
+This is NOT done during temporary reconnect.
+--------------------------------------------------
+*/
+
+if (
+    role === "teacher" &&
+    meetingMemory.screenShare &&
+    meetingMemory.screenShare[room] &&
+    meetingMemory.screenShare[room].teacherSocketId ===
+        socket.id
+) {
+
+    delete meetingMemory.screenShare[room];
+
+    console.log(
+        "SCREEN SHARE OWNER LEFT - SCREEN SHARE MEMORY CLEARED:",
+        room
+    );
+
+    io.to(room).emit(
+        "screen-stop"
+    );
+
+}
 
 
                             /*
