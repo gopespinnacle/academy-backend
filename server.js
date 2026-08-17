@@ -4,6 +4,8 @@ require("./routes/discountRoutes");
 const jwt = require("jsonwebtoken");
 const Recording = require("./models/Recording");
 const ClassSummary = require("./models/ClassSummary");
+const Annotation =
+    require("./models/Annotation");
 const multer = require("multer");
 const curiosityRoutes = require("./routes/curiosityRoutes");
 const aiRoutes = require("./routes/aiRoutes");
@@ -416,7 +418,196 @@ socket.on("lowerHand", (data) => {
     io.to(data.room).emit("handList", raisedHands[data.room] || []);
 });
 
+/* ============================================================
+   ANNOTATION V1
+   SAVE / LOAD / LIVE SYNC
+   ============================================================ */
 
+
+/*
+============================================================
+SAVE ANNOTATION
+============================================================
+*/
+
+socket.on(
+    "annotationSave",
+    async (data) => {
+
+        try {
+
+            if (!data || !data.room) {
+                return;
+            }
+
+            await Annotation.findOneAndUpdate(
+                {
+                    room: data.room
+                },
+                {
+                    room: data.room,
+                    data: data.data
+                },
+                {
+                    upsert: true,
+                    new: true,
+                    setDefaultsOnInsert: true
+                }
+            );
+
+
+            /*
+            ------------------------------------------------
+            SEND NEW STATE TO OTHER USERS
+            ------------------------------------------------
+            */
+
+            socket.to(
+                data.room
+            ).emit(
+                "annotationUpdated",
+                {
+                    room: data.room,
+                    data: data.data
+                }
+            );
+
+
+            console.log(
+                "ANNOTATION V1: SAVED",
+                data.room
+            );
+
+        }
+        catch (err) {
+
+            console.log(
+                "ANNOTATION V1: SAVE ERROR",
+                err
+            );
+
+        }
+
+    }
+);
+
+
+/*
+============================================================
+LOAD ANNOTATION
+============================================================
+*/
+
+socket.on(
+    "annotationLoad",
+    async (room) => {
+
+        try {
+
+            if (!room) {
+                return;
+            }
+
+
+            const annotation =
+                await Annotation.findOne({
+                    room: room
+                });
+
+
+            socket.emit(
+                "annotationLoaded",
+                {
+                    room: room,
+
+                    data:
+                        annotation
+                            ? annotation.data
+                            : null
+                }
+            );
+
+
+            console.log(
+                "ANNOTATION V1: LOADED",
+                room
+            );
+
+        }
+        catch (err) {
+
+            console.log(
+                "ANNOTATION V1: LOAD ERROR",
+                err
+            );
+
+        }
+
+    }
+);
+
+
+/*
+============================================================
+CLEAR ANNOTATION
+============================================================
+*/
+
+socket.on(
+    "annotationClear",
+    async (room) => {
+
+        try {
+
+            if (!room) {
+                return;
+            }
+
+
+            await Annotation.findOneAndUpdate(
+                {
+                    room: room
+                },
+                {
+                    room: room,
+                    data: null
+                },
+                {
+                    upsert: true
+                }
+            );
+
+
+            /*
+            ------------------------------------------------
+            TELL EVERYONE
+            ------------------------------------------------
+            */
+
+            io.to(
+                room
+            ).emit(
+                "annotationCleared"
+            );
+
+
+            console.log(
+                "ANNOTATION V1: CLEARED",
+                room
+            );
+
+        }
+        catch (err) {
+
+            console.log(
+                "ANNOTATION V1: CLEAR ERROR",
+                err
+            );
+
+        }
+
+    }
+);
 
 /* ================= LOCK BOARD ================= */
 }); 
