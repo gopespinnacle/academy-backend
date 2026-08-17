@@ -565,10 +565,37 @@ router.get(
             ------------------------------------------------
             */
 
-            const studentClass =
-                student.className ||
-                student.class ||
-                student.grade;
+           let studentClass =
+    student.className ||
+    student.class ||
+    student.grade;
+
+
+/*
+=========================================================
+NORMALIZE STUDENT GRADE
+=========================================================
+*/
+
+if (
+    studentClass &&
+    /^\d+$/.test(
+        String(studentClass).trim()
+    )
+) {
+
+    studentClass =
+        `Grade-${String(
+            studentClass
+        ).trim()}`;
+
+}
+
+
+console.log(
+    "ANNOTATION MATERIALS: STUDENT CLASS",
+    studentClass
+);
 
 
             if (!studentClass) {
