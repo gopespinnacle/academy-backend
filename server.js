@@ -46,6 +46,7 @@ let raisedHands = {};
 let boardLock = {};
 let boardData = {}; // 🔥 STORE DRAWINGS
 let teacherAttendanceMemory = {};
+let annotationActive = {};
 
 let roomParticipants = {};
 // ROUTES
@@ -422,6 +423,190 @@ socket.on("lowerHand", (data) => {
    ANNOTATION V1
    SAVE / LOAD / LIVE SYNC
    ============================================================ */
+
+   /*
+============================================================
+ANNOTATION SESSION STATE
+OPEN / CLOSE / STATUS
+============================================================
+*/
+
+
+/*
+------------------------------------------------------------
+TEACHER OPENS ANNOTATION
+------------------------------------------------------------
+*/
+
+socket.on(
+    "annotationStart",
+    (data) => {
+
+        try {
+
+            if (!data || !data.room) {
+
+                return;
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            REMEMBER ANNOTATION IS ACTIVE
+            ------------------------------------------------
+            */
+
+            annotationActive[data.room] = true;
+
+
+            /*
+            ------------------------------------------------
+            TELL EVERYONE IN THE ROOM
+            ------------------------------------------------
+            */
+
+            io.to(
+                data.room
+            ).emit(
+                "annotationStarted",
+                {
+                    room: data.room
+                }
+            );
+
+
+            console.log(
+                "ANNOTATION V1: STARTED",
+                data.room
+            );
+
+        }
+        catch (err) {
+
+            console.log(
+                "ANNOTATION V1: START ERROR",
+                err
+            );
+
+        }
+
+    }
+);
+
+
+/*
+------------------------------------------------------------
+TEACHER CLOSES ANNOTATION
+------------------------------------------------------------
+*/
+
+socket.on(
+    "annotationStop",
+    (data) => {
+
+        try {
+
+            if (!data || !data.room) {
+
+                return;
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            REMEMBER ANNOTATION IS CLOSED
+            ------------------------------------------------
+            */
+
+            annotationActive[data.room] = false;
+
+
+            /*
+            ------------------------------------------------
+            TELL EVERYONE IN THE ROOM
+            ------------------------------------------------
+            */
+
+            io.to(
+                data.room
+            ).emit(
+                "annotationStopped",
+                {
+                    room: data.room
+                }
+            );
+
+
+            console.log(
+                "ANNOTATION V1: STOPPED",
+                data.room
+            );
+
+        }
+        catch (err) {
+
+            console.log(
+                "ANNOTATION V1: STOP ERROR",
+                err
+            );
+
+        }
+
+    }
+);
+
+
+/*
+------------------------------------------------------------
+NEW USER REQUESTS CURRENT ANNOTATION STATE
+------------------------------------------------------------
+*/
+
+socket.on(
+    "annotationStatus",
+    (room) => {
+
+        try {
+
+            if (!room) {
+
+                return;
+
+            }
+
+
+            socket.emit(
+                "annotationStatus",
+                {
+                    room: room,
+
+                    active:
+                        annotationActive[room] === true
+                }
+            );
+
+
+            console.log(
+                "ANNOTATION V1: STATUS SENT",
+                room,
+                annotationActive[room] === true
+            );
+
+        }
+        catch (err) {
+
+            console.log(
+                "ANNOTATION V1: STATUS ERROR",
+                err
+            );
+
+        }
+
+    }
+);
+
 
 
 /*
