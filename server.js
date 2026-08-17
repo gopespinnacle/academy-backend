@@ -199,7 +199,7 @@ app.use("/api/curiosity", curiosityRoutes);
 app.use("/api/ai", aiRoutes);
 
 app.use(
-    "/api",
+    "/api/annotation-materials",
     annotationMaterialRoutes
 );
 
