@@ -53,6 +53,10 @@ let roomParticipants = {};
 const studentAttendanceRoutes = require("./routes/studentattendanceRoutes");
 const founderTimeClashRoutes = require("./routes/founderTimeClashRoutes");
 const authRoutes = require("./routes/authRoutes");
+const annotationMaterialRoutes =
+    require(
+        "./routes/annotationMaterialRoutes"
+    );
 const teacherSessionRoutes = require("./routes/teacherSessionRoutes");
 const teacherRoutes = require("./routes/teacherRoutes");
 const founderRoutes = require("./routes/founderRoutes");
