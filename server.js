@@ -198,6 +198,11 @@ app.use(
 app.use("/api/curiosity", curiosityRoutes);
 app.use("/api/ai", aiRoutes);
 
+app.use(
+    "/api",
+    annotationMaterialRoutes
+);
+
 app.use("/api", admissionRoutes);
 app.use("/api", admissionRoutes);
 app.use(
