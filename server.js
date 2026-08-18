@@ -49,6 +49,14 @@ let teacherAttendanceMemory = {};
 let annotationActive = {};
 
 let roomParticipants = {};
+
+/* =========================================================
+   ANNOTATION STUDENT PERMISSION
+   Stores the socket ID of the student currently allowed
+   to annotate in each room.
+   ========================================================= */
+
+let annotationPermission = {};
 // ROUTES
 const studentAttendanceRoutes = require("./routes/studentattendanceRoutes");
 const founderTimeClashRoutes = require("./routes/founderTimeClashRoutes");
@@ -468,6 +476,15 @@ socket.on(
 
             annotationActive[data.room] = true;
 
+            /*
+------------------------------------------------
+RESET STUDENT ANNOTATION PERMISSION
+EVERY NEW ANNOTATION SESSION STARTS LOCKED
+------------------------------------------------
+*/
+
+annotationPermission[data.room] = null;
+
 
             /*
             ------------------------------------------------
@@ -530,6 +547,17 @@ socket.on(
             */
 
             annotationActive[data.room] = false;
+
+
+
+            /*
+------------------------------------------------
+REMOVE STUDENT ANNOTATION PERMISSION
+WHEN ANNOTATION CLOSES
+------------------------------------------------
+*/
+
+annotationPermission[data.room] = null;
 
 
             /*
@@ -608,6 +636,225 @@ socket.on(
 
             console.log(
                 "ANNOTATION V1: STATUS ERROR",
+                err
+            );
+
+        }
+
+    }
+);
+
+/* =========================================================
+   ANNOTATION STUDENT PERMISSION — STEP 1
+   ========================================================= */
+
+
+/*
+------------------------------------------------------------
+TEACHER GIVES ANNOTATION PERMISSION
+------------------------------------------------------------
+*/
+
+socket.on(
+    "annotationGivePermission",
+    (data) => {
+
+        try {
+
+            if (
+                !data ||
+                !data.room ||
+                !data.studentSocketId
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            ONLY TEACHER CAN GIVE PERMISSION
+            ------------------------------------------------
+            */
+
+            if (
+                socket.role !== "teacher"
+            ) {
+
+                console.log(
+                    "ANNOTATION PERMISSION DENIED: NOT TEACHER",
+                    socket.id
+                );
+
+                return;
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            MAKE SURE TARGET IS A STUDENT
+            ------------------------------------------------
+            */
+
+            const student =
+                roomParticipants[data.room]?.find(
+                    p =>
+                        p.socketId ===
+                        data.studentSocketId &&
+                        p.role === "student"
+                );
+
+
+            if (!student) {
+
+                console.log(
+                    "ANNOTATION PERMISSION DENIED: STUDENT NOT FOUND",
+                    data.studentSocketId
+                );
+
+                return;
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            SAVE PERMISSION
+            ------------------------------------------------
+            */
+
+            annotationPermission[data.room] =
+                data.studentSocketId;
+
+
+            /*
+            ------------------------------------------------
+            TELL EVERYONE WHO HAS PERMISSION
+            ------------------------------------------------
+            */
+
+            io.to(
+                data.room
+            ).emit(
+                "annotationPermissionChanged",
+                {
+
+                    room:
+                        data.room,
+
+                    studentSocketId:
+                        data.studentSocketId
+
+                }
+            );
+
+
+            console.log(
+                "ANNOTATION PERMISSION GRANTED:",
+                data.room,
+                data.studentSocketId
+            );
+
+        }
+        catch (err) {
+
+            console.log(
+                "ANNOTATION PERMISSION GRANT ERROR:",
+                err
+            );
+
+        }
+
+    }
+);
+
+
+/*
+------------------------------------------------------------
+TEACHER REVOKES ANNOTATION PERMISSION
+------------------------------------------------------------
+*/
+
+socket.on(
+    "annotationRevokePermission",
+    (data) => {
+
+        try {
+
+            if (
+                !data ||
+                !data.room
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            ONLY TEACHER CAN REVOKE
+            ------------------------------------------------
+            */
+
+            if (
+                socket.role !== "teacher"
+            ) {
+
+                console.log(
+                    "ANNOTATION PERMISSION REVOKE DENIED: NOT TEACHER",
+                    socket.id
+                );
+
+                return;
+
+            }
+
+
+            /*
+            ------------------------------------------------
+            CLEAR PERMISSION
+            ------------------------------------------------
+            */
+
+            annotationPermission[data.room] =
+                null;
+
+
+            /*
+            ------------------------------------------------
+            TELL EVERYONE
+            ------------------------------------------------
+            */
+
+            io.to(
+                data.room
+            ).emit(
+                "annotationPermissionChanged",
+                {
+
+                    room:
+                        data.room,
+
+                    studentSocketId:
+                        null
+
+                }
+            );
+
+
+            console.log(
+                "ANNOTATION PERMISSION REVOKED:",
+                data.room
+            );
+
+        }
+        catch (err) {
+
+            console.log(
+                "ANNOTATION PERMISSION REVOKE ERROR:",
                 err
             );
 
