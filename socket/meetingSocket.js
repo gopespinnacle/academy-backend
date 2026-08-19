@@ -861,14 +861,11 @@ TEACHER SESSION START
 Create ONE DailyClassDetails record when the teacher
 starts the class.
 
-IMPORTANT:
+Class information is obtained from the existing
+PeriodAssignment using periodId.
 
-This is completely separate from TeacherSession.
-
-TeacherSession = existing attendance system.
-
-DailyClassDetails = detailed class-session tracking.
-
+This keeps DailyClassDetails independent from the
+frontend-supplied class information.
 ==========================================================
 */
 
@@ -880,7 +877,7 @@ if (
 
         /*
         --------------------------------------------------
-        CHECK WHETHER A SESSION ALREADY EXISTS
+        FIND EXISTING ACTIVE DAILY CLASS SESSION
         --------------------------------------------------
         */
 
@@ -904,176 +901,327 @@ if (
 
         if (!dailyClass) {
 
-            const now =
-                new Date();
+            /*
+            ==================================================
+            FIND PERIOD / TIMETABLE INFORMATION
+            ==================================================
+            */
+
+            let periodAssignment =
+                null;
+
+
+            if (
+                periodId &&
+                mongoose.Types.ObjectId.isValid(
+                    periodId
+                )
+            ) {
+
+                /*
+                ------------------------------------------------
+                IMPORTANT:
+
+                We already know from the logs that periodId
+                points to the timetable/period assignment.
+
+                We will load the actual class information
+                from that database record.
+                ------------------------------------------------
+                */
+
+                const PeriodAssignment =
+                    require(
+                        "../models/PeriodAssignment"
+                    );
+
+
+                periodAssignment =
+                    await PeriodAssignment.findById(
+                        periodId
+                    );
+
+            }
 
 
             /*
-            ------------------------------------------------
-            CREATE UNIQUE SESSION ID
-            ------------------------------------------------
+            ==================================================
+            VALIDATE TIMETABLE DATA
+            ==================================================
             */
 
-            const sessionId =
-                new mongoose.Types.ObjectId()
-                    .toString();
+            if (!periodAssignment) {
+
+                console.error(
+                    "DAILY CLASS DETAILS: PERIOD ASSIGNMENT NOT FOUND",
+                    periodId
+                );
+
+            }
 
 
-            dailyClass =
-                new DailyClassDetails({
+            /*
+            --------------------------------------------------
+            CLASS INFORMATION
+            --------------------------------------------------
+            */
 
-                    sessionId:
-                        sessionId,
-
-
-                    room:
-                        room,
-
-
-                    /*
-                    ----------------------------------------
-                    CLASS INFORMATION
-
-                    We will improve/fetch the exact
-                    timetable values in the next step.
-                    ----------------------------------------
-                    */
-
-                    className:
-                        data.className ||
-                        "",
+            const className =
+                periodAssignment
+                    ?.className ||
+                "";
 
 
-                    subject:
-                        data.subject ||
-                        "",
+            const subject =
+                periodAssignment
+                    ?.subject ||
+                "";
 
 
-                    /*
-                    ----------------------------------------
-                    DATE
-                    ----------------------------------------
-                    */
-
-                    date:
-                        now,
+            const scheduledStartTime =
+                periodAssignment
+                    ?.startTime ||
+                "";
 
 
-                    day:
-                        now.toLocaleDateString(
-                            "en-IN",
-                            {
-                                weekday:
-                                    "long",
-
-                                timeZone:
-                                    "Asia/Kolkata"
-
-                            }
-                        ),
+            const scheduledEndTime =
+                periodAssignment
+                    ?.endTime ||
+                "";
 
 
-                    /*
-                    ----------------------------------------
-                    SCHEDULED TIMING
-                    ----------------------------------------
-                    */
+            /*
+            --------------------------------------------------
+            CLASS NAME IS REQUIRED BY THE MODEL
+            --------------------------------------------------
 
-                    scheduledStartTime:
-                        data.startTime ||
-                        "",
+            Do not create an invalid DailyClassDetails
+            document.
+            --------------------------------------------------
+            */
+
+            if (!className) {
+
+                console.error(
+                    "DAILY CLASS DETAILS: CLASS NAME NOT FOUND. SESSION NOT CREATED."
+                );
+
+            }
+            else {
+
+                /*
+                ==================================================
+                CREATE SESSION
+                ==================================================
+                */
+
+                const now =
+                    new Date();
 
 
-                    scheduledEndTime:
-                        data.endTime ||
-                        "",
+                /*
+                ------------------------------------------------
+                UNIQUE SESSION ID
+                ------------------------------------------------
+                */
+
+                const sessionId =
+                    new mongoose.Types.ObjectId()
+                        .toString();
 
 
-                    /*
-                    ----------------------------------------
-                    TEACHER
-                    ----------------------------------------
-                    */
+                dailyClass =
+                    new DailyClassDetails({
 
-                    teacher: {
+                        /*
+                        ----------------------------------------
+                        SESSION
+                        ----------------------------------------
+                        */
 
-                        teacherId:
-                            userId,
+                        sessionId:
+                            sessionId,
 
-                        teacherName:
-                            name,
 
-                        joinedAt:
+                        /*
+                        ----------------------------------------
+                        EXISTING CLASSROOM ROOM
+                        ----------------------------------------
+                        */
+
+                        room:
+                            room,
+
+
+                        /*
+                        ----------------------------------------
+                        CLASS INFORMATION
+                        ----------------------------------------
+                        */
+
+                        className:
+                            className,
+
+
+                        subject:
+                            subject,
+
+
+                        /*
+                        ----------------------------------------
+                        DATE
+                        ----------------------------------------
+                        */
+
+                        date:
                             now,
 
-                        leftAt:
-                            null,
 
-                        disconnectCount:
+                        day:
+                            periodAssignment
+                                ?.day ||
+                            now.toLocaleDateString(
+                                "en-IN",
+                                {
+                                    weekday:
+                                        "long",
+
+                                    timeZone:
+                                        "Asia/Kolkata"
+                                }
+                            ),
+
+
+                        /*
+                        ----------------------------------------
+                        SCHEDULED CLASS TIME
+                        ----------------------------------------
+                        */
+
+                        scheduledStartTime:
+                            scheduledStartTime,
+
+
+                        scheduledEndTime:
+                            scheduledEndTime,
+
+
+                        /*
+                        ----------------------------------------
+                        TEACHER SESSION
+                        ----------------------------------------
+                        */
+
+                        teacher: {
+
+                            teacherId:
+                                userId,
+
+                            teacherName:
+                                name,
+
+                            joinedAt:
+                                now,
+
+                            leftAt:
+                                null,
+
+                            disconnectCount:
+                                0,
+
+                            connectionEvents:
+                                []
+
+                        },
+
+
+                        /*
+                        ----------------------------------------
+                        STUDENTS
+
+                        Students will be added when they join.
+                        ----------------------------------------
+                        */
+
+                        students:
+                            [],
+
+
+                        studentCount:
                             0,
 
-                        connectionEvents:
-                            []
 
-                    },
+                        /*
+                        ----------------------------------------
+                        SESSION STATUS
+                        ----------------------------------------
+                        */
 
+                        status:
+                            "Active"
 
-                    /*
-                    ----------------------------------------
-                    STUDENTS
-
-                    Empty initially.
-                    ----------------------------------------
-                    */
-
-                    students:
-                        [],
+                    });
 
 
-                    studentCount:
-                        0,
+                await dailyClass.save();
 
 
-                    status:
-                        "Active"
+                /*
+                ==================================================
+                SUCCESS LOG
+                ==================================================
+                */
 
-                });
+                console.log(
+                    "================================================"
+                );
 
+                console.log(
+                    "DAILY CLASS DETAILS: SESSION CREATED"
+                );
 
-            await dailyClass.save();
+                console.log(
+                    "Session ID:",
+                    dailyClass.sessionId
+                );
 
+                console.log(
+                    "Room:",
+                    room
+                );
 
-            console.log(
-                "================================================"
-            );
+                console.log(
+                    "Class:",
+                    className
+                );
 
-            console.log(
-                "DAILY CLASS DETAILS: SESSION CREATED"
-            );
+                console.log(
+                    "Subject:",
+                    subject
+                );
 
-            console.log(
-                "Session ID:",
-                dailyClass.sessionId
-            );
+                console.log(
+                    "Teacher:",
+                    name
+                );
 
-            console.log(
-                "Room:",
-                room
-            );
+                console.log(
+                    "Teacher Joined:",
+                    now.toISOString()
+                );
 
-            console.log(
-                "Teacher:",
-                name
-            );
+                console.log(
+                    "Scheduled:",
+                    scheduledStartTime,
+                    "-",
+                    scheduledEndTime
+                );
 
-            console.log(
-                "Teacher Joined:",
-                now.toISOString()
-            );
+                console.log(
+                    "================================================"
+                );
 
-            console.log(
-                "================================================"
-            );
+            }
 
         }
         else {
@@ -1091,10 +1239,8 @@ if (
         --------------------------------------------------
         IMPORTANT
 
-        A DailyClassDetails error must NOT stop the
-        teacher from entering the meeting.
-
-        Existing meeting flow continues normally.
+        DailyClassDetails errors must NEVER prevent
+        the teacher from entering the meeting.
         --------------------------------------------------
         */
 
