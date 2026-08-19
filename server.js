@@ -871,35 +871,71 @@ SAVE ANNOTATION
 ============================================================
 */
 
+/*
+============================================================
+SAVE ANNOTATION
+============================================================
+*/
+
 socket.on(
     "annotationSave",
     async (data) => {
 
         try {
 
-            if (!data || !data.room) {
+            if (
+                !data ||
+                !data.room ||
+                !data.annotationKey
+            ) {
+
                 return;
+
             }
+
+
+            /*
+            ------------------------------------------------
+            SAVE USING UNIQUE ANNOTATION SESSION KEY
+            ------------------------------------------------
+            */
 
             await Annotation.findOneAndUpdate(
                 {
-                    room: data.room
+                    room:
+                        data.annotationKey
                 },
                 {
-                    room: data.room,
-                    data: data.data
+                    room:
+                        data.annotationKey,
+
+                    data:
+                        data.data
                 },
                 {
-                    upsert: true,
-                    new: true,
-                    setDefaultsOnInsert: true
+                    upsert:
+                        true,
+
+                    new:
+                        true,
+
+                    setDefaultsOnInsert:
+                        true
                 }
             );
 
 
             /*
             ------------------------------------------------
-            SEND NEW STATE TO OTHER USERS
+            SEND LIVE UPDATE TO CLASSROOM
+            ------------------------------------------------
+
+            IMPORTANT:
+
+            We still use data.room here.
+
+            Therefore teacher/student synchronization
+            continues to use the normal classroom room.
             ------------------------------------------------
             */
 
@@ -908,15 +944,23 @@ socket.on(
             ).emit(
                 "annotationUpdated",
                 {
-                    room: data.room,
-                    data: data.data
+
+                    room:
+                        data.room,
+
+                    annotationKey:
+                        data.annotationKey,
+
+                    data:
+                        data.data
+
                 }
             );
 
 
             console.log(
                 "ANNOTATION V1: SAVED",
-                data.room
+                data.annotationKey
             );
 
         }
@@ -939,39 +983,86 @@ LOAD ANNOTATION
 ============================================================
 */
 
+/*
+============================================================
+LOAD ANNOTATION
+============================================================
+*/
+
 socket.on(
     "annotationLoad",
-    async (room) => {
+    async (request) => {
 
         try {
 
-            if (!room) {
+            if (
+                !request ||
+                !request.room ||
+                !request.annotationKey
+            ) {
+
                 return;
+
             }
 
 
-            const annotation =
-                await Annotation.findOne({
-                    room: room
-                });
+            /*
+            ------------------------------------------------
+            FIND SAVED DATA USING UNIQUE SESSION KEY
+            ------------------------------------------------
+            */
 
+            const annotation =
+                await Annotation.findOne(
+                    {
+                        room:
+                            request.annotationKey
+                    }
+                );
+
+
+            /*
+            ------------------------------------------------
+            SEND DATA BACK ONLY TO REQUESTING TAB
+            ------------------------------------------------
+            */
 
             socket.emit(
                 "annotationLoaded",
                 {
-                    room: room,
+
+                    /*
+                    Actual classroom room
+                    */
+
+                    room:
+                        request.room,
+
+
+                    /*
+                    Unique annotation session
+                    */
+
+                    annotationKey:
+                        request.annotationKey,
+
+
+                    /*
+                    Saved drawing data
+                    */
 
                     data:
                         annotation
                             ? annotation.data
                             : null
+
                 }
             );
 
 
             console.log(
                 "ANNOTATION V1: LOADED",
-                room
+                request.annotationKey
             );
 
         }
@@ -986,6 +1077,7 @@ socket.on(
 
     }
 );
+
 
 
 /*
