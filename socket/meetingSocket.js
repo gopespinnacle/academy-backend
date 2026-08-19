@@ -852,6 +852,261 @@ function registerMeetingSocket(io) {
 
                     }
 
+                    /*
+==========================================================
+DAILY CLASS DETAILS
+TEACHER SESSION START
+==========================================================
+
+Create ONE DailyClassDetails record when the teacher
+starts the class.
+
+IMPORTANT:
+
+This is completely separate from TeacherSession.
+
+TeacherSession = existing attendance system.
+
+DailyClassDetails = detailed class-session tracking.
+
+==========================================================
+*/
+
+if (
+    role === "teacher"
+) {
+
+    try {
+
+        /*
+        --------------------------------------------------
+        CHECK WHETHER A SESSION ALREADY EXISTS
+        --------------------------------------------------
+        */
+
+        let dailyClass =
+            await DailyClassDetails.findOne({
+
+                room:
+                    room,
+
+                status:
+                    "Active"
+
+            });
+
+
+        /*
+        --------------------------------------------------
+        CREATE NEW SESSION
+        --------------------------------------------------
+        */
+
+        if (!dailyClass) {
+
+            const now =
+                new Date();
+
+
+            /*
+            ------------------------------------------------
+            CREATE UNIQUE SESSION ID
+            ------------------------------------------------
+            */
+
+            const sessionId =
+                new mongoose.Types.ObjectId()
+                    .toString();
+
+
+            dailyClass =
+                new DailyClassDetails({
+
+                    sessionId:
+                        sessionId,
+
+
+                    room:
+                        room,
+
+
+                    /*
+                    ----------------------------------------
+                    CLASS INFORMATION
+
+                    We will improve/fetch the exact
+                    timetable values in the next step.
+                    ----------------------------------------
+                    */
+
+                    className:
+                        data.className ||
+                        "",
+
+
+                    subject:
+                        data.subject ||
+                        "",
+
+
+                    /*
+                    ----------------------------------------
+                    DATE
+                    ----------------------------------------
+                    */
+
+                    date:
+                        now,
+
+
+                    day:
+                        now.toLocaleDateString(
+                            "en-IN",
+                            {
+                                weekday:
+                                    "long",
+
+                                timeZone:
+                                    "Asia/Kolkata"
+
+                            }
+                        ),
+
+
+                    /*
+                    ----------------------------------------
+                    SCHEDULED TIMING
+                    ----------------------------------------
+                    */
+
+                    scheduledStartTime:
+                        data.startTime ||
+                        "",
+
+
+                    scheduledEndTime:
+                        data.endTime ||
+                        "",
+
+
+                    /*
+                    ----------------------------------------
+                    TEACHER
+                    ----------------------------------------
+                    */
+
+                    teacher: {
+
+                        teacherId:
+                            userId,
+
+                        teacherName:
+                            name,
+
+                        joinedAt:
+                            now,
+
+                        leftAt:
+                            null,
+
+                        disconnectCount:
+                            0,
+
+                        connectionEvents:
+                            []
+
+                    },
+
+
+                    /*
+                    ----------------------------------------
+                    STUDENTS
+
+                    Empty initially.
+                    ----------------------------------------
+                    */
+
+                    students:
+                        [],
+
+
+                    studentCount:
+                        0,
+
+
+                    status:
+                        "Active"
+
+                });
+
+
+            await dailyClass.save();
+
+
+            console.log(
+                "================================================"
+            );
+
+            console.log(
+                "DAILY CLASS DETAILS: SESSION CREATED"
+            );
+
+            console.log(
+                "Session ID:",
+                dailyClass.sessionId
+            );
+
+            console.log(
+                "Room:",
+                room
+            );
+
+            console.log(
+                "Teacher:",
+                name
+            );
+
+            console.log(
+                "Teacher Joined:",
+                now.toISOString()
+            );
+
+            console.log(
+                "================================================"
+            );
+
+        }
+        else {
+
+            console.log(
+                "DAILY CLASS DETAILS: ACTIVE SESSION ALREADY EXISTS"
+            );
+
+        }
+
+    }
+    catch (error) {
+
+        /*
+        --------------------------------------------------
+        IMPORTANT
+
+        A DailyClassDetails error must NOT stop the
+        teacher from entering the meeting.
+
+        Existing meeting flow continues normally.
+        --------------------------------------------------
+        */
+
+        console.error(
+            "DAILY CLASS DETAILS: SESSION CREATE ERROR:",
+            error
+        );
+
+    }
+
+}
+
 
                     /*
                     ==================================================
