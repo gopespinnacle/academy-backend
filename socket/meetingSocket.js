@@ -1253,6 +1253,222 @@ if (
 
 }
 
+/*
+==========================================================
+DAILY CLASS DETAILS
+STUDENT SESSION START
+==========================================================
+
+When a student joins the classroom:
+
+1. Find the active DailyClassDetails session.
+2. Check whether this student already exists.
+3. If not, add the student.
+4. Store the exact joinedAt time.
+
+Reconnect handling will be added separately later.
+==========================================================
+*/
+
+if (
+    role === "student"
+) {
+
+    try {
+
+        /*
+        --------------------------------------------------
+        FIND ACTIVE CLASS SESSION
+        --------------------------------------------------
+        */
+
+        const dailyClass =
+            await DailyClassDetails.findOne({
+
+                room:
+                    room,
+
+                status:
+                    "Active"
+
+            });
+
+
+        /*
+        --------------------------------------------------
+        DAILY CLASS SESSION MUST EXIST
+        --------------------------------------------------
+        */
+
+        if (!dailyClass) {
+
+            console.warn(
+                "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR STUDENT",
+                {
+                    room,
+                    name,
+                    studentId
+                }
+            );
+
+        }
+        else {
+
+            /*
+            ------------------------------------------------
+            FIND EXISTING STUDENT
+            ------------------------------------------------
+            */
+
+            const existingStudent =
+                dailyClass.students.find(
+                    student => {
+
+                        return (
+                            String(
+                                student.studentId
+                            ) ===
+                            String(
+                                studentId
+                            )
+                        );
+
+                    }
+                );
+
+
+            /*
+            =================================================
+            STUDENT ALREADY EXISTS
+            =================================================
+            */
+
+            if (existingStudent) {
+
+                console.log(
+                    "DAILY CLASS DETAILS: STUDENT ALREADY EXISTS",
+                    name
+                );
+
+            }
+
+
+            /*
+            =================================================
+            NEW STUDENT
+            =================================================
+            */
+
+            else {
+
+                const now =
+                    new Date();
+
+
+                dailyClass.students.push({
+
+                    studentId:
+                        studentId,
+
+                    studentName:
+                        name,
+
+                    joinedAt:
+                        now,
+
+                    leftAt:
+                        null,
+
+                    disconnectCount:
+                        0,
+
+                    connectionEvents:
+                        []
+
+                });
+
+
+                /*
+                --------------------------------------------
+                UPDATE STUDENT COUNT
+                --------------------------------------------
+                */
+
+                dailyClass.studentCount =
+                    dailyClass.students.length;
+
+
+                /*
+                --------------------------------------------
+                SAVE
+                --------------------------------------------
+                */
+
+                await dailyClass.save();
+
+
+                console.log(
+                    "================================================"
+                );
+
+                console.log(
+                    "DAILY CLASS DETAILS: STUDENT JOINED"
+                );
+
+                console.log(
+                    "Room:",
+                    room
+                );
+
+                console.log(
+                    "Student:",
+                    name
+                );
+
+                console.log(
+                    "Student ID:",
+                    studentId
+                );
+
+                console.log(
+                    "Joined:",
+                    now.toISOString()
+                );
+
+                console.log(
+                    "Total Students:",
+                    dailyClass.studentCount
+                );
+
+                console.log(
+                    "================================================"
+                );
+
+            }
+
+        }
+
+    }
+    catch (error) {
+
+        /*
+        --------------------------------------------------
+        IMPORTANT
+
+        Tracking failure must NOT prevent the student
+        from entering the existing meeting.
+        --------------------------------------------------
+        */
+
+        console.error(
+            "DAILY CLASS DETAILS: STUDENT JOIN ERROR:",
+            error
+        );
+
+    }
+
+}
+
 
                     /*
                     ==================================================
