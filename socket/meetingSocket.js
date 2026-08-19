@@ -43,6 +43,9 @@ const meetingMemory =
 const TeacherSession =
     require("../models/TeacherSession");
 
+const DailyClassDetails =
+    require("../models/DailyClassDetails");
+
 const mongoose =
     require("mongoose");
 
