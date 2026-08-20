@@ -1409,31 +1409,16 @@ if (
 /*
 ==========================================================
 DAILY CLASS DETAILS
-STUDENT SESSION START
-==========================================================
-
-When a student joins the classroom:
-
-1. Find the active DailyClassDetails session.
-2. Check whether this student already exists.
-3. If not, add the student.
-4. Store the exact joinedAt time.
-
-Reconnect handling will be added separately later.
+STUDENT SESSION START / RECONNECT
 ==========================================================
 */
 
 if (
-    role === "student"
+    role === "student" &&
+    studentId
 ) {
 
     try {
-
-        /*
-        --------------------------------------------------
-        FIND ACTIVE CLASS SESSION
-        --------------------------------------------------
-        */
 
         const dailyClass =
             await DailyClassDetails.findOne({
@@ -1448,9 +1433,9 @@ if (
 
 
         /*
-        --------------------------------------------------
-        DAILY CLASS SESSION MUST EXIST
-        --------------------------------------------------
+        ==================================================
+        ACTIVE SESSION NOT FOUND
+        ==================================================
         */
 
         if (!dailyClass) {
@@ -1468,12 +1453,12 @@ if (
         else {
 
             /*
-            ------------------------------------------------
+            ==================================================
             FIND EXISTING STUDENT
-            ------------------------------------------------
+            ==================================================
             */
 
-            const existingStudent =
+            let existingStudent =
                 dailyClass.students.find(
                     student => {
 
@@ -1491,28 +1476,14 @@ if (
 
 
             /*
-            =================================================
-            STUDENT ALREADY EXISTS
-            =================================================
+            ==================================================
+            FIRST TIME STUDENT JOIN
+            ==================================================
             */
 
-            if (existingStudent) {
-
-                console.log(
-                    "DAILY CLASS DETAILS: STUDENT ALREADY EXISTS",
-                    name
-                );
-
-            }
-
-
-            /*
-            =================================================
-            NEW STUDENT
-            =================================================
-            */
-
-            else {
+            if (
+                !existingStudent
+            ) {
 
                 const now =
                     new Date();
@@ -1542,20 +1513,14 @@ if (
 
 
                 /*
-                --------------------------------------------
+                ----------------------------------------------
                 UPDATE STUDENT COUNT
-                --------------------------------------------
+                ----------------------------------------------
                 */
 
                 dailyClass.studentCount =
                     dailyClass.students.length;
 
-
-                /*
-                --------------------------------------------
-                SAVE
-                --------------------------------------------
-                */
 
                 await dailyClass.save();
 
@@ -1599,22 +1564,143 @@ if (
 
             }
 
+
+            /*
+            ==================================================
+            STUDENT ALREADY EXISTS
+            CHECK FOR PENDING RECONNECT
+            ==================================================
+            */
+
+            else {
+
+                let pendingEvent =
+                    null;
+
+
+                /*
+                ----------------------------------------------
+                SEARCH FROM LAST EVENT
+                ----------------------------------------------
+                */
+
+                if (
+                    Array.isArray(
+                        existingStudent.connectionEvents
+                    )
+                ) {
+
+                    for (
+                        let i =
+                            existingStudent
+                                .connectionEvents
+                                .length - 1;
+
+                        i >= 0;
+
+                        i--
+                    ) {
+
+                        const event =
+                            existingStudent
+                                .connectionEvents[i];
+
+
+                        if (
+                            event.disconnectedAt &&
+                            !event.reconnectedAt
+                        ) {
+
+                            pendingEvent =
+                                event;
+
+                            break;
+
+                        }
+
+                    }
+
+                }
+
+
+                /*
+                ==================================================
+                PENDING DISCONNECT FOUND
+                ==================================================
+                */
+
+                if (
+                    pendingEvent
+                ) {
+
+                    const reconnectedAt =
+                        new Date();
+
+
+                    pendingEvent.reconnectedAt =
+                        reconnectedAt;
+
+
+                    await dailyClass.save();
+
+
+                    console.log(
+                        "================================================"
+                    );
+
+                    console.log(
+                        "DAILY CLASS DETAILS: STUDENT RECONNECTED"
+                    );
+
+                    console.log(
+                        "Room:",
+                        room
+                    );
+
+                    console.log(
+                        "Student:",
+                        existingStudent.studentName
+                    );
+
+                    console.log(
+                        "Student ID:",
+                        studentId
+                    );
+
+                    console.log(
+                        "Reconnected:",
+                        reconnectedAt.toISOString()
+                    );
+
+                    console.log(
+                        "Total Disconnects:",
+                        existingStudent.disconnectCount
+                    );
+
+                    console.log(
+                        "================================================"
+                    );
+
+                }
+                else {
+
+                    console.log(
+                        "DAILY CLASS DETAILS: STUDENT ALREADY EXISTS - NO PENDING RECONNECT"
+                    );
+
+                }
+
+            }
+
         }
 
     }
-    catch (error) {
-
-        /*
-        --------------------------------------------------
-        IMPORTANT
-
-        Tracking failure must NOT prevent the student
-        from entering the existing meeting.
-        --------------------------------------------------
-        */
+    catch (
+        error
+    ) {
 
         console.error(
-            "DAILY CLASS DETAILS: STUDENT JOIN ERROR:",
+            "DAILY CLASS DETAILS: STUDENT JOIN / RECONNECT ERROR:",
             error
         );
 
