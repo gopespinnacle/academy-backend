@@ -3053,12 +3053,124 @@ if (
 
 
                     if (!room)
-                        return;
+    return;
 
 
-                    console.log(
-                        "=========================================="
-                    );
+/*
+======================================================
+DAILY CLASS DETAILS
+TEACHER DISCONNECT TRACKING
+======================================================
+*/
+
+if (
+    role === "teacher" &&
+    socket.userId
+) {
+
+    try {
+
+        const disconnectedAt =
+            new Date();
+
+
+        const session =
+            await DailyClassDetails.findOne({
+
+                room:
+                    room,
+
+                status:
+                    "Active"
+
+            });
+
+
+        if (session) {
+
+            if (
+                !Array.isArray(
+                    session.teacherConnectionEvents
+                )
+            ) {
+
+                session.teacherConnectionEvents =
+                    [];
+
+            }
+
+
+            session.teacherConnectionEvents.push({
+
+                disconnectedAt:
+                    disconnectedAt,
+
+                rejoinedAt:
+                    null
+
+            });
+
+
+            session.teacherDisconnectCount =
+                (
+                    session.teacherDisconnectCount ||
+                    0
+                ) + 1;
+
+
+            await session.save();
+
+
+            console.log(
+                "================================================"
+            );
+
+            console.log(
+                "DAILY CLASS DETAILS: TEACHER DISCONNECTED"
+            );
+
+            console.log(
+                "Room:",
+                room
+            );
+
+            console.log(
+                "Teacher:",
+                socket.name
+            );
+
+            console.log(
+                "Disconnected:",
+                disconnectedAt
+            );
+
+            console.log(
+                "Total Disconnects:",
+                session.teacherDisconnectCount
+            );
+
+            console.log(
+                "================================================"
+            );
+
+        }
+
+    }
+    catch (error) {
+
+        console.error(
+            "DAILY CLASS DETAILS: TEACHER DISCONNECT ERROR:",
+            error
+        );
+
+    }
+
+}
+
+
+console.log(
+    "=========================================="
+);
 
                     console.log(
                         "MEETING PARTICIPANT DISCONNECTED"
