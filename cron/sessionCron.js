@@ -37,6 +37,7 @@ today.toISOString().split("T")[0];
 await TeacherSession.create({
   teacher: s.teacher,
   schedule: s._id,
+  periodId: s._id,
   className: s.className,
   subject: s.subject,
   date: today,
