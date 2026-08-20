@@ -3239,21 +3239,58 @@ if (
             });
 
 
-        if (session) {
+        if (
+            !session
+        ) {
+
+            console.warn(
+                "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR TEACHER DISCONNECT"
+            );
+
+        }
+        else {
+
+            /*
+            ==================================================
+            ENSURE TEACHER OBJECT EXISTS
+            ==================================================
+            */
+
+            if (
+                !session.teacher
+            ) {
+
+                session.teacher =
+                    {};
+
+            }
+
+
+            /*
+            ==================================================
+            ENSURE CONNECTION EVENTS EXISTS
+            ==================================================
+            */
 
             if (
                 !Array.isArray(
-                    session.teacherConnectionEvents
+                    session.teacher.connectionEvents
                 )
             ) {
 
-                session.teacherConnectionEvents =
+                session.teacher.connectionEvents =
                     [];
 
             }
 
 
-            session.teacherConnectionEvents.push({
+            /*
+            ==================================================
+            ADD DISCONNECT EVENT
+            ==================================================
+            */
+
+            session.teacher.connectionEvents.push({
 
                 disconnectedAt:
                     disconnectedAt,
@@ -3264,12 +3301,24 @@ if (
             });
 
 
-            session.teacherDisconnectCount =
+            /*
+            ==================================================
+            INCREASE DISCONNECT COUNT
+            ==================================================
+            */
+
+            session.teacher.disconnectCount =
                 (
-                    session.teacherDisconnectCount ||
+                    session.teacher.disconnectCount ||
                     0
                 ) + 1;
 
+
+            /*
+            ==================================================
+            SAVE
+            ==================================================
+            */
 
             await session.save();
 
@@ -3294,12 +3343,12 @@ if (
 
             console.log(
                 "Disconnected:",
-                disconnectedAt
+                disconnectedAt.toISOString()
             );
 
             console.log(
                 "Total Disconnects:",
-                session.teacherDisconnectCount
+                session.teacher.disconnectCount
             );
 
             console.log(
