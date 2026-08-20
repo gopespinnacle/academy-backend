@@ -3455,6 +3455,187 @@ if (
 
 }
 
+/*
+==========================================================
+DAILY CLASS DETAILS
+STUDENT DISCONNECT TRACKING
+==========================================================
+*/
+
+if (
+    role === "student" &&
+    studentId &&
+    room
+) {
+
+    try {
+
+        const dailyClass =
+            await DailyClassDetails.findOne({
+
+                room:
+                    room,
+
+                status:
+                    "Active"
+
+            });
+
+
+        if (
+            !dailyClass
+        ) {
+
+            console.warn(
+                "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR STUDENT DISCONNECT",
+                {
+                    room,
+                    name,
+                    studentId
+                }
+            );
+
+        }
+        else {
+
+            const student =
+                dailyClass.students.find(
+                    item =>
+                        String(
+                            item.studentId
+                        ) ===
+                        String(
+                            studentId
+                        )
+                );
+
+
+            if (
+                !student
+            ) {
+
+                console.warn(
+                    "DAILY CLASS DETAILS: STUDENT NOT FOUND IN ACTIVE SESSION",
+                    {
+                        room,
+                        name,
+                        studentId
+                    }
+                );
+
+            }
+            else {
+
+                const disconnectedAt =
+                    new Date();
+
+
+                /*
+                ------------------------------------------
+                ENSURE CONNECTION EVENTS ARRAY
+                ------------------------------------------
+                */
+
+                if (
+                    !Array.isArray(
+                        student.connectionEvents
+                    )
+                ) {
+
+                    student.connectionEvents =
+                        [];
+
+                }
+
+
+                /*
+                ------------------------------------------
+                ADD DISCONNECT EVENT
+                ------------------------------------------
+                */
+
+                student.connectionEvents.push({
+
+                    disconnectedAt:
+                        disconnectedAt,
+
+                    reconnectedAt:
+                        null
+
+                });
+
+
+                /*
+                ------------------------------------------
+                INCREASE DISCONNECT COUNT
+                ------------------------------------------
+                */
+
+                student.disconnectCount =
+                    (
+                        student.disconnectCount ||
+                        0
+                    ) + 1;
+
+
+                await dailyClass.save();
+
+
+                console.log(
+                    "================================================"
+                );
+
+                console.log(
+                    "DAILY CLASS DETAILS: STUDENT DISCONNECTED"
+                );
+
+                console.log(
+                    "Room:",
+                    room
+                );
+
+                console.log(
+                    "Student:",
+                    student.studentName
+                );
+
+                console.log(
+                    "Student ID:",
+                    studentId
+                );
+
+                console.log(
+                    "Disconnected:",
+                    disconnectedAt.toISOString()
+                );
+
+                console.log(
+                    "Total Disconnects:",
+                    student.disconnectCount
+                );
+
+                console.log(
+                    "================================================"
+                );
+
+            }
+
+        }
+
+    }
+    catch (
+        error
+    ) {
+
+        console.error(
+            "DAILY CLASS DETAILS: STUDENT DISCONNECT ERROR:",
+            error
+        );
+
+    }
+
+}
+
 
 console.log(
     "=========================================="
