@@ -1226,11 +1226,164 @@ if (
         }
         else {
 
-            console.log(
-                "DAILY CLASS DETAILS: ACTIVE SESSION ALREADY EXISTS"
+    /*
+    ======================================================
+    DAILY CLASS DETAILS
+    TEACHER RECONNECT TRACKING
+    ======================================================
+    */
+
+    try {
+
+        const rejoinedAt =
+            new Date();
+
+
+        /*
+        --------------------------------------------------
+        ENSURE TEACHER DATA EXISTS
+        --------------------------------------------------
+        */
+
+        if (
+            !dailyClass.teacher
+        ) {
+
+            console.warn(
+                "DAILY CLASS DETAILS: TEACHER DATA NOT FOUND"
             );
 
         }
+        else {
+
+            /*
+            --------------------------------------------------
+            ENSURE CONNECTION EVENTS EXISTS
+            --------------------------------------------------
+            */
+
+            if (
+                !Array.isArray(
+                    dailyClass.teacher.connectionEvents
+                )
+            ) {
+
+                dailyClass.teacher.connectionEvents =
+                    [];
+
+            }
+
+
+            /*
+            --------------------------------------------------
+            FIND LAST DISCONNECT WITHOUT REJOIN TIME
+            --------------------------------------------------
+            */
+
+            let pendingEvent =
+                null;
+
+
+            for (
+                let i =
+                    dailyClass.teacher.connectionEvents.length - 1;
+
+                i >= 0;
+
+                i--
+            ) {
+
+                const event =
+                    dailyClass.teacher.connectionEvents[
+                        i
+                    ];
+
+
+                if (
+                    event.disconnectedAt &&
+                    !event.rejoinedAt
+                ) {
+
+                    pendingEvent =
+                        event;
+
+                    break;
+
+                }
+
+            }
+
+
+            /*
+            --------------------------------------------------
+            UPDATE REJOIN TIME
+            --------------------------------------------------
+            */
+
+            if (
+                pendingEvent
+            ) {
+
+                pendingEvent.rejoinedAt =
+                    rejoinedAt;
+
+
+                await dailyClass.save();
+
+
+                console.log(
+                    "================================================"
+                );
+
+                console.log(
+                    "DAILY CLASS DETAILS: TEACHER REJOINED"
+                );
+
+                console.log(
+                    "Room:",
+                    room
+                );
+
+                console.log(
+                    "Teacher:",
+                    name
+                );
+
+                console.log(
+                    "Rejoined:",
+                    rejoinedAt.toISOString()
+                );
+
+                console.log(
+                    "================================================"
+                );
+
+            }
+            else {
+
+                console.log(
+                    "DAILY CLASS DETAILS: ACTIVE SESSION ALREADY EXISTS"
+                );
+
+                console.log(
+                    "DAILY CLASS DETAILS: NO PENDING TEACHER RECONNECT"
+                );
+
+            }
+
+        }
+
+    }
+    catch (error) {
+
+        console.error(
+            "DAILY CLASS DETAILS: TEACHER RECONNECT ERROR:",
+            error
+        );
+
+    }
+
+}
 
     }
     catch (error) {
