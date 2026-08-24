@@ -3471,15 +3471,13 @@ if (
     try {
 
         const dailyClass =
-            await DailyClassDetails.findOne({
+    await DailyClassDetails.findOne({
 
-                room:
-                    room,
+        room: room
 
-                status:
-                    "Active"
-
-            });
+    }).sort({
+        createdAt: -1
+    });
 
 
         if (
@@ -3901,9 +3899,9 @@ console.log(
                             ) {
 
                                 console.log(
-                                    "Reconnect detected - keeping participant:",
-                                    currentParticipant.name
-                                );
+    "Reconnect detected - keeping participant:",
+    currentParticipant.name
+);
 
                                 /*
 ==========================================================
@@ -3921,16 +3919,13 @@ if (
     try {
 
         const dailyClass =
-            await DailyClassDetails.findOne({
+    await DailyClassDetails.findOne({
 
-                room:
-                    room,
+        room: room
 
-                status:
-                    "Active"
-
-            });
-
+    }).sort({
+        createdAt: -1
+    });
 
         if (
             !dailyClass
