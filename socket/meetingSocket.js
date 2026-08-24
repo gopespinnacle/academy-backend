@@ -1421,15 +1421,13 @@ if (
     try {
 
         const dailyClass =
-            await DailyClassDetails.findOne({
+    await DailyClassDetails.findOne({
 
-                room:
-                    room,
+        room: room
 
-                status:
-                    "Active"
-
-            });
+    }).sort({
+        createdAt: -1
+    });
 
 
         /*
@@ -3963,7 +3961,7 @@ if (
                     "DAILY CLASS DETAILS: STUDENT NOT FOUND FOR RECONNECT",
                     {
                         room,
-                        name,
+                        name: socket.name,
                         studentId
                     }
                 );
