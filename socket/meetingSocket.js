@@ -3487,14 +3487,12 @@ if (
         ) {
 
             console.warn(
-                "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR STUDENT DISCONNECT",
-                {
-                    room,
-                    name,
-                    studentId
-                }
-            );
-
+    "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR STUDENT DISCONNECT",
+    {
+        room,
+        studentId
+    }
+);
         }
         else {
 
@@ -3514,14 +3512,13 @@ if (
                 !student
             ) {
 
-                console.warn(
-                    "DAILY CLASS DETAILS: STUDENT NOT FOUND IN ACTIVE SESSION",
-                    {
-                        room,
-                        name,
-                        studentId
-                    }
-                );
+               console.warn(
+    "DAILY CLASS DETAILS: STUDENT NOT FOUND IN ACTIVE SESSION",
+    {
+        room,
+        studentId
+    }
+);
 
             }
             else {
