@@ -3935,7 +3935,7 @@ if (
                 "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR STUDENT RECONNECT",
                 {
                     room,
-                    name,
+                    name: socket.name,
                     studentId
                 }
             );
