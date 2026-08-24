@@ -3905,6 +3905,227 @@ console.log(
                                     currentParticipant.name
                                 );
 
+                                /*
+==========================================================
+DAILY CLASS DETAILS
+STUDENT RECONNECT TRACKING
+==========================================================
+*/
+
+if (
+    role === "student" &&
+    studentId &&
+    room
+) {
+
+    try {
+
+        const dailyClass =
+            await DailyClassDetails.findOne({
+
+                room:
+                    room,
+
+                status:
+                    "Active"
+
+            });
+
+
+        if (
+            !dailyClass
+        ) {
+
+            console.warn(
+                "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR STUDENT RECONNECT",
+                {
+                    room,
+                    name,
+                    studentId
+                }
+            );
+
+        }
+        else {
+
+            const student =
+                dailyClass.students.find(
+                    item =>
+                        String(
+                            item.studentId
+                        ) ===
+                        String(
+                            studentId
+                        )
+                );
+
+
+            if (
+                !student
+            ) {
+
+                console.warn(
+                    "DAILY CLASS DETAILS: STUDENT NOT FOUND FOR RECONNECT",
+                    {
+                        room,
+                        name,
+                        studentId
+                    }
+                );
+
+            }
+            else {
+
+                /*
+                ------------------------------------------
+                ENSURE CONNECTION EVENTS ARRAY
+                ------------------------------------------
+                */
+
+                if (
+                    !Array.isArray(
+                        student.connectionEvents
+                    )
+                ) {
+
+                    student.connectionEvents =
+                        [];
+
+                }
+
+
+                /*
+                ------------------------------------------
+                FIND LATEST OPEN DISCONNECT EVENT
+
+                We search from the end because the latest
+                disconnect must be closed first.
+                ------------------------------------------
+                */
+
+                let latestOpenEvent =
+                    null;
+
+
+                for (
+                    let i =
+                        student.connectionEvents.length - 1;
+
+                    i >= 0;
+
+                    i--
+                ) {
+
+                    if (
+                        student
+                            .connectionEvents[i]
+                            .disconnectedAt &&
+
+                        !
+                        student
+                            .connectionEvents[i]
+                            .reconnectedAt
+                    ) {
+
+                        latestOpenEvent =
+                            student
+                                .connectionEvents[i];
+
+                        break;
+
+                    }
+
+                }
+
+
+                /*
+                ------------------------------------------
+                UPDATE RECONNECT TIME
+                ------------------------------------------
+                */
+
+                if (
+                    latestOpenEvent
+                ) {
+
+                    const reconnectedAt =
+                        new Date();
+
+
+                    latestOpenEvent.reconnectedAt =
+                        reconnectedAt;
+
+
+                    await dailyClass.save();
+
+
+                    console.log(
+                        "================================================"
+                    );
+
+                    console.log(
+                        "DAILY CLASS DETAILS: STUDENT RECONNECTED"
+                    );
+
+                    console.log(
+                        "Room:",
+                        room
+                    );
+
+                    console.log(
+                        "Student:",
+                        student.studentName
+                    );
+
+                    console.log(
+                        "Student ID:",
+                        studentId
+                    );
+
+                    console.log(
+                        "Disconnected:",
+                        latestOpenEvent
+                            .disconnectedAt
+                            .toISOString()
+                    );
+
+                    console.log(
+                        "Reconnected:",
+                        reconnectedAt
+                            .toISOString()
+                    );
+
+                    console.log(
+                        "================================================"
+                    );
+
+                }
+                else {
+
+                    console.log(
+                        "DAILY CLASS DETAILS: NO PENDING STUDENT RECONNECT"
+                    );
+
+                }
+
+            }
+
+        }
+
+    }
+    catch (
+        error
+    ) {
+
+        console.error(
+            "DAILY CLASS DETAILS: STUDENT RECONNECT ERROR:",
+            error
+        );
+
+    }
+
+}
+
                                 return;
 
                             }
