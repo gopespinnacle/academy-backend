@@ -22,6 +22,7 @@ const axios = require("axios");
 const express = require("express");
 const router = express.Router();
 const founderController = require("../controllers/founderController")
+const { sendWhatsAppMessage } = require("../services/whatsappService");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
@@ -43,6 +44,7 @@ const CompensationClass = require("../models/CompensationClass");
 const Subject = require("../models/Subject");
 const Category = require("../models/Category");
 const { uploadFile } = require("../config/s3");
+
 
 
 
@@ -3026,6 +3028,126 @@ router.put(
 
                 message:
                     "Unable to reject teacher leave."
+
+            });
+
+        }
+
+    }
+);
+
+/* =========================================================
+   SEND STUDENT LOGIN DETAILS TO PARENT VIA WHATSAPP
+========================================================= */
+router.post(
+    "/send-student-whatsapp/:studentId",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const student = await User.findOne({
+                _id: req.params.studentId,
+                role: "student"
+            });
+
+            if (!student) {
+
+                return res.status(404).json({
+                    success: false,
+                    message: "Student not found."
+                });
+
+            }
+
+
+            /* ================= PARENT WHATSAPP NUMBER ================= */
+
+            const parentPhone =
+                student.whatsapp || student.mobile;
+
+
+            if (!parentPhone) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Parent WhatsApp number is not available."
+                });
+
+            }
+
+
+            /* ================= CREATE MESSAGE ================= */
+
+            const message = `🎓 *GOPES PINNACLE ACADEMY*
+
+Dear Parent,
+
+Please find your student's login credentials below.
+
+🆔 *Student ID:* ${student.studentId || "Not Available"}
+
+👤 *Student Name:* ${student.name || "Not Available"}
+
+📧 *Login ID:* ${student.loginEmail || student.email || "Not Available"}
+
+🔐 *Password:* ${student.loginPassword || "Not Available"}
+
+Please use these credentials to log in to the Gopes Pinnacle Academy student portal.
+
+Thank you,
+*GOPES PINNACLE ACADEMY*`;
+
+
+            /* ================= SEND WHATSAPP ================= */
+
+            const result =
+                await sendWhatsAppMessage(
+                    parentPhone,
+                    message
+                );
+
+
+            if (!result.success) {
+
+                return res.status(500).json({
+
+                    success: false,
+
+                    message:
+                        "Failed to send WhatsApp message.",
+
+                    error: result.error
+
+                });
+
+            }
+
+
+            res.status(200).json({
+
+                success: true,
+
+                message:
+                    "WhatsApp message sent successfully."
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "SEND STUDENT WHATSAPP ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Internal server error."
 
             });
 
