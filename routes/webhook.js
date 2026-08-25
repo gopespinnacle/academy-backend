@@ -131,6 +131,7 @@ For assistance, please contact us through the official academy support channel.
 Thank you.
 `;
 
+
 const replyResult = await sendWhatsAppMessage(
   from,
   autoReply
