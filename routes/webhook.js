@@ -41,6 +41,10 @@ router.get("/webhook", (req, res) => {
 router.post("/webhook", async (req, res) => {
 
   try {
+    console.log("=================================");
+console.log("📥 WHATSAPP WEBHOOK RECEIVED");
+console.log(JSON.stringify(req.body, null, 2));
+console.log("=================================");
 
     // Meta requires a quick 200 response
     res.sendStatus(200);
