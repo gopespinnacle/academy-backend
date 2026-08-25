@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const Message = require("../models/Message");
+const {
+  sendWhatsAppMessage
+} = require("../services/whatsappService");
 
 // =====================================================
 // META WEBHOOK VERIFICATION
@@ -109,6 +112,44 @@ router.post("/webhook", async (req, res) => {
 
 
     console.log("✅ Incoming WhatsApp message saved");
+
+    // =====================================================
+// AUTO REPLY — NOTIFICATION ONLY NUMBER
+// =====================================================
+
+const autoReply = `
+🎓 GOPES PINNACLE ACADEMY
+
+Thank you for your message.
+
+This WhatsApp number is used for academy notifications only and does not accept parent queries or support messages.
+
+For assistance, please contact us through the official academy support channel.
+
+📞 [+91-9566911472]
+
+Thank you.
+`;
+
+const replyResult = await sendWhatsAppMessage(
+  from,
+  autoReply
+);
+
+if (replyResult.success) {
+
+  console.log(
+    "✅ Automatic notification-only reply sent"
+  );
+
+} else {
+
+  console.log(
+    "❌ Automatic reply failed:",
+    replyResult.error
+  );
+
+}
 
   } catch (error) {
 
