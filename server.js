@@ -80,6 +80,11 @@ const studentRoutes = require("./routes/studentRoutes");
 const admissionRoutes = require("./routes/admissionRoutes");
 const admissionParentRoutes =
 require("./routes/admissionParentRoutes");
+/* ================= WHATSAPP SERVICE ================= */
+
+const {
+    sendWhatsAppMessage
+} = require("./services/whatsappService");
 // CRON JOBS
 require("./cron/sessionCron");
 require("./cron/attendanceCron");
@@ -264,6 +269,38 @@ app.get("/test-whatsapp", async (req, res) => {
     console.log(err.response?.data || err.message);
     res.send("❌ Failed");
   }
+});
+
+/* =====================================================
+   WHATSAPP SERVICE TEST
+   ===================================================== */
+
+app.get("/test-whatsapp-service", async (req, res) => {
+
+    const result =
+        await sendWhatsAppMessage(
+            "919566911472",
+            "🎉 WhatsApp Service is working from Gopes Pinnacle Academy Backend!"
+        );
+
+    if (result.success) {
+
+        return res.json({
+            success: true,
+            message:
+                "WhatsApp message sent successfully",
+            data: result.data
+        });
+
+    }
+
+    return res.status(500).json({
+        success: false,
+        message:
+            "WhatsApp message failed",
+        error: result.error
+    });
+
 });
 const webhookRoutes = require("./routes/webhook");
 app.use("/api", webhookRoutes);
