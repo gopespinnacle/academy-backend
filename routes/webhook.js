@@ -1,64 +1,124 @@
 const express = require("express");
 const router = express.Router();
-const axios = require("axios");
 const Message = require("../models/Message");
 
-// VERIFY WEBHOOK (META REQUIREMENT)
+// =====================================================
+// META WEBHOOK VERIFICATION
+// =====================================================
+
 router.get("/webhook", (req, res) => {
-  const VERIFY_TOKEN = "myverifytoken"; // set same in Meta
+
+  const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
+  console.log("Webhook verification request received");
+
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    res.status(200).send(challenge);
+
+    console.log("WhatsApp webhook verified successfully");
+
+    return res.status(200).send(challenge);
+
   } else {
-    res.sendStatus(403);
+
+    console.log("Webhook verification failed");
+
+    return res.sendStatus(403);
   }
 });
 
-// RECEIVE MESSAGE
+
+// =====================================================
+// RECEIVE WHATSAPP MESSAGE
+// =====================================================
+
 router.post("/webhook", async (req, res) => {
 
   try {
-    const message = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
 
-    if (message) {
-      const from = message.from;
-      const text = message.text?.body;
-
-      console.log("📩 Incoming:", from, text);
-
-      // 1️⃣ SAVE IN DB
-      await Message.create({ from, text });
-
-      // 2️⃣ FORWARD TO YOU
-      await axios.post(
-        `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
-        {
-          messaging_product: "whatsapp",
-          to: "919566911472",
-          type: "text",
-          text: {
-            body: `📩 Student Reply\nNumber: ${from}\nMessage: ${text}`
-          }
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-    }
-
+    // Meta requires a quick 200 response
     res.sendStatus(200);
 
-  } catch (err) {
-    console.log(err);
-    res.sendStatus(500);
+    const value =
+      req.body?.entry?.[0]?.changes?.[0]?.value;
+
+    if (!value) {
+      return;
+    }
+
+
+    // =====================================================
+    // RECEIVE INCOMING MESSAGE
+    // =====================================================
+
+    const message = value.messages?.[0];
+
+    if (!message) {
+      return;
+    }
+
+
+    const from = message.from;
+
+    let text = "";
+
+    // Text message
+    if (message.type === "text") {
+
+      text = message.text?.body || "";
+
+    } else {
+
+      text = `[${message.type} message]`;
+
+    }
+
+
+    console.log("=================================");
+    console.log("📩 NEW WHATSAPP MESSAGE");
+    console.log("From:", from);
+    console.log("Message:", text);
+    console.log("Type:", message.type);
+    console.log("=================================");
+
+
+    // =====================================================
+    // SAVE INCOMING MESSAGE TO DATABASE
+    // =====================================================
+
+    await Message.create({
+
+      from: from,
+
+      to: process.env.WHATSAPP_PHONE_NUMBER,
+
+      text: text,
+
+      direction: "incoming",
+
+      messageType: message.type,
+
+      whatsappMessageId: message.id,
+
+      timestamp: new Date()
+
+    });
+
+
+    console.log("✅ Incoming WhatsApp message saved");
+
+  } catch (error) {
+
+    console.error(
+      "❌ WhatsApp webhook error:",
+      error.response?.data || error.message
+    );
+
   }
+
 });
 
 module.exports = router;
