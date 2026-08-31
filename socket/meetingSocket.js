@@ -122,6 +122,21 @@ function getOnlineParticipants(room) {
 
 }
 
+/*
+==========================================================
+TEACHER CONTROL AUTHORIZATION
+==========================================================
+*/
+
+function isTeacherController(socket) {
+
+    return (
+        socket &&
+        socket.role === "teacher"
+    );
+
+}
+
 
 /*
 ==========================================================
@@ -2948,65 +2963,122 @@ if (
             ======================================================
             */
 
-            socket.on(
-                "muteStudent",
-                (data = {}) => {
+            /*
+==========================================================
+TEACHER — MUTE / UNMUTE STUDENT
+==========================================================
+*/
+
+socket.on(
+    "muteStudent",
+    (data = {}) => {
+
+        const room =
+            socket.room;
 
 
-                    const room =
-                        socket.room;
+        /*
+        --------------------------------------------------
+        ONLY TEACHER CAN CONTROL STUDENTS
+        --------------------------------------------------
+        */
 
+        if (
+            !room ||
+            !isTeacherController(socket)
+        ) {
 
-                    if (!room) return;
-
-
-                    const student =
-                        getParticipants(room)
-                            .find(
-                                p =>
-                                    p.socketId ===
-                                    data.socketId &&
-                                    p.role ===
-                                    "student"
-                            );
-
-
-                    if (!student)
-                        return;
-
-
-                    student.micMuted =
-                        !student.micMuted;
-
-
-                    io.to(
-                        data.socketId
-                    ).emit(
-                        "forceMute",
-                        {
-
-                            muted:
-                                student.micMuted
-
-                        }
-                    );
-
-
-                    io.to(room).emit(
-                        "studentControlUpdated",
-                        {
-
-                            socketId:
-                                student.socketId,
-
-                            micMuted:
-                                student.micMuted
-
-                        }
-                    );
-
-                }
+            console.warn(
+                "MUTE STUDENT: unauthorized request"
             );
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        FIND STUDENT
+        --------------------------------------------------
+        */
+
+        const student =
+            getParticipants(room)
+                .find(
+                    participant =>
+                        participant.socketId ===
+                            data.socketId &&
+                        participant.role ===
+                            "student"
+                );
+
+
+        if (!student) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        TOGGLE MUTE
+        --------------------------------------------------
+        */
+
+        student.micMuted =
+            !student.micMuted;
+
+
+        /*
+        --------------------------------------------------
+        FORCE STUDENT MEDIA
+        --------------------------------------------------
+        */
+
+        io.to(
+            student.socketId
+        ).emit(
+            "forceMute",
+            {
+
+                muted:
+                    student.micMuted
+
+            }
+        );
+
+
+        /*
+        --------------------------------------------------
+        UPDATE EVERYONE
+        --------------------------------------------------
+        */
+
+        io.to(room).emit(
+            "studentControlUpdated",
+            {
+
+                socketId:
+                    student.socketId,
+
+                mic:
+                    student.micMuted
+                        ? false
+                        : student.mic,
+
+                micMuted:
+                    student.micMuted,
+
+                micLocked:
+                    student.micLocked || false
+
+            }
+        );
+
+    }
+);
 
 
             /*
@@ -3015,68 +3087,142 @@ if (
             ======================================================
             */
 
-            socket.on(
-                "lockMic",
-                (data = {}) => {
+            /*
+==========================================================
+TEACHER — LOCK / UNLOCK STUDENT MICROPHONE
+==========================================================
+*/
+
+socket.on(
+    "lockMic",
+    (data = {}) => {
+
+        const room =
+            socket.room;
 
 
-                    const room =
-                        socket.room;
+        /*
+        --------------------------------------------------
+        ONLY TEACHER
+        --------------------------------------------------
+        */
 
+        if (
+            !room ||
+            !isTeacherController(socket)
+        ) {
 
-                    if (!room) return;
-
-
-                    const participant =
-                        getParticipants(room)
-                            .find(
-                                p =>
-                                    p.socketId ===
-                                    data.socketId &&
-                                    p.role ===
-                                    "student"
-                            );
-
-
-                    if (!participant)
-                        return;
-
-
-                    participant.micLocked =
-                        !participant.micLocked;
-
-
-                    io.to(
-                        data.socketId
-                    ).emit(
-                        "forceMute",
-                        {
-
-                            muted:
-                                participant.micLocked
-
-                        }
-                    );
-
-
-                    io.to(room).emit(
-                        "studentControlUpdated",
-                        {
-
-                            socketId:
-                                participant.socketId,
-
-                            micLocked:
-                                participant.micLocked,
-
-                            micMuted:
-                                participant.micLocked
-
-                        }
-                    );
-
-                }
+            console.warn(
+                "LOCK MIC: unauthorized request"
             );
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        FIND STUDENT
+        --------------------------------------------------
+        */
+
+        const student =
+            getParticipants(room)
+                .find(
+                    participant =>
+                        participant.socketId ===
+                            data.socketId &&
+                        participant.role ===
+                            "student"
+                );
+
+
+        if (!student) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        TOGGLE LOCK
+        --------------------------------------------------
+        */
+
+        student.micLocked =
+            !student.micLocked;
+
+
+        /*
+        --------------------------------------------------
+        WHEN LOCKED
+        MICROPHONE MUST BE OFF
+        --------------------------------------------------
+        */
+
+        if (
+            student.micLocked
+        ) {
+
+            student.micMuted =
+                true;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        FORCE STUDENT
+        --------------------------------------------------
+        */
+
+        io.to(
+            student.socketId
+        ).emit(
+            "forceMute",
+            {
+
+                muted:
+                    student.micMuted,
+
+                locked:
+                    student.micLocked
+
+            }
+        );
+
+
+        /*
+        --------------------------------------------------
+        UPDATE ROOM
+        --------------------------------------------------
+        */
+
+        io.to(room).emit(
+            "studentControlUpdated",
+            {
+
+                socketId:
+                    student.socketId,
+
+                mic:
+                    student.micMuted
+                        ? false
+                        : student.mic,
+
+                micMuted:
+                    student.micMuted,
+
+                micLocked:
+                    student.micLocked
+
+            }
+        );
+
+    }
+);
 
 
             /*
@@ -3085,68 +3231,141 @@ if (
             ======================================================
             */
 
-            socket.on(
-                "lockCamera",
-                (data = {}) => {
+            /*
+==========================================================
+TEACHER — LOCK / UNLOCK STUDENT CAMERA
+==========================================================
+*/
+
+socket.on(
+    "lockCamera",
+    (data = {}) => {
+
+        const room =
+            socket.room;
 
 
-                    const room =
-                        socket.room;
+        /*
+        --------------------------------------------------
+        ONLY TEACHER
+        --------------------------------------------------
+        */
 
+        if (
+            !room ||
+            !isTeacherController(socket)
+        ) {
 
-                    if (!room) return;
-
-
-                    const participant =
-                        getParticipants(room)
-                            .find(
-                                p =>
-                                    p.socketId ===
-                                    data.socketId &&
-                                    p.role ===
-                                    "student"
-                            );
-
-
-                    if (!participant)
-                        return;
-
-
-                    participant.cameraLocked =
-                        !participant.cameraLocked;
-
-
-                    io.to(
-                        data.socketId
-                    ).emit(
-                        "forceStopCamera",
-                        {
-
-                            stopped:
-                                participant.cameraLocked
-
-                        }
-                    );
-
-
-                    io.to(room).emit(
-                        "studentControlUpdated",
-                        {
-
-                            socketId:
-                                participant.socketId,
-
-                            cameraLocked:
-                                participant.cameraLocked,
-
-                            cameraStopped:
-                                participant.cameraLocked
-
-                        }
-                    );
-
-                }
+            console.warn(
+                "LOCK CAMERA: unauthorized request"
             );
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        FIND STUDENT
+        --------------------------------------------------
+        */
+
+        const student =
+            getParticipants(room)
+                .find(
+                    participant =>
+                        participant.socketId ===
+                            data.socketId &&
+                        participant.role ===
+                            "student"
+                );
+
+
+        if (!student) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        TOGGLE LOCK
+        --------------------------------------------------
+        */
+
+        student.cameraLocked =
+            !student.cameraLocked;
+
+
+        /*
+        --------------------------------------------------
+        LOCKED = CAMERA OFF
+        --------------------------------------------------
+        */
+
+        if (
+            student.cameraLocked
+        ) {
+
+            student.cameraStopped =
+                true;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        FORCE STUDENT CAMERA
+        --------------------------------------------------
+        */
+
+        io.to(
+            student.socketId
+        ).emit(
+            "forceStopCamera",
+            {
+
+                stopped:
+                    student.cameraStopped,
+
+                locked:
+                    student.cameraLocked
+
+            }
+        );
+
+
+        /*
+        --------------------------------------------------
+        UPDATE EVERYONE
+        --------------------------------------------------
+        */
+
+        io.to(room).emit(
+            "studentControlUpdated",
+            {
+
+                socketId:
+                    student.socketId,
+
+                camera:
+                    student.cameraStopped
+                        ? false
+                        : student.camera,
+
+                cameraStopped:
+                    student.cameraStopped,
+
+                cameraLocked:
+                    student.cameraLocked
+
+            }
+        );
+
+    }
+);
 
 
             /*
@@ -3155,65 +3374,379 @@ if (
             ======================================================
             */
 
-            socket.on(
-                "stopCamera",
-                (data = {}) => {
+            /*
+==========================================================
+TEACHER — TURN STUDENT CAMERA ON / OFF
+==========================================================
+*/
+
+socket.on(
+    "stopCamera",
+    (data = {}) => {
+
+        const room =
+            socket.room;
 
 
-                    const room =
-                        socket.room;
+        /*
+        --------------------------------------------------
+        ONLY TEACHER
+        --------------------------------------------------
+        */
+
+        if (
+            !room ||
+            !isTeacherController(socket)
+        ) {
+
+            console.warn(
+                "STOP CAMERA: unauthorized request"
+            );
+
+            return;
+
+        }
 
 
-                    if (!room) return;
+        /*
+        --------------------------------------------------
+        FIND STUDENT
+        --------------------------------------------------
+        */
+
+        const student =
+            getParticipants(room)
+                .find(
+                    participant =>
+                        participant.socketId ===
+                            data.socketId &&
+                        participant.role ===
+                            "student"
+                );
 
 
-                    const student =
-                        getParticipants(room)
-                            .find(
-                                p =>
-                                    p.socketId ===
-                                    data.socketId &&
-                                    p.role ===
-                                    "student"
-                            );
+        if (!student) {
+
+            return;
+
+        }
 
 
-                    if (!student)
-                        return;
+        /*
+        --------------------------------------------------
+        TOGGLE CAMERA
+        --------------------------------------------------
+        */
+
+        student.cameraStopped =
+            !student.cameraStopped;
 
 
-                    student.cameraStopped =
-                        !student.cameraStopped;
+        /*
+        --------------------------------------------------
+        FORCE STUDENT CAMERA
+        --------------------------------------------------
+        */
+
+        io.to(
+            student.socketId
+        ).emit(
+            "forceStopCamera",
+            {
+
+                stopped:
+                    student.cameraStopped,
+
+                locked:
+                    student.cameraLocked || false
+
+            }
+        );
+
+
+        /*
+        --------------------------------------------------
+        UPDATE EVERYONE
+        --------------------------------------------------
+        */
+
+        io.to(room).emit(
+            "studentControlUpdated",
+            {
+
+                socketId:
+                    student.socketId,
+
+                camera:
+                    student.cameraStopped
+                        ? false
+                        : student.camera,
+
+                cameraStopped:
+                    student.cameraStopped,
+
+                cameraLocked:
+                    student.cameraLocked || false
+
+            }
+        );
+
+    }
+);
+
+
+/*
+==========================================================
+TEACHER — LOCK ALL STUDENT MICROPHONES
+==========================================================
+*/
+
+socket.on(
+    "lockAllStudentMics",
+    () => {
+
+        const room =
+            socket.room;
+
+
+        if (
+            !room ||
+            !isTeacherController(socket)
+        ) {
+
+            return;
+
+        }
+
+
+        getParticipants(room)
+            .filter(
+                participant =>
+                    participant.role ===
+                    "student"
+            )
+            .forEach(
+                student => {
+
+                    student.micLocked =
+                        true;
+
+                    student.micMuted =
+                        true;
 
 
                     io.to(
-                        data.socketId
+                        student.socketId
                     ).emit(
-                        "forceStopCamera",
+                        "forceMute",
                         {
 
-                            stopped:
-                                student.cameraStopped
+                            muted:
+                                true,
 
-                        }
-                    );
-
-
-                    io.to(room).emit(
-                        "studentControlUpdated",
-                        {
-
-                            socketId:
-                                student.socketId,
-
-                            cameraStopped:
-                                student.cameraStopped
+                            locked:
+                                true
 
                         }
                     );
 
                 }
             );
+
+
+        io.to(room).emit(
+            "studentControlsAllUpdated",
+            {
+
+                micLocked:
+                    true
+
+            }
+        );
+
+    }
+);
+
+
+/*
+==========================================================
+TEACHER — UNLOCK ALL STUDENT MICROPHONES
+==========================================================
+*/
+
+socket.on(
+    "unlockAllStudentMics",
+    () => {
+
+        const room =
+            socket.room;
+
+
+        if (
+            !room ||
+            !isTeacherController(socket)
+        ) {
+
+            return;
+
+        }
+
+
+        getParticipants(room)
+            .filter(
+                participant =>
+                    participant.role ===
+                    "student"
+            )
+            .forEach(
+                student => {
+
+                    student.micLocked =
+                        false;
+
+                }
+            );
+
+
+        io.to(room).emit(
+            "studentControlsAllUpdated",
+            {
+
+                micLocked:
+                    false
+
+            }
+        );
+
+    }
+);
+
+
+/*
+==========================================================
+TEACHER — LOCK ALL STUDENT CAMERAS
+==========================================================
+*/
+
+socket.on(
+    "lockAllStudentCameras",
+    () => {
+
+        const room =
+            socket.room;
+
+
+        if (
+            !room ||
+            !isTeacherController(socket)
+        ) {
+
+            return;
+
+        }
+
+
+        getParticipants(room)
+            .filter(
+                participant =>
+                    participant.role ===
+                    "student"
+            )
+            .forEach(
+                student => {
+
+                    student.cameraLocked =
+                        true;
+
+                    student.cameraStopped =
+                        true;
+
+
+                    io.to(
+                        student.socketId
+                    ).emit(
+                        "forceStopCamera",
+                        {
+
+                            stopped:
+                                true,
+
+                            locked:
+                                true
+
+                        }
+                    );
+
+                }
+            );
+
+
+        io.to(room).emit(
+            "studentControlsAllUpdated",
+            {
+
+                cameraLocked:
+                    true
+
+            }
+        );
+
+    }
+);
+
+
+/*
+==========================================================
+TEACHER — UNLOCK ALL STUDENT CAMERAS
+==========================================================
+*/
+
+socket.on(
+    "unlockAllStudentCameras",
+    () => {
+
+        const room =
+            socket.room;
+
+
+        if (
+            !room ||
+            !isTeacherController(socket)
+        ) {
+
+            return;
+
+        }
+
+
+        getParticipants(room)
+            .filter(
+                participant =>
+                    participant.role ===
+                    "student"
+            )
+            .forEach(
+                student => {
+
+                    student.cameraLocked =
+                        false;
+
+                }
+            );
+
+
+        io.to(room).emit(
+            "studentControlsAllUpdated",
+            {
+
+                cameraLocked:
+                    false
+
+            }
+        );
+
+    }
+);
 
 
             /*
