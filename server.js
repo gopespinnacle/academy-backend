@@ -187,6 +187,8 @@ app.use("/api/academy-calendar", academyCalendarRoutes);
 
 // ✅ FIRST load MAIN routes
 app.use("/api/founder", founderRoutes);
+const aiClassroomRoutes =
+    require("./routes/aiClassroomRoutes");
 
 app.use(
     "/api/founder/bank-statements",
