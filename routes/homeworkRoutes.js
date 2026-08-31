@@ -790,24 +790,35 @@ router.get("/lesson-plans", async (req, res) => {
 try{
 
 const teacherId = req.query.teacherId;
+const periodId = req.query.periodId;
 
-const plans = await LessonPlan.find({
+const filter = {
 
-teacherId: teacherId
+    teacherId: teacherId
 
-}).sort({
+};
 
-date:-1,
+if(periodId){
 
-createdAt:-1
+    filter.periodId = periodId;
+
+}
+
+const plans = await LessonPlan.find(
+    filter
+).sort({
+
+    date: -1,
+
+    createdAt: -1
 
 });
 
 res.json({
 
-success:true,
+    success: true,
 
-data:plans
+    data: plans
 
 });
 
@@ -817,9 +828,9 @@ console.log(err);
 
 res.status(500).json({
 
-success:false,
+    success:false,
 
-message:err.message
+    message:err.message
 
 });
 
