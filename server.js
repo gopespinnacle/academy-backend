@@ -70,6 +70,7 @@ const teacherRoutes = require("./routes/teacherRoutes");
 const founderRoutes = require("./routes/founderRoutes");
 const aiClassroomRoutes =
     require("./routes/aiClassroomRoutes");
+    const aiSpeechRoutes = require("./routes/aiSpeechRoutes");
 
 const bankStatementRoutes =
 require("./routes/bankStatementRoutes");
