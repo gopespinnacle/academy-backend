@@ -2609,6 +2609,136 @@ if (
                 }
             );
 
+            /*
+==========================================================
+FOCUS MONITORING V2
+STUDENT FOCUS EVENTS
+==========================================================
+*/
+
+socket.on(
+    "focusMonitoringEvent",
+    (data = {}) => {
+
+        const room =
+            socket.room;
+
+
+        /*
+        --------------------------------------------------
+        ONLY STUDENT CAN SEND FOCUS EVENTS
+        --------------------------------------------------
+        */
+
+        if (
+            !room ||
+            socket.role !== "student"
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        FIND CURRENT STUDENT
+        --------------------------------------------------
+        */
+
+        const student =
+            getParticipants(room)
+                .find(
+                    participant =>
+                        participant.socketId ===
+                        socket.id
+                );
+
+
+        if (!student) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        SEND EVENT TO THE ENTIRE CLASSROOM
+
+        Teacher + Student both receive it.
+
+        socket.to(room) sends to everyone except
+        the student who generated the event.
+        --------------------------------------------------
+        */
+
+        io.to(room).emit(
+            "focusMonitoringUpdate",
+            {
+
+                type:
+                    data.type,
+
+                socketId:
+                    socket.id,
+
+                studentId:
+                    student.studentId ||
+                    data.studentId ||
+                    null,
+
+                studentName:
+                    student.name ||
+                    data.studentName ||
+                    "Student",
+
+                visibility:
+                    data.visibility,
+
+                viewport:
+                    data.viewport,
+
+                orientation:
+                    data.orientation,
+
+                online:
+                    data.online,
+
+                timestamp:
+                    data.timestamp ||
+                    new Date()
+                        .toISOString()
+
+            }
+        );
+
+
+        /*
+        --------------------------------------------------
+        LOG
+        --------------------------------------------------
+        */
+
+        console.log(
+            "FOCUS MONITORING:",
+            {
+
+                type:
+                    data.type,
+
+                student:
+                    student.name,
+
+                room:
+                    room
+
+            }
+        );
+
+    }
+);
+
 
             /*
             ======================================================
@@ -4874,5 +5004,80 @@ if (
 
         }
     );
+
+    /*
+===========================================================
+FOCUS MONITORING V2
+RECEIVE STUDENT FOCUS EVENTS
+===========================================================
+*/
+
+socket.on(
+    "focusMonitoringEvent",
+    data => {
+
+        try {
+
+            if (!data) return;
+
+
+            /*
+            ------------------------------------------------
+            Only student focus events should be
+            broadcast as student monitoring events.
+            ------------------------------------------------
+            */
+
+            if (
+                data.role !== "student"
+            ) {
+
+                return;
+
+            }
+
+
+            console.log(
+                "FOCUS MONITORING EVENT:",
+                data
+            );
+
+
+            /*
+            ------------------------------------------------
+            SEND TO EVERYONE ELSE IN THE SAME ROOM
+            ------------------------------------------------
+            */
+
+            socket.to(
+                data.room
+            ).emit(
+                "focusMonitoringUpdate",
+                {
+
+                    ...data,
+
+                    socketId:
+                        socket.id,
+
+                    receivedAt:
+                        new Date()
+                            .toISOString()
+
+                }
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "FOCUS MONITORING ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
 
 };
