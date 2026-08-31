@@ -5,6 +5,10 @@ const router = express.Router();
 const AIClassSettings =
     require("../models/AIClassSettings");
 
+    const {
+    generateClassroomQuestions
+} = require("../services/aiQuestionService");
+
 
 // =====================================================
 // GET AI CLASSROOM SETTINGS
@@ -186,5 +190,154 @@ router.put(
     }
 );
 
+// =====================================================
+// GENERATE AI CLASSROOM QUESTIONS
+// =====================================================
+
+router.post(
+    "/classroom/generate-questions",
+    async (req, res) => {
+
+        try {
+
+            const {
+                transcript,
+                className,
+                subject,
+                previousQuestions = []
+            } = req.body;
+
+
+            // ==========================================
+            // VALIDATE TRANSCRIPT
+            // ==========================================
+
+            if (
+                !transcript ||
+                !transcript.trim()
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Teacher transcript is required"
+
+                });
+
+            }
+
+
+            // ==========================================
+            // GET FOUNDER AI SETTINGS
+            // ==========================================
+
+            let settings =
+                await AIClassSettings.findOne();
+
+
+            if (!settings) {
+
+                settings =
+                    await AIClassSettings.create({
+
+                        enabled: true,
+
+                        intervalMinutes: 10,
+
+                        questionCount: 3
+
+                    });
+
+            }
+
+
+            // ==========================================
+            // CHECK AI ENABLED
+            // ==========================================
+
+            if (!settings.enabled) {
+
+                return res.json({
+
+                    success: false,
+
+                    enabled: false,
+
+                    message:
+                        "AI Classroom Questions are disabled"
+
+                });
+
+            }
+
+
+            // ==========================================
+            // GENERATE QUESTIONS
+            // ==========================================
+
+            const questions =
+                await generateClassroomQuestions({
+
+                    transcript,
+
+                    className:
+                        className || "",
+
+                    subject:
+                        subject || "",
+
+                    questionCount:
+                        settings.questionCount,
+
+                    previousQuestions:
+                        Array.isArray(previousQuestions)
+                            ? previousQuestions
+                            : []
+
+                });
+
+
+            // ==========================================
+            // RESPONSE
+            // ==========================================
+
+            res.json({
+
+                success: true,
+
+                intervalMinutes:
+                    settings.intervalMinutes,
+
+                questionCount:
+                    settings.questionCount,
+
+                questions
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "AI CLASSROOM QUESTION ERROR:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Failed to generate classroom questions"
+
+            });
+
+        }
+
+    }
+);
 
 module.exports = router;
