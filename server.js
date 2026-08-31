@@ -194,6 +194,10 @@ app.use(
     "/api/founder/ai-classroom",
     aiClassroomRoutes
 );
+app.use(
+    "/api/ai",
+    aiClassroomRoutes
+);
 app.use("/api/ai", aiSpeechRoutes);
 
 
