@@ -322,6 +322,8 @@ app.use("/api/student-attendance", studentAttendanceRoutes);
 /* ================= PERIOD ASSIGNMENTS ================= */
 
 const PeriodAssignment = require("./models/PeriodAssignment");  // adjust if path different
+const LessonPlan = require("./models/LessonPlan");
+const Homework = require("./models/Homework");
 
 app.get("/api/founder/periodassignments", async (req, res) => {
 
@@ -340,15 +342,152 @@ app.get("/api/founder/periodassignments", async (req, res) => {
 
 app.delete("/api/founder/periodassignments/:id", async (req, res) => {
 
-    try{
+    try {
 
-        await PeriodAssignment.findByIdAndDelete(req.params.id);
+        const periodId = req.params.id;
 
-        res.json({ message: "Period deleted successfully ✅" });
+        console.log("==========================================");
+        console.log("FOUNDER DELETE PERIOD");
+        console.log("PERIOD ID:", periodId);
+        console.log("==========================================");
 
-    }catch(err){
-        console.log(err);
-        res.status(500).json({ message: "Delete failed ❌" });
+
+        // ==================================================
+        // 1. FIND THE PERIOD
+        // ==================================================
+
+        const period =
+            await PeriodAssignment.findById(periodId);
+
+
+        if (!period) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message: "Period not found."
+
+            });
+
+        }
+
+
+        // ==================================================
+        // 2. FIND ALL LESSON PLANS FOR THIS PERIOD
+        // ==================================================
+
+        const lessonPlans =
+            await LessonPlan.find({
+
+                periodId: period._id
+
+            }).select("_id");
+
+
+        const lessonPlanIds =
+            lessonPlans.map(
+                plan => plan._id
+            );
+
+
+        console.log(
+            "LESSON PLANS FOUND:",
+            lessonPlanIds.length
+        );
+
+
+        // ==================================================
+        // 3. DELETE HOMEWORK RECORDS
+        // ==================================================
+
+        if (lessonPlanIds.length > 0) {
+
+            const homeworkDeleteResult =
+                await Homework.deleteMany({
+
+                    lessonPlan: {
+                        $in: lessonPlanIds
+                    }
+
+                });
+
+
+            console.log(
+                "HOMEWORK RECORDS DELETED:",
+                homeworkDeleteResult.deletedCount
+            );
+
+        }
+
+
+        // ==================================================
+        // 4. DELETE LESSON PLANS
+        // ==================================================
+
+        const lessonPlanDeleteResult =
+            await LessonPlan.deleteMany({
+
+                periodId: period._id
+
+            });
+
+
+        console.log(
+            "LESSON PLANS DELETED:",
+            lessonPlanDeleteResult.deletedCount
+        );
+
+
+        // ==================================================
+        // 5. DELETE PERIOD ASSIGNMENT
+        // ==================================================
+
+        await PeriodAssignment.findByIdAndDelete(
+            period._id
+        );
+
+
+        console.log(
+            "PERIOD ASSIGNMENT DELETED:",
+            period._id
+        );
+
+
+        // ==================================================
+        // 6. SUCCESS
+        // ==================================================
+
+        res.json({
+
+            success: true,
+
+            message:
+                "Period, lesson plans and homework deleted successfully."
+
+        });
+
+
+    } catch (err) {
+
+        console.error(
+            "FOUNDER PERIOD DELETE ERROR:",
+            err
+        );
+
+
+        res.status(500).json({
+
+            success: false,
+
+            message:
+                "Failed to delete period and related homework.",
+
+            error:
+                err.message
+
+        });
+
     }
 
 });
