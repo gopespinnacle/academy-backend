@@ -2703,12 +2703,15 @@ socket.on(
                     data.orientation,
 
                 online:
-                    data.online,
+    data.online,
 
-                timestamp:
-                    data.timestamp ||
-                    new Date()
-                        .toISOString()
+battery:
+    data.battery || null,
+
+timestamp:
+    data.timestamp ||
+    new Date()
+        .toISOString()
 
             }
         );
