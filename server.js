@@ -68,6 +68,8 @@ const annotationMaterialRoutes =
 const teacherSessionRoutes = require("./routes/teacherSessionRoutes");
 const teacherRoutes = require("./routes/teacherRoutes");
 const founderRoutes = require("./routes/founderRoutes");
+const aiClassroomRoutes =
+    require("./routes/aiClassroomRoutes");
 
 const bankStatementRoutes =
 require("./routes/bankStatementRoutes");
@@ -187,8 +189,11 @@ app.use("/api/academy-calendar", academyCalendarRoutes);
 
 // ✅ FIRST load MAIN routes
 app.use("/api/founder", founderRoutes);
-const aiClassroomRoutes =
-    require("./routes/aiClassroomRoutes");
+app.use(
+    "/api/founder/ai-classroom",
+    aiClassroomRoutes
+);
+
 
 app.use(
     "/api/founder/bank-statements",
