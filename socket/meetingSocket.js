@@ -2739,6 +2739,145 @@ socket.on(
     }
 );
 
+/*
+==========================================================
+FOCUS MONITORING V2
+STUDENT FOCUS EVENTS
+==========================================================
+*/
+
+socket.on(
+    "focusMonitoringEvent",
+    (data = {}) => {
+
+        /*
+        --------------------------------------------------
+        STUDENT ONLY
+        --------------------------------------------------
+        */
+
+        if (
+            socket.role !== "student"
+        ) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        ROOM FROM SOCKET
+        --------------------------------------------------
+        */
+
+        const room =
+            socket.room;
+
+
+        if (!room) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        FIND STUDENT
+        --------------------------------------------------
+        */
+
+        const student =
+            getParticipants(room)
+                .find(
+                    participant =>
+                        participant.socketId ===
+                        socket.id
+                );
+
+
+        if (!student) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        SEND TO EVERYONE IN SAME CLASSROOM
+        --------------------------------------------------
+        */
+
+        io.to(
+            room
+        ).emit(
+            "focusMonitoringUpdate",
+            {
+
+                type:
+                    data.type,
+
+                socketId:
+                    socket.id,
+
+                studentId:
+                    student.studentId ||
+                    data.studentId ||
+                    null,
+
+                studentName:
+                    student.name ||
+                    data.studentName ||
+                    "Student",
+
+                visibility:
+                    data.visibility,
+
+                viewport:
+                    data.viewport,
+
+                orientation:
+                    data.orientation,
+
+                online:
+                    data.online,
+
+                timestamp:
+                    data.timestamp ||
+                    new Date()
+                        .toISOString()
+
+            }
+        );
+
+
+        /*
+        --------------------------------------------------
+        SERVER LOG
+        --------------------------------------------------
+        */
+
+        console.log(
+            "FOCUS MONITORING:",
+            {
+
+                type:
+                    data.type,
+
+                student:
+                    student.name,
+
+                room:
+                    room
+
+            }
+        );
+
+    }
+);
+
 
             /*
             ======================================================
