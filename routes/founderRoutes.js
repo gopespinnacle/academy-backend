@@ -2165,21 +2165,163 @@ router.post("/assign-period", async (req, res) => {
 
 });
 
-router.delete("/delete-schedule/:id", protect, authorize("founder"), async (req, res) => {
-    try {
+router.delete(
+    "/delete-schedule/:id",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
 
-        const deleted = await TeacherSchedule.findByIdAndDelete(req.params.id);
+        try {
 
-        if (!deleted) {
-            return res.status(404).json({ message: "Schedule not found" });
+            // =====================================================
+            // 1. FIND THE TEACHER SCHEDULE FIRST
+            // =====================================================
+
+            const schedule =
+                await TeacherSchedule.findById(
+                    req.params.id
+                );
+
+
+            // =====================================================
+            // 2. CHECK SCHEDULE EXISTS
+            // =====================================================
+
+            if (!schedule) {
+
+                return res.status(404).json({
+
+                    message:
+                        "Schedule not found"
+
+                });
+
+            }
+
+
+            // =====================================================
+            // 3. DELETE THE TEACHER SCHEDULE
+            // =====================================================
+
+            await TeacherSchedule.findByIdAndDelete(
+                req.params.id
+            );
+
+
+            // =====================================================
+            // 4. DELETE THE RELATED PERIOD ASSIGNMENT
+            // =====================================================
+
+            const deletedPeriods =
+                await PeriodAssignment.deleteMany({
+
+                    teacher:
+                        schedule.teacher,
+
+                    className:
+                        schedule.className,
+
+                    subject:
+                        schedule.subject,
+
+                    day:
+                        schedule.day,
+
+                    startTime:
+                        schedule.startTime,
+
+                    endTime:
+                        schedule.endTime
+
+                });
+
+
+            // =====================================================
+            // 5. LOG WHAT WAS DELETED
+            // =====================================================
+
+            console.log(
+                "=========================================="
+            );
+
+            console.log(
+                "SCHEDULE DELETED"
+            );
+
+            console.log(
+                "Teacher:",
+                schedule.teacher
+            );
+
+            console.log(
+                "Class:",
+                schedule.className
+            );
+
+            console.log(
+                "Subject:",
+                schedule.subject
+            );
+
+            console.log(
+                "Day:",
+                schedule.day
+            );
+
+            console.log(
+                "Time:",
+                schedule.startTime,
+                "-",
+                schedule.endTime
+            );
+
+            console.log(
+                "PeriodAssignments deleted:",
+                deletedPeriods.deletedCount
+            );
+
+            console.log(
+                "=========================================="
+            );
+
+
+            // =====================================================
+            // 6. SEND SUCCESS RESPONSE
+            // =====================================================
+
+            res.json({
+
+                success: true,
+
+                message:
+                    "Schedule and related period deleted successfully",
+
+                deletedPeriods:
+                    deletedPeriods.deletedCount
+
+            });
+
+
+        } catch (error) {
+
+            console.log(
+                "DELETE SCHEDULE ERROR:",
+                error
+            );
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Server error"
+
+            });
+
         }
 
-        res.json({ message: "Schedule deleted successfully" });
-
-    } catch (error) {
-        res.status(500).json({ message: "Server error" });
     }
-});
+);
 
 router.get("/compensation-report", async (req,res)=>{
     try{
