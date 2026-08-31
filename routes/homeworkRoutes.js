@@ -506,7 +506,9 @@ let lessonPlan = await LessonPlan.findOne({
 
     subject: req.body.subject,
 
-    date: req.body.date
+    date: req.body.date,
+
+    periodId: req.body.periodId
 
 });
 
@@ -520,19 +522,27 @@ if(lessonPlan){
 
     lessonPlan = new LessonPlan({
 
-        teacherId:req.body.teacherId,
+    teacherId: req.body.teacherId,
 
-        teacherName:req.body.teacherName,
+    teacherName: req.body.teacherName,
 
-        className:req.body.className,
+    className: req.body.className,
 
-        subject:req.body.subject,
+    subject: req.body.subject,
 
-        date:req.body.date,
+    date: req.body.date,
 
-        lessons:req.body.lessons || []
+    periodId: req.body.periodId || null,
 
-    });
+    day: req.body.day || "",
+
+    startTime: req.body.startTime || "",
+
+    endTime: req.body.endTime || "",
+
+    lessons: req.body.lessons || []
+
+});
 
     await lessonPlan.save();
 
