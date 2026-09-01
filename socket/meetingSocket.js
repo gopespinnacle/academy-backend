@@ -871,9 +871,21 @@ Thank you,
             dailyClass.className || "Not Available",
             dailyClass.subject || "Not Available",
             dailyClass.teacher?.teacherName || "Not Available",
-            teacherConnectionDetails,
-            studentConnectionDetails,
-            classEndTime
+
+            String(teacherConnectionDetails || "Not Available")
+                .replace(/[\r\n\t]+/g, " ")
+                .replace(/ {5,}/g, " ")
+                .trim(),
+
+            String(studentConnectionDetails || "Not Available")
+                .replace(/[\r\n\t]+/g, " ")
+                .replace(/ {5,}/g, " ")
+                .trim(),
+
+            String(classEndTime || "Not Available")
+                .replace(/[\r\n\t]+/g, " ")
+                .replace(/ {5,}/g, " ")
+                .trim()
         ]
     );
 
