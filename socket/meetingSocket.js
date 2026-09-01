@@ -4163,34 +4163,47 @@ socket.on(
                 dailyClass
             ) {
 
-                /*
-                ------------------------------------------------
-                STORE TEACHER FINAL LEAVE TIME
-                ------------------------------------------------
-                */
-
                 if (
-                    dailyClass.teacher
-                ) {
+    dailyClass.teacher
+) {
 
-                    dailyClass.teacher.leftAt =
-                        endedAt;
+    dailyClass.teacher.leftAt =
+        endedAt;
 
-                }
-
-
-                /*
-                ------------------------------------------------
-                MARK CLASS COMPLETED
-                ------------------------------------------------
-                */
-
-                dailyClass.status =
-                    "Completed";
+}
 
 
-                await dailyClass.save();
+/*
+------------------------------------------------
+STORE FINAL CLASS END TIME
+------------------------------------------------
+*/
 
+dailyClass.endedAt =
+    endedAt;
+
+
+/*
+------------------------------------------------
+STORE END REASON
+------------------------------------------------
+*/
+
+dailyClass.endReason =
+    "Teacher ended meeting";
+
+
+/*
+------------------------------------------------
+MARK CLASS COMPLETED
+------------------------------------------------
+*/
+
+dailyClass.status =
+    "Completed";
+
+
+await dailyClass.save();
 
                 console.log(
                     "================================================"
@@ -4386,45 +4399,53 @@ socket.on(
             }
 
 
-            /*
-            ==================================================
-            UPDATE TEACHER FINAL LEAVE TIME
-            ==================================================
-            */
-
             if (
-                dailyClass.teacher
-            ) {
+    dailyClass.teacher
+) {
 
-                dailyClass.teacher.leftAt =
-                    leftAt;
+    dailyClass.teacher.leftAt =
+        leftAt;
 
-            }
-
-
-            /*
-            ==================================================
-            CLASS STATUS
-            ==================================================
-
-            Teacher explicitly clicked Leave Meeting.
-
-            For the current single-teacher session,
-            the class is considered completed.
-            ==================================================
-            */
-
-            dailyClass.status =
-                "Completed";
+}
 
 
-            /*
-            ==================================================
-            SAVE IMMEDIATELY
-            ==================================================
-            */
+/*
+==================================================
+STORE FINAL CLASS END TIME
+==================================================
+*/
 
-            await dailyClass.save();
+dailyClass.endedAt =
+    leftAt;
+
+
+/*
+==================================================
+STORE END REASON
+==================================================
+*/
+
+dailyClass.endReason =
+    "Teacher ended meeting";
+
+
+/*
+==================================================
+CLASS STATUS
+==================================================
+*/
+
+dailyClass.status =
+    "Completed";
+
+
+/*
+==================================================
+SAVE IMMEDIATELY
+==================================================
+*/
+
+await dailyClass.save();
 
 
             /*
@@ -5399,29 +5420,38 @@ if (
 
 
         if (
-            dailyClass &&
-            dailyClass.teacher
-        ) {
+    dailyClass &&
+    dailyClass.teacher
+) {
 
-            dailyClass.teacher.leftAt =
-                finalLeftAt;
-
-
-            /*
-            --------------------------------------------------
-            CLASS SESSION COMPLETED
-            --------------------------------------------------
-
-            At this point the teacher really left and
-            there is no teacher remaining in the room.
-            --------------------------------------------------
-            */
-
-            dailyClass.status =
-                "Completed";
+    dailyClass.teacher.leftAt =
+        finalLeftAt;
 
 
-            await dailyClass.save();
+/*
+--------------------------------------------------
+STORE FINAL CLASS END TIME
+--------------------------------------------------
+*/
+
+    dailyClass.endedAt =
+        finalLeftAt;
+
+
+/*
+--------------------------------------------------
+STORE END REASON
+--------------------------------------------------
+*/
+
+    dailyClass.endReason =
+        "Teacher disconnected and did not reconnect";
+
+
+    dailyClass.status =
+        "Completed";
+
+    await dailyClass.save();
 
 
             console.log(
