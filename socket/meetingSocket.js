@@ -556,43 +556,57 @@ TEACHER CONNECTION DETAILS
 ----------------------------------------------------------
 */
 
-let teacherConnectionDetails =
-    "";
+let teacherConnectionDetails = "";
 
+if (dailyClass.teacher) {
 
-if (
-    dailyClass.teacher &&
-    Array.isArray(
-        dailyClass.teacher.connectionEvents
-    ) &&
-    dailyClass.teacher.connectionEvents.length > 0
-) {
+    const teacherJoined =
+        formatIST(
+            dailyClass.teacher.joinedAt
+        );
+
+    const teacherFinalLeave =
+        formatIST(
+            dailyClass.teacher.leftAt
+        );
+
+    let teacherEvents = "";
+
+    if (
+        Array.isArray(
+            dailyClass.teacher.connectionEvents
+        ) &&
+        dailyClass.teacher.connectionEvents.length > 0
+    ) {
+
+        teacherEvents =
+            dailyClass.teacher.connectionEvents
+                .map(
+                    (event, index) => {
+
+                        return (
+                            `Disconnect ${index + 1}: ${formatIST(event.disconnectedAt)} | ` +
+                            `Rejoin ${index + 1}: ${formatIST(event.reconnectedAt)}`
+                        );
+
+                    }
+                )
+                .join(" | ");
+
+    }
 
     teacherConnectionDetails =
-        dailyClass.teacher.connectionEvents
-            .map(
-                (event, index) => {
-
-                    return (
-                        `${index + 1}. ` +
-                        `Disconnected: ${formatIST(event.disconnectedAt)} ` +
-                        `Rejoined: ${formatIST(event.reconnectedAt)}`
-                    );
-
-                }
-            )
-            .join("\n");
+        `Joined: ${teacherJoined}` +
+        (teacherEvents
+            ? ` | ${teacherEvents}`
+            : "") +
+        ` | Final Leave: ${teacherFinalLeave}`;
 
 }
 else {
 
     teacherConnectionDetails =
-        `Joined: ${formatIST(
-            dailyClass.teacher?.joinedAt
-        )}\n` +
-        `Final Leave: ${formatIST(
-            dailyClass.teacher?.leftAt
-        )}`;
+        "Not Available";
 
 }
 
@@ -603,14 +617,10 @@ STUDENT CONNECTION DETAILS
 ----------------------------------------------------------
 */
 
-let studentConnectionDetails =
-    "";
-
+let studentConnectionDetails = "";
 
 if (
-    Array.isArray(
-        dailyClass.students
-    ) &&
+    Array.isArray(dailyClass.students) &&
     dailyClass.students.length > 0
 ) {
 
@@ -619,7 +629,17 @@ if (
             .map(
                 (student, index) => {
 
-                    let connectionText =
+                    const joinedAt =
+                        formatIST(
+                            student.joinedAt
+                        );
+
+                    const finalLeave =
+                        formatIST(
+                            student.leftAt
+                        );
+
+                    let connectionEvents =
                         "";
 
                     if (
@@ -629,42 +649,36 @@ if (
                         student.connectionEvents.length > 0
                     ) {
 
-                        connectionText =
+                        connectionEvents =
                             student.connectionEvents
                                 .map(
-                                    (event) => {
+                                    (event, eventIndex) => {
 
                                         return (
-                                            `Disconnected: ${formatIST(event.disconnectedAt)} ` +
-                                            `Rejoined: ${formatIST(event.reconnectedAt)}`
+                                            `Disconnect ${eventIndex + 1}: ${formatIST(event.disconnectedAt)} | ` +
+                                            `Rejoin ${eventIndex + 1}: ${formatIST(event.reconnectedAt)}`
                                         );
 
                                     }
                                 )
-                                .join("\n");
+                                .join(" | ");
 
                     }
-                    else {
-
-                        connectionText =
-                            `Joined: ${formatIST(
-                                student.joinedAt
-                            )}\n` +
-                            `Final Leave: ${formatIST(
-                                student.leftAt
-                            )}`;
-
-                    }
-
 
                     return (
-                        `${index + 1}. *${student.studentName || "Unknown"}*\n` +
-                        connectionText
+                        `${index + 1}. ${student.studentName || "Unknown"} | ` +
+                        `Joined: ${joinedAt}` +
+                        (
+                            connectionEvents
+                                ? ` | ${connectionEvents}`
+                                : ""
+                        ) +
+                        ` | Final Leave: ${finalLeave}`
                     );
 
                 }
             )
-            .join("\n\n");
+            .join(" | ");
 
 }
 else {
