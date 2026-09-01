@@ -444,6 +444,15 @@ console.log(
                 role: "founder"
             });
 
+            /*
+==========================================================
+FIXED FOUNDER WHATSAPP NUMBER
+==========================================================
+*/
+
+const FOUNDER_WHATSAPP =
+    "9566911472";
+
             console.log(
     "================================================"
 );
@@ -658,27 +667,24 @@ Thank you,
 
         if (founder) {
 
-            const founderPhone =
-                founder.whatsapp ||
-                founder.mobile;
+    const founderPhone =
+        founder.whatsapp ||
+        founder.mobile ||
+        FOUNDER_WHATSAPP;
 
 
-            if (founderPhone) {
+    recipients.push({
 
-                recipients.push({
+        name:
+            founder.name ||
+            "Founder",
 
-                    name:
-                        founder.name ||
-                        "Founder",
+        phone:
+            founderPhone
 
-                    phone:
-                        founderPhone
+    });
 
-                });
-
-            }
-
-        }
+}
 
 
         /*
