@@ -297,6 +297,54 @@ async function sendDailyClassWhatsAppReport(
                 role: "founder"
             });
 
+            console.log(
+    "================================================"
+);
+
+console.log(
+    "WHATSAPP RECIPIENT DEBUG"
+);
+
+console.log(
+    "Teacher Found:",
+    teacherUser
+        ? {
+            id: teacherUser._id,
+            name: teacherUser.name,
+            whatsapp: teacherUser.whatsapp,
+            mobile: teacherUser.mobile
+        }
+        : null
+);
+
+console.log(
+    "Students Found:",
+    studentUsers.map(
+        student => ({
+            id: student._id,
+            name: student.name,
+            whatsapp: student.whatsapp,
+            mobile: student.mobile
+        })
+    )
+);
+
+console.log(
+    "Founder Found:",
+    founder
+        ? {
+            id: founder._id,
+            name: founder.name,
+            whatsapp: founder.whatsapp,
+            mobile: founder.mobile
+        }
+        : null
+);
+
+console.log(
+    "================================================"
+);
+
 
         /*
         ==================================================
