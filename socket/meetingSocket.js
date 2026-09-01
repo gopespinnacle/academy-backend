@@ -49,6 +49,48 @@ const DailyClassDetails =
 const mongoose =
     require("mongoose");
 
+const User =
+    require("../models/User");
+
+const {
+    sendWhatsAppMessage
+} = require("../services/whatsappService");
+
+/*
+==========================================================
+IST DATE/TIME FORMATTER
+==========================================================
+*/
+
+function formatIST(date) {
+
+    if (!date) {
+
+        return "Not Available";
+
+    }
+
+    return new Intl.DateTimeFormat(
+        "en-IN",
+        {
+            timeZone: "Asia/Kolkata",
+
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+
+            hour12: true
+        }
+    ).format(
+        new Date(date)
+    );
+
+}
+
 
 /*
 ==========================================================
@@ -99,6 +141,484 @@ function getParticipants(room) {
     }
 
     return meetingMemory.participants[room];
+
+}
+
+
+/*
+==========================================================
+STEP 12
+PREVENT DUPLICATE WHATSAPP CLASS REPORT
+==========================================================
+*/
+
+const whatsappReportSent =
+    new Set();
+
+/*
+==========================================================
+STEP 11
+DAILY CLASS WHATSAPP REPORT
+==========================================================
+*/
+
+async function sendDailyClassWhatsAppReport(
+    dailyClass
+) {
+
+        /*
+    ==========================================================
+    STEP 12
+    CHECK WHETHER REPORT WAS ALREADY SENT
+    ==========================================================
+    */
+
+    if (
+        !dailyClass ||
+        !dailyClass.sessionId
+    ) {
+
+        console.warn(
+            "WHATSAPP REPORT: INVALID DAILY CLASS SESSION"
+        );
+
+        return;
+
+    }
+
+
+    /*
+    ----------------------------------------------------------
+    PREVENT DUPLICATE REPORT
+    ----------------------------------------------------------
+    */
+
+    if (
+        whatsappReportSent.has(
+            dailyClass.sessionId
+        )
+    ) {
+
+        console.log(
+            "WHATSAPP REPORT ALREADY SENT:",
+            dailyClass.sessionId
+        );
+
+        return;
+
+    }
+
+
+    /*
+    ----------------------------------------------------------
+    MARK AS SENT
+    ----------------------------------------------------------
+
+    Mark it BEFORE sending so that if another event
+    fires immediately, it cannot send another report.
+    ----------------------------------------------------------
+    */
+
+    whatsappReportSent.add(
+        dailyClass.sessionId
+    );
+
+    try {
+
+        if (!dailyClass) {
+
+            console.warn(
+                "WHATSAPP CLASS REPORT: DailyClassDetails not found"
+            );
+
+            return;
+
+        }
+
+
+        /*
+        ==================================================
+        FIND TEACHER
+        ==================================================
+        */
+
+        let teacherUser = null;
+
+
+        if (
+            dailyClass.teacher &&
+            dailyClass.teacher.teacherId
+        ) {
+
+            teacherUser =
+                await User.findById(
+                    dailyClass.teacher.teacherId
+                );
+
+        }
+
+
+        /*
+        ==================================================
+        FIND STUDENTS
+        ==================================================
+        */
+
+        const studentIds =
+            (dailyClass.students || [])
+                .map(
+                    student =>
+                        student.studentId
+                )
+                .filter(
+                    id => id
+                );
+
+
+        const studentUsers =
+            studentIds.length > 0
+                ? await User.find({
+                    _id: {
+                        $in:
+                            studentIds
+                    }
+                })
+                : [];
+
+
+        /*
+        ==================================================
+        FIND FOUNDER
+        ==================================================
+        */
+
+        const founder =
+            await User.findOne({
+                role: "founder"
+            });
+
+
+        /*
+        ==================================================
+        FORMAT STUDENT DETAILS
+        ==================================================
+        */
+
+        let studentDetails =
+            "";
+
+
+        if (
+            dailyClass.students &&
+            dailyClass.students.length > 0
+        ) {
+
+            dailyClass.students.forEach(
+    (student, index) => {
+
+        studentDetails +=
+            `\n${index + 1}. *${student.studentName || "Unknown"}*\n`;
+
+        studentDetails +=
+            `   Joined: ${formatIST(student.joinedAt)}\n`;
+
+        studentDetails +=
+            `   Final Leave: ${formatIST(student.leftAt)}\n`;
+
+        studentDetails +=
+            `   Disconnect Count: ${student.disconnectCount || 0}\n`;
+
+    }
+);
+
+        }
+        else {
+
+            studentDetails =
+                "\nNo students recorded.";
+
+        }
+
+
+        /*
+        ==================================================
+        CREATE MESSAGE
+        ==================================================
+        */
+
+        const message =
+
+`🎓 *GOPES PINNACLE ACADEMY*
+
+📋 *DAILY CLASS REPORT*
+
+👨‍🏫 *Teacher Name:*
+${dailyClass.teacher?.teacherName || "Not Available"}
+
+📚 *Subject:*
+${dailyClass.subject || "Not Available"}
+
+⏰ *Period Time:*
+${dailyClass.scheduledStartTime || "--"} - ${dailyClass.scheduledEndTime || "--"}
+
+🟢 *Teacher Joined:*
+${formatIST(dailyClass.teacher?.joinedAt)}
+
+🔴 *Teacher Final Leave:*
+${formatIST(dailyClass.teacher?.leftAt)}
+
+📡 *Teacher Disconnect Count:*
+${dailyClass.teacher?.disconnectCount || 0}
+
+👨‍🎓 *STUDENTS:*
+${studentDetails}
+
+🏁 *Class Ended:*
+${formatIST(dailyClass.endedAt)}
+
+📌 *Status:*
+${dailyClass.status || "Not Available"}
+
+Thank you,
+*GOPES PINNACLE ACADEMY*`;
+
+
+        /*
+        ==================================================
+        COLLECT RECIPIENTS
+        ==================================================
+        */
+
+        const recipients = [];
+
+
+        /*
+        ==================================================
+        TEACHER
+        ==================================================
+        */
+
+        if (teacherUser) {
+
+            const teacherPhone =
+                teacherUser.whatsapp ||
+                teacherUser.mobile;
+
+
+            if (teacherPhone) {
+
+                recipients.push({
+                    name:
+                        teacherUser.name ||
+                        dailyClass.teacher?.teacherName ||
+                        "Teacher",
+
+                    phone:
+                        teacherPhone
+                });
+
+            }
+
+        }
+
+
+        /*
+        ==================================================
+        STUDENTS
+        ==================================================
+        */
+
+        studentUsers.forEach(
+            studentUser => {
+
+                const studentPhone =
+                    studentUser.whatsapp ||
+                    studentUser.mobile;
+
+
+                if (studentPhone) {
+
+                    recipients.push({
+
+                        name:
+                            studentUser.name ||
+                            "Student",
+
+                        phone:
+                            studentPhone
+
+                    });
+
+                }
+
+            }
+        );
+
+
+        /*
+        ==================================================
+        FOUNDER
+        ==================================================
+        */
+
+        if (founder) {
+
+            const founderPhone =
+                founder.whatsapp ||
+                founder.mobile;
+
+
+            if (founderPhone) {
+
+                recipients.push({
+
+                    name:
+                        founder.name ||
+                        "Founder",
+
+                    phone:
+                        founderPhone
+
+                });
+
+            }
+
+        }
+
+
+        /*
+        ==================================================
+        REMOVE DUPLICATE NUMBERS
+        ==================================================
+        */
+
+        const uniqueRecipients =
+            [
+                ...new Map(
+                    recipients.map(
+                        recipient =>
+                            [
+                                recipient.phone,
+                                recipient
+                            ]
+                    )
+                ).values()
+            ];
+
+
+        /*
+        ==================================================
+        SEND
+        ==================================================
+        */
+
+        for (
+            const recipient
+            of uniqueRecipients
+        ) {
+
+            try {
+
+                const result =
+                    await sendWhatsAppMessage(
+                        recipient.phone,
+                        message
+                    );
+
+
+                if (result.success) {
+
+                    console.log(
+                        "✅ CLASS REPORT WHATSAPP SENT:",
+                        recipient.name,
+                        recipient.phone
+                    );
+
+                }
+                else {
+
+                    console.error(
+                        "❌ CLASS REPORT WHATSAPP FAILED:",
+                        recipient.name,
+                        result.error
+                    );
+
+                }
+
+            }
+            catch (error) {
+
+                console.error(
+                    "❌ CLASS REPORT WHATSAPP ERROR:",
+                    recipient.name,
+                    error
+                );
+
+            }
+
+        }
+
+
+        console.log(
+            "================================================"
+        );
+
+        console.log(
+            "DAILY CLASS WHATSAPP REPORT COMPLETED"
+        );
+
+        console.log(
+            "Session:",
+            dailyClass.sessionId
+        );
+
+        console.log(
+            "Recipients:",
+            uniqueRecipients.map(
+                recipient =>
+                    recipient.name
+            )
+        );
+
+        console.log(
+            "================================================"
+        );
+
+
+        }
+    catch (error) {
+
+        /*
+        ==========================================================
+        STEP 12
+        WHATSAPP SEND FAILED
+        ALLOW RETRY
+        ==========================================================
+        */
+
+        if (
+            dailyClass &&
+            dailyClass.sessionId
+        ) {
+
+            whatsappReportSent.delete(
+                dailyClass.sessionId
+            );
+
+            console.log(
+                "WHATSAPP REPORT FAILED - RETRY ALLOWED:",
+                dailyClass.sessionId
+            );
+
+        }
+
+
+        console.error(
+            "DAILY CLASS WHATSAPP REPORT ERROR:",
+            error
+        );
+
+    }
 
 }
 
@@ -4182,7 +4702,37 @@ STORE FINAL CLASS END TIME
 dailyClass.endedAt =
     endedAt;
 
+/*
+==========================================================
+FINAL STUDENT LEAVE TIME
+==========================================================
 
+When teacher officially ends the class,
+students who are still online are considered
+to have left at the official class end time.
+==========================================================
+*/
+
+if (
+    Array.isArray(dailyClass.students)
+) {
+
+    dailyClass.students.forEach(
+        student => {
+
+            if (
+                !student.leftAt
+            ) {
+
+                student.leftAt =
+                    endedAt;
+
+            }
+
+        }
+    );
+
+}
 /*
 ------------------------------------------------
 STORE END REASON
@@ -4353,6 +4903,9 @@ socket.on(
 
         socket.intentionalLeave =
             true;
+           
+        socket.meetingEndedByTeacher =
+          true;
 
 
         try {
@@ -4374,15 +4927,49 @@ socket.on(
             */
 
             const dailyClass =
-                await DailyClassDetails.findOne({
+    await DailyClassDetails.findOne({
 
-                    room:
-                        room,
+        room:
+            room,
 
-                    status:
-                        "Active"
+        status:
+            "Active"
 
-                });
+    });
+
+if (!dailyClass) {
+
+    console.warn(
+        "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR FINAL TEACHER LEAVE",
+        {
+            room
+        }
+    );
+
+    return;
+
+}
+
+
+/*
+==================================================
+PREVENT DUPLICATE FINAL LEAVE
+==================================================
+*/
+
+if (
+    dailyClass.teacher &&
+    dailyClass.teacher.leftAt
+) {
+
+    console.log(
+        "TEACHER FINAL LEAVE ALREADY RECORDED:",
+        dailyClass.teacher.leftAt
+    );
+
+    return;
+
+}
 
 
             if (!dailyClass) {
@@ -4421,6 +5008,37 @@ dailyClass.endedAt =
 
 /*
 ==================================================
+STEP 11 CHANGE 3
+FINAL STUDENT LEAVE TIME
+==================================================
+*/
+
+if (
+    Array.isArray(
+        dailyClass.students
+    )
+) {
+
+    dailyClass.students.forEach(
+        student => {
+
+            if (
+                !student.leftAt
+            ) {
+
+                student.leftAt =
+                    leftAt;
+
+            }
+
+        }
+    );
+
+}
+
+
+/*
+==================================================
 STORE END REASON
 ==================================================
 */
@@ -4446,6 +5064,31 @@ SAVE IMMEDIATELY
 */
 
 await dailyClass.save();
+
+/*
+==================================================
+RELOAD FINAL DATA FROM DATABASE
+==================================================
+
+Use the actual saved final class record.
+==================================================
+*/
+
+const finalDailyClass =
+    await DailyClassDetails.findOne({
+
+        _id:
+            dailyClass._id
+
+    });
+
+if (finalDailyClass) {
+
+    await sendDailyClassWhatsAppReport(
+        finalDailyClass
+    );
+
+}
 
 
             /*
