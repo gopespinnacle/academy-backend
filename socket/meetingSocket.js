@@ -6410,44 +6410,85 @@ if (
                 student
             ) {
 
-                student.leftAt =
-                    finalLeftAt;
+                /*
+                ==================================================
+                STUDENT FINAL LEAVE
+                ==================================================
+
+                Only record this time if the class is still Active.
+
+                If the teacher already ended the class, the
+                teacherFinalLeave event has already stored the
+                student's final leave time.
+
+                DO NOT overwrite it with the later socket
+                disconnect time.
+                ==================================================
+                */
+
+                if (
+                    !student.leftAt
+                ) {
+
+                    student.leftAt =
+                        finalLeftAt;
 
 
-                await dailyClass.save();
+                    await dailyClass.save();
 
 
-                console.log(
-                    "================================================"
-                );
+                    console.log(
+                        "================================================"
+                    );
 
-                console.log(
-                    "DAILY CLASS DETAILS: STUDENT FINAL LEAVE"
-                );
+                    console.log(
+                        "DAILY CLASS DETAILS: STUDENT FINAL LEAVE"
+                    );
 
-                console.log(
-                    "Room:",
-                    room
-                );
+                    console.log(
+                        "Room:",
+                        room
+                    );
 
-                console.log(
-                    "Student:",
-                    student.studentName
-                );
+                    console.log(
+                        "Student:",
+                        student.studentName
+                    );
 
-                console.log(
-                    "Student ID:",
-                    studentId
-                );
+                    console.log(
+                        "Student ID:",
+                        studentId
+                    );
 
-                console.log(
-                    "Final Leave:",
-                    finalLeftAt.toISOString()
-                );
+                    console.log(
+                        "Final Leave:",
+                        finalLeftAt.toISOString()
+                    );
 
-                console.log(
-                    "================================================"
-                );
+                    console.log(
+                        "================================================"
+                    );
+
+                }
+                else {
+
+                    console.log(
+                        "DAILY CLASS DETAILS: STUDENT FINAL LEAVE ALREADY RECORDED"
+                    );
+
+                    console.log(
+                        "Student:",
+                        student.studentName
+                    );
+
+                    console.log(
+                        "Existing Final Leave:",
+                        formatIST(
+                            student.leftAt
+                        )
+                    );
+
+                }
 
             }
             else {
@@ -6465,13 +6506,81 @@ if (
         }
         else {
 
-            console.warn(
-                "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR STUDENT FINAL LEAVE",
-                {
-                    room,
-                    studentId
-                }
-            );
+            /*
+            ==================================================
+            CLASS ALREADY COMPLETED
+            ==================================================
+
+            This normally happens when the teacher clicked
+            the red Leave Meeting button.
+
+            The teacherFinalLeave event has already stored:
+
+                student.leftAt
+                dailyClass.endedAt
+                status = Completed
+
+            Therefore do NOT overwrite the student's final
+            leave time.
+            ==================================================
+            */
+
+            const completedClass =
+                await DailyClassDetails.findOne({
+
+                    room:
+                        room,
+
+                    status:
+                        "Completed"
+
+                });
+
+
+            if (
+                completedClass
+            ) {
+
+                const student =
+                    completedClass.students.find(
+                        item =>
+                            String(
+                                item.studentId
+                            ) ===
+                            String(
+                                studentId
+                            )
+                    );
+
+
+                console.log(
+                    "DAILY CLASS DETAILS: STUDENT DISCONNECTED AFTER CLASS COMPLETED - FINAL LEAVE ALREADY RECORDED",
+                    {
+                        room,
+                        studentId,
+                        student:
+                            student?.studentName || "Unknown",
+                        finalLeave:
+                            student?.leftAt
+                                ? formatIST(
+                                    student.leftAt
+                                )
+                                : "Not Available"
+                    }
+                );
+
+            }
+            else {
+
+                console.warn(
+                    "DAILY CLASS DETAILS: SESSION NOT FOUND FOR STUDENT FINAL LEAVE",
+                    {
+                        room,
+                        studentId
+                    }
+                );
+
+            }
 
         }
 
