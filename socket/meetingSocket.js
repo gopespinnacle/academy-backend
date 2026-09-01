@@ -4275,6 +4275,214 @@ socket.on(
     }
 );
 
+/*
+==========================================================
+DAILY CLASS DETAILS
+TEACHER FINAL LEAVE MEETING
+==========================================================
+
+This event is triggered when the teacher explicitly
+clicks the red "Leave Meeting" button.
+
+This is different from a network disconnect.
+
+The exact server time is stored immediately in:
+
+DailyClassDetails.teacher.leftAt
+
+==========================================================
+*/
+
+socket.on(
+    "teacherFinalLeave",
+    async () => {
+
+        /*
+        --------------------------------------------------
+        ONLY TEACHER
+        --------------------------------------------------
+        */
+
+        if (
+            socket.role !== "teacher"
+        ) {
+
+            return;
+
+        }
+
+
+        const room =
+            socket.room;
+
+
+        if (!room) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        MARK THIS SOCKET AS AN INTENTIONAL LEAVE
+        --------------------------------------------------
+
+        The disconnect event will happen after this.
+
+        This flag allows us to distinguish:
+
+        RED BUTTON CLICK
+        from
+        NETWORK DISCONNECT
+        --------------------------------------------------
+        */
+
+        socket.intentionalLeave =
+            true;
+
+
+        try {
+
+            /*
+            ==================================================
+            EXACT FINAL LEAVE TIME
+            ==================================================
+            */
+
+            const leftAt =
+                new Date();
+
+
+            /*
+            ==================================================
+            FIND ACTIVE DAILY CLASS
+            ==================================================
+            */
+
+            const dailyClass =
+                await DailyClassDetails.findOne({
+
+                    room:
+                        room,
+
+                    status:
+                        "Active"
+
+                });
+
+
+            if (!dailyClass) {
+
+                console.warn(
+                    "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR FINAL TEACHER LEAVE",
+                    {
+                        room
+                    }
+                );
+
+                return;
+
+            }
+
+
+            /*
+            ==================================================
+            UPDATE TEACHER FINAL LEAVE TIME
+            ==================================================
+            */
+
+            if (
+                dailyClass.teacher
+            ) {
+
+                dailyClass.teacher.leftAt =
+                    leftAt;
+
+            }
+
+
+            /*
+            ==================================================
+            CLASS STATUS
+            ==================================================
+
+            Teacher explicitly clicked Leave Meeting.
+
+            For the current single-teacher session,
+            the class is considered completed.
+            ==================================================
+            */
+
+            dailyClass.status =
+                "Completed";
+
+
+            /*
+            ==================================================
+            SAVE IMMEDIATELY
+            ==================================================
+            */
+
+            await dailyClass.save();
+
+
+            /*
+            ==================================================
+            LOG
+            ==================================================
+            */
+
+            console.log(
+                "================================================"
+            );
+
+            console.log(
+                "DAILY CLASS DETAILS: TEACHER FINAL LEAVE"
+            );
+
+            console.log(
+                "Room:",
+                room
+            );
+
+            console.log(
+                "Teacher:",
+                socket.name
+            );
+
+            console.log(
+                "Teacher ID:",
+                socket.userId
+            );
+
+            console.log(
+                "FINAL LEAVE TIME:",
+                leftAt.toISOString()
+            );
+
+            console.log(
+                "Status:",
+                dailyClass.status
+            );
+
+            console.log(
+                "================================================"
+            );
+
+        }
+        catch (error) {
+
+            console.error(
+                "DAILY CLASS DETAILS: TEACHER FINAL LEAVE ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
+
 
             /*
             ======================================================
