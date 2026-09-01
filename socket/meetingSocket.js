@@ -264,26 +264,173 @@ async function sendDailyClassWhatsAppReport(
         ==================================================
         */
 
-        const studentIds =
-            (dailyClass.students || [])
-                .map(
-                    student =>
-                        student.studentId
+        /*
+==========================================================
+FIND STUDENTS FOR WHATSAPP REPORT
+==========================================================
+
+DailyClassDetails may store either:
+
+1. User._id
+2. User.studentId
+
+Check BOTH so the correct student User record
+is always found.
+==========================================================
+*/
+
+const studentIds =
+    (dailyClass.students || [])
+        .map(
+            student =>
+                student.studentId
+        )
+        .filter(
+            id =>
+                id !== null &&
+                id !== undefined &&
+                id !== ""
+        );
+
+
+/*
+----------------------------------------------------------
+VALID MONGODB OBJECT IDs
+----------------------------------------------------------
+*/
+
+const studentObjectIds =
+    studentIds
+        .filter(
+            id =>
+                mongoose.Types.ObjectId.isValid(
+                    id
                 )
-                .filter(
-                    id => id
-                );
+        )
+        .map(
+            id =>
+                new mongoose.Types.ObjectId(id)
+        );
 
 
-        const studentUsers =
-            studentIds.length > 0
-                ? await User.find({
-                    _id: {
-                        $in:
-                            studentIds
-                    }
-                })
-                : [];
+/*
+----------------------------------------------------------
+STRING STUDENT IDs
+----------------------------------------------------------
+*/
+
+const studentStringIds =
+    studentIds.map(
+        id =>
+            String(id)
+    );
+
+
+/*
+----------------------------------------------------------
+FIND STUDENT USERS
+----------------------------------------------------------
+
+Search BOTH:
+
+User._id
+AND
+User.studentId
+----------------------------------------------------------
+*/
+
+let studentUsers = [];
+
+
+if (
+    studentObjectIds.length > 0 ||
+    studentStringIds.length > 0
+) {
+
+    studentUsers =
+        await User.find({
+
+            $or: [
+
+                /*
+                ------------------------------------------
+                MATCH USER._id
+                ------------------------------------------
+                */
+
+                ...(studentObjectIds.length > 0
+                    ? [
+                        {
+                            _id: {
+                                $in:
+                                    studentObjectIds
+                            }
+                        }
+                    ]
+                    : []),
+
+
+                /*
+                ------------------------------------------
+                MATCH USER.studentId
+                ------------------------------------------
+                */
+
+                ...(studentStringIds.length > 0
+                    ? [
+                        {
+                            studentId: {
+                                $in:
+                                    studentStringIds
+                            }
+                        }
+                    ]
+                    : [])
+
+            ]
+
+        });
+
+}
+
+
+/*
+----------------------------------------------------------
+STUDENT LOOKUP DEBUG
+----------------------------------------------------------
+*/
+
+console.log(
+    "DAILY CLASS STUDENT IDS:",
+    studentIds.map(
+        id =>
+            String(id)
+    )
+);
+
+console.log(
+    "STUDENT USERS FOUND:",
+    studentUsers.map(
+        student => ({
+
+            id:
+                student._id,
+
+            studentId:
+                student.studentId,
+
+            name:
+                student.name,
+
+            whatsapp:
+                student.whatsapp,
+
+            mobile:
+                student.mobile
+
+        })
+    )
+);
 
 
         /*
