@@ -390,6 +390,9 @@ function registerMeetingSocket(io) {
         "connection",
         (socket) => {
 
+            socket.meetingEndedByTeacher =
+    false;
+
 
             console.log(
                 "=========================================="
@@ -1315,9 +1318,9 @@ if (
 
 
                 if (
-                    event.disconnectedAt &&
-                    !event.rejoinedAt
-                ) {
+    event.disconnectedAt &&
+    !event.reconnectedAt
+) {
 
                     pendingEvent =
                         event;
@@ -1339,8 +1342,8 @@ if (
                 pendingEvent
             ) {
 
-                pendingEvent.rejoinedAt =
-                    rejoinedAt;
+                pendingEvent.reconnectedAt =
+    rejoinedAt;
 
 
                 await dailyClass.save();
@@ -4054,6 +4057,224 @@ socket.on(
                 }
             );
 
+            /*
+==========================================================
+EXPLICIT END MEETING
+==========================================================
+
+This runs when the teacher intentionally clicks
+"End Class".
+
+This is different from a temporary network
+disconnect.
+
+Temporary disconnect:
+    handled by "disconnect"
+
+Intentional class ending:
+    handled here.
+
+==========================================================
+*/
+
+socket.on(
+    "endMeeting",
+    async (data = {}) => {
+
+        const room =
+            socket.room ||
+            data.room;
+
+
+        /*
+        --------------------------------------------------
+        BASIC VALIDATION
+        --------------------------------------------------
+        */
+
+        if (!room) {
+
+            console.warn(
+                "END MEETING: ROOM NOT FOUND"
+            );
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        ONLY TEACHER CAN END THE CLASS
+        --------------------------------------------------
+        */
+
+        if (
+            socket.role !== "teacher"
+        ) {
+
+            console.warn(
+                "END MEETING: UNAUTHORIZED REQUEST",
+                {
+                    socketId: socket.id,
+                    role: socket.role,
+                    room: room
+                }
+            );
+
+            return;
+
+        }
+        socket.meetingEndedByTeacher =
+    true;
+
+
+        try {
+
+            const endedAt =
+                new Date();
+
+
+            /*
+            ==================================================
+            FIND ACTIVE DAILY CLASS
+            ==================================================
+            */
+
+            const dailyClass =
+                await DailyClassDetails.findOne({
+
+                    room:
+                        room,
+
+                    status:
+                        "Active"
+
+                });
+
+
+            /*
+            ==================================================
+            UPDATE DAILY CLASS DETAILS
+            ==================================================
+            */
+
+            if (
+                dailyClass
+            ) {
+
+                /*
+                ------------------------------------------------
+                STORE TEACHER FINAL LEAVE TIME
+                ------------------------------------------------
+                */
+
+                if (
+                    dailyClass.teacher
+                ) {
+
+                    dailyClass.teacher.leftAt =
+                        endedAt;
+
+                }
+
+
+                /*
+                ------------------------------------------------
+                MARK CLASS COMPLETED
+                ------------------------------------------------
+                */
+
+                dailyClass.status =
+                    "Completed";
+
+
+                await dailyClass.save();
+
+
+                console.log(
+                    "================================================"
+                );
+
+                console.log(
+                    "DAILY CLASS DETAILS: CLASS ENDED BY TEACHER"
+                );
+
+                console.log(
+                    "Room:",
+                    room
+                );
+
+                console.log(
+                    "Teacher:",
+                    socket.name
+                );
+
+                console.log(
+                    "Ended At:",
+                    endedAt.toISOString()
+                );
+
+                console.log(
+                    "Session ID:",
+                    dailyClass.sessionId
+                );
+
+                console.log(
+                    "Session Status:",
+                    dailyClass.status
+                );
+
+                console.log(
+                    "================================================"
+                );
+
+            }
+            else {
+
+                console.warn(
+                    "END MEETING: ACTIVE DAILY CLASS NOT FOUND",
+                    {
+                        room: room
+                    }
+                );
+
+            }
+
+
+            /*
+            ==================================================
+            NOTIFY EVERYONE
+            ==================================================
+            */
+
+            socket.to(room).emit(
+                "meetingEnded",
+                {
+
+                    room:
+                        room,
+
+                    endedAt:
+                        endedAt.toISOString()
+
+                }
+            );
+
+
+        }
+        catch (error) {
+
+            console.error(
+                "END MEETING ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
+
 
             /*
             ======================================================
@@ -4071,6 +4292,18 @@ socket.on(
 
                     const role =
                         socket.role;
+
+                        if (
+    socket.meetingEndedByTeacher === true
+) {
+
+    console.log(
+        "DISCONNECT AFTER TEACHER ENDED MEETING - SKIPPING NORMAL DISCONNECT TRACKING"
+    );
+
+    return;
+
+}
 
                     const studentId =
                         socket.studentId;
@@ -4166,13 +4399,13 @@ if (
 
             session.teacher.connectionEvents.push({
 
-                disconnectedAt:
-                    disconnectedAt,
+    disconnectedAt:
+        disconnectedAt,
 
-                rejoinedAt:
-                    null
+    reconnectedAt:
+        null
 
-            });
+});
 
 
             /*
@@ -4912,6 +5145,265 @@ if (
                                 return;
 
                             }
+
+                            /*
+==========================================================
+DAILY CLASS DETAILS
+TEACHER FINAL LEAVE TIME
+==========================================================
+
+This runs only when the teacher has really left
+the meeting and did NOT reconnect within 15 seconds.
+
+Temporary disconnect:
+    disconnectedAt is stored.
+
+Reconnect:
+    reconnectedAt is stored.
+
+Real final leave:
+    teacher.leftAt is stored.
+==========================================================
+*/
+
+if (
+    role === "teacher" &&
+    socket.userId &&
+    room
+) {
+
+    try {
+
+        const finalLeftAt =
+            new Date();
+
+
+        const dailyClass =
+            await DailyClassDetails.findOne({
+
+                room:
+                    room,
+
+                status:
+                    "Active"
+
+            });
+
+
+        if (
+            dailyClass &&
+            dailyClass.teacher
+        ) {
+
+            dailyClass.teacher.leftAt =
+                finalLeftAt;
+
+
+            /*
+            --------------------------------------------------
+            CLASS SESSION COMPLETED
+            --------------------------------------------------
+
+            At this point the teacher really left and
+            there is no teacher remaining in the room.
+            --------------------------------------------------
+            */
+
+            dailyClass.status =
+                "Completed";
+
+
+            await dailyClass.save();
+
+
+            console.log(
+                "================================================"
+            );
+
+            console.log(
+                "DAILY CLASS DETAILS: TEACHER FINAL LEAVE"
+            );
+
+            console.log(
+                "Room:",
+                room
+            );
+
+            console.log(
+                "Teacher:",
+                dailyClass.teacher.teacherName
+            );
+
+            console.log(
+                "Final Leave:",
+                finalLeftAt.toISOString()
+            );
+
+            console.log(
+                "Session Status:",
+                dailyClass.status
+            );
+
+            console.log(
+                "================================================"
+            );
+
+        }
+        else {
+
+            console.warn(
+                "DAILY CLASS DETAILS: SESSION NOT FOUND FOR TEACHER FINAL LEAVE",
+                {
+                    room,
+                    userId: socket.userId
+                }
+            );
+
+        }
+
+    }
+    catch (error) {
+
+        console.error(
+            "DAILY CLASS DETAILS: TEACHER FINAL LEAVE ERROR:",
+            error
+        );
+
+    }
+
+}
+
+/*
+==========================================================
+DAILY CLASS DETAILS
+STUDENT FINAL LEAVE TIME
+==========================================================
+
+This executes only when the student did NOT reconnect
+within the existing 15-second reconnect window.
+==========================================================
+*/
+
+if (
+    role === "student" &&
+    studentId &&
+    room
+) {
+
+    try {
+
+        const finalLeftAt =
+            new Date();
+
+
+        const dailyClass =
+            await DailyClassDetails.findOne({
+
+                room:
+                    room,
+
+                status:
+                    "Active"
+
+            });
+
+
+        if (
+            dailyClass
+        ) {
+
+            const student =
+                dailyClass.students.find(
+                    item =>
+                        String(
+                            item.studentId
+                        ) ===
+                        String(
+                            studentId
+                        )
+                );
+
+
+            if (
+                student
+            ) {
+
+                student.leftAt =
+                    finalLeftAt;
+
+
+                await dailyClass.save();
+
+
+                console.log(
+                    "================================================"
+                );
+
+                console.log(
+                    "DAILY CLASS DETAILS: STUDENT FINAL LEAVE"
+                );
+
+                console.log(
+                    "Room:",
+                    room
+                );
+
+                console.log(
+                    "Student:",
+                    student.studentName
+                );
+
+                console.log(
+                    "Student ID:",
+                    studentId
+                );
+
+                console.log(
+                    "Final Leave:",
+                    finalLeftAt.toISOString()
+                );
+
+                console.log(
+                    "================================================"
+                );
+
+            }
+            else {
+
+                console.warn(
+                    "DAILY CLASS DETAILS: STUDENT NOT FOUND FOR FINAL LEAVE",
+                    {
+                        room,
+                        studentId
+                    }
+                );
+
+            }
+
+        }
+        else {
+
+            console.warn(
+                "DAILY CLASS DETAILS: ACTIVE SESSION NOT FOUND FOR STUDENT FINAL LEAVE",
+                {
+                    room,
+                    studentId
+                }
+            );
+
+        }
+
+    }
+    catch (error) {
+
+        console.error(
+            "DAILY CLASS DETAILS: STUDENT FINAL LEAVE ERROR:",
+            error
+        );
+
+    }
+
+}
 
 
                             /*

@@ -501,21 +501,67 @@ const dailyClassDetailsSchema =
 
             status: {
 
-                type: String,
+    type: String,
 
-                enum: [
+    enum: [
 
-                    "Active",
-                    "Completed",
-                    "Incomplete"
+        "Active",
+        "Completed",
+        "Incomplete"
 
-                ],
+    ],
 
-                default: "Active",
+    default: "Active",
 
-                index: true
+    index: true
 
-            }
+},
+
+
+/*
+===========================================================
+ACTUAL MEETING END TIME
+===========================================================
+
+This is the real time the classroom was ended.
+
+Example:
+
+2026-08-31T18:55:32.000Z
+===========================================================
+*/
+
+endedAt: {
+
+    type: Date,
+
+    default: null,
+
+    index: true
+
+},
+
+
+/*
+===========================================================
+MEETING END REASON
+===========================================================
+
+Examples:
+
+Teacher ended meeting
+Meeting ended unexpectedly
+System ended meeting
+===========================================================
+*/
+
+endReason: {
+
+    type: String,
+
+    default: ""
+
+}
 
         },
 
