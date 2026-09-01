@@ -53,7 +53,8 @@ const User =
     require("../models/User");
 
 const {
-    sendWhatsAppMessage
+    sendWhatsAppMessage,
+    sendWhatsAppTemplate
 } = require("../services/whatsappService");
 
 /*
@@ -543,6 +544,148 @@ console.log(
 
         }
 
+        /*
+==========================================================
+WHATSAPP TEMPLATE VARIABLES
+==========================================================
+*/
+
+/*
+----------------------------------------------------------
+TEACHER CONNECTION DETAILS
+----------------------------------------------------------
+*/
+
+let teacherConnectionDetails =
+    "";
+
+
+if (
+    dailyClass.teacher &&
+    Array.isArray(
+        dailyClass.teacher.connectionEvents
+    ) &&
+    dailyClass.teacher.connectionEvents.length > 0
+) {
+
+    teacherConnectionDetails =
+        dailyClass.teacher.connectionEvents
+            .map(
+                (event, index) => {
+
+                    return (
+                        `${index + 1}. ` +
+                        `Disconnected: ${formatIST(event.disconnectedAt)} ` +
+                        `Rejoined: ${formatIST(event.reconnectedAt)}`
+                    );
+
+                }
+            )
+            .join("\n");
+
+}
+else {
+
+    teacherConnectionDetails =
+        `Joined: ${formatIST(
+            dailyClass.teacher?.joinedAt
+        )}\n` +
+        `Final Leave: ${formatIST(
+            dailyClass.teacher?.leftAt
+        )}`;
+
+}
+
+
+/*
+----------------------------------------------------------
+STUDENT CONNECTION DETAILS
+----------------------------------------------------------
+*/
+
+let studentConnectionDetails =
+    "";
+
+
+if (
+    Array.isArray(
+        dailyClass.students
+    ) &&
+    dailyClass.students.length > 0
+) {
+
+    studentConnectionDetails =
+        dailyClass.students
+            .map(
+                (student, index) => {
+
+                    let connectionText =
+                        "";
+
+                    if (
+                        Array.isArray(
+                            student.connectionEvents
+                        ) &&
+                        student.connectionEvents.length > 0
+                    ) {
+
+                        connectionText =
+                            student.connectionEvents
+                                .map(
+                                    (event) => {
+
+                                        return (
+                                            `Disconnected: ${formatIST(event.disconnectedAt)} ` +
+                                            `Rejoined: ${formatIST(event.reconnectedAt)}`
+                                        );
+
+                                    }
+                                )
+                                .join("\n");
+
+                    }
+                    else {
+
+                        connectionText =
+                            `Joined: ${formatIST(
+                                student.joinedAt
+                            )}\n` +
+                            `Final Leave: ${formatIST(
+                                student.leftAt
+                            )}`;
+
+                    }
+
+
+                    return (
+                        `${index + 1}. *${student.studentName || "Unknown"}*\n` +
+                        connectionText
+                    );
+
+                }
+            )
+            .join("\n\n");
+
+}
+else {
+
+    studentConnectionDetails =
+        "No students recorded.";
+
+}
+
+
+/*
+----------------------------------------------------------
+CLASS END TIME
+----------------------------------------------------------
+*/
+
+const classEndTime =
+    formatIST(
+        dailyClass.endedAt
+    );
+
 
         /*
         ==================================================
@@ -721,11 +864,18 @@ Thank you,
             try {
 
                 const result =
-                    await sendWhatsAppMessage(
-                        recipient.phone,
-                        message
-                    );
-
+    await sendWhatsAppTemplate(
+        recipient.phone,
+        [
+            recipient.name,
+            dailyClass.className || "Not Available",
+            dailyClass.subject || "Not Available",
+            dailyClass.teacher?.teacherName || "Not Available",
+            teacherConnectionDetails,
+            studentConnectionDetails,
+            classEndTime
+        ]
+    );
 
                 if (result.success) {
 
