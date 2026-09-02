@@ -3781,6 +3781,116 @@ socket.on(
     }
 );
 
+/*
+==========================================================
+EMOJI REACTION
+==========================================================
+
+Teacher or student sends an emoji.
+
+The emoji is broadcast to everyone
+inside the same classroom.
+
+No database storage.
+No WebRTC changes.
+==========================================================
+*/
+
+socket.on(
+    "emojiReaction",
+    (data = {}) => {
+
+        const room =
+            socket.room;
+
+        /*
+        --------------------------------------------------
+        VALIDATE ROOM
+        --------------------------------------------------
+        */
+
+        if (!room) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        VALIDATE EMOJI
+        --------------------------------------------------
+        */
+
+        const emoji =
+            typeof data.emoji === "string"
+                ? data.emoji.trim()
+                : "";
+
+        if (!emoji) {
+
+            return;
+
+        }
+
+
+        /*
+        --------------------------------------------------
+        BROADCAST TO EVERYONE IN THE CLASSROOM
+        --------------------------------------------------
+        */
+
+        io.to(room).emit(
+            "emojiReaction",
+            {
+
+                emoji:
+                    emoji,
+
+                socketId:
+                    socket.id,
+
+                name:
+                    socket.name,
+
+                role:
+                    socket.role,
+
+                timestamp:
+                    new Date().toISOString()
+
+            }
+        );
+
+
+        /*
+        --------------------------------------------------
+        LOG
+        --------------------------------------------------
+        */
+
+        console.log(
+            "EMOJI REACTION:",
+            {
+
+                room:
+                    room,
+
+                emoji:
+                    emoji,
+
+                name:
+                    socket.name,
+
+                role:
+                    socket.role
+
+            }
+        );
+
+    }
+);
+
 
             /*
             ======================================================
