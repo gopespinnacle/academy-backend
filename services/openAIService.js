@@ -464,6 +464,10 @@ Return ONLY the JSON object.
 
 for (let i = 0; i < chunks.length; i++) {
 
+    console.log(
+    `AI QUESTION GENERATION: ${chunks.length} chunks detected`
+);
+
     const chunk = chunks[i];
 
     const previousQuestions =
@@ -541,6 +545,17 @@ END OF DOCUMENT COVERAGE CHUNK
 
         });
 
+        console.log(
+    `AI CHUNK ${i + 1}/${chunks.length} RESPONSE RECEIVED`
+);
+
+console.log(
+    `AI CHUNK ${i + 1} OUTPUT LENGTH:`,
+    response.output_text
+        ? response.output_text.length
+        : 0
+);
+
     const chunkOutput =
         response.output_text;
 
@@ -550,15 +565,19 @@ END OF DOCUMENT COVERAGE CHUNK
             JSON.parse(chunkOutput);
 
         if (
-            parsedChunk &&
-            Array.isArray(parsedChunk.questions)
-        ) {
+    parsedChunk &&
+    Array.isArray(parsedChunk.questions)
+) {
 
-            allQuestions.push(
-                ...parsedChunk.questions
-            );
+    console.log(
+        `AI CHUNK ${i + 1}: ${parsedChunk.questions.length} questions generated`
+    );
 
-        }
+    allQuestions.push(
+        ...parsedChunk.questions
+    );
+
+}
 
     } catch (err) {
 
@@ -579,6 +598,10 @@ END OF DOCUMENT COVERAGE CHUNK
 }
 
 }
+
+console.log(
+    `AI GENERATION COMPLETE: ${allQuestions.length} total questions`
+);
 
 return JSON.stringify({
     questions: allQuestions
