@@ -67,6 +67,23 @@ for (let i = 0; i < pages.length; i += CHUNK_SIZE) {
 
 }
 
+console.log(
+    `PDF EXTRACTION: ${pages.length} pages received`
+);
+
+chunks.forEach((chunk, index) => {
+
+    console.log(
+        `PDF CHUNK ${index + 1}: Pages ${chunk.startPage}-${chunk.endPage}, Text Length: ${chunk.text.length}`
+    );
+
+    console.log(
+        `PDF CHUNK ${index + 1} PREVIEW:`,
+        chunk.text.substring(0, 300)
+    );
+
+});
+
         const prompt = `
 You are an expert academic assessment designer for GOPES PINNACLE ACADEMY.
 
