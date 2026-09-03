@@ -562,12 +562,21 @@ END OF DOCUMENT COVERAGE CHUNK
 
     } catch (err) {
 
-        console.error(
-            `Invalid AI JSON for chunk ${i + 1}:`,
-            err
-        );
+    console.error(
+        `Invalid AI JSON for chunk ${i + 1}:`,
+        err
+    );
 
-    }
+    console.error(
+        `AI OUTPUT FOR CHUNK ${i + 1}:`,
+        chunkOutput
+    );
+
+    throw new Error(
+        `AI returned invalid JSON for document chunk ${i + 1} (Pages ${chunk.startPage}-${chunk.endPage}).`
+    );
+
+}
 
 }
 
