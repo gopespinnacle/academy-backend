@@ -1,12 +1,21 @@
 const pdf = require("pdf-parse");
 const { createCanvas } = require("@napi-rs/canvas");
-const { createWorker } = require("tesseract.js");
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
+const { execFile } = require("child_process");
+const { promisify } = require("util");
+
+const execFileAsync =
+    promisify(execFile);
+
 
 exports.extractText = async (fileBuffer) => {
 
     console.log("======================================");
     console.log("PDF OCR EXTRACTION STARTED");
     console.log("======================================");
+
 
     /*
      * STEP 1
@@ -18,10 +27,14 @@ exports.extractText = async (fileBuffer) => {
 
     try {
 
-        const data = await pdf(fileBuffer);
+        const data =
+            await pdf(fileBuffer);
 
-        normalText = data.text || "";
-        normalPages = data.numpages || 0;
+        normalText =
+            data.text || "";
+
+        normalPages =
+            data.numpages || 0;
 
         console.log(
             "NORMAL PDF TEXT LENGTH:",
@@ -46,7 +59,7 @@ exports.extractText = async (fileBuffer) => {
     /*
      * STEP 2
      * If useful text already exists,
-     * return it without OCR.
+     * use it directly.
      */
 
     if (
@@ -63,9 +76,13 @@ exports.extractText = async (fileBuffer) => {
 
             pages: normalPages,
 
-            pageTexts: normalText
-                .split("\f")
-                .map(page => page.trim()),
+            pageTexts:
+                normalText
+                    .split("\f")
+                    .map(
+                        page =>
+                            page.trim()
+                    ),
 
             info: {}
 
@@ -76,7 +93,7 @@ exports.extractText = async (fileBuffer) => {
 
     /*
      * STEP 3
-     * PDF is probably scanned/image based.
+     * Scanned/image PDF.
      * Start OCR.
      */
 
@@ -90,9 +107,7 @@ exports.extractText = async (fileBuffer) => {
 
 
     /*
-     * PDF.js is an ES module in the installed version.
-     * Dynamic import allows us to use it
-     * from this CommonJS backend.
+     * Load PDF.js.
      */
 
     const pdfjsLib =
@@ -101,17 +116,15 @@ exports.extractText = async (fileBuffer) => {
         );
 
 
-    /*
-     * Load PDF from memory.
-     */
-
     const pdfData =
-    new Uint8Array(fileBuffer);
+        new Uint8Array(fileBuffer);
 
-const loadingTask =
-    pdfjsLib.getDocument({
-        data: pdfData
-    });
+
+    const loadingTask =
+        pdfjsLib.getDocument({
+            data: pdfData
+        });
+
 
     const pdfDocument =
         await loadingTask.promise;
@@ -123,21 +136,14 @@ const loadingTask =
     );
 
 
-    /*
-     * Start Tesseract worker.
-     */
-
-    
-
-
     const pageTexts = [];
 
 
-    try {
+    /*
+     * Process every page separately.
+     */
 
-        /*
-         * Process every page sequentially.
-         */
+    try {
 
         for (
             let pageNumber = 1;
@@ -157,13 +163,12 @@ const loadingTask =
 
 
             /*
-             * Scale controls OCR image quality.
-             *
-             * 2.0 gives a good balance between
-             * quality and Render memory usage.
+             * Keep image resolution moderate
+             * for Render memory.
              */
 
             const scale = 1.0;
+
 
             const viewport =
                 page.getViewport({
@@ -171,27 +176,25 @@ const loadingTask =
                 });
 
 
-            /*
-             * Create canvas for this PDF page.
-             */
-
             let canvas =
-    createCanvas(
-        Math.ceil(viewport.width),
-        Math.ceil(viewport.height)
-    );
+                createCanvas(
+                    Math.ceil(viewport.width),
+                    Math.ceil(viewport.height)
+                );
 
-let context =
-    canvas.getContext("2d");
+
+            let context =
+                canvas.getContext("2d");
 
 
             /*
-             * Render PDF page into canvas.
+             * Render PDF page to canvas.
              */
 
             await page.render({
 
-                canvasContext: context,
+                canvasContext:
+                    context,
 
                 viewport
 
@@ -199,11 +202,13 @@ let context =
 
 
             /*
-             * Convert canvas to PNG.
+             * Convert page to PNG.
              */
 
-            let imageBuffer =
-    canvas.toBuffer("image/png");
+            const imageBuffer =
+                canvas.toBuffer(
+                    "image/png"
+                );
 
 
             console.log(
@@ -213,67 +218,185 @@ let context =
 
 
             /*
-             * Run OCR.
+             * Save PNG temporarily.
              */
 
-            const worker =
-    await createWorker("eng");
-
-const result =
-    await worker.recognize(
-        imageBuffer
-    );
-
-await worker.terminate();
+            const imagePath =
+                path.join(
+                    os.tmpdir(),
+                    `gopes-ocr-${process.pid}-${Date.now()}-${pageNumber}.png`
+                );
 
 
-            const pageText =
-                result.data.text || "";
-
-
-            pageTexts.push(
-                pageText.trim()
+            await fs.promises.writeFile(
+                imagePath,
+                imageBuffer
             );
 
 
-            console.log(
-                `OCR PAGE ${pageNumber} TEXT LENGTH:`,
-                pageText.length
-            );
+            /*
+             * Run OCR in a SEPARATE Node process.
+             */
 
-                       console.log(
-                `OCR PAGE ${pageNumber} PREVIEW:`,
-                pageText
-                    .substring(0, 200)
-                    .replace(/\n/g, " ")
-            );
+            try {
+
+                const workerScript =
+                    path.join(
+                        __dirname,
+                        "ocrPage.js"
+                    );
+
+
+                const result =
+                    await execFileAsync(
+                        process.execPath,
+                        [
+                            workerScript,
+                            imagePath
+                        ],
+                        {
+                            maxBuffer:
+                                10 * 1024 * 1024
+                        }
+                    );
+
+
+                const output =
+                    result.stdout || "";
+
+
+                /*
+                 * Extract only the OCR text
+                 * between our markers.
+                 */
+
+                const startMarker =
+                    "OCR_RESULT_START";
+
+                const endMarker =
+                    "OCR_RESULT_END";
+
+
+                const startIndex =
+                    output.indexOf(
+                        startMarker
+                    );
+
+
+                const endIndex =
+                    output.indexOf(
+                        endMarker
+                    );
+
+
+                if (
+                    startIndex === -1 ||
+                    endIndex === -1
+                ) {
+
+                    throw new Error(
+                        `OCR result markers missing for page ${pageNumber}.`
+                    );
+
+                }
+
+
+                const pageText =
+                    output
+                        .substring(
+                            startIndex +
+                            startMarker.length,
+                            endIndex
+                        )
+                        .trim();
+
+
+                pageTexts.push(
+                    pageText
+                );
+
+
+                console.log(
+                    `OCR PAGE ${pageNumber} TEXT LENGTH:`,
+                    pageText.length
+                );
+
+
+                console.log(
+                    `OCR PAGE ${pageNumber} PREVIEW:`,
+                    pageText
+                        .substring(0, 200)
+                        .replace(/\n/g, " ")
+                );
+
+
+            } finally {
+
+                /*
+                 * Delete temporary image.
+                 */
+
+                try {
+
+                    await fs.promises.unlink(
+                        imagePath
+                    );
+
+                } catch (cleanupError) {
+
+                    console.error(
+                        `OCR TEMP FILE CLEANUP FAILED FOR PAGE ${pageNumber}:`,
+                        cleanupError.message
+                    );
+
+                }
+
+            }
+
+
+            /*
+             * Release PDF.js and canvas memory.
+             */
+
+            page.cleanup();
+
+            context = null;
+
+            canvas = null;
 
         }
 
+
+    } finally {
+
         /*
- * Release PDF/image memory before next page.
- */
+         * Release PDF document resources.
+         */
 
-page.cleanup();
+        try {
 
-imageBuffer = null;
-context = null;
-canvas = null;
+            if (
+                pdfDocument.cleanup
+            ) {
 
-    } catch (err) {
+                await pdfDocument.cleanup();
 
-        console.error(
-            "OCR EXTRACTION FAILED:",
-            err.message
-        );
+            }
 
-        throw err;
+        } catch (cleanupError) {
+
+            console.error(
+                "PDF DOCUMENT CLEANUP ERROR:",
+                cleanupError.message
+            );
+
+        }
 
     }
 
 
     /*
-     * Combine all OCR page text.
+     * Combine all page text.
      */
 
     const combinedText =
@@ -308,9 +431,11 @@ canvas = null;
 
     return {
 
-        text: combinedText,
+        text:
+            combinedText,
 
-        pages: pdfDocument.numPages,
+        pages:
+            pdfDocument.numPages,
 
         pageTexts,
 
