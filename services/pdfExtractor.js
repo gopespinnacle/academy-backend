@@ -164,7 +164,7 @@ const loadingTask =
              * quality and Render memory usage.
              */
 
-            const scale = 2.0;
+            const scale = 1.3;
 
             const viewport =
                 page.getViewport({
