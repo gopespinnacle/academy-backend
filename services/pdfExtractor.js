@@ -32,6 +32,18 @@ exports.extractText = async (fileBuffer) => {
     const data =
         await pdf(fileBuffer, options);
 
+        console.log(
+    "PDF TOTAL TEXT LENGTH:",
+    data.text ? data.text.length : 0
+);
+
+console.log(
+    "PDF PAGE TEXT LENGTHS:",
+    pages.map((page, index) =>
+        `Page ${index + 1}: ${page.length}`
+    )
+);
+
     return {
 
         text: data.text,
