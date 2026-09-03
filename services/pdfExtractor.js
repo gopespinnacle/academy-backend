@@ -242,7 +242,7 @@ await worker.terminate();
                 pageText.length
             );
 
-            console.log(
+                       console.log(
                 `OCR PAGE ${pageNumber} PREVIEW:`,
                 pageText
                     .substring(0, 200)
@@ -251,7 +251,16 @@ await worker.terminate();
 
         }
 
-    
+    } catch (err) {
+
+        console.error(
+            "OCR EXTRACTION FAILED:",
+            err.message
+        );
+
+        throw err;
+
+    }
 
 
     /*
