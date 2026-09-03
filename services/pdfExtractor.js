@@ -127,8 +127,7 @@ const loadingTask =
      * Start Tesseract worker.
      */
 
-    const worker =
-        await createWorker("eng");
+    
 
 
     const pageTexts = [];
@@ -218,10 +217,15 @@ const loadingTask =
              * Run OCR.
              */
 
-            const result =
-                await worker.recognize(
-                    imageBuffer
-                );
+            const worker =
+    await createWorker("eng");
+
+const result =
+    await worker.recognize(
+        imageBuffer
+    );
+
+await worker.terminate();
 
 
             const pageText =
@@ -247,15 +251,7 @@ const loadingTask =
 
         }
 
-    } finally {
-
-        /*
-         * Always terminate OCR worker.
-         */
-
-        await worker.terminate();
-
-    }
+    
 
 
     /*
