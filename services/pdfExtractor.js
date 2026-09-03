@@ -105,10 +105,13 @@ exports.extractText = async (fileBuffer) => {
      * Load PDF from memory.
      */
 
-    const loadingTask =
-        pdfjsLib.getDocument({
-            data: fileBuffer
-        });
+    const pdfData =
+    new Uint8Array(fileBuffer);
+
+const loadingTask =
+    pdfjsLib.getDocument({
+        data: pdfData
+    });
 
     const pdfDocument =
         await loadingTask.promise;
