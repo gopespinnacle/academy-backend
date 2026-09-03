@@ -16,12 +16,32 @@ exports.uploadChapter = async (req, res) => {
     try {
 
         const {
-            className,
-            subject,
-            chapter,
-            teacherId,
-            uploadMode
-        } = req.body;
+    className,
+    subject,
+    chapter,
+    teacherId,
+    uploadMode,
+    questionLevel,
+    totalMarks,
+    duration,
+    questionMode,
+    questionTypes
+} = req.body;
+
+let selectedQuestionTypes = [];
+
+try {
+
+    selectedQuestionTypes =
+        questionTypes
+            ? JSON.parse(questionTypes)
+            : [];
+
+} catch (err) {
+
+    selectedQuestionTypes = [];
+
+}
 
         if (!req.file) {
             return res.status(400).json({
@@ -103,7 +123,13 @@ exports.uploadChapter = async (req, res) => {
             version,
 
             status:
-                "Uploaded"
+                "Uploaded",
+
+                questionLevel,
+totalMarks: Number(totalMarks),
+duration,
+questionMode,
+questionTypes: selectedQuestionTypes
 
         });
 
@@ -124,11 +150,23 @@ await openAIService.generateQuestionBank({
 
     pdfText: pdfData.text,
 
+    pdfPages: pdfData.pageTexts,
+
     className,
 
     subject,
 
-    chapter
+    chapter,
+
+    questionLevel,
+
+    totalMarks,
+
+    duration,
+
+    questionMode,
+
+    questionTypes: selectedQuestionTypes
 
 });
 
@@ -174,6 +212,12 @@ await QuestionBank.create({
     version,
 
     generatedBy: teacherId,
+
+    questionLevel,
+    totalMarks: Number(totalMarks),
+    duration,
+    questionMode,
+    questionTypes: selectedQuestionTypes,
 
     questions: parsed.questions || [],
 
@@ -495,17 +539,12 @@ exports.generateQuestionPaper = async (req, res) => {
     try {
 
         const {
-
             questionBankId,
-            totalMarks,
-            paperTitle,
-            duration,
-            difficulty
-
+            paperTitle
         } = req.body;
 
         const questionBank =
-        await QuestionBank.findById(questionBankId);
+            await QuestionBank.findById(questionBankId);
 
         if (!questionBank) {
 
@@ -519,77 +558,374 @@ exports.generateQuestionPaper = async (req, res) => {
 
         }
 
-        let selectedQuestions = [];
+        // ------------------------------------
+        // PAPER CONFIGURATION
+        // ------------------------------------
 
-        let currentMarks = 0;
+        const requestedTotalMarks =
+            Number(
+                questionBank.totalMarks || 25
+            );
 
-        for (const q of questionBank.questions) {
+        const paperDuration =
+            questionBank.duration || "40 Minutes";
 
-            if (currentMarks >= totalMarks)
-                break;
+        const paperDifficulty =
+            questionBank.questionLevel || "Medium";
 
-            selectedQuestions.push({
+        const selectedTypes =
+            Array.isArray(questionBank.questionTypes)
+                ? questionBank.questionTypes
+                : [];
+
+        // ------------------------------------
+        // VALIDATE TOTAL MARKS
+        // ------------------------------------
+
+        const allowedMarks = [
+            10,
+            25,
+            50,
+            80,
+            100
+        ];
+
+        if (!allowedMarks.includes(requestedTotalMarks)) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Invalid total marks configuration."
+
+            });
+
+        }
+
+        // ------------------------------------
+        // PREPARE QUESTION POOL
+        // ------------------------------------
+
+        let availableQuestions =
+            Array.isArray(questionBank.questions)
+                ? questionBank.questions
+                : [];
+
+        if (!availableQuestions.length) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Question Bank contains no questions."
+
+            });
+
+        }
+
+        // ------------------------------------
+        // FILTER BY SELECTED QUESTION TYPES
+        // ------------------------------------
+
+        if (selectedTypes.length > 0) {
+
+            availableQuestions =
+                availableQuestions.filter(q =>
+                    selectedTypes.includes(q.type)
+                );
+
+        }
+
+        if (!availableQuestions.length) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "No questions match the selected question types."
+
+            });
+
+        }
+
+        // ------------------------------------
+        // PREFER SELECTED DIFFICULTY
+        // ------------------------------------
+
+        const preferredQuestions =
+            availableQuestions.filter(q =>
+                q.difficulty === paperDifficulty
+            );
+
+        const otherQuestions =
+            availableQuestions.filter(q =>
+                q.difficulty !== paperDifficulty
+            );
+
+        /*
+        Prefer the selected difficulty.
+
+        Other difficulty questions are kept as a
+        fallback only when an exact-mark paper cannot
+        be formed using the preferred difficulty alone.
+        */
+
+        const sortQuestions = (questions) => {
+
+            return [...questions].sort(() => Math.random() - 0.5);
+
+        };
+
+        let candidates =
+            sortQuestions(preferredQuestions);
+
+        const fallbackCandidates =
+            sortQuestions(otherQuestions);
+
+        // ------------------------------------
+        // EXACT-MARK SUBSET FINDER
+        // ------------------------------------
+
+        function findExactCombination(
+            questions,
+            target
+        ) {
+
+            const dp =
+                new Array(target + 1)
+                    .fill(null);
+
+            dp[0] = [];
+
+            for (
+                let i = 0;
+                i < questions.length;
+                i++
+            ) {
+
+                const q =
+                    questions[i];
+
+                const marks =
+                    Number(q.marks || 0);
+
+                if (
+                    !Number.isFinite(marks) ||
+                    marks <= 0 ||
+                    marks > target
+                ) {
+
+                    continue;
+
+                }
+
+                for (
+                    let sum = target;
+                    sum >= marks;
+                    sum--
+                ) {
+
+                    if (
+                        dp[sum] === null &&
+                        dp[sum - marks] !== null
+                    ) {
+
+                        dp[sum] = [
+                            ...dp[sum - marks],
+                            i
+                        ];
+
+                    }
+
+                }
+
+                if (dp[target] !== null) {
+                    break;
+                }
+
+            }
+
+            if (dp[target] === null) {
+                return null;
+            }
+
+            return dp[target].map(
+                index => questions[index]
+            );
+
+        }
+
+        // ------------------------------------
+        // TRY SELECTED DIFFICULTY FIRST
+        // ------------------------------------
+
+        let selectedQuestions =
+            findExactCombination(
+                candidates,
+                requestedTotalMarks
+            );
+
+        // ------------------------------------
+        // FALLBACK:
+        // ALL SELECTED TYPES
+        // ------------------------------------
+
+        if (!selectedQuestions) {
+
+            candidates =
+                sortQuestions(
+                    availableQuestions
+                );
+
+            selectedQuestions =
+                findExactCombination(
+                    candidates,
+                    requestedTotalMarks
+                );
+
+        }
+
+        // ------------------------------------
+        // EXACT MARKS CHECK
+        // ------------------------------------
+
+        if (!selectedQuestions) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    `Unable to create an exact ${requestedTotalMarks}-mark paper from the current Question Bank. Please add more questions with suitable mark values.`
+
+            });
+
+        }
+
+        const calculatedMarks =
+            selectedQuestions.reduce(
+                (sum, q) =>
+                    sum + Number(q.marks || 0),
+                0
+            );
+
+        if (
+            calculatedMarks !==
+            requestedTotalMarks
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Question Paper mark calculation failed. No paper was created."
+
+            });
+
+        }
+
+        // ------------------------------------
+        // BUILD FINAL PAPER QUESTIONS
+        // ------------------------------------
+
+        const finalQuestions =
+            selectedQuestions.map(q => ({
 
                 questionId: q._id,
 
                 question: q.question,
 
-                answer: q.answer,
+                answer: q.answer || "",
 
                 type: q.type,
 
-                marks: q.marks,
+                options:
+                    Array.isArray(q.options)
+                        ? q.options
+                        : [],
 
-                difficulty: q.difficulty
+                marks: Number(q.marks || 0),
+
+                difficulty:
+                    q.difficulty || paperDifficulty
+
+            }));
+
+        // ------------------------------------
+        // CREATE QUESTION PAPER
+        // ------------------------------------
+
+        const paper =
+            await QuestionPaper.create({
+
+                questionBank:
+                    questionBank._id,
+
+                className:
+                    questionBank.className,
+
+                subject:
+                    questionBank.subject,
+
+                chapter:
+                    questionBank.chapter,
+
+                paperTitle:
+                    paperTitle ||
+                    "Question Paper",
+
+                questionLevel:
+                    questionBank.questionLevel ||
+                    "Medium",
+
+                questionMode:
+                    questionBank.questionMode ||
+                    "Direct + Indirect",
+
+                questionTypes:
+                    questionBank.questionTypes || [],
+
+                totalMarks:
+                    requestedTotalMarks,
+
+                duration:
+                    paperDuration,
+
+                difficulty:
+                    paperDifficulty,
+
+                questions:
+                    finalQuestions,
+
+                createdBy:
+                    questionBank.generatedBy
 
             });
 
-            currentMarks += q.marks;
-
-        }
-
-        const paper =
-        await QuestionPaper.create({
-
-            questionBank: questionBank._id,
-
-            className: questionBank.className,
-
-            subject: questionBank.subject,
-
-            chapter: questionBank.chapter,
-
-            paperTitle,
-
-            totalMarks,
-
-            duration,
-
-            difficulty,
-
-            questions: selectedQuestions,
-
-            createdBy: questionBank.generatedBy
-
-        });
-
-        res.json({
+        return res.json({
 
             success: true,
 
-            message: "Question Paper generated successfully.",
+            message:
+                "Question Paper generated successfully.",
 
             paper
 
         });
 
     }
-
     catch (err) {
 
-        console.error(err);
+        console.error(
+            "Generate Question Paper Error:",
+            err
+        );
 
-        res.status(500).json({
+        return res.status(500).json({
 
             success: false,
 

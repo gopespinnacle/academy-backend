@@ -20,6 +20,33 @@ const aiAssessmentSchema = new mongoose.Schema({
         trim: true
     },
 
+    questionLevel: {
+    type: String,
+    enum: ["Easy", "Medium", "Hard"],
+    default: "Medium"
+},
+
+totalMarks: {
+    type: Number,
+    default: 25
+},
+
+duration: {
+    type: String,
+    default: "40 Minutes"
+},
+
+questionMode: {
+    type: String,
+    enum: ["Direct", "Indirect", "Direct + Indirect"],
+    default: "Direct + Indirect"
+},
+
+questionTypes: {
+    type: [String],
+    default: []
+},
+
     uploadedFileName: {
         type: String,
         required: true

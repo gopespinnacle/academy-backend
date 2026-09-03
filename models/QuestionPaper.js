@@ -22,6 +22,10 @@ const questionSchema = new mongoose.Schema({
         default:"MCQ"
     },
 
+    options: [{
+    type: String
+}],
+
     marks:{
         type:Number,
         default:1
@@ -56,6 +60,23 @@ const questionPaperSchema = new mongoose.Schema({
         type:String,
         required:true
     },
+
+    questionLevel: {
+    type: String,
+    enum: ["Easy", "Medium", "Hard"],
+    default: "Medium"
+},
+
+questionMode: {
+    type: String,
+    enum: ["Direct", "Indirect", "Direct + Indirect"],
+    default: "Direct + Indirect"
+},
+
+questionTypes: {
+    type: [String],
+    default: []
+},
 
     paperTitle:{
         type:String,
