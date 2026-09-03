@@ -175,15 +175,14 @@ const loadingTask =
              * Create canvas for this PDF page.
              */
 
-            const canvas =
-                createCanvas(
-                    Math.ceil(viewport.width),
-                    Math.ceil(viewport.height)
-                );
+            let canvas =
+    createCanvas(
+        Math.ceil(viewport.width),
+        Math.ceil(viewport.height)
+    );
 
-
-            const context =
-                canvas.getContext("2d");
+let context =
+    canvas.getContext("2d");
 
 
             /*
@@ -203,8 +202,8 @@ const loadingTask =
              * Convert canvas to PNG.
              */
 
-            const imageBuffer =
-                canvas.toBuffer("image/png");
+            let imageBuffer =
+    canvas.toBuffer("image/png");
 
 
             console.log(
@@ -250,6 +249,16 @@ await worker.terminate();
             );
 
         }
+
+        /*
+ * Release PDF/image memory before next page.
+ */
+
+page.cleanup();
+
+imageBuffer = null;
+context = null;
+canvas = null;
 
     } catch (err) {
 
