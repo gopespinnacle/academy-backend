@@ -577,17 +577,31 @@ NORMALIZE STUDENT GRADE
 =========================================================
 */
 
-if (
-    studentClass &&
-    /^\d+$/.test(
-        String(studentClass).trim()
-    )
-) {
+if (studentClass) {
 
-    studentClass =
-        `Grade-${String(
-            studentClass
-        ).trim()}`;
+    const gradeMatch =
+        String(studentClass)
+            .trim()
+            .match(/^Grade[\s-]*(\d+)$/i);
+
+    if (gradeMatch) {
+
+        studentClass =
+            `Grade-${gradeMatch[1]}`;
+
+    }
+    else if (
+        /^\d+$/.test(
+            String(studentClass).trim()
+        )
+    ) {
+
+        studentClass =
+            `Grade-${String(
+                studentClass
+            ).trim()}`;
+
+    }
 
 }
 
