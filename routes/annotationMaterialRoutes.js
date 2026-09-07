@@ -40,6 +40,11 @@ const User =
         "../models/User"
     );
 
+    const PeriodAssignment =
+    require(
+        "../models/PeriodAssignment"
+    );
+
 
 /*
 ===========================================================
@@ -54,24 +59,25 @@ router.post(
         try {
 
             const {
+    teacher,
+    teacherName,
+    className,
+    subject,
 
-                teacher,
-                teacherName,
-                className,
-                subject,
+    chapterNo,
+    chapterName,
 
-                chapterNo,
-                chapterName,
+    topic,
+    description,
 
-                topic,
-                description,
+    materialDate,
+    room,
 
-                materialDate,
-                room,
+    periodId,
 
-                pages
+    pages
 
-            } = req.body;
+} = req.body;
 
 
             /*
@@ -89,7 +95,8 @@ router.post(
                 !chapterName ||
                 !topic ||
                 !materialDate ||
-                !room
+                 !room ||
+    !periodId
             ) {
 
                 return res.status(400).json({
@@ -154,39 +161,41 @@ router.post(
             */
 
             const material =
-                await AnnotationMaterial.create({
+    await AnnotationMaterial.create({
 
-                    teacher,
+        teacher,
 
-                    teacherName,
+        teacherName,
 
-                    className,
+        className,
 
-                    subject,
+        subject,
 
-                    chapterNo,
+        chapterNo,
 
-                    chapterName,
+        chapterName,
 
-                    topic,
+        topic,
 
-                    description:
-                        description || "",
+        description:
+            description || "",
 
-                    materialDate,
+        materialDate,
 
-                    room,
+        room,
 
-                    pages:
-                        formattedPages,
+        periodId,
 
-                    totalPages:
-                        Math.max(
-                            formattedPages.length,
-                            1
-                        )
+        pages:
+            formattedPages,
 
-                });
+        totalPages:
+            Math.max(
+                formattedPages.length,
+                1
+            )
+
+    });
 
 
             return res.status(201).json({
@@ -625,20 +634,62 @@ console.log(
             }
 
 
-            const materials =
-                await AnnotationMaterial.find({
+            /*
+------------------------------------------------
+GET STUDENT PERIOD ASSIGNMENTS
+------------------------------------------------
+*/
 
-                    className:
-                        studentClass
 
-                })
-                .sort({
 
-                    materialDate: -1,
+const periodAssignments =
+    await PeriodAssignment.find({
 
-                    createdAt: -1
+        "assignments.student":
+            studentId
 
-                });
+    });
+
+
+/*
+------------------------------------------------
+GET PERIOD IDS
+------------------------------------------------
+*/
+
+const periodIds =
+    periodAssignments.map(
+        period => period._id
+    );
+
+
+console.log(
+    "ANNOTATION MATERIALS: STUDENT PERIOD IDS",
+    periodIds
+);
+
+
+/*
+------------------------------------------------
+GET MATERIALS FOR ASSIGNED PERIODS
+------------------------------------------------
+*/
+
+const materials =
+    await AnnotationMaterial.find({
+
+        periodId: {
+            $in: periodIds
+        }
+
+    })
+    .sort({
+
+        materialDate: -1,
+
+        createdAt: -1
+
+    });
 
 
             return res.json({

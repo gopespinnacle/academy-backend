@@ -256,6 +256,8 @@ const annotationMaterialSchema =
 
             room: {
 
+
+
                 type: String,
 
                 required: true,
@@ -263,6 +265,29 @@ const annotationMaterialSchema =
                 trim: true
 
             },
+
+            
+
+            /*
+------------------------------------------------
+PERIOD ASSIGNMENT
+------------------------------------------------
+
+Identifies the exact timetable period
+for which this material was created.
+------------------------------------------------
+*/
+
+periodId: {
+
+    type:
+        mongoose.Schema.Types.ObjectId,
+
+    ref: "PeriodAssignment",
+
+    required: true
+
+},
 
 
             /*
