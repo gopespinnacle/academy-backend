@@ -22,7 +22,10 @@ const axios = require("axios");
 const express = require("express");
 const router = express.Router();
 const founderController = require("../controllers/founderController")
-const { sendWhatsAppMessage } = require("../services/whatsappService");
+const {
+    sendWhatsAppMessage,
+    sendStudentAccountWhatsApp
+} = require("../services/whatsappService");;
 const {
     buildStudentLoginMessage
 } = require("../utils/whatsappTemplates");
@@ -3207,59 +3210,75 @@ router.post(
             }
 
 
-            /* ================= PARENT WHATSAPP NUMBER ================= */
+            /* ===============================
+               PARENT WHATSAPP NUMBER
+            =============================== */
 
             const parentPhone =
-                student.whatsapp || student.mobile;
+                student.whatsapp ||
+                student.mobile;
 
 
             if (!parentPhone) {
 
                 return res.status(400).json({
                     success: false,
-                    message: "Parent WhatsApp number is not available."
+                    message:
+                        "Parent WhatsApp number is not available."
                 });
 
             }
 
 
-           /* ================= CREATE STUDENT MESSAGE ================= */
+            /* ===============================
+               GET VALUES FROM DATABASE
+            =============================== */
 
-const message =
-    buildStudentLoginMessage({
+            const studentName =
+                student.name || "Not Available";
 
-        name:
-            student.name,
+            const studentId =
+                student.studentId || "Not Available";
 
-        studentId:
-            student.studentId,
+            const loginId =
+                student.loginEmail ||
+                student.email ||
+                "Not Available";
 
-        loginEmail:
-            student.loginEmail || student.email,
-
-        loginPassword:
-            student.loginPassword
-
-    });
-
-
-    console.log("================================");
-console.log("STUDENT WHATSAPP MESSAGE DATA");
-console.log("Student Name:", student.name);
-console.log("Student ID:", student.studentId);
-console.log(
-    "User ID:",
-    student.loginEmail || student.email
-);
-console.log(
-    "Password:",
-    student.loginPassword
-);
-console.log("Parent Phone:", parentPhone);
-console.log("================================");
+            const password =
+                student.loginPassword ||
+                "Not Available";
 
 
-            /* ================= SEND WHATSAPP ================= */
+            /* ===============================
+               CREATE WHATSAPP MESSAGE
+            =============================== */
+
+            const message =
+
+`🎓 GOPES PINNACLE ACADEMY
+
+Dear Parent,
+
+Your student's account has been created successfully.
+
+Student Name: ${studentName}
+
+Student ID: ${studentId}
+
+Login ID: ${loginId}
+
+Password: ${password}
+
+Please keep these login details safe and confidential.
+
+Thank you,
+Gopes Pinnacle Academy`;
+
+
+            /* ===============================
+               SEND WHATSAPP
+            =============================== */
 
             const result =
                 await sendWhatsAppMessage(
@@ -3271,20 +3290,20 @@ console.log("================================");
             if (!result.success) {
 
                 return res.status(500).json({
-
                     success: false,
-
                     message:
                         "Failed to send WhatsApp message.",
-
                     error: result.error
-
                 });
 
             }
 
 
-            res.status(200).json({
+            /* ===============================
+               SUCCESS
+            =============================== */
+
+            return res.status(200).json({
 
                 success: true,
 
@@ -3301,7 +3320,7 @@ console.log("================================");
                 error
             );
 
-            res.status(500).json({
+            return res.status(500).json({
 
                 success: false,
 
