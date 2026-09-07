@@ -23,6 +23,9 @@ const express = require("express");
 const router = express.Router();
 const founderController = require("../controllers/founderController")
 const { sendWhatsAppMessage } = require("../services/whatsappService");
+const {
+    buildStudentLoginMessage
+} = require("../utils/whatsappTemplates");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
@@ -3220,26 +3223,40 @@ router.post(
             }
 
 
-            /* ================= CREATE MESSAGE ================= */
+           /* ================= CREATE STUDENT MESSAGE ================= */
 
-            const message = `🎓 *GOPES PINNACLE ACADEMY*
+const message =
+    buildStudentLoginMessage({
 
-Dear Parent,
+        name:
+            student.name,
 
-Please find your student's login credentials below.
+        studentId:
+            student.studentId,
 
-🆔 *Student ID:* ${student.studentId || "Not Available"}
+        loginEmail:
+            student.loginEmail || student.email,
 
-👤 *Student Name:* ${student.name || "Not Available"}
+        loginPassword:
+            student.loginPassword
 
-📧 *Login ID:* ${student.loginEmail || student.email || "Not Available"}
+    });
 
-🔐 *Password:* ${student.loginPassword || "Not Available"}
 
-Please use these credentials to log in to the Gopes Pinnacle Academy student portal.
-
-Thank you,
-*GOPES PINNACLE ACADEMY*`;
+    console.log("================================");
+console.log("STUDENT WHATSAPP MESSAGE DATA");
+console.log("Student Name:", student.name);
+console.log("Student ID:", student.studentId);
+console.log(
+    "User ID:",
+    student.loginEmail || student.email
+);
+console.log(
+    "Password:",
+    student.loginPassword
+);
+console.log("Parent Phone:", parentPhone);
+console.log("================================");
 
 
             /* ================= SEND WHATSAPP ================= */
