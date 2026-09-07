@@ -163,7 +163,9 @@ app.get("/", (req, res) => {
 
 /* ================= Close TEST ================= */
 
-app.use(express.json());
+app.use(express.json({
+    limit: "100mb"
+}));
 app.use("/uploads", express.static("uploads", {
     setHeaders: (res, filePath) => {
 
