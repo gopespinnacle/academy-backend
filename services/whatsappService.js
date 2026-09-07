@@ -121,8 +121,106 @@ async function sendWhatsAppTemplate(phone, parameters) {
     }
 }
 
+async function sendStudentAccountWhatsApp(
+    phone,
+    studentName,
+    studentId,
+    loginId,
+    password
+) {
 
+    try {
+
+        const response = await axios.post(
+            `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+            {
+                messaging_product: "whatsapp",
+
+                to: phone,
+
+                type: "template",
+
+                template: {
+
+                    name: "student_account_created",
+
+                    language: {
+                        code: "en"
+                    },
+
+                    components: [
+
+                        {
+                            type: "body",
+
+                            parameters: [
+
+                                {
+                                    type: "text",
+                                    text: String(studentName ?? "")
+                                },
+
+                                {
+                                    type: "text",
+                                    text: String(studentId ?? "")
+                                },
+
+                                {
+                                    type: "text",
+                                    text: String(loginId ?? "")
+                                },
+
+                                {
+                                    type: "text",
+                                    text: String(password ?? "")
+                                }
+
+                            ]
+                        }
+
+                    ]
+                }
+            },
+
+            {
+                headers: {
+
+                    Authorization:
+                        `Bearer ${process.env.WHATSAPP_TOKEN}`,
+
+                    "Content-Type":
+                        "application/json"
+
+                }
+            }
+        );
+
+        console.log(
+            "✅ Student account WhatsApp sent:",
+            response.data
+        );
+
+        return {
+            success: true,
+            data: response.data
+        };
+
+    } catch (error) {
+
+        console.log(
+            "❌ Student account WhatsApp Error:",
+            error.response?.data || error.message
+        );
+
+        return {
+            success: false,
+            error:
+                error.response?.data || error.message
+        };
+    }
+}
 module.exports = {
     sendWhatsAppMessage,
-    sendWhatsAppTemplate
+    sendWhatsAppTemplate,
+    sendStudentAccountWhatsApp
 };
