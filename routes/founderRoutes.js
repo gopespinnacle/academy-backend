@@ -3251,40 +3251,17 @@ router.post(
 
 
             /* ===============================
-               CREATE WHATSAPP MESSAGE
-            =============================== */
+   SEND STUDENT ACCOUNT TEMPLATE
+=============================== */
 
-            const message =
-
-`🎓 GOPES PINNACLE ACADEMY
-
-Dear Parent,
-
-Your student's account has been created successfully.
-
-Student Name: ${studentName}
-
-Student ID: ${studentId}
-
-Login ID: ${loginId}
-
-Password: ${password}
-
-Please keep these login details safe and confidential.
-
-Thank you,
-Gopes Pinnacle Academy`;
-
-
-            /* ===============================
-               SEND WHATSAPP
-            =============================== */
-
-            const result =
-                await sendWhatsAppMessage(
-                    parentPhone,
-                    message
-                );
+const result =
+    await sendStudentAccountWhatsApp(
+        parentPhone,
+        studentName,
+        studentId,
+        loginId,
+        password
+    );
 
 
             if (!result.success) {
