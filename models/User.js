@@ -51,9 +51,15 @@ whatsapp: {
     type: String
 },
 
-// ================= STUDENT FEE SYSTEM =================
+// ================= STUDENT / TEACHER ID SYSTEM =================
 
 studentId: {
+    type: String,
+    unique: true,
+    sparse: true
+},
+
+teacherId: {
     type: String,
     unique: true,
     sparse: true

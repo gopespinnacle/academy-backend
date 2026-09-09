@@ -81,14 +81,72 @@ router.post("/add-teacher", async (req, res) => {
             return res.status(400).json({ message: "Teacher already exists" });
         }
 
-        const teacher = new User({
-            name, email, password,
-            role: "teacher",
-            subject, eca, language,
-            mobile, whatsapp, experience,
-            salaryMonth, sessionsWeek, salarySession,
-             meetingLink
-        });
+        // ================= GENERATE TEACHER ID =================
+
+const lastTeacher = await User.findOne(
+    {
+        role: "teacher",
+        teacherId: {
+            $regex: /^GPA-T\d+$/
+        }
+    }
+).sort({
+    teacherId: -1
+});
+
+let nextTeacherNumber = 1;
+
+if (lastTeacher && lastTeacher.teacherId) {
+
+    const match =
+        lastTeacher.teacherId.match(
+            /^GPA-T(\d+)$/
+        );
+
+    if (match) {
+
+        nextTeacherNumber =
+            Number(match[1]) + 1;
+
+    }
+
+}
+
+const generatedTeacherId =
+    `GPA-T${nextTeacherNumber}`;
+
+
+// ================= CREATE TEACHER =================
+
+const teacher = new User({
+
+    name,
+    email,
+    password,
+
+    role: "teacher",
+
+    teacherId:
+        generatedTeacherId,
+
+    subject,
+    eca,
+    language,
+
+    mobile,
+    whatsapp,
+
+    experience,
+
+    salaryMonth,
+
+    sessionsWeek,
+
+    salarySession,
+
+    meetingLink
+
+});
 
         await teacher.save();
 
@@ -1207,7 +1265,7 @@ router.get(
 
     studentName:
         student.name,
-        
+
 
        teacherFees:
     record
