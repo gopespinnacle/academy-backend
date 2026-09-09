@@ -3500,6 +3500,7 @@ router.post("/teacher-salary-payment", async (req, res) => {
             documentType
             
         } = req.body;
+        
 
 
         // ================= VALIDATION =================
