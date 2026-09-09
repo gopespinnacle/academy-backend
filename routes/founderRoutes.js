@@ -83,37 +83,22 @@ router.post("/add-teacher", async (req, res) => {
 
         // ================= GENERATE TEACHER ID =================
 
-const lastTeacher = await User.findOne(
-    {
-        role: "teacher",
-        teacherId: {
-            $regex: /^GPA-T\d+$/
+const teacherCounter =
+    await Counter.findByIdAndUpdate(
+        "teacher",
+        {
+            $inc: {
+                sequenceValue: 1
+            }
+        },
+        {
+            new: true,
+            upsert: true
         }
-    }
-).sort({
-    teacherId: -1
-});
-
-let nextTeacherNumber = 1;
-
-if (lastTeacher && lastTeacher.teacherId) {
-
-    const match =
-        lastTeacher.teacherId.match(
-            /^GPA-T(\d+)$/
-        );
-
-    if (match) {
-
-        nextTeacherNumber =
-            Number(match[1]) + 1;
-
-    }
-
-}
+    );
 
 const generatedTeacherId =
-    `GPA-T${nextTeacherNumber}`;
+    `GPA-T${teacherCounter.sequenceValue}`;
 
 
 // ================= CREATE TEACHER =================
