@@ -83,19 +83,18 @@ router.post("/add-teacher", async (req, res) => {
 
         // ================= GENERATE TEACHER ID =================
 
-const teacherCounter =
-    await Counter.findByIdAndUpdate(
-        "teacher",
-        {
-            $inc: {
-                sequenceValue: 1
-            }
-        },
-        {
-            new: true,
-            upsert: true
+const teacherCounter = await Counter.findByIdAndUpdate(
+    "teacher",
+    {
+        $inc: {
+            sequenceValue: 1
         }
-    );
+    },
+    {
+        new: true,
+        upsert: true
+    }
+);
 
 const generatedTeacherId =
     `GPA-T${teacherCounter.sequenceValue}`;
