@@ -41,12 +41,7 @@ const path = require("path");
 // TEACHER PAYMENT RECEIPTS
 // =========================================
 
-app.use(
-    "/uploads",
-    express.static(
-        path.join(__dirname, "uploads")
-    )
-);
+
 const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
@@ -105,6 +100,13 @@ require("./cron/sessionCron");
 require("./cron/attendanceCron");
 require("./cron/attendanceAutoExit");
 const app = express();
+
+app.use(
+    "/uploads",
+    express.static(
+        path.join(__dirname, "uploads")
+    )
+);
 app.use(express.static(__dirname));
 app.use(cors({
 
