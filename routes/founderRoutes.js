@@ -1208,6 +1208,11 @@ router.get(
     studentName:
         student.name,
 
+       teacherFees:
+    record
+        ? record.teacherFees || []
+        : [],
+
                     actualFee:
     Number(student.monthlyFee || 0),
 
@@ -1325,12 +1330,15 @@ router.post(
         try {
 
             const {
-                studentId,
-                month,
-                year,
-                feePaid,
-                teacherFee
-            } = req.body;
+    studentId,
+    month,
+    year,
+    actualFee,
+    feePaid,
+    teacherFee,
+    teacherFees,
+    academyFee
+} = req.body;
 
 
             // ================= VALIDATION =================
@@ -1460,10 +1468,24 @@ router.post(
                         paidAmount,
 
                     teacherFee:
-                        teacherAmount,
+    teacherAmount,
 
-                    academyFee:
-                        academyAmount,
+teacherFees:
+    (teacherFees || []).map(item => ({
+
+        teacher:
+            item.teacherId,
+
+        teacherName:
+            item.teacherName || "",
+
+        amount:
+            Number(item.amount) || 0
+
+    })),
+
+academyFee:
+    academyAmount,
 
                     paymentStatus:
                         paidAmount === 0
@@ -1494,10 +1516,24 @@ router.post(
                     paidAmount;
 
                 feeRecord.teacherFee =
-                    teacherAmount;
+    teacherAmount;
 
-                feeRecord.academyFee =
-                    academyAmount;
+feeRecord.teacherFees =
+    (teacherFees || []).map(item => ({
+
+        teacher:
+            item.teacherId,
+
+        teacherName:
+            item.teacherName || "",
+
+        amount:
+            Number(item.amount) || 0
+
+    }));
+
+feeRecord.academyFee =
+    academyAmount;
 
                 feeRecord.paymentStatus =
                     paidAmount === 0

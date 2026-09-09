@@ -46,15 +46,34 @@ const monthlyFeeSchema = new mongoose.Schema({
 
     // ================= DISTRIBUTION =================
 
-    teacherFee: {
-        type: Number,
-        default: 0
-    },
+teacherFee: {
+    type: Number,
+    default: 0
+},
 
-    academyFee: {
-        type: Number,
-        default: 0
-    },
+teacherFees: [
+    {
+        teacher: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        },
+
+        teacherName: {
+            type: String,
+            default: ""
+        },
+
+        amount: {
+            type: Number,
+            default: 0
+        }
+    }
+],
+
+academyFee: {
+    type: Number,
+    default: 0
+},
 
     // ================= PAYMENT =================
 
