@@ -331,7 +331,10 @@ app.get("/api/founder/periodassignments", async (req, res) => {
 
     try{
 
-        const data = await PeriodAssignment.find();
+        const data = await PeriodAssignment
+    .find()
+    .populate("teacher", "name")
+    .populate("assignments.student", "name");
 
         res.json({ data });
 

@@ -1199,11 +1199,14 @@ router.get(
 
                 return {
 
-                    studentId:
-                        student.studentId || "",
+    studentMongoId:
+        student._id.toString(),
 
-                    studentName:
-                        student.name,
+    studentId:
+        student.studentId || "",
+
+    studentName:
+        student.name,
 
                     actualFee:
     Number(student.monthlyFee || 0),
