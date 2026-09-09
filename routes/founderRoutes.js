@@ -33,6 +33,14 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
 const User = require("../models/User");
+const TeacherPayment = require("../models/TeacherPayment");
+const {
+    createTeacherPaymentReceipt
+} = require("../services/teacherSalaryReceipt");
+
+const {
+    sendWhatsAppDocument
+} = require("../services/sendWhatsApp");
 const TeacherLeave = require("../models/TeacherLeave");
 const MonthlyFee = require("../models/MonthlyFee");
 
@@ -3476,5 +3484,234 @@ const result =
 
     }
 );
+
+// =====================================================
+// TEACHER SALARY PAYMENT
+// =====================================================
+
+router.post("/teacher-salary-payment", async (req, res) => {
+
+    try {
+
+        const {
+            teacherId,
+            feeMonth,
+            totalFee,
+            documentType
+            
+        } = req.body;
+
+
+        // ================= VALIDATION =================
+
+        if (!teacherId) {
+            return res.status(400).json({
+                success: false,
+                message: "Teacher ID is required"
+            });
+        }
+
+        if (!feeMonth) {
+            return res.status(400).json({
+                success: false,
+                message: "Fee month is required"
+            });
+        }
+
+        if (!documentType) {
+            return res.status(400).json({
+                success: false,
+                message: "Document type is required"
+            });
+        }
+
+
+        // ================= FIND TEACHER =================
+
+        const teacher = await User.findOne({
+            teacherId: teacherId,
+            role: "teacher"
+        }).populate(
+            "assignedStudents",
+            "name studentId"
+        );
+
+
+        if (!teacher) {
+            return res.status(404).json({
+                success: false,
+                message: "Teacher not found"
+            });
+        }
+
+
+        // ================= STUDENTS =================
+
+        const students = (teacher.assignedStudents || []).map(student => ({
+
+            student: student._id,
+
+            studentId: student.studentId || "",
+
+            studentName: student.name || ""
+
+        }));
+
+
+        // ================= RECEIPT NUMBER =================
+
+        const receiptNumber =
+            "GPA-" +
+            Date.now();
+
+
+        // ================= SAVE PAYMENT =================
+
+        const payment = new TeacherPayment({
+
+            teacher: teacher._id,
+
+            teacherId: teacher.teacherId,
+
+            teacherName: teacher.name,
+
+            teacherWhatsapp:
+                teacher.whatsapp || teacher.mobile || "",
+
+            students: students,
+
+            feeMonth: feeMonth,
+
+            totalFee: Number(totalFee) || 0,
+
+            receiptNumber: receiptNumber,
+
+            documentType: documentType,
+            documentUrl: documentUrl,
+
+            description:
+                "Academic Service Fee Payment Acknowledgement"
+
+        });
+
+
+        await payment.save();
+
+
+// ================= CREATE RECEIPT =================
+
+const receiptBuffer =
+    await createTeacherPaymentReceipt(payment);
+
+
+// ================= SAVE RECEIPT =================
+
+const fs = require("fs");
+const path = require("path");
+
+const receiptDirectory =
+    path.join(__dirname, "../uploads/teacher-payments");
+
+
+if (!fs.existsSync(receiptDirectory)) {
+
+    fs.mkdirSync(
+        receiptDirectory,
+        {
+            recursive: true
+        }
+    );
+
+}
+
+
+const receiptFileName =
+    `${receiptNumber}.pdf`;
+
+
+const receiptPath =
+    path.join(
+        receiptDirectory,
+        receiptFileName
+    );
+
+
+fs.writeFileSync(
+    receiptPath,
+    receiptBuffer
+);
+
+
+// ================= DOCUMENT URL =================
+
+const documentUrl =
+    `${req.protocol}://${req.get("host")}/uploads/teacher-payments/${receiptFileName}`;
+
+
+payment.documentUrl =
+    documentUrl;
+
+
+await payment.save();
+
+
+// ================= SEND RECEIPT TO TEACHER =================
+
+if (teacher.whatsapp || teacher.mobile) {
+
+    const teacherWhatsapp =
+        teacher.whatsapp || teacher.mobile;
+
+    await sendWhatsAppDocument(
+        teacherWhatsapp,
+        documentUrl,
+        receiptFileName,
+        `Gopes Pinnacle Academy - Academic Service Fee Payment Acknowledgement\n\nTeacher ID: ${teacher.teacherId}\nTeacher Name: ${teacher.name}\nFee Month: ${feeMonth}\nTotal Fee: Rs. ${Number(totalFee || 0).toLocaleString("en-IN")}\n\nPayment Status: PAID`
+    );
+
+}
+
+
+// ================= RESPONSE =================
+
+res.json({
+
+    success: true,
+
+    message:
+        "Teacher payment receipt created successfully",
+
+    paymentId:
+        payment._id,
+
+    receiptNumber:
+        receiptNumber,
+
+    documentUrl:
+        documentUrl
+
+});
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Teacher salary payment error:",
+            error
+        );
+
+        res.status(500).json({
+
+            success: false,
+
+            message:
+                "Error saving teacher payment"
+
+        });
+
+    }
+
+});
 
 module.exports = router;

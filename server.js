@@ -23,7 +23,7 @@ const storageFile = multer.diskStorage({
 });
 
 const uploadFile = multer({ storage: storageFile });
-const path = require("path");
+
 const fs = require("fs");
 
 // 🔥 CREATE recordings FOLDER IF NOT EXISTS
@@ -35,6 +35,18 @@ if (!fs.existsSync("uploads")) {
     fs.mkdirSync("uploads");
 }
 const express = require("express");
+const path = require("path");
+
+// =========================================
+// TEACHER PAYMENT RECEIPTS
+// =========================================
+
+app.use(
+    "/uploads",
+    express.static(
+        path.join(__dirname, "uploads")
+    )
+);
 const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
