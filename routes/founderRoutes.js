@@ -144,6 +144,90 @@ const teacher = new User({
 /* ================= GET TEACHERS ================= */
 
 router.get("/teachers", founderController.getTeachers);
+
+
+/* ================= GENERATE MISSING TEACHER IDS ================= */
+
+router.post(
+    "/generate-missing-teacher-ids",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const teachers = await User.find({
+                role: "teacher",
+                $or: [
+                    { teacherId: { $exists: false } },
+                    { teacherId: null },
+                    { teacherId: "" }
+                ]
+            }).sort({
+                createdAt: 1
+            });
+
+            if (!teachers.length) {
+
+                return res.json({
+                    message: "All teachers already have Teacher IDs."
+                });
+
+            }
+
+            const counter =
+                await Counter.findByIdAndUpdate(
+                    "teacher",
+                    {
+                        $inc: {
+                            sequenceValue: teachers.length
+                        }
+                    },
+                    {
+                        new: true,
+                        upsert: true
+                    }
+                );
+
+            const firstNumber =
+                counter.sequenceValue - teachers.length + 1;
+
+            for (
+                let i = 0;
+                i < teachers.length;
+                i++
+            ) {
+
+                teachers[i].teacherId =
+                    `GPA-T${firstNumber + i}`;
+
+                await teachers[i].save();
+
+            }
+
+            res.json({
+                message:
+                    "Teacher IDs generated successfully.",
+                count:
+                    teachers.length
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Teacher ID migration error:",
+                error
+            );
+
+            res.status(500).json({
+                message:
+                    "Error generating teacher IDs."
+            });
+
+        }
+
+    }
+);
 /* ================= ANALYTICS ================= */
 
 router.get("/analytics", async (req, res) => {
