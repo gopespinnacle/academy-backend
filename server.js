@@ -570,7 +570,7 @@ app.get(
 
             await axios.post(
 
-                `https://graph.facebook.com/v23.0/${process.env.PHONE_NUMBER_ID}/messages`,
+                `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
 
                 {
 
