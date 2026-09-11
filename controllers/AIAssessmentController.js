@@ -8,6 +8,12 @@ const QuestionPaper = require("../models/QuestionPaper");
 const AIAssessmentAssignment =
     require("../models/AIAssessmentAssignment");
 
+    const AIAssessmentSubmission =
+    require("../models/AIAssessmentSubmission");
+
+const jwt =
+    require("jsonwebtoken");
+
 /*
 ====================================================
 Upload Chapter
@@ -1010,6 +1016,679 @@ if (assignments.length > 0) {
             "Generate Question Paper Error:",
             err
         );
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                err.message
+
+        });
+
+    }
+
+};
+
+
+/*
+====================================================
+STUDENT ASSESSMENT SHEET
+GET ALL ASSESSMENTS FOR LOGGED-IN STUDENT
+====================================================
+*/
+
+exports.getStudentAssessments =
+async (req, res) => {
+
+    try {
+
+        /*
+        --------------------------------------------
+        GET TOKEN
+        --------------------------------------------
+        */
+
+        const token =
+            req.headers.authorization
+                ?.split(" ")[1];
+
+
+        if (!token) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "Authentication token is required."
+
+            });
+
+        }
+
+
+        /*
+        --------------------------------------------
+        VERIFY TOKEN
+        --------------------------------------------
+        */
+
+        const decoded =
+            jwt.verify(
+                token,
+                process.env.JWT_SECRET
+            );
+
+
+        const studentUserId =
+            decoded.id;
+
+
+        if (!studentUserId) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "Invalid student authentication."
+
+            });
+
+        }
+
+
+        /*
+        --------------------------------------------
+        FIND ONLY THIS STUDENT'S ASSIGNMENTS
+        --------------------------------------------
+        */
+
+        const assignments =
+    await AIAssessmentAssignment
+        .find({
+            student:
+                studentUserId
+        })
+        .populate(
+            "questionPaper"
+        )
+        .populate(
+            "teacher",
+            "name teacherName"
+        )
+        .sort({
+            assignedAt: -1
+        });
+
+
+        /*
+        --------------------------------------------
+        GET SUBMISSIONS
+        --------------------------------------------
+        */
+
+        const assignmentIds =
+            assignments.map(
+                assignment =>
+                    assignment._id
+            );
+
+
+        const submissions =
+            await AIAssessmentSubmission
+                .find({
+                    assignment: {
+                        $in:
+                            assignmentIds
+                    }
+                })
+                .sort({
+                    createdAt: -1
+                });
+
+
+        /*
+        --------------------------------------------
+        CONVERT SUBMISSIONS TO QUICK LOOKUP
+        --------------------------------------------
+        */
+
+        const submissionMap =
+            new Map();
+
+
+        submissions.forEach(
+            submission => {
+
+                submissionMap.set(
+                    String(
+                        submission.assignment
+                    ),
+                    submission
+                );
+
+            }
+        );
+
+
+        /*
+        --------------------------------------------
+        PREPARE RESPONSE
+        --------------------------------------------
+        */
+
+        const data =
+            assignments.map(
+                assignment => {
+
+                    const submission =
+                        submissionMap.get(
+                            String(
+                                assignment._id
+                            )
+                        );
+
+
+                    let answerStatus =
+                        "Not Submitted";
+
+
+                    if (submission) {
+
+                        answerStatus =
+                            submission.status ===
+                            "Corrected"
+
+                                ? "Corrected"
+
+                                : "Submitted";
+
+                    }
+
+
+                    return {
+
+                        _id:
+                            assignment._id,
+
+                        questionPaperId:
+                            assignment.questionPaper
+                                ? assignment.questionPaper._id
+                                : assignment.questionPaper,
+
+                        questionBankId:
+                            assignment.questionBank,
+
+                        student:
+                            assignment.student,
+
+                        studentName:
+                            assignment.studentName,
+
+                        studentId:
+                            assignment.studentId,
+
+                        className:
+                            assignment.className,
+
+                        subject:
+                            assignment.subject,
+
+                        chapter:
+                            assignment.chapter,
+
+                        teacher:
+    assignment.teacher,
+
+teacherName:
+    assignment.teacher
+        ? (
+            assignment.teacher.name ||
+            assignment.teacher.teacherName ||
+            ""
+        )
+        : "",
+
+                        status:
+                            assignment.status,
+
+                        assignedAt:
+                            assignment.assignedAt,
+
+                        createdAt:
+                            assignment.createdAt,
+
+                        answerStatus,
+
+                        submissionId:
+                            submission
+                                ? submission._id
+                                : null
+
+                    };
+
+                }
+            );
+
+
+        return res.json({
+
+            success:
+                true,
+
+            data
+
+        });
+
+    }
+    catch (err) {
+
+        console.error(
+            "Get Student Assessments Error:",
+            err
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                err.message
+
+        });
+
+    }
+
+};
+
+/*
+====================================================
+STUDENT VIEW PARTICULAR ASSESSMENT
+====================================================
+*/
+
+exports.getStudentAssessment =
+async (req, res) => {
+
+    try {
+
+        /*
+        --------------------------------------------
+        GET TOKEN
+        --------------------------------------------
+        */
+
+        const token =
+            req.headers.authorization
+                ?.split(" ")[1];
+
+
+        if (!token) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "Authentication token is required."
+
+            });
+
+        }
+
+
+        /*
+        --------------------------------------------
+        VERIFY TOKEN
+        --------------------------------------------
+        */
+
+        const decoded =
+            jwt.verify(
+                token,
+                process.env.JWT_SECRET
+            );
+
+
+        const studentUserId =
+            decoded.id;
+
+
+        /*
+        --------------------------------------------
+        FIND ASSIGNMENT
+        --------------------------------------------
+        */
+
+        const assignment =
+            await AIAssessmentAssignment
+                .findOne({
+
+                    _id:
+                        req.params.assignmentId,
+
+                    student:
+                        studentUserId
+
+                })
+                .populate(
+                    "questionPaper"
+                );
+
+
+        if (!assignment) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Assessment not found or not assigned to this student."
+
+            });
+
+        }
+
+
+        /*
+        --------------------------------------------
+        RETURN PAPER
+        --------------------------------------------
+        */
+
+        return res.json({
+
+            success:
+                true,
+
+            assignment,
+
+            paper:
+                assignment.questionPaper
+
+        });
+
+    }
+    catch (err) {
+
+        console.error(
+            "Get Student Assessment Error:",
+            err
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                err.message
+
+        });
+
+    }
+
+};
+
+/*
+====================================================
+STUDENT SUBMIT ANSWERS
+MULTIPLE FILES
+====================================================
+*/
+
+exports.submitStudentAnswers =
+async (req, res) => {
+
+    try {
+
+        /*
+        --------------------------------------------
+        GET TOKEN
+        --------------------------------------------
+        */
+
+        const token =
+            req.headers.authorization
+                ?.split(" ")[1];
+
+
+        if (!token) {
+
+            return res.status(401).json({
+
+                success: false,
+
+                message:
+                    "Authentication token is required."
+
+            });
+
+        }
+
+
+        /*
+        --------------------------------------------
+        VERIFY TOKEN
+        --------------------------------------------
+        */
+
+        const decoded =
+            jwt.verify(
+                token,
+                process.env.JWT_SECRET
+            );
+
+
+        const studentUserId =
+            decoded.id;
+
+
+        /*
+        --------------------------------------------
+        CHECK FILES
+        --------------------------------------------
+        */
+
+        if (
+            !req.files ||
+            req.files.length === 0
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Please select at least one answer file."
+
+            });
+
+        }
+
+
+        /*
+        --------------------------------------------
+        FIND ONLY THIS STUDENT'S ASSIGNMENT
+        --------------------------------------------
+        */
+
+        const assignment =
+            await AIAssessmentAssignment
+                .findOne({
+
+                    _id:
+                        req.params.assignmentId,
+
+                    student:
+                        studentUserId
+
+                });
+
+
+        if (!assignment) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Assessment not found or not assigned to this student."
+
+            });
+
+        }
+
+
+        /*
+        --------------------------------------------
+        PREVENT DUPLICATE SUBMISSION
+        --------------------------------------------
+        */
+
+        const existingSubmission =
+            await AIAssessmentSubmission
+                .findOne({
+
+                    assignment:
+                        assignment._id
+
+                });
+
+
+        if (existingSubmission) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Answers have already been submitted for this assessment."
+
+            });
+
+        }
+
+
+        /*
+        --------------------------------------------
+        UPLOAD ALL ANSWER FILES TO S3
+        --------------------------------------------
+        */
+
+        const uploadedFiles = [];
+
+
+        for (
+            const file of req.files
+        ) {
+
+            const uploaded =
+                await s3.uploadFile(
+
+                    file,
+
+                    "AI/AssessmentAnswers"
+
+                );
+
+
+            uploadedFiles.push({
+
+                fileName:
+                    file.originalname,
+
+                fileUrl:
+                    uploaded.Location,
+
+                uploadedAt:
+                    new Date()
+
+            });
+
+        }
+
+
+        /*
+        --------------------------------------------
+        CREATE SUBMISSION
+        --------------------------------------------
+        */
+
+        const submission =
+            await AIAssessmentSubmission.create({
+
+                assignment:
+                    assignment._id,
+
+                questionPaper:
+                    assignment.questionPaper,
+
+                student:
+                    assignment.student,
+
+                studentName:
+                    assignment.studentName,
+
+                studentId:
+                    assignment.studentId,
+
+                answerFiles:
+                    uploadedFiles,
+
+                status:
+                    "Submitted",
+
+                submittedAt:
+                    new Date()
+
+            });
+
+
+        /*
+        --------------------------------------------
+        UPDATE ASSIGNMENT
+        --------------------------------------------
+        */
+
+        assignment.status =
+            "Submitted";
+
+        assignment.submittedAt =
+            new Date();
+
+        await assignment.save();
+
+
+        /*
+        --------------------------------------------
+        RESPONSE
+        --------------------------------------------
+        */
+
+        return res.json({
+
+            success:
+                true,
+
+            message:
+                "Answers submitted successfully.",
+
+            submission
+
+        });
+
+    }
+    catch (err) {
+
+        console.error(
+            "Submit Student Answers Error:",
+            err
+        );
+
 
         return res.status(500).json({
 

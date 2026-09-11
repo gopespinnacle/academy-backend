@@ -51,4 +51,54 @@ router.post(
 
 );
 
+
+/*
+====================================================
+STUDENT ASSESSMENT SHEET
+====================================================
+*/
+
+/*
+Get question papers assigned
+to the logged-in student
+*/
+
+router.get(
+
+    "/student/assignments",
+
+    AIAssessmentController.getStudentAssessments
+
+);
+
+
+/*
+Get one particular assigned
+question paper
+*/
+
+router.get(
+
+    "/student/assignment/:assignmentId",
+
+    AIAssessmentController.getStudentAssessment
+
+);
+
+
+/*
+Submit multiple answer files
+*/
+
+router.post(
+
+    "/student/assignment/:assignmentId/submit",
+
+    upload.array("answerFiles", 20),
+
+    AIAssessmentController.submitStudentAnswers
+
+);
+
+
 module.exports = router;
