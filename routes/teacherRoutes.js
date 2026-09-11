@@ -197,25 +197,214 @@ router.get("/assessments", async (req, res) => {
 
 /* ================= TEACHER STUDENTS ================= */
 
-router.get("/students", protect, authorize("teacher"), async (req,res)=>{
-    try{
-        const { className, subject } = req.query;
+router.get(
+    "/students",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
 
-        const data = await TeacherStudentMap.find({
-            teacher: req.user.id,
-            className,
-            subject
-        }).populate(
-    "student",
-    "name grade studentId"
-);
+        try {
 
-        res.json({data});
+            const teacherId = req.user.id;
 
-    }catch(err){
-        res.status(500).json({message:"Error loading students"});
+            const className =
+                (req.query.className || "").trim();
+
+            const subject =
+                (req.query.subject || "").trim();
+
+
+            if (!className || !subject) {
+
+                return res.status(400).json({
+                    message:
+                        "Class and subject are required."
+                });
+
+            }
+
+
+            /*
+            ==================================================
+            FIND STUDENTS FROM PERIOD ASSIGNMENT
+            ==================================================
+
+            This is the same assignment system used by
+            Founder -> Teacher Student Assigned.
+
+            Subject comparison is case-insensitive:
+                Science
+                science
+                SCIENCE
+
+            will all match.
+            ==================================================
+            */
+
+            const subjectRegex =
+                new RegExp(
+                    "^" +
+                    subject.replace(
+                        /[.*+?^${}()|[\]\\]/g,
+                        "\\$&"
+                    ) +
+                    "$",
+                    "i"
+                );
+
+
+            const periods =
+                await PeriodAssignment.find({
+
+                    teacher: teacherId,
+
+                    className: className,
+
+                    subject: subjectRegex
+
+                }).populate(
+                    "assignments.student",
+                    "name grade studentId"
+                );
+
+
+            /*
+            ==================================================
+            REMOVE DUPLICATE STUDENTS
+            ==================================================
+            */
+
+            const studentMap =
+                new Map();
+
+
+            periods.forEach(period => {
+
+                if (
+                    !period.assignments ||
+                    !Array.isArray(period.assignments)
+                ) {
+                    return;
+                }
+
+
+                period.assignments.forEach(
+                    assignment => {
+
+                        const student =
+                            assignment.student;
+
+
+                        if (!student) {
+                            return;
+                        }
+
+
+                        const studentId =
+                            String(student._id);
+
+
+                        if (
+                            !studentMap.has(studentId)
+                        ) {
+
+                            studentMap.set(
+                                studentId,
+                                {
+                                    student
+                                }
+                            );
+
+                        }
+
+                    }
+                );
+
+            });
+
+
+            const data =
+                Array.from(
+                    studentMap.values()
+                );
+
+
+            console.log(
+                "===================================="
+            );
+
+            console.log(
+                "AI ASSESSMENT STUDENT LOAD"
+            );
+
+            console.log(
+                "Teacher ID:",
+                teacherId
+            );
+
+            console.log(
+                "Class:",
+                className
+            );
+
+            console.log(
+                "Subject:",
+                subject
+            );
+
+            console.log(
+                "Periods Found:",
+                periods.length
+            );
+
+            console.log(
+                "Students Found:",
+                data.length
+            );
+
+            console.log(
+                "Students:",
+                data.map(x => ({
+                    name:
+                        x.student?.name,
+
+                    studentId:
+                        x.student?.studentId
+                }))
+            );
+
+            console.log(
+                "===================================="
+            );
+
+
+            return res.json({
+                data
+            });
+
+
+        } catch (err) {
+
+            console.error(
+                "AI Assessment student loading error:",
+                err
+            );
+
+
+            return res.status(500).json({
+
+                message:
+                    "Error loading students.",
+
+                error:
+                    err.message
+
+            });
+
+        }
+
     }
-});
+);
 
 /* ================= REQUEST MODIFICATION ================= */
 
