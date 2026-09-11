@@ -205,7 +205,10 @@ router.get("/students", protect, authorize("teacher"), async (req,res)=>{
             teacher: req.user.id,
             className,
             subject
-        }).populate("student","name grade");
+        }).populate(
+    "student",
+    "name grade studentId"
+);
 
         res.json({data});
 
