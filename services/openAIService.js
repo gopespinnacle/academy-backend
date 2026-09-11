@@ -242,11 +242,179 @@ Selected mode:
 
 ${questionMode || "Direct + Indirect"}
 
-DIRECT QUESTIONS:
+====================================================
+PUBLIC BOARD EXAM QUESTION-WRITING STANDARD
+====================================================
 
-Ask directly about information, concepts, definitions, examples, facts, rules and explanations present in the source.
+Write every question as if it is appearing in a real
+CBSE / public board examination question paper.
 
-INDIRECT QUESTIONS:
+The student must understand the question independently.
+
+The student must NOT need to know:
+
+- the chapter name
+- the textbook
+- the uploaded document
+- where the information was found
+
+The uploaded document is ONLY the knowledge source.
+
+It must NOT be referenced inside normal questions.
+
+====================================================
+STRICTLY FORBIDDEN QUESTION WORDING
+====================================================
+
+NEVER use phrases such as:
+
+- "as per the chapter"
+- "according to the chapter"
+- "mentioned in the chapter"
+- "given in the chapter"
+- "provided in the chapter"
+- "stated in the chapter"
+- "discussed in the chapter"
+- "described in the chapter"
+- "shown in the chapter"
+- "from the chapter"
+- "from the textbook"
+- "in this chapter"
+- "in the lesson"
+- "as taught in the chapter"
+- "as explained in the chapter"
+- "the example mentioned in the chapter"
+- "the example given in the chapter"
+- "the example provided in the chapter"
+- "which example is mentioned"
+- "which example is given"
+- "which term is mentioned in the chapter"
+
+Also avoid:
+
+- "according to the passage"
+- "mentioned above"
+- "given above"
+- "stated above"
+
+unless the selected question type is specifically
+Source-Based and the source passage is intentionally
+presented as part of the question.
+
+====================================================
+IMPORTANT TRANSFORMATION RULE
+====================================================
+
+Use information from the document to CREATE questions.
+
+Do NOT ask students to identify information merely because
+it appeared in the document.
+
+Convert textbook statements and examples into independent
+academic questions.
+
+Example:
+
+BAD:
+
+"Which term describes animals that eat only plants,
+as per the chapter?"
+
+GOOD:
+
+"What term is used for animals that feed only on plants?"
+
+----------------------------------------------------
+
+BAD:
+
+"Which is the parasite-host example mentioned in the chapter?"
+
+GOOD:
+
+"A tick feeds on the blood of a dog. What type of interaction
+exists between the tick and the dog?"
+
+----------------------------------------------------
+
+BAD:
+
+"Which food chain is provided in the chapter?"
+
+GOOD:
+
+"Consider the food chain:
+Grass → Grasshopper → Frog → Snake → Eagle.
+Identify the producer and the primary consumer."
+
+----------------------------------------------------
+
+BAD:
+
+"What example of competition is given in the lesson?"
+
+GOOD:
+
+"How can competition for limited food resources affect
+the population of organisms in an ecosystem?"
+
+====================================================
+BOARD EXAM INDEPENDENCE TEST
+====================================================
+
+Before returning each question, silently check:
+
+"If the chapter title and source document are completely
+removed, can a student still understand exactly what the
+question is asking?"
+
+If YES:
+
+Keep the question.
+
+If NO:
+
+Rewrite the question.
+
+====================================================
+DIRECT QUESTIONS
+====================================================
+
+If the selected mode is Direct:
+
+Ask directly about:
+
+- definitions
+- concepts
+- facts
+- processes
+- classifications
+- relationships
+- causes and effects
+- scientific principles
+- important observations
+- terminology
+- examples converted into conceptual questions
+
+Do NOT mention the source or chapter.
+
+Example:
+
+Instead of:
+
+"Which term is mentioned in the chapter for organisms
+that make their own food?"
+
+Write:
+
+"What term is used for organisms that make their own
+food through photosynthesis?"
+
+====================================================
+INDIRECT QUESTIONS
+====================================================
+
+If the selected mode is Indirect:
 
 Test the SAME SOURCE CONCEPT through:
 
@@ -261,13 +429,27 @@ Test the SAME SOURCE CONCEPT through:
 - Error analysis
 - Justification
 
-Do not introduce concepts that are outside the uploaded document merely to make a question harder.
+Do not introduce concepts outside the uploaded document
+merely to make the question harder.
 
-If the selected mode is Direct, favour direct questions.
+====================================================
+DIRECT + INDIRECT
+====================================================
 
-If the selected mode is Indirect, favour indirect/application questions.
+If the selected mode is Direct + Indirect:
 
-If the selected mode is Direct + Indirect, create a balanced combination.
+Create a balanced combination of:
+
+- Direct conceptual questions
+- Application questions
+- Reasoning questions
+- Competency-based questions
+- Real-life situations
+- Interpretation questions
+
+All questions must independently make sense to the student.
+
+====================================================
 
 ====================================================
 QUESTION TYPE CONTROL
@@ -323,6 +505,14 @@ Every question must:
 
 - Be academically meaningful.
 - Be answerable from the uploaded source material or by applying concepts taught in it.
+- Use the uploaded document as the knowledge foundation.
+- NEVER mention the uploaded document in the question.
+- NEVER refer to "the chapter", "the lesson", "the textbook",
+  or "the source" in a normal question.
+- Convert textbook examples into independent examination questions.
+- Convert source statements into conceptual, application,
+  reasoning, or competency-based questions.
+- Be independently understandable without the chapter title.
 - Match the selected class level.
 - Match the selected difficulty.
 - Match one of the selected question types.
