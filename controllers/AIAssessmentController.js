@@ -1619,33 +1619,45 @@ async (req, res) => {
         */
 
         const submission =
-            await AIAssessmentSubmission.create({
+    await AIAssessmentSubmission.create({
 
-                assignment:
-                    assignment._id,
+        assignment:
+            assignment._id,
 
-                questionPaper:
-                    assignment.questionPaper,
+        questionPaper:
+            assignment.questionPaper,
 
-                student:
-                    assignment.student,
+        student:
+            assignment.student,
 
-                studentName:
-                    assignment.studentName,
+        studentName:
+            assignment.studentName,
 
-                studentId:
-                    assignment.studentId,
+        studentId:
+            assignment.studentId,
 
-                answerFiles:
-                    uploadedFiles,
+        teacher:
+            assignment.teacher,
 
-                status:
-                    "Submitted",
+        subject:
+            assignment.subject,
 
-                submittedAt:
-                    new Date()
+        chapter:
+            assignment.chapter,
 
-            });
+        className:
+            assignment.className,
+
+        answerFiles:
+            uploadedFiles,
+
+        status:
+            "Submitted",
+
+        submittedAt:
+            new Date()
+
+    });
 
 
         /*
