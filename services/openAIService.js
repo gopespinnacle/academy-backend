@@ -389,15 +389,65 @@ Use the following rules:
 
 The Question Bank is NOT limited to the selected total marks.
 
-Generate a LARGE Question Bank so that the paper generator has enough questions to create:
+The Question Bank must be LARGE ENOUGH to support future paper generation.
+
+IMPORTANT QUESTION QUANTITY REQUIREMENT:
+
+Generate AT LEAST 50 questions in the complete Question Bank whenever the uploaded source contains sufficient assessable content.
+
+The Question Bank should contain a balanced supply of:
+
+- At least 15 questions worth 1 mark each.
+- At least 15 questions worth 2 marks each.
+- At least 10 questions worth 5 marks each.
+
+Use the remaining questions to improve complete document coverage.
+
+This gives the paper generator enough material to create:
 
 25-mark papers
 50-mark papers
+80-mark papers
 100-mark papers
 
-Every generated question MUST use only 1, 2, or 5 marks.
+The 100-mark paper generator must be able to select an exact combination from the Question Bank.
 
-Before returning the JSON, verify every question:
+IMPORTANT:
+
+The Question Bank itself is NOT a 100-mark paper.
+
+It is a QUESTION POOL from which different papers will later be generated.
+
+Therefore, DO NOT stop generating questions when their combined marks reach the selected totalMarks.
+
+For example, if totalMarks is 25, you must STILL generate a large Question Bank.
+
+Do NOT generate only 25 marks worth of questions.
+
+====================================================
+STRICT MARK VALIDATION
+====================================================
+
+Every generated question MUST have exactly one of these mark values:
+
+1
+2
+5
+
+NEVER generate:
+
+3 marks
+4 marks
+6 marks
+7 marks
+8 marks
+9 marks
+10 marks
+or any other mark value.
+
+Before returning the final JSON, internally verify every question.
+
+For every question:
 
 question.marks === 1
 OR
@@ -407,7 +457,17 @@ question.marks === 5
 
 If any question has another mark value, correct it before returning the JSON.
 
-The final Question Paper will later select questions to meet the exact requested total marks.
+====================================================
+100-MARK PAPER READINESS CHECK
+====================================================
+
+Before returning the Question Bank, internally calculate the total possible marks available from all generated questions.
+
+The Question Bank should contain enough valid questions to provide AT LEAST 100 total available marks.
+
+If the generated Question Bank has less than 100 total available marks, continue generating additional questions from uncovered source content until sufficient questions are available, provided the source contains enough assessable content.
+
+The final Question Paper will later select questions from this pool to meet the exact requested total marks.
 
 ====================================================
 ANTI-DUPLICATION
