@@ -246,74 +246,128 @@ ${questionMode || "Direct + Indirect"}
 PUBLIC BOARD EXAM QUESTION-WRITING STANDARD
 ====================================================
 
-Write every question as if it is appearing in a real
-CBSE / public board examination question paper.
+VERY IMPORTANT:
 
-The student must understand the question independently.
+Generate every question in the style of a real CBSE / public
+board school examination.
 
-The student must NOT need to know:
+The uploaded PDF is ONLY the KNOWLEDGE SOURCE.
 
-- the chapter name
-- the textbook
-- the uploaded document
-- where the information was found
+The PDF, chapter, lesson, textbook, source document and
+chapter title are NOT part of the student's question.
 
-The uploaded document is ONLY the knowledge source.
+The student should see the question as an independent
+examination question.
 
-It must NOT be referenced inside normal questions.
-
-====================================================
-STRICTLY FORBIDDEN QUESTION WORDING
-====================================================
-
-NEVER use phrases such as:
-
-- "as per the chapter"
-- "according to the chapter"
-- "mentioned in the chapter"
-- "given in the chapter"
-- "provided in the chapter"
-- "stated in the chapter"
-- "discussed in the chapter"
-- "described in the chapter"
-- "shown in the chapter"
-- "from the chapter"
-- "from the textbook"
-- "in this chapter"
-- "in the lesson"
-- "as taught in the chapter"
-- "as explained in the chapter"
-- "the example mentioned in the chapter"
-- "the example given in the chapter"
-- "the example provided in the chapter"
-- "which example is mentioned"
-- "which example is given"
-- "which term is mentioned in the chapter"
-
-Also avoid:
-
-- "according to the passage"
-- "mentioned above"
-- "given above"
-- "stated above"
-
-unless the selected question type is specifically
-Source-Based and the source passage is intentionally
-presented as part of the question.
+The student must NEVER be told that the information came
+from a chapter, textbook, PDF, document, passage or source.
 
 ====================================================
-IMPORTANT TRANSFORMATION RULE
+STRICT QUESTION INDEPENDENCE RULE
 ====================================================
 
-Use information from the document to CREATE questions.
+EVERY question MUST be understandable by a student
+without seeing the chapter title or uploaded document.
 
-Do NOT ask students to identify information merely because
-it appeared in the document.
+Before returning a question, silently perform this test:
 
-Convert textbook statements and examples into independent
-academic questions.
+"If I remove the chapter name, PDF and source document,
+would this still look like a normal CBSE examination question?"
 
-Example:
+If NO:
+REWRITE THE QUESTION.
+
+If YES:
+KEEP THE QUESTION.
+
+====================================================
+ABSOLUTELY FORBIDDEN WORDING
+====================================================
+
+NEVER use any of the following in a normal question:
+
+"as per the chapter"
+"according to the chapter"
+"mentioned in the chapter"
+"given in the chapter"
+"provided in the chapter"
+"stated in the chapter"
+"discussed in the chapter"
+"described in the chapter"
+"shown in the chapter"
+"explained in the chapter"
+"taught in the chapter"
+"from the chapter"
+"in this chapter"
+"this chapter"
+"the chapter"
+"the lesson"
+"according to the lesson"
+"mentioned in the lesson"
+"given in the lesson"
+"from the lesson"
+"according to the textbook"
+"mentioned in the textbook"
+"given in the textbook"
+"from the textbook"
+"according to the source"
+"mentioned in the source"
+"given in the source"
+"provided in the source"
+"according to the document"
+"mentioned in the document"
+"given in the document"
+"provided in the document"
+"according to the text"
+"mentioned in the text"
+"given in the text"
+"provided in the text"
+"according to the passage"
+"mentioned in the passage"
+"given in the passage"
+"mentioned above"
+"given above"
+"stated above"
+
+Also NEVER ask:
+
+"Which example is mentioned in the chapter?"
+
+"Which example is given in the chapter?"
+
+"Which term is mentioned in the chapter?"
+
+"Which of the following is provided in the chapter?"
+
+"What example is given in the lesson?"
+
+"According to the chapter, why...?"
+
+====================================================
+CRITICAL TRANSFORMATION RULE
+====================================================
+
+DO NOT simply copy a sentence from the source and turn it
+into a question asking the student to identify where it
+appeared.
+
+Instead:
+
+READ the source.
+
+UNDERSTAND the concept.
+
+IDENTIFY the educational point.
+
+CONVERT that knowledge into an independent examination
+question.
+
+The question must test the student's knowledge,
+understanding, application, reasoning or competency.
+
+====================================================
+EXAMPLES — FOLLOW THIS EXACT STYLE
+====================================================
 
 BAD:
 
@@ -332,8 +386,8 @@ BAD:
 
 GOOD:
 
-"A tick feeds on the blood of a dog. What type of interaction
-exists between the tick and the dog?"
+"A tick feeds on the blood of a dog. Identify the type of
+interaction between the tick and the dog."
 
 ----------------------------------------------------
 
@@ -343,7 +397,7 @@ BAD:
 
 GOOD:
 
-"Consider the food chain:
+"Consider the following food chain:
 Grass → Grasshopper → Frog → Snake → Eagle.
 Identify the producer and the primary consumer."
 
@@ -355,26 +409,193 @@ BAD:
 
 GOOD:
 
-"How can competition for limited food resources affect
-the population of organisms in an ecosystem?"
+"How does competition for limited food resources affect
+organisms living in an ecosystem?"
+
+----------------------------------------------------
+
+BAD:
+
+"According to the chapter, why are large animals like tigers
+and elephants fewer in number?"
+
+GOOD:
+
+"Why are large animals such as tigers and elephants
+generally fewer in number than smaller herbivores?"
+
+----------------------------------------------------
+
+BAD:
+
+"Which parasite-host relationship is mentioned in the text?"
+
+GOOD:
+
+"A tick feeds on the blood of a dog. What type of biological
+interaction does this relationship represent? Explain."
 
 ====================================================
-BOARD EXAM INDEPENDENCE TEST
+CHAPTER NAME RULE
 ====================================================
 
-Before returning each question, silently check:
+The value supplied in:
 
-"If the chapter title and source document are completely
-removed, can a student still understand exactly what the
-question is asking?"
+Chapter: ${chapter}
 
-If YES:
+is ONLY for INTERNAL CONTEXT.
 
-Keep the question.
+Do NOT put the chapter name into normal questions.
 
-If NO:
+Do NOT write:
 
-Rewrite the question.
+"From Chapter 9..."
+"In Chapter 9..."
+"According to Chapter 9..."
+"As discussed in Chapter 9..."
+"Based on Chapter 9..."
+
+The chapter information is for the AI's understanding only.
+
+====================================================
+SOURCE DOCUMENT RULE
+====================================================
+
+Use the source document to obtain:
+
+- Concepts
+- Definitions
+- Facts
+- Scientific principles
+- Processes
+- Examples
+- Applications
+- Relationships
+- Causes and effects
+- Classifications
+- Important observations
+- Diagrams
+- Tables
+- Terminology
+- Learning outcomes
+
+But NEVER tell the student that the information came
+from the source.
+
+The source should influence WHAT you ask,
+not HOW you refer to the source.
+
+====================================================
+BOARD EXAM STYLE
+====================================================
+
+Questions should sound like questions written by a
+professional school examination paper setter.
+
+Prefer wording such as:
+
+"Explain..."
+"Identify..."
+"State..."
+"Define..."
+"Give a reason..."
+"Differentiate between..."
+"Compare..."
+"Justify..."
+"Analyse..."
+"Predict..."
+"Observe the following situation and answer..."
+"Study the following data and answer..."
+"Consider the following situation..."
+"Read the following case and answer..."
+"Why does..."
+"How does..."
+"What would happen if..."
+"Give one example of..."
+"Suggest..."
+"Calculate..."
+"Determine..."
+"Classify..."
+
+Questions should test the student's knowledge and
+understanding directly.
+
+====================================================
+REAL-LIFE / APPLICATION QUESTIONS
+====================================================
+
+When the source contains examples, convert them into
+meaningful examination situations.
+
+For example:
+
+SOURCE IDEA:
+A tick feeds on a dog's blood.
+
+DO NOT ASK:
+
+"Which parasite-host example is mentioned in the chapter?"
+
+ASK:
+
+"A tick attaches itself to a dog's body and feeds on its
+blood. Identify the type of interaction and explain why."
+
+----------------------------------------------------
+
+SOURCE IDEA:
+Some birds migrate during winter.
+
+DO NOT ASK:
+
+"Which migratory bird example is given in the chapter?"
+
+ASK:
+
+"Why do some birds migrate to warmer regions during
+winter? State one advantage of migration."
+
+====================================================
+FINAL QUESTION VALIDATION
+====================================================
+
+Before returning the JSON, silently check EVERY question.
+
+For each question ask:
+
+1. Does it sound like a real board examination question?
+2. Can the student understand it independently?
+3. Does it avoid mentioning the chapter?
+4. Does it avoid mentioning the source document?
+5. Does it avoid mentioning the textbook?
+6. Does it avoid phrases such as "mentioned in the chapter"?
+7. Does it test knowledge or understanding rather than
+   asking where information appeared?
+8. Is the question based on the uploaded source?
+9. Is the question appropriate for the selected class?
+10. Is the question appropriate for the selected difficulty?
+
+If ANY answer is NO:
+
+REWRITE THE QUESTION BEFORE RETURNING THE JSON.
+
+====================================================
+FINAL ABSOLUTE RULE
+====================================================
+
+NEVER generate a question whose purpose is to ask the student
+what was "mentioned", "given", "provided", "stated", "shown",
+"discussed" or "explained" in the chapter, lesson, textbook,
+PDF, document, passage or source.
+
+The uploaded material is the KNOWLEDGE SOURCE.
+
+It is NOT the subject of the question.
+
+Generate the QUESTION FROM THE KNOWLEDGE,
+not ABOUT THE SOURCE OF THE KNOWLEDGE.
+
+
 
 ====================================================
 DIRECT QUESTIONS
