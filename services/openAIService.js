@@ -344,44 +344,68 @@ For questions requiring explanation:
 - Include enough detail for teacher evaluation.
 
 ====================================================
-MARKS
+MARKS — STRICT QUESTION BANK RULE
 ====================================================
 
-The teacher selected:
+The Question Bank must use ONLY these individual mark values:
 
-${totalMarks || 25} total marks.
+1 mark
+2 marks
+5 marks
 
-The Question Bank is NOT limited to exactly this many marks.
+NEVER assign 3 marks.
 
-Generate a sufficiently large Question Bank to provide comprehensive coverage of the uploaded document.
+NEVER assign 4 marks.
 
-Assign sensible marks to individual questions according to their complexity.
+NEVER assign 6 or more marks to a single question.
 
-Typical guidance:
+Every question MUST have marks equal to exactly:
 
-1 mark:
+1, 2, or 5.
+
+Use the following rules:
+
+1 MARK:
 - MCQ
 - Fill in the Blanks
 - True / False
-- One Word
+- One Word Answer
 - Very Short Answer
 
-2 marks:
+2 MARKS:
 - Short Answer
-- Basic reasoning
-- Simple application
+- Basic Reasoning
+- Simple Application
+- Compare / Explain
 
-3 marks:
-- Multi-step application
-- Problem solving
-- Competency questions
-
-4–5 marks:
+5 MARKS:
 - Long Answer
-- Case Study components
-- Complex problem solving
+- Case Study
+- Competency-Based
 - HOTS
-- Detailed reasoning
+- Detailed Reasoning
+- Complex Application
+- Diagram-Based where appropriate
+
+The Question Bank is NOT limited to the selected total marks.
+
+Generate a LARGE Question Bank so that the paper generator has enough questions to create:
+
+25-mark papers
+50-mark papers
+100-mark papers
+
+Every generated question MUST use only 1, 2, or 5 marks.
+
+Before returning the JSON, verify every question:
+
+question.marks === 1
+OR
+question.marks === 2
+OR
+question.marks === 5
+
+If any question has another mark value, correct it before returning the JSON.
 
 The final Question Paper will later select questions to meet the exact requested total marks.
 

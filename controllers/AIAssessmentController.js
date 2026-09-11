@@ -390,66 +390,6 @@ exports.updateQuestionBank = async (req, res) => {
 
 };
 
-exports.generateQuestionPaper = async (req, res) => {
-
-    try {
-
-        const { questionBankId } = req.body;
-
-        const QuestionBank =
-        require("../models/QuestionBank");
-
-        const questionBank =
-        await QuestionBank.findById(questionBankId);
-
-        if (!questionBank) {
-
-            return res.json({
-
-                success: false,
-
-                message: "Question Bank not found."
-
-            });
-
-        }
-
-        return res.json({
-
-            success: true,
-
-            message: "Question Paper Generated Successfully.",
-
-            questionPaper: {
-
-                className: questionBank.className,
-
-                subject: questionBank.subject,
-
-                chapter: questionBank.chapter,
-
-                questions: questionBank.questions
-
-            }
-
-        });
-
-    }
-    catch (err) {
-
-        console.log(err);
-
-        res.status(500).json({
-
-            success: false,
-
-            message: err.message
-
-        });
-
-    }
-
-};
 
 /*
 ====================================================
@@ -549,11 +489,8 @@ exports.generateQuestionPaper = async (req, res) => {
         if (!questionBank) {
 
             return res.status(404).json({
-
                 success: false,
-
                 message: "Question Bank not found."
-
             });
 
         }
@@ -563,9 +500,7 @@ exports.generateQuestionPaper = async (req, res) => {
         // ------------------------------------
 
         const requestedTotalMarks =
-            Number(
-                questionBank.totalMarks || 25
-            );
+            Number(questionBank.totalMarks || 25);
 
         const paperDuration =
             questionBank.duration || "40 Minutes";
@@ -579,7 +514,7 @@ exports.generateQuestionPaper = async (req, res) => {
                 : [];
 
         // ------------------------------------
-        // VALIDATE TOTAL MARKS
+        // ALLOWED PAPER MARKS
         // ------------------------------------
 
         const allowedMarks = [
@@ -593,18 +528,14 @@ exports.generateQuestionPaper = async (req, res) => {
         if (!allowedMarks.includes(requestedTotalMarks)) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Invalid total marks configuration."
-
+                message: "Invalid total marks configuration."
             });
 
         }
 
         // ------------------------------------
-        // PREPARE QUESTION POOL
+        // GET QUESTIONS
         // ------------------------------------
 
         let availableQuestions =
@@ -615,18 +546,14 @@ exports.generateQuestionPaper = async (req, res) => {
         if (!availableQuestions.length) {
 
             return res.status(400).json({
-
                 success: false,
-
-                message:
-                    "Question Bank contains no questions."
-
+                message: "Question Bank contains no questions."
             });
 
         }
 
         // ------------------------------------
-        // FILTER BY SELECTED QUESTION TYPES
+        // FILTER QUESTION TYPES
         // ------------------------------------
 
         if (selectedTypes.length > 0) {
@@ -641,52 +568,51 @@ exports.generateQuestionPaper = async (req, res) => {
         if (!availableQuestions.length) {
 
             return res.status(400).json({
-
                 success: false,
-
                 message:
                     "No questions match the selected question types."
-
             });
 
         }
 
         // ------------------------------------
-        // PREFER SELECTED DIFFICULTY
+        // IMPORTANT
+        // ONLY 1, 2 AND 5 MARK QUESTIONS
         // ------------------------------------
 
-        const preferredQuestions =
-            availableQuestions.filter(q =>
-                q.difficulty === paperDifficulty
-            );
+        availableQuestions =
+            availableQuestions.filter(q => {
 
-        const otherQuestions =
-            availableQuestions.filter(q =>
-                q.difficulty !== paperDifficulty
-            );
+                const marks = Number(q.marks);
 
-        /*
-        Prefer the selected difficulty.
+                return (
+                    marks === 1 ||
+                    marks === 2 ||
+                    marks === 5
+                );
 
-        Other difficulty questions are kept as a
-        fallback only when an exact-mark paper cannot
-        be formed using the preferred difficulty alone.
-        */
+            });
 
-        const sortQuestions = (questions) => {
+        if (!availableQuestions.length) {
 
-            return [...questions].sort(() => Math.random() - 0.5);
+            return res.status(400).json({
+                success: false,
+                message:
+                    "No valid 1, 2 or 5 mark questions are available."
+            });
 
-        };
-
-        let candidates =
-            sortQuestions(preferredQuestions);
-
-        const fallbackCandidates =
-            sortQuestions(otherQuestions);
+        }
 
         // ------------------------------------
-        // EXACT-MARK SUBSET FINDER
+        // RANDOMIZE QUESTIONS
+        // ------------------------------------
+
+        const shuffledQuestions =
+            [...availableQuestions]
+                .sort(() => Math.random() - 0.5);
+
+        // ------------------------------------
+        // FIND EXACT MARK COMBINATION
         // ------------------------------------
 
         function findExactCombination(
@@ -710,16 +636,18 @@ exports.generateQuestionPaper = async (req, res) => {
                     questions[i];
 
                 const marks =
-                    Number(q.marks || 0);
+                    Number(q.marks);
 
                 if (
-                    !Number.isFinite(marks) ||
-                    marks <= 0 ||
-                    marks > target
+                    marks !== 1 &&
+                    marks !== 2 &&
+                    marks !== 5
                 ) {
-
                     continue;
+                }
 
+                if (marks > target) {
+                    continue;
                 }
 
                 for (
@@ -759,56 +687,64 @@ exports.generateQuestionPaper = async (req, res) => {
         }
 
         // ------------------------------------
-        // TRY SELECTED DIFFICULTY FIRST
+        // CREATE EXACT PAPER
         // ------------------------------------
 
-        let selectedQuestions =
+        const selectedQuestions =
             findExactCombination(
-                candidates,
+                shuffledQuestions,
                 requestedTotalMarks
             );
 
         // ------------------------------------
-        // FALLBACK:
-        // ALL SELECTED TYPES
+        // IF EXACT TOTAL NOT POSSIBLE
         // ------------------------------------
 
         if (!selectedQuestions) {
 
-            candidates =
-                sortQuestions(
-                    availableQuestions
-                );
+            const count1 =
+                availableQuestions.filter(
+                    q => Number(q.marks) === 1
+                ).length;
 
-            selectedQuestions =
-                findExactCombination(
-                    candidates,
-                    requestedTotalMarks
-                );
+            const count2 =
+                availableQuestions.filter(
+                    q => Number(q.marks) === 2
+                ).length;
 
-        }
-
-        // ------------------------------------
-        // EXACT MARKS CHECK
-        // ------------------------------------
-
-        if (!selectedQuestions) {
+            const count5 =
+                availableQuestions.filter(
+                    q => Number(q.marks) === 5
+                ).length;
 
             return res.status(400).json({
 
                 success: false,
 
                 message:
-                    `Unable to create an exact ${requestedTotalMarks}-mark paper from the current Question Bank. Please add more questions with suitable mark values.`
+                    `Unable to create an exact ${requestedTotalMarks}-mark paper from the current Question Bank.`,
+
+                availableQuestions: {
+                    oneMark: count1,
+                    twoMark: count2,
+                    fiveMark: count5
+                },
+
+                required:
+                    "The Question Bank must contain enough 1, 2 and/or 5 mark questions."
 
             });
 
         }
 
+        // ------------------------------------
+        // VERIFY TOTAL MARKS
+        // ------------------------------------
+
         const calculatedMarks =
             selectedQuestions.reduce(
                 (sum, q) =>
-                    sum + Number(q.marks || 0),
+                    sum + Number(q.marks),
                 0
             );
 
@@ -822,41 +758,47 @@ exports.generateQuestionPaper = async (req, res) => {
                 success: false,
 
                 message:
-                    "Question Paper mark calculation failed. No paper was created."
+                    "Question Paper mark calculation failed."
 
             });
 
         }
 
         // ------------------------------------
-        // BUILD FINAL PAPER QUESTIONS
+        // BUILD FINAL QUESTIONS
         // ------------------------------------
 
         const finalQuestions =
             selectedQuestions.map(q => ({
 
-                questionId: q._id,
+                questionId:
+                    q._id,
 
-                question: q.question,
+                question:
+                    q.question,
 
-                answer: q.answer || "",
+                answer:
+                    q.answer || "",
 
-                type: q.type,
+                type:
+                    q.type,
 
                 options:
                     Array.isArray(q.options)
                         ? q.options
                         : [],
 
-                marks: Number(q.marks || 0),
+                marks:
+                    Number(q.marks),
 
                 difficulty:
-                    q.difficulty || paperDifficulty
+                    q.difficulty ||
+                    paperDifficulty
 
             }));
 
         // ------------------------------------
-        // CREATE QUESTION PAPER
+        // SAVE QUESTION PAPER
         // ------------------------------------
 
         const paper =
@@ -887,7 +829,8 @@ exports.generateQuestionPaper = async (req, res) => {
                     "Direct + Indirect",
 
                 questionTypes:
-                    questionBank.questionTypes || [],
+                    questionBank.questionTypes ||
+                    [],
 
                 totalMarks:
                     requestedTotalMarks,
@@ -929,7 +872,8 @@ exports.generateQuestionPaper = async (req, res) => {
 
             success: false,
 
-            message: err.message
+            message:
+                err.message
 
         });
 
