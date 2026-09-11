@@ -57,38 +57,169 @@ exports.extractText = async (fileBuffer) => {
 
 
     /*
-     * STEP 2
-     * If useful text already exists,
-     * use it directly.
+ * STEP 2
+ * Check whether the extracted PDF text
+ * is actually readable.
+ *
+ * IMPORTANT:
+ * A PDF may contain >100 characters but
+ * those characters can still be corrupted.
+ */
+
+function isReadablePdfText(text) {
+
+    if (!text || !text.trim()) {
+        return false;
+    }
+
+    const cleanText = text.trim();
+
+    /*
+     * Minimum amount of usable text.
      */
+    if (cleanText.length < 100) {
+        return false;
+    }
 
-    if (
-        normalText.trim().length > 100
-    ) {
+    /*
+     * Count alphabetic characters.
+     */
+    const letters =
+        (cleanText.match(/[A-Za-z]/g) || []).length;
 
-        console.log(
-            "USE NORMAL PDF TEXT EXTRACTION"
+    /*
+     * Count suspicious replacement characters.
+     */
+    const replacementChars =
+        (cleanText.match(/[�]/g) || []).length;
+
+    /*
+     * Count long words.
+     */
+    const words =
+        cleanText.match(/[A-Za-z]{2,}/g) || [];
+
+    /*
+     * Count readable words.
+     */
+    const readableWords =
+        words.filter(word =>
+            /^[A-Za-z]+$/.test(word)
         );
 
-        return {
+    /*
+     * Calculate ratios.
+     */
+    const letterRatio =
+        letters / cleanText.length;
 
-            text: normalText,
+    const readableWordRatio =
+        words.length > 0
+            ? readableWords.length / words.length
+            : 0;
 
-            pages: normalPages,
-
-            pageTexts:
-                normalText
-                    .split("\f")
-                    .map(
-                        page =>
-                            page.trim()
-                    ),
-
-            info: {}
-
-        };
-
+    /*
+     * Too many replacement characters
+     * means the text is probably corrupted.
+     */
+    if (replacementChars > 5) {
+        return false;
     }
+
+    /*
+     * A normal school document should contain
+     * a reasonable amount of alphabetic text.
+     */
+    if (letterRatio < 0.25) {
+        return false;
+    }
+
+    /*
+     * Reject badly damaged text.
+     */
+    if (readableWordRatio < 0.70) {
+        return false;
+    }
+
+    return true;
+}
+
+
+if (
+    isReadablePdfText(normalText)
+) {
+
+    console.log(
+        "======================================"
+    );
+
+    console.log(
+        "NORMAL PDF TEXT IS READABLE"
+    );
+
+    console.log(
+        "USING NORMAL PDF TEXT EXTRACTION"
+    );
+
+    console.log(
+        "TEXT PREVIEW:",
+        normalText
+            .substring(0, 500)
+            .replace(/\n/g, " ")
+    );
+
+    console.log(
+        "======================================"
+    );
+
+    return {
+
+        text: normalText,
+
+        pages: normalPages,
+
+        pageTexts:
+            normalText
+                .split("\f")
+                .map(
+                    page =>
+                        page.trim()
+                ),
+
+        info: {}
+
+    };
+
+}
+
+
+console.log(
+    "======================================"
+);
+
+console.log(
+    "NORMAL PDF TEXT APPEARS CORRUPTED"
+);
+
+console.log(
+    "NORMAL TEXT LENGTH:",
+    normalText.length
+);
+
+console.log(
+    "NORMAL TEXT PREVIEW:",
+    normalText
+        .substring(0, 500)
+        .replace(/\n/g, " ")
+);
+
+console.log(
+    "FALLING BACK TO PAGE OCR"
+);
+
+console.log(
+    "======================================"
+);
 
 
     /*
