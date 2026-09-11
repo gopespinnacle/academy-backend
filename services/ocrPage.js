@@ -30,7 +30,21 @@ async function runOCR() {
          */
 
         const worker =
-            await createWorker("eng");
+    await createWorker("eng");
+
+
+/*
+ * Configure OCR for normal educational
+ * document/page layouts.
+ */
+
+await worker.setParameters({
+
+    tessedit_pageseg_mode: "3",
+
+    preserve_interword_spaces: "1"
+
+});
 
 
         /*

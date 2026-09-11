@@ -298,7 +298,7 @@ console.log(
              * for Render memory.
              */
 
-            const scale = 1.0;
+            const scale = 2.5;
 
 
             const viewport =
