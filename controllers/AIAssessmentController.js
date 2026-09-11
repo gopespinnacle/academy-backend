@@ -558,16 +558,21 @@ exports.generateQuestionPaper = async (req, res) => {
 
 if (selectedTypes.length > 0) {
 
-    const normalizeType = (value) =>
-        String(value || "")
+    const normalizeType = (value) => {
+
+        return String(value || "")
+            .replace(/\u200B/g, "")
+            .replace(/\uFEFF/g, "")
             .trim()
             .toLowerCase()
-            .replace(/\s+/g, " ");
+            .replace(/[^a-z0-9]+/g, "");
+
+    };
 
     const normalizedSelectedTypes =
         selectedTypes.map(normalizeType);
 
-    availableQuestions =
+    const matchedQuestions =
         availableQuestions.filter(q => {
 
             const questionType =
@@ -579,17 +584,18 @@ if (selectedTypes.length > 0) {
 
         });
 
+    // ------------------------------------
+    // USE MATCHED QUESTIONS WHEN AVAILABLE
+    // ------------------------------------
+
+    if (matchedQuestions.length > 0) {
+
+        availableQuestions =
+            matchedQuestions;
+
+    }
+
 }
-
-        if (!availableQuestions.length) {
-
-            return res.status(400).json({
-                success: false,
-                message:
-                    "No questions match the selected question types."
-            });
-
-        }
 
         // ------------------------------------
         // IMPORTANT
