@@ -5,6 +5,9 @@ const openAIService = require("../services/openAIService");
 const QuestionBank = require("../models/QuestionBank");
 const QuestionPaper = require("../models/QuestionPaper");
 
+const AIAssessmentAssignment =
+    require("../models/AIAssessmentAssignment");
+
 /*
 ====================================================
 Upload Chapter
@@ -25,7 +28,8 @@ exports.uploadChapter = async (req, res) => {
     totalMarks,
     duration,
     questionMode,
-    questionTypes
+    questionTypes,
+    assignedStudents
 } = req.body;
 
 let selectedQuestionTypes = [];
@@ -40,6 +44,34 @@ try {
 } catch (err) {
 
     selectedQuestionTypes = [];
+
+}
+
+let selectedStudents = [];
+
+try {
+
+    selectedStudents =
+        assignedStudents
+            ? JSON.parse(assignedStudents)
+            : [];
+
+} catch (err) {
+
+    selectedStudents = [];
+}
+
+if (!Array.isArray(selectedStudents) ||
+    selectedStudents.length === 0) {
+
+    return res.status(400).json({
+
+        success: false,
+
+        message:
+            "Please select at least one student."
+
+    });
 
 }
 
@@ -301,6 +333,7 @@ exports.getQuestionBank = async (req, res) => {
             });
 
         }
+        
 
         return res.json({
 
@@ -479,9 +512,10 @@ exports.generateQuestionPaper = async (req, res) => {
     try {
 
         const {
-            questionBankId,
-            paperTitle
-        } = req.body;
+    questionBankId,
+    paperTitle,
+    assignedStudents
+} = req.body;
 
         const questionBank =
             await QuestionBank.findById(questionBankId);
@@ -492,8 +526,44 @@ exports.generateQuestionPaper = async (req, res) => {
                 success: false,
                 message: "Question Bank not found."
             });
+            
 
         }
+
+        // ------------------------------------
+// PARSE SELECTED STUDENTS
+// ------------------------------------
+
+let selectedStudents = [];
+
+try {
+
+    selectedStudents =
+        assignedStudents
+            ? JSON.parse(assignedStudents)
+            : [];
+
+} catch (err) {
+
+    selectedStudents = [];
+
+}
+
+if (
+    !Array.isArray(selectedStudents) ||
+    selectedStudents.length === 0
+) {
+
+    return res.status(400).json({
+
+        success: false,
+
+        message:
+            "No students were selected for this question paper."
+
+    });
+
+}
 
         // ------------------------------------
         // PAPER CONFIGURATION
@@ -871,16 +941,67 @@ if (selectedTypes.length > 0) {
 
             });
 
+            // ------------------------------------
+// ASSIGN QUESTION PAPER TO SELECTED STUDENTS
+// ------------------------------------
+
+const assignments =
+    selectedStudents.map(student => ({
+
+        questionPaper:
+            paper._id,
+
+        questionBank:
+            questionBank._id,
+
+        teacher:
+            questionBank.generatedBy,
+
+        student:
+            student.userId,
+
+        studentName:
+            student.studentName,
+
+        studentId:
+            student.studentId,
+
+        className:
+            questionBank.className,
+
+        subject:
+            questionBank.subject,
+
+        chapter:
+            questionBank.chapter,
+
+        status:
+            "Assigned"
+
+    }));
+
+
+if (assignments.length > 0) {
+
+    await AIAssessmentAssignment.insertMany(
+        assignments
+    );
+
+}
+
         return res.json({
 
-            success: true,
+    success: true,
 
-            message:
-                "Question Paper generated successfully.",
+    message:
+        "Question Paper generated and assigned successfully.",
 
-            paper
+    paper,
 
-        });
+    assignedStudents:
+        selectedStudents
+
+});
 
     }
     catch (err) {
