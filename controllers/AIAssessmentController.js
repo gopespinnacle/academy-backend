@@ -553,17 +553,33 @@ exports.generateQuestionPaper = async (req, res) => {
         }
 
         // ------------------------------------
-        // FILTER QUESTION TYPES
-        // ------------------------------------
+// FILTER QUESTION TYPES
+// ------------------------------------
 
-        if (selectedTypes.length > 0) {
+if (selectedTypes.length > 0) {
 
-            availableQuestions =
-                availableQuestions.filter(q =>
-                    selectedTypes.includes(q.type)
-                );
+    const normalizeType = (value) =>
+        String(value || "")
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, " ");
 
-        }
+    const normalizedSelectedTypes =
+        selectedTypes.map(normalizeType);
+
+    availableQuestions =
+        availableQuestions.filter(q => {
+
+            const questionType =
+                normalizeType(q.type);
+
+            return normalizedSelectedTypes.includes(
+                questionType
+            );
+
+        });
+
+}
 
         if (!availableQuestions.length) {
 
