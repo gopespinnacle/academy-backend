@@ -123,6 +123,9 @@ const founderTimeClashRoutes =
 const authRoutes =
     require("./routes/authRoutes");
 
+    const livekitRoutes =
+    require("./routes/livekitRoutes");
+
 const annotationMaterialRoutes =
     require("./routes/annotationMaterialRoutes");
 
@@ -363,6 +366,11 @@ app.use(
 app.use(
     "/api/auth",
     authRoutes
+);
+
+app.use(
+    "/api/livekit",
+    livekitRoutes
 );
 
 app.use(
