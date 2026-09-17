@@ -18,6 +18,17 @@ const assessmentCurriculumController =
 
 
 // =========================================================
+// GET ALL SUPPORTED CURRICULUM TRACKS
+// =========================================================
+
+router.get(
+    "/tracks",
+    assessmentCurriculumController.getTracks
+);
+
+
+
+// =========================================================
 // GET ALL AVAILABLE GRADES
 // =========================================================
 
