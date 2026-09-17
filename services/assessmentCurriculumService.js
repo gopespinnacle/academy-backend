@@ -385,21 +385,23 @@ async function getChapters({
 
         const splitUpRegexes = normalizedSplitUps.map(value => {
 
-            const escaped = value.replace(
-                /[.*+?^${}()|[\]\\]/g,
-                "\\$&"
-            );
+    const parts = normalizeString(value).split(/[-–—]/);
 
-            const dashNormalized = escaped.replace(
-                /\\-|–|—/g,
-                "[-–—]"
-            );
+    const escapedParts = parts.map(part =>
+        part.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&"
+        )
+    );
 
-            return new RegExp(
-                `^${dashNormalized}$`,
-                "i"
-            );
-        });
+    const dashNormalized =
+        escapedParts.join("[-–—]");
+
+    return new RegExp(
+        `^${dashNormalized}$`,
+        "i"
+    );
+});
 
         filter.$or = [
             {
