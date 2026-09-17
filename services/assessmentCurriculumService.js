@@ -367,17 +367,50 @@ async function getChapters({
         subject
     });
 
+    /*
+    =========================================================
+    SPLIT-UP MATCHING
+
+    Treat these as equivalent:
+        -  Hyphen
+        –  En dash
+        —  Em dash
+
+    This prevents curriculum lookup failures caused by
+    different dash characters in browser/UI/database values.
+    =========================================================
+    */
+
     if (normalizedSplitUps.length > 0) {
+
+        const splitUpRegexes = normalizedSplitUps.map(value => {
+
+            const escaped = value.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&"
+            );
+
+            const dashNormalized = escaped.replace(
+                /\\-|–|—/g,
+                "[-–—]"
+            );
+
+            return new RegExp(
+                `^${dashNormalized}$`,
+                "i"
+            );
+        });
+
         filter.$or = [
             {
                 splitUp: {
-                    $in: normalizedSplitUps
+                    $in: splitUpRegexes
                 }
             },
             {
                 splitUp: {
                     $elemMatch: {
-                        $in: normalizedSplitUps
+                        $in: splitUpRegexes
                     }
                 }
             }
