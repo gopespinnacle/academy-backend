@@ -174,6 +174,9 @@ const admissionParentRoutes =
     const teacherAssessmentRoutes =
     require("./routes/teacherAssessmentRoutes");
 
+    const assessmentCurriculumRoutes =
+    require("./routes/assessmentCurriculumRoutes");
+
     const publicAssessmentRoutes =
     require("./routes/publicAssessmentRoutes");
 
@@ -393,6 +396,15 @@ app.use(
 app.use(
     "/api/teacher-assessment",
     teacherAssessmentRoutes
+);
+
+// =========================================================
+// PUBLIC ASSESSMENT CURRICULUM
+// =========================================================
+
+app.use(
+    "/api/assessment-curriculum",
+    assessmentCurriculumRoutes
 );
 
 // =========================================================
