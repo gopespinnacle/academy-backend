@@ -167,6 +167,15 @@ const admissionRoutes =
 
 const admissionParentRoutes =
     require("./routes/admissionParentRoutes");
+    
+    const founderAssessmentRoutes =
+    require("./routes/founderAssessmentRoutes");
+
+    const teacherAssessmentRoutes =
+    require("./routes/teacherAssessmentRoutes");
+
+    const publicAssessmentRoutes =
+    require("./routes/publicAssessmentRoutes");
 
 
 // =========================================================
@@ -358,6 +367,33 @@ app.use(
     })
 );
 
+// =========================================================
+// PUBLIC CHILD ASSESSMENT
+// =========================================================
+
+app.use(
+    "/api/public-assessment",
+    publicAssessmentRoutes
+);
+
+// =========================================================
+// FOUNDER — PUBLIC CHILD ASSESSMENT
+// =========================================================
+
+app.use(
+    "/api/founder-assessment",
+    founderAssessmentRoutes
+);
+
+
+// =========================================================
+// TEACHER — PUBLIC CHILD ASSESSMENT
+// =========================================================
+
+app.use(
+    "/api/teacher-assessment",
+    teacherAssessmentRoutes
+);
 
 // =========================================================
 // API ROUTES
@@ -367,6 +403,8 @@ app.use(
     "/api/auth",
     authRoutes
 );
+
+
 
 app.use(
     "/api/livekit",
