@@ -4,7 +4,7 @@ const User = require("../models/User");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const Conversation = require("../models/Conversation");
 const GPAMessage = require("../models/GPAMessage");
-const admin = require("../firebaseAdmin");
+const { messaging } = require("../firebaseAdmin");
 const FCMToken = require("../models/FCMToken");
 
 
@@ -56,9 +56,7 @@ async function sendFCMNotification(
 
 
         const response =
-            await admin
-                .messaging()
-                .sendEachForMulticast({
+            await messaging.sendEachForMulticast({
 
                     tokens: tokens,
 
