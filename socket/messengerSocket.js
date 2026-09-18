@@ -4,6 +4,8 @@ const User = require("../models/User");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const Conversation = require("../models/Conversation");
 const GPAMessage = require("../models/GPAMessage");
+const admin = require("../firebaseAdmin");
+const FCMToken = require("../models/FCMToken");
 
 
 // =========================================================
@@ -12,6 +14,145 @@ const GPAMessage = require("../models/GPAMessage");
 
 function messengerRoom(conversationId) {
     return `gpa-messenger:${conversationId}`;
+}
+
+// =========================================================
+// SEND FCM PUSH NOTIFICATION
+// =========================================================
+
+async function sendFCMNotification(
+    receiverId,
+    senderName,
+    message,
+    conversationId
+) {
+
+    try {
+
+        const tokenRecords =
+            await FCMToken.find({
+                user: receiverId
+            }).select("token");
+
+        if (!tokenRecords.length) {
+            console.log(
+                "No FCM tokens found for receiver:",
+                receiverId
+            );
+            return;
+        }
+
+
+        const tokens =
+            tokenRecords.map(
+                item => item.token
+            );
+
+
+        const notificationBody =
+            message.length > 120
+                ? message.substring(0, 117) + "..."
+                : message;
+
+
+        const response =
+            await admin
+                .messaging()
+                .sendEachForMulticast({
+
+                    tokens: tokens,
+
+                    notification: {
+                        title:
+                            `${senderName} - GPA Messenger`,
+                        body:
+                            notificationBody
+                    },
+
+                    data: {
+                        type:
+                            "gpa_messenger",
+
+                        conversationId:
+                            String(conversationId),
+
+                        url:
+                            "https://www.gopespinnacle.com/gpa-messenger.html"
+                    },
+
+                    webpush: {
+                        fcmOptions: {
+                            link:
+                                "https://www.gopespinnacle.com/gpa-messenger.html"
+                        }
+                    }
+
+                });
+
+
+        console.log(
+            `FCM notification sent: ${response.successCount} successful, ${response.failureCount} failed`
+        );
+
+
+        // -----------------------------------------------------
+        // REMOVE INVALID / EXPIRED TOKENS
+        // -----------------------------------------------------
+
+        const invalidTokens = [];
+
+
+        response.responses.forEach(
+            (result, index) => {
+
+                if (!result.success) {
+
+                    const errorCode =
+                        result.error?.code;
+
+                    if (
+                        errorCode ===
+                            "messaging/registration-token-not-registered" ||
+                        errorCode ===
+                            "messaging/invalid-registration-token"
+                    ) {
+
+                        invalidTokens.push(
+                            tokens[index]
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        if (invalidTokens.length) {
+
+            await FCMToken.deleteMany({
+                token: {
+                    $in: invalidTokens
+                }
+            });
+
+            console.log(
+                `Removed ${invalidTokens.length} invalid FCM token(s).`
+            );
+
+        }
+
+    }
+    catch (error) {
+
+        console.error(
+            "FCM NOTIFICATION ERROR:",
+            error
+        );
+
+    }
+
 }
 
 
@@ -778,6 +919,17 @@ messenger.to(
         message:
             populatedMessage
     }
+);
+
+// -----------------------------------------
+// SEND FIREBASE PUSH NOTIFICATION
+// -----------------------------------------
+
+await sendFCMNotification(
+    receiver._id,
+    sender.name,
+    message.trim(),
+    conversationId
 );
 
 

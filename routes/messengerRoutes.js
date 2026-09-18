@@ -16,12 +16,96 @@ const Conversation =
 const GPAMessage =
     require("../models/GPAMessage");
 
+    const FCMToken = require("../models/FCMToken");
+
 const messengerAuth =
     require("../middleware/messengerAuth");
 
-// =========================================================
+const FCMToken = require("../models/FCMToken");
+
+const messengerAuth =
+    require("../middleware/messengerAuth");
+
+
+// ==========================================
+// REGISTER FCM TOKEN
+// ==========================================
+
+router.post(
+    "/fcm-token",
+    messengerAuth,
+    async (req, res) => {
+
+        try {
+
+            const {
+                token,
+                platform,
+                deviceId
+            } = req.body;
+
+            if (!token) {
+                return res.status(400).json({
+                    success: false,
+                    message: "FCM token is required."
+                });
+            }
+
+            if (!["web", "android"].includes(platform)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid platform."
+                });
+            }
+
+            const existingToken =
+                await FCMToken.findOne({ token });
+
+            if (existingToken) {
+
+                existingToken.user = req.user._id;
+                existingToken.platform = platform;
+                existingToken.deviceId = deviceId || "";
+                existingToken.lastSeenAt = new Date();
+
+                await existingToken.save();
+
+            } else {
+
+                await FCMToken.create({
+                    user: req.user._id,
+                    token,
+                    platform,
+                    deviceId: deviceId || "",
+                    lastSeenAt: new Date()
+                });
+
+            }
+
+            return res.json({
+                success: true,
+                message: "FCM token registered successfully."
+            });
+
+        } catch (error) {
+
+            console.error(
+                "REGISTER FCM TOKEN ERROR:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to register FCM token."
+            });
+        }
+    }
+);
+
+
+// ==========================================
 // GET CURRENT MESSENGER USER
-// =========================================================
+// ==========================================
 
 router.get(
     "/me",
