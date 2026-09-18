@@ -22,9 +22,6 @@ const messengerAuth =
     require("../middleware/messengerAuth");
 
 
-const messengerAuth =
-    require("../middleware/messengerAuth");
-
 
 // ==========================================
 // REGISTER FCM TOKEN
