@@ -21,7 +21,6 @@ const GPAMessage =
 const messengerAuth =
     require("../middleware/messengerAuth");
 
-const FCMToken = require("../models/FCMToken");
 
 const messengerAuth =
     require("../middleware/messengerAuth");
