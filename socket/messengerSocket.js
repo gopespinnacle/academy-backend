@@ -367,6 +367,26 @@ if (user.role === "admin") {
 // -------------------------------------------------------
 
 if (user.role === "teacher") {
+    // -------------------------------------------------
+    // ADMIN ↔ TEACHER PERSONAL CONVERSATION
+    // -------------------------------------------------
+
+    const hasAdmin =
+        participantUsers.some(
+            participant =>
+                participant.role ===
+                "admin"
+        );
+
+    if (
+        hasAdmin &&
+        conversation.conversationType === "direct" &&
+        participantUsers.length === 2
+    ) {
+
+        return true;
+
+    }
 
     // -------------------------------------------------
     // FOUNDER ↔ TEACHER PERSONAL CONVERSATION
@@ -459,6 +479,27 @@ if (user.role === "teacher") {
 // -------------------------------------------------------
 
 if (user.role === "student") {
+
+        // -------------------------------------------------
+    // ADMIN ↔ STUDENT PERSONAL CONVERSATION
+    // -------------------------------------------------
+
+    const hasAdmin =
+        participantUsers.some(
+            participant =>
+                participant.role ===
+                "admin"
+        );
+
+    if (
+        hasAdmin &&
+        conversation.conversationType === "direct" &&
+        participantUsers.length === 2
+    ) {
+
+        return true;
+
+    }
 
     // -------------------------------------------------
     // FOUNDER ↔ STUDENT PERSONAL CONVERSATION
