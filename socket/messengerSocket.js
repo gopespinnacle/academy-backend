@@ -360,30 +360,7 @@ if (user.role === "admin") {
     return true;
 }
 
-  // -------------------------------------------------------
-// ADMIN
-// -------------------------------------------------------
-
-if (user.role === "admin") {
-
-    // Admin can access ONLY direct 1-to-1 conversations
-    if (
-        conversation.conversationType !== "direct" ||
-        conversation.participants.length !== 2
-    ) {
-        return false;
-    }
-
-    // Admin can chat ONLY with Teacher or Student
-    if (
-        otherUser.role !== "teacher" &&
-        otherUser.role !== "student"
-    ) {
-        return false;
-    }
-
-    return true;
-}
+  
 
     // -------------------------------------------------------
 // TEACHER
