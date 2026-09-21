@@ -65,6 +65,254 @@ const { uploadFile } = require("../config/s3");
 const { protect, authorize } = require("../middleware/authMiddleware");
 
 
+/* =========================================================
+   CREATE ADMIN
+   FOUNDER ONLY
+   ========================================================= */
+
+router.post(
+    "/create-admin",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const {
+                name,
+                mobile,
+                address,
+                email
+            } = req.body;
+
+
+            // ================= VALIDATION =================
+
+            if (!name || !name.trim()) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Admin name is required."
+                });
+
+            }
+
+            if (!mobile || !mobile.trim()) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Mobile number is required."
+                });
+
+            }
+
+            if (!address || !address.trim()) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Address is required."
+                });
+
+            }
+
+            if (!email || !email.trim()) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Email ID is required."
+                });
+
+            }
+
+
+            // ================= CONTACT EMAIL CHECK =================
+
+            const existingContactEmail =
+                await User.findOne({
+                    adminEmail: email.trim().toLowerCase()
+                });
+
+            if (existingContactEmail) {
+
+                return res.status(400).json({
+                    success: false,
+                    message: "This Admin email ID is already registered."
+                });
+
+            }
+
+
+            // ================= GENERATE ADMIN ID =================
+
+            const adminCounter =
+                await Counter.findByIdAndUpdate(
+                    "admin",
+                    {
+                        $inc: {
+                            sequenceValue: 1
+                        }
+                    },
+                    {
+                        new: true,
+                        upsert: true
+                    }
+                );
+
+
+            const adminId =
+                `GPA-Admin${adminCounter.sequenceValue}`;
+
+
+            // ================= GENERATE LOGIN ID =================
+
+            let baseName =
+                name
+                    .trim()
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]/g, "");
+
+
+            if (!baseName) {
+
+                baseName = "admin";
+
+            }
+
+
+            let loginEmail =
+                `${baseName}@gpaadmin.com`;
+
+
+            // ================= CHECK LOGIN ID =================
+
+            let loginExists =
+                await User.findOne({
+                    email: loginEmail
+                });
+
+
+            let loginNumber = 2;
+
+
+            while (loginExists) {
+
+                loginEmail =
+                    `${baseName}${loginNumber}@gpaadmin.com`;
+
+                loginExists =
+                    await User.findOne({
+                        email: loginEmail
+                    });
+
+                loginNumber++;
+
+            }
+
+
+            // ================= FIXED INITIAL PASSWORD =================
+
+            const initialPassword =
+                "GPAadmin@1";
+
+
+            // ================= CREATE ADMIN =================
+
+            const admin =
+                new User({
+
+                    name:
+                        name.trim(),
+
+                    email:
+                        loginEmail,
+
+                    password:
+                        initialPassword,
+
+                    role:
+                        "admin",
+
+                    adminId:
+                        adminId,
+
+                    adminEmail:
+                        email.trim().toLowerCase(),
+
+                    mobile:
+                        mobile.trim(),
+
+                    address:
+                        address.trim()
+
+                });
+
+
+            await admin.save();
+
+
+            // ================= RESPONSE =================
+
+            return res.status(201).json({
+
+                success: true,
+
+                message:
+                    "Admin created successfully.",
+
+                admin: {
+
+                    adminId:
+                        admin.adminId,
+
+                    name:
+                        admin.name,
+
+                    mobile:
+                        admin.mobile,
+
+                    address:
+                        admin.address,
+
+                    email:
+                        admin.adminEmail,
+
+                    loginId:
+                        admin.email,
+
+                    password:
+                        initialPassword,
+
+                    role:
+                        admin.role
+
+                }
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "CREATE ADMIN ERROR:",
+                error
+            );
+
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Error creating Admin."
+
+            });
+
+        }
+
+    }
+);
+
+
 /* ================= ADD TEACHER ================= */
 
 router.post("/add-teacher", async (req, res) => {

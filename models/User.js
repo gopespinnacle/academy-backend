@@ -19,11 +19,11 @@ const userSchema = new mongoose.Schema({
         required: true
     },
 
-    role: {
-        type: String,
-        enum: ["founder", "teacher", "student", "parent"],
-        required: true
-    },
+   role: {
+    type: String,
+    enum: ["founder", "teacher", "student", "parent", "admin"],
+    required: true
+},
 
   grade: String,
 board: String,
@@ -63,6 +63,24 @@ teacherId: {
     type: String,
     unique: true,
     sparse: true
+},
+
+// ================= ADMIN ID SYSTEM =================
+
+adminId: {
+    type: String,
+    unique: true,
+    sparse: true
+},
+
+adminEmail: {
+    type: String,
+    default: ""
+},
+
+address: {
+    type: String,
+    default: ""
 },
 
 monthlyFee: {
