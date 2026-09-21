@@ -1016,6 +1016,21 @@ if (
 
         }
 
+        // ---------------------------------------------
+// ADMIN
+// ---------------------------------------------
+
+if (
+    receiver.role ===
+    "admin"
+) {
+
+    // Admin is allowed in a direct
+    // Admin ↔ Teacher conversation.
+    continue;
+
+}
+
 
         // ---------------------------------------------
         // STUDENT
@@ -1100,6 +1115,20 @@ if (
         ) {
 
             // Founder is allowed.
+            continue;
+
+        }
+
+                // ---------------------------------------------
+        // ADMIN
+        // ---------------------------------------------
+
+        if (
+            receiver.role ===
+            "admin"
+        ) {
+
+            // Admin is allowed.
             continue;
 
         }
