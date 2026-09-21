@@ -1793,24 +1793,28 @@ socket.on(
 
         try {
 
-            const {
-                conversationId
-            } = data || {};
+           const {
+    conversationId,
+    receiverId
+} = data || {};
 
 
-            if (!conversationId) {
+            if (
+    !conversationId ||
+    !receiverId
+) {
 
-                socket.emit(
-                    "voiceCallError",
-                    {
-                        message:
-                            "Conversation is required."
-                    }
-                );
+    socket.emit(
+        "voiceCallError",
+        {
+            message:
+                "Conversation and receiver are required."
+        }
+    );
 
-                return;
+    return;
 
-            }
+}
 
 
             const conversation =
@@ -1887,96 +1891,115 @@ socket.on(
 
 
             // -------------------------------------------------
-            // GET OTHER PARTICIPANTS
+// GET SELECTED RECEIVER
+// -------------------------------------------------
+
+const receiver =
+    await User.findById(
+        receiverId
+    )
+    .select(
+        "_id name role"
+    );
+
+
+if (!receiver) {
+
+    socket.emit(
+        "voiceCallError",
+        {
+            message:
+                "Receiver not found."
+        }
+    );
+
+    return;
+
+}
+
+// -------------------------------------------------
+// RECEIVER MUST BE IN THIS CONVERSATION
+// -------------------------------------------------
+
+const receiverInConversation =
+    conversation.participants.some(
+        participant =>
+            String(
+                participant
+            ) ===
+            String(
+                receiver._id
+            )
+    );
+
+
+if (!receiverInConversation) {
+
+    socket.emit(
+        "voiceCallError",
+        {
+            message:
+                "This receiver is not part of the conversation."
+        }
+    );
+
+    return;
+
+}
+
+
             // -------------------------------------------------
+// ONLY TEACHER / STUDENT CAN RECEIVE
+// -------------------------------------------------
 
-            const receiverIds =
-                conversation.participants.filter(
-                    participant =>
-                        String(
-                            participant
-                        ) !==
-                        String(
-                            caller._id
-                        )
-                );
+if (
+    receiver.role !== "teacher" &&
+    receiver.role !== "student"
+) {
 
+    socket.emit(
+        "voiceCallError",
+        {
+            message:
+                "Voice calls are only available between Founder/Admin and Teacher/Student."
+        }
+    );
 
-            const receivers =
-                await User.find({
-                    _id: {
-                        $in: receiverIds
-                    }
-                })
-                .select(
-                    "_id name role"
-                );
+    return;
+
+}
 
 
             // -------------------------------------------------
-            // ONLY TEACHER / STUDENT CAN RECEIVE
-            // -------------------------------------------------
+// SEND INCOMING CALL TO SELECTED RECEIVER ONLY
+// -------------------------------------------------
 
-            const invalidReceiver =
-                receivers.some(
-                    receiver =>
-                        receiver.role !== "teacher" &&
-                        receiver.role !== "student"
-                );
+messenger
+    .to(
+        `gpa-user:${receiver._id}`
+    )
+    .emit(
+        "incomingVoiceCall",
+        {
 
+            conversationId:
+                String(
+                    conversation._id
+                ),
 
-            if (invalidReceiver) {
+            callerId:
+                String(
+                    caller._id
+                ),
 
-                socket.emit(
-                    "voiceCallError",
-                    {
-                        message:
-                            "Voice calls are only available between Founder/Admin and Teacher/Student."
-                    }
-                );
+            callerName:
+                caller.name,
 
-                return;
+            callerRole:
+                caller.role
 
-            }
-
-
-            // -------------------------------------------------
-            // SEND INCOMING CALL TO EACH RECEIVER
-            // -------------------------------------------------
-
-            for (
-                const receiver
-                of receivers
-            ) {
-
-                messenger
-                    .to(
-                        `gpa-user:${receiver._id}`
-                    )
-                    .emit(
-                        "incomingVoiceCall",
-                        {
-
-                            conversationId:
-                                String(
-                                    conversation._id
-                                ),
-
-                            callerId:
-                                String(
-                                    caller._id
-                                ),
-
-                            callerName:
-                                caller.name,
-
-                            callerRole:
-                                caller.role
-
-                        }
-                    );
-
-            }
+        }
+    );
 
 
             // -------------------------------------------------
