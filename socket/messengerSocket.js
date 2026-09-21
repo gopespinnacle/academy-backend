@@ -329,96 +329,184 @@ async function canAccessConversation(
     // TEACHER
     // -------------------------------------------------------
 
-    if (user.role === "teacher") {
+    // -------------------------------------------------------
+// TEACHER
+// -------------------------------------------------------
 
-        // Find all Students in this conversation.
-        // Founder is automatically ignored.
+if (user.role === "teacher") {
 
-        const students =
-            participantUsers.filter(
-                participant =>
-                    participant.role ===
-                    "student"
+    // -------------------------------------------------
+    // FOUNDER ↔ TEACHER PERSONAL CONVERSATION
+    // -------------------------------------------------
+
+    const hasFounder =
+        participantUsers.some(
+            participant =>
+                participant.role ===
+                "founder"
+        );
+
+
+    const hasStudent =
+        participantUsers.some(
+            participant =>
+                participant.role ===
+                "student"
+        );
+
+
+    // If this conversation contains Founder
+    // and NO Student, it is a personal
+    // Founder ↔ Teacher conversation.
+    if (
+        hasFounder &&
+        !hasStudent &&
+        participantUsers.length === 2
+    ) {
+
+        return true;
+
+    }
+
+
+    // -------------------------------------------------
+    // NORMAL TEACHER ↔ STUDENT / GROUP ACCESS
+    // -------------------------------------------------
+
+    const students =
+        participantUsers.filter(
+            participant =>
+                participant.role ===
+                "student"
+        );
+
+
+    if (!students.length) {
+
+        return false;
+
+    }
+
+
+    // At least one student must be mapped
+    // to this teacher.
+
+    for (
+        const student
+        of students
+    ) {
+
+        const mapped =
+            await areTeacherAndStudentMapped(
+                user._id,
+                student._id
             );
 
 
-        if (!students.length) {
-            return false;
-        }
+        if (mapped) {
 
-
-        // At least one student must be mapped
-        // to this teacher.
-
-        for (
-            const student
-            of students
-        ) {
-
-            const mapped =
-                await areTeacherAndStudentMapped(
-                    user._id,
-                    student._id
-                );
-
-
-            if (mapped) {
-                return true;
-            }
+            return true;
 
         }
 
-
-        return false;
     }
+
+
+    return false;
+
+}
 
 
     // -------------------------------------------------------
     // STUDENT
     // -------------------------------------------------------
 
-    if (user.role === "student") {
+   // -------------------------------------------------------
+// STUDENT
+// -------------------------------------------------------
 
-        // Find all Teachers in this conversation.
-        // Founder is automatically ignored.
+if (user.role === "student") {
 
-        const teachers =
-            participantUsers.filter(
-                participant =>
-                    participant.role ===
-                    "teacher"
+    // -------------------------------------------------
+    // FOUNDER ↔ STUDENT PERSONAL CONVERSATION
+    // -------------------------------------------------
+
+    const hasFounder =
+        participantUsers.some(
+            participant =>
+                participant.role ===
+                "founder"
+        );
+
+
+    const hasTeacher =
+        participantUsers.some(
+            participant =>
+                participant.role ===
+                "teacher"
+        );
+
+
+    // If this conversation contains Founder
+    // and NO Teacher, it is a personal
+    // Founder ↔ Student conversation.
+    if (
+        hasFounder &&
+        !hasTeacher &&
+        participantUsers.length === 2
+    ) {
+
+        return true;
+
+    }
+
+
+    // -------------------------------------------------
+    // NORMAL STUDENT ↔ TEACHER / GROUP ACCESS
+    // -------------------------------------------------
+
+    const teachers =
+        participantUsers.filter(
+            participant =>
+                participant.role ===
+                "teacher"
+        );
+
+
+    if (!teachers.length) {
+
+        return false;
+
+    }
+
+
+    // At least one teacher must be mapped
+    // to this student.
+
+    for (
+        const teacher
+        of teachers
+    ) {
+
+        const mapped =
+            await areTeacherAndStudentMapped(
+                teacher._id,
+                user._id
             );
 
 
-        if (!teachers.length) {
-            return false;
-        }
+        if (mapped) {
 
-
-        // At least one teacher must be mapped
-        // to this student.
-
-        for (
-            const teacher
-            of teachers
-        ) {
-
-            const mapped =
-                await areTeacherAndStudentMapped(
-                    teacher._id,
-                    user._id
-                );
-
-
-            if (mapped) {
-                return true;
-            }
+            return true;
 
         }
 
-
-        return false;
     }
+
+
+    return false;
+
+}
 
 
     return false;
@@ -819,141 +907,257 @@ socket.on(
 
 
             // -----------------------------------------
-            // TEACHER SECURITY
-            // -----------------------------------------
+// TEACHER SECURITY
+// -----------------------------------------
 
-            if (
-                sender.role ===
-                "teacher"
-            ) {
+if (
+    sender.role ===
+    "teacher"
+) {
 
-                // A Teacher may message only
-                // mapped Students.
+    // -------------------------------------------------
+    // Founder is allowed in a personal conversation
+    // -------------------------------------------------
 
-                const invalidReceiver =
-                    receivers.some(
-                        receiver =>
-                            receiver.role !==
-                            "student"
-                    );
+    const hasFounderReceiver =
+        receivers.some(
+            receiver =>
+                receiver.role ===
+                "founder"
+        );
 
 
-                if (
-                    invalidReceiver
-                ) {
+    // If Founder is the receiver,
+    // allow Founder ↔ Teacher personal chat.
+    if (hasFounderReceiver) {
 
-                    socket.emit(
-                        "messengerError",
-                        {
-                            message:
-                                "Teachers can only message mapped students."
-                        }
-                    );
+        // Personal Founder ↔ Teacher conversation
+        // should contain only Founder + Teacher.
+        if (receivers.length !== 1) {
 
-                    return;
+            socket.emit(
+                "messengerError",
+                {
+                    message:
+                        "Invalid Founder personal conversation."
                 }
+            );
+
+            return;
+
+        }
 
 
-                // Verify every student receiver
-                // is mapped to this teacher.
+        if (
+            receivers[0].role !==
+            "founder"
+        ) {
 
-                for (
-                    const receiver
-                    of receivers
-                ) {
+            socket.emit(
+                "messengerError",
+                {
+                    message:
+                        "Invalid Founder receiver."
+                }
+            );
 
-                    const mapped =
-                        await areTeacherAndStudentMapped(
-                            sender._id,
-                            receiver._id
-                        );
+            return;
+
+        }
+
+    }
+    else {
+
+        // -------------------------------------------------
+        // NORMAL TEACHER → STUDENT SECURITY
+        // -------------------------------------------------
+
+        const invalidReceiver =
+            receivers.some(
+                receiver =>
+                    receiver.role !==
+                    "student"
+            );
 
 
-                    if (!mapped) {
+        if (
+            invalidReceiver
+        ) {
 
-                        socket.emit(
-                            "messengerError",
-                            {
-                                message:
-                                    "This student is not mapped to you."
-                            }
-                        );
+            socket.emit(
+                "messengerError",
+                {
+                    message:
+                        "Teachers can only message mapped students."
+                }
+            );
 
-                        return;
+            return;
+
+        }
+
+
+        // Verify every student receiver
+        // is mapped to this teacher.
+
+        for (
+            const receiver
+            of receivers
+        ) {
+
+            const mapped =
+                await areTeacherAndStudentMapped(
+                    sender._id,
+                    receiver._id
+                );
+
+
+            if (!mapped) {
+
+                socket.emit(
+                    "messengerError",
+                    {
+                        message:
+                            "This student is not mapped to you."
                     }
+                );
 
-                }
+                return;
 
             }
 
+        }
+
+    }
+
+}
+
 
             // -----------------------------------------
-            // STUDENT SECURITY
-            // -----------------------------------------
+// STUDENT SECURITY
+// -----------------------------------------
 
-            if (
-                sender.role ===
-                "student"
-            ) {
+if (
+    sender.role ===
+    "student"
+) {
 
-                // A Student may message only
-                // mapped Teachers.
+    // -------------------------------------------------
+    // Founder is allowed in a personal conversation
+    // -------------------------------------------------
 
-                const invalidReceiver =
-                    receivers.some(
-                        receiver =>
-                            receiver.role !==
-                            "teacher"
-                    );
+    const hasFounderReceiver =
+        receivers.some(
+            receiver =>
+                receiver.role ===
+                "founder"
+        );
 
 
-                if (
-                    invalidReceiver
-                ) {
+    // If Founder is the receiver,
+    // allow Founder ↔ Student personal chat.
+    if (hasFounderReceiver) {
 
-                    socket.emit(
-                        "messengerError",
-                        {
-                            message:
-                                "Students can only message mapped teachers."
-                        }
-                    );
+        // Personal Founder ↔ Student conversation
+        // should contain only Founder + Student.
+        if (receivers.length !== 1) {
 
-                    return;
+            socket.emit(
+                "messengerError",
+                {
+                    message:
+                        "Invalid Founder personal conversation."
                 }
+            );
+
+            return;
+
+        }
 
 
-                // Verify every teacher receiver
-                // is mapped to this student.
+        if (
+            receivers[0].role !==
+            "founder"
+        ) {
 
-                for (
-                    const receiver
-                    of receivers
-                ) {
+            socket.emit(
+                "messengerError",
+                {
+                    message:
+                        "Invalid Founder receiver."
+                }
+            );
 
-                    const mapped =
-                        await areTeacherAndStudentMapped(
-                            receiver._id,
-                            sender._id
-                        );
+            return;
+
+        }
+
+    }
+    else {
+
+        // -------------------------------------------------
+        // NORMAL STUDENT → TEACHER SECURITY
+        // -------------------------------------------------
+
+        const invalidReceiver =
+            receivers.some(
+                receiver =>
+                    receiver.role !==
+                    "teacher"
+            );
 
 
-                    if (!mapped) {
+        if (
+            invalidReceiver
+        ) {
 
-                        socket.emit(
-                            "messengerError",
-                            {
-                                message:
-                                    "This teacher is not mapped to you."
-                            }
-                        );
+            socket.emit(
+                "messengerError",
+                {
+                    message:
+                        "Students can only message mapped teachers."
+                }
+            );
 
-                        return;
+            return;
+
+        }
+
+
+        // Verify every teacher receiver
+        // is mapped to this student.
+
+        for (
+            const receiver
+            of receivers
+        ) {
+
+            const mapped =
+                await areTeacherAndStudentMapped(
+                    receiver._id,
+                    sender._id
+                );
+
+
+            if (!mapped) {
+
+                socket.emit(
+                    "messengerError",
+                    {
+                        message:
+                            "This teacher is not mapped to you."
                     }
+                );
 
-                }
+                return;
 
             }
+
+        }
+
+    }
+
+}
 
 
             // -----------------------------------------

@@ -396,19 +396,38 @@ router.get(
                 );
 
 
-                const contacts =
-                    Array.from(
-                        studentMap.values()
-                    );
+                // -------------------------------------------------
+// ADD FOUNDER AS A PERSONAL CHAT CONTACT
+// -------------------------------------------------
+
+const founders =
+    await User.find({
+        role: "founder"
+    })
+    .select(
+        "_id name email role studentId teacherId"
+    )
+    .sort({
+        name: 1
+    });
 
 
-                return res.json({
+const contacts =
+    [
+        ...founders,
+        ...Array.from(
+            studentMap.values()
+        )
+    ];
 
-                    success: true,
 
-                    contacts
+return res.json({
 
-                });
+    success: true,
+
+    contacts
+
+});
 
             }
 
@@ -483,19 +502,38 @@ router.get(
                 );
 
 
-                const contacts =
-                    Array.from(
-                        teacherMap.values()
-                    );
+                // -------------------------------------------------
+// ADD FOUNDER AS A PERSONAL CHAT CONTACT
+// -------------------------------------------------
+
+const founders =
+    await User.find({
+        role: "founder"
+    })
+    .select(
+        "_id name email role studentId teacherId"
+    )
+    .sort({
+        name: 1
+    });
 
 
-                return res.json({
+const contacts =
+    [
+        ...founders,
+        ...Array.from(
+            teacherMap.values()
+        )
+    ];
 
-                    success: true,
 
-                    contacts
+return res.json({
 
-                });
+    success: true,
+
+    contacts
+
+});
 
             }
 
