@@ -20,8 +20,12 @@ function messengerRoom(conversationId) {
 // SEND FCM PUSH NOTIFICATION
 // =========================================================
 
+// =========================================================
+// SEND FCM PUSH NOTIFICATION
+// =========================================================
+
 async function sendFCMNotification(
-    receiverId,
+    receiverIds,
     senderName,
     message,
     conversationId
@@ -29,17 +33,57 @@ async function sendFCMNotification(
 
     try {
 
+        // -----------------------------------------------------
+        // SUPPORT BOTH:
+        // receiverIds = single ID
+        // receiverIds = array of IDs
+        // -----------------------------------------------------
+
+        if (!Array.isArray(receiverIds)) {
+
+            receiverIds = [
+                receiverIds
+            ];
+
+        }
+
+
+        receiverIds =
+            receiverIds.filter(
+                id => !!id
+            );
+
+
+        if (!receiverIds.length) {
+
+            return;
+
+        }
+
+
+        // -----------------------------------------------------
+        // GET ALL TOKENS FOR ALL RECEIVERS
+        // -----------------------------------------------------
+
         const tokenRecords =
             await FCMToken.find({
-                user: receiverId
+
+                user: {
+                    $in: receiverIds
+                }
+
             }).select("token");
 
+
         if (!tokenRecords.length) {
+
             console.log(
-                "No FCM tokens found for receiver:",
-                receiverId
+                "No FCM tokens found for receivers:",
+                receiverIds
             );
+
             return;
+
         }
 
 
@@ -49,43 +93,62 @@ async function sendFCMNotification(
             );
 
 
+        // -----------------------------------------------------
+        // NOTIFICATION BODY
+        // -----------------------------------------------------
+
         const notificationBody =
             message.length > 120
                 ? message.substring(0, 117) + "..."
                 : message;
 
 
+        // -----------------------------------------------------
+        // SEND TO ALL RECEIVERS
+        // -----------------------------------------------------
+
         const response =
             await messaging.sendEachForMulticast({
 
-                    tokens: tokens,
+                tokens: tokens,
 
-                    notification: {
-                        title:
-                            `${senderName} - GPA Messenger`,
-                        body:
-                            notificationBody
-                    },
+                notification: {
 
-                    data: {
-                        type:
-                            "gpa_messenger",
+                    title:
+                        `${senderName} - GPA Messenger`,
 
-                        conversationId:
-                            String(conversationId),
+                    body:
+                        notificationBody
 
-                        url:
+                },
+
+                data: {
+
+                    type:
+                        "gpa_messenger",
+
+                    conversationId:
+                        String(
+                            conversationId
+                        ),
+
+                    url:
+                        "https://www.gopespinnacle.com/gpa-messenger.html"
+
+                },
+
+                webpush: {
+
+                    fcmOptions: {
+
+                        link:
                             "https://www.gopespinnacle.com/gpa-messenger.html"
-                    },
 
-                    webpush: {
-                        fcmOptions: {
-                            link:
-                                "https://www.gopespinnacle.com/gpa-messenger.html"
-                        }
                     }
 
-                });
+                }
+
+            });
 
 
         console.log(
@@ -108,6 +171,7 @@ async function sendFCMNotification(
                     const errorCode =
                         result.error?.code;
 
+
                     if (
                         errorCode ===
                             "messaging/registration-token-not-registered" ||
@@ -127,13 +191,19 @@ async function sendFCMNotification(
         );
 
 
-        if (invalidTokens.length) {
+        if (
+            invalidTokens.length
+        ) {
 
             await FCMToken.deleteMany({
+
                 token: {
-                    $in: invalidTokens
+                    $in:
+                        invalidTokens
                 }
+
             });
+
 
             console.log(
                 `Removed ${invalidTokens.length} invalid FCM token(s).`
@@ -194,6 +264,10 @@ async function areTeacherAndStudentMapped(
 // CHECK CONVERSATION ACCESS
 // =========================================================
 
+// =========================================================
+// CHECK CONVERSATION ACCESS
+// =========================================================
+
 async function canAccessConversation(
     user,
     conversation
@@ -231,29 +305,22 @@ async function canAccessConversation(
 
 
     // -------------------------------------------------------
-    // FIND OTHER PARTICIPANT
+    // LOAD ALL PARTICIPANTS
     // -------------------------------------------------------
 
-    const otherParticipantId =
-        conversation.participants.find(
-            participant =>
-                String(participant) !==
-                String(user._id)
+    const participantUsers =
+        await User.find({
+            _id: {
+                $in:
+                    conversation.participants
+            }
+        })
+        .select(
+            "_id name role studentId teacherId"
         );
 
 
-    if (!otherParticipantId) {
-        return false;
-    }
-
-
-    const otherUser =
-        await User.findById(
-            otherParticipantId
-        );
-
-
-    if (!otherUser) {
+    if (!participantUsers.length) {
         return false;
     }
 
@@ -264,14 +331,45 @@ async function canAccessConversation(
 
     if (user.role === "teacher") {
 
-        if (otherUser.role !== "student") {
+        // Find all Students in this conversation.
+        // Founder is automatically ignored.
+
+        const students =
+            participantUsers.filter(
+                participant =>
+                    participant.role ===
+                    "student"
+            );
+
+
+        if (!students.length) {
             return false;
         }
 
-        return await areTeacherAndStudentMapped(
-            user._id,
-            otherUser._id
-        );
+
+        // At least one student must be mapped
+        // to this teacher.
+
+        for (
+            const student
+            of students
+        ) {
+
+            const mapped =
+                await areTeacherAndStudentMapped(
+                    user._id,
+                    student._id
+                );
+
+
+            if (mapped) {
+                return true;
+            }
+
+        }
+
+
+        return false;
     }
 
 
@@ -281,14 +379,45 @@ async function canAccessConversation(
 
     if (user.role === "student") {
 
-        if (otherUser.role !== "teacher") {
+        // Find all Teachers in this conversation.
+        // Founder is automatically ignored.
+
+        const teachers =
+            participantUsers.filter(
+                participant =>
+                    participant.role ===
+                    "teacher"
+            );
+
+
+        if (!teachers.length) {
             return false;
         }
 
-        return await areTeacherAndStudentMapped(
-            otherUser._id,
-            user._id
-        );
+
+        // At least one teacher must be mapped
+        // to this student.
+
+        for (
+            const teacher
+            of teachers
+        ) {
+
+            const mapped =
+                await areTeacherAndStudentMapped(
+                    teacher._id,
+                    user._id
+                );
+
+
+            if (mapped) {
+                return true;
+            }
+
+        }
+
+
+        return false;
     }
 
 
@@ -537,541 +666,734 @@ function registerMessengerSocket(io) {
 
 
         // =================================================
-        // SEND TEXT MESSAGE
-        // =================================================
+// SEND TEXT MESSAGE
+// =================================================
 
-        socket.on(
-            "sendMessengerMessage",
-            async (data) => {
+socket.on(
+    "sendMessengerMessage",
+    async (data) => {
 
-                try {
+        try {
 
-                    const {
-                        conversationId,
-                        message
-                    } = data || {};
+            const {
+                conversationId,
+                message
+            } = data || {};
 
 
-                    // -----------------------------------------
-                    // BASIC VALIDATION
-                    // -----------------------------------------
+            // -----------------------------------------
+            // BASIC VALIDATION
+            // -----------------------------------------
 
-                    if (
-                        !conversationId ||
-                        typeof message !== "string" ||
-                        !message.trim()
-                    ) {
+            if (
+                !conversationId ||
+                typeof message !== "string" ||
+                !message.trim()
+            ) {
 
-                        socket.emit(
-                            "messengerError",
-                            {
-                                message:
-                                    "Message cannot be empty."
-                            }
-                        );
+                socket.emit(
+                    "messengerError",
+                    {
+                        message:
+                            "Message cannot be empty."
+                    }
+                );
 
-                        return;
+                return;
+            }
+
+
+            const conversation =
+                await Conversation.findById(
+                    conversationId
+                );
+
+
+            if (!conversation) {
+
+                socket.emit(
+                    "messengerError",
+                    {
+                        message:
+                            "Conversation not found."
+                    }
+                );
+
+                return;
+            }
+
+
+            // -----------------------------------------
+            // ACCESS CHECK
+            // -----------------------------------------
+
+            const allowed =
+                await canAccessConversation(
+                    socket.gpaUser,
+                    conversation
+                );
+
+
+            if (!allowed) {
+
+                socket.emit(
+                    "messengerError",
+                    {
+                        message:
+                            "You are not allowed to send messages in this conversation."
+                    }
+                );
+
+                return;
+            }
+
+
+            const sender =
+                socket.gpaUser;
+
+
+            // -----------------------------------------
+            // GET ALL OTHER PARTICIPANTS
+            // -----------------------------------------
+
+            const receiverIds =
+                conversation.participants
+                    .filter(
+                        participant =>
+                            String(
+                                participant
+                            ) !==
+                            String(
+                                sender._id
+                            )
+                    );
+
+
+            if (!receiverIds.length) {
+
+                socket.emit(
+                    "messengerError",
+                    {
+                        message:
+                            "No receiver found for this conversation."
+                    }
+                );
+
+                return;
+            }
+
+
+            // -----------------------------------------
+            // LOAD ALL RECEIVERS
+            // -----------------------------------------
+
+            const receivers =
+                await User.find({
+
+                    _id: {
+                        $in:
+                            receiverIds
                     }
 
+                })
+                .select(
+                    "_id name email role studentId teacherId"
+                );
 
-                    const conversation =
-                        await Conversation.findById(
-                            conversationId
-                        );
 
+            if (
+                receivers.length !==
+                receiverIds.length
+            ) {
 
-                    if (!conversation) {
-
-                        socket.emit(
-                            "messengerError",
-                            {
-                                message:
-                                    "Conversation not found."
-                            }
-                        );
-
-                        return;
+                socket.emit(
+                    "messengerError",
+                    {
+                        message:
+                            "One or more conversation participants could not be found."
                     }
+                );
+
+                return;
+            }
 
 
-                    // -----------------------------------------
-                    // ACCESS CHECK
-                    // -----------------------------------------
+            // -----------------------------------------
+            // TEACHER SECURITY
+            // -----------------------------------------
 
-                    const allowed =
-                        await canAccessConversation(
-                            socket.gpaUser,
-                            conversation
-                        );
+            if (
+                sender.role ===
+                "teacher"
+            ) {
 
+                // A Teacher may message only
+                // mapped Students.
 
-                    if (!allowed) {
-
-                        socket.emit(
-                            "messengerError",
-                            {
-                                message:
-                                    "You are not allowed to send messages in this conversation."
-                            }
-                        );
-
-                        return;
-                    }
-
-
-                    const sender =
-                        socket.gpaUser;
-
-
-                    // -----------------------------------------
-                    // DETERMINE RECEIVER
-                    // -----------------------------------------
-
-                    let receiverId;
-
-
-                    if (
-                        sender.role ===
-                        "founder"
-                    ) {
-
-                        // Founder conversation contains
-                        // teacher + student.
-                        //
-                        // For now, founder sends to the
-                        // participant selected by frontend.
-                        receiverId =
-                            data.receiverId;
-
-                    }
-                    else {
-
-                        receiverId =
-                            conversation.participants.find(
-                                participant =>
-                                    String(
-                                        participant
-                                    ) !==
-                                    String(
-                                        sender._id
-                                    )
-                            );
-
-                    }
-
-
-                    if (!receiverId) {
-
-                        socket.emit(
-                            "messengerError",
-                            {
-                                message:
-                                    "Receiver could not be determined."
-                            }
-                        );
-
-                        return;
-                    }
-
-
-                    const receiver =
-                        await User.findById(
-                            receiverId
-                        )
-                        .select(
-                            "_id name email role studentId teacherId"
-                        );
-
-
-                    if (!receiver) {
-
-                        socket.emit(
-                            "messengerError",
-                            {
-                                message:
-                                    "Receiver not found."
-                            }
-                        );
-
-                        return;
-                    }
-
-
-                    // -----------------------------------------
-                    // TEACHER SECURITY
-                    // -----------------------------------------
-
-                    if (
-                        sender.role ===
-                        "teacher"
-                    ) {
-
-                        if (
+                const invalidReceiver =
+                    receivers.some(
+                        receiver =>
                             receiver.role !==
                             "student"
-                        ) {
-
-                            socket.emit(
-                                "messengerError",
-                                {
-                                    message:
-                                        "Teachers can only message students."
-                                }
-                            );
-
-                            return;
-                        }
-
-
-                        const mapped =
-                            await areTeacherAndStudentMapped(
-                                sender._id,
-                                receiver._id
-                            );
-
-
-                        if (!mapped) {
-
-                            socket.emit(
-                                "messengerError",
-                                {
-                                    message:
-                                        "This student is not mapped to you."
-                                }
-                            );
-
-                            return;
-                        }
-
-                    }
-
-
-                    // -----------------------------------------
-                    // STUDENT SECURITY
-                    // -----------------------------------------
-
-                    if (
-                        sender.role ===
-                        "student"
-                    ) {
-
-                        if (
-                            receiver.role !==
-                            "teacher"
-                        ) {
-
-                            socket.emit(
-                                "messengerError",
-                                {
-                                    message:
-                                        "Students can only message teachers."
-                                }
-                            );
-
-                            return;
-                        }
-
-
-                        const mapped =
-                            await areTeacherAndStudentMapped(
-                                receiver._id,
-                                sender._id
-                            );
-
-
-                        if (!mapped) {
-
-                            socket.emit(
-                                "messengerError",
-                                {
-                                    message:
-                                        "This teacher is not mapped to you."
-                                }
-                            );
-
-                            return;
-                        }
-
-                    }
-
-
-                    // -----------------------------------------
-                    // CREATE MESSAGE
-                    // -----------------------------------------
-
-                    const newMessage =
-                        await GPAMessage.create({
-
-                            conversation:
-                                conversation._id,
-
-                            sender:
-                                sender._id,
-
-                            receiver:
-                                receiver._id,
-
-                            message:
-                                message.trim(),
-
-                            messageType:
-                                "text",
-
-                            isRead:
-                                false
-
-                        });
-
-
-                    // -----------------------------------------
-                    // UPDATE CONVERSATION
-                    // -----------------------------------------
-
-                    conversation.lastMessage =
-                        message.trim();
-
-                    conversation.lastMessageAt =
-                        new Date();
-
-                    conversation.lastMessageSender =
-                        sender._id;
-
-
-                    let unreadEntry =
-                        conversation.unreadCounts?.find(
-                            item =>
-                                String(
-                                    item.user
-                                ) ===
-                                String(
-                                    receiver._id
-                                )
-                        );
-
-
-                    if (unreadEntry) {
-
-                        unreadEntry.count += 1;
-
-                    }
-                    else {
-
-                        conversation.unreadCounts.push({
-
-                            user:
-                                receiver._id,
-
-                            count:
-                                1
-
-                        });
-
-                    }
-
-
-                    await conversation.save();
-
-
-                    // -----------------------------------------
-                    // POPULATE MESSAGE
-                    // -----------------------------------------
-
-                    const populatedMessage =
-                        await GPAMessage.findById(
-                            newMessage._id
-                        )
-                        .populate(
-                            "sender",
-                            "_id name role"
-                        )
-                        .populate(
-                            "receiver",
-                            "_id name role"
-                        );
-
-
-                    // -----------------------------------------
-// SEND TO CONVERSATION
-// -----------------------------------------
-
-messenger.to(
-    messengerRoom(
-        conversationId
-    )
-).emit(
-    "newMessengerMessage",
-    populatedMessage
-);
-
-
-                    // -----------------------------------------
-// ALSO SEND TO RECEIVER'S PERSONAL ROOM
-// -----------------------------------------
-
-messenger.to(
-    `gpa-user:${receiver._id}`
-).emit(
-    "messengerNewMessageNotification",
-    {
-        conversationId,
-        message:
-            populatedMessage
-    }
-);
-
-// -----------------------------------------
-// SEND FIREBASE PUSH NOTIFICATION
-// -----------------------------------------
-
-await sendFCMNotification(
-    receiver._id,
-    sender.name,
-    message.trim(),
-    conversationId
-);
-
-
-                }
-                catch (error) {
-
-                    console.error(
-                        "SEND MESSENGER MESSAGE ERROR:",
-                        error
                     );
+
+
+                if (
+                    invalidReceiver
+                ) {
 
                     socket.emit(
                         "messengerError",
                         {
                             message:
-                                "Unable to send message."
+                                "Teachers can only message mapped students."
                         }
                     );
+
+                    return;
+                }
+
+
+                // Verify every student receiver
+                // is mapped to this teacher.
+
+                for (
+                    const receiver
+                    of receivers
+                ) {
+
+                    const mapped =
+                        await areTeacherAndStudentMapped(
+                            sender._id,
+                            receiver._id
+                        );
+
+
+                    if (!mapped) {
+
+                        socket.emit(
+                            "messengerError",
+                            {
+                                message:
+                                    "This student is not mapped to you."
+                            }
+                        );
+
+                        return;
+                    }
 
                 }
 
             }
-        );
 
 
-        // =================================================
-        // MARK CONVERSATION AS READ
-        // =================================================
+            // -----------------------------------------
+            // STUDENT SECURITY
+            // -----------------------------------------
 
-        socket.on(
-            "markMessengerConversationRead",
-            async (conversationId) => {
+            if (
+                sender.role ===
+                "student"
+            ) {
 
-                try {
+                // A Student may message only
+                // mapped Teachers.
 
-                    if (!conversationId) {
-                        return;
-                    }
-
-
-                    const conversation =
-                        await Conversation.findById(
-                            conversationId
-                        );
-
-
-                    if (!conversation) {
-                        return;
-                    }
-
-
-                    const allowed =
-                        await canAccessConversation(
-                            socket.gpaUser,
-                            conversation
-                        );
-
-
-                    if (!allowed) {
-                        return;
-                    }
-
-
-                    await GPAMessage.updateMany(
-
-                        {
-
-                            conversation:
-                                conversationId,
-
-                            receiver:
-                                socket.gpaUser._id,
-
-                            isRead:
-                                false
-
-                        },
-
-                        {
-
-                            $set: {
-
-                                isRead:
-                                    true,
-
-                                readAt:
-                                    new Date()
-
-                            }
-
-                        }
-
+                const invalidReceiver =
+                    receivers.some(
+                        receiver =>
+                            receiver.role !==
+                            "teacher"
                     );
 
 
-                    const unreadEntry =
-                        conversation.unreadCounts?.find(
-                            item =>
-                                String(
-                                    item.user
-                                ) ===
-                                String(
-                                    socket.gpaUser._id
-                                )
+                if (
+                    invalidReceiver
+                ) {
+
+                    socket.emit(
+                        "messengerError",
+                        {
+                            message:
+                                "Students can only message mapped teachers."
+                        }
+                    );
+
+                    return;
+                }
+
+
+                // Verify every teacher receiver
+                // is mapped to this student.
+
+                for (
+                    const receiver
+                    of receivers
+                ) {
+
+                    const mapped =
+                        await areTeacherAndStudentMapped(
+                            receiver._id,
+                            sender._id
                         );
 
 
-                    if (unreadEntry) {
+                    if (!mapped) {
 
-                        unreadEntry.count =
-                            0;
+                        socket.emit(
+                            "messengerError",
+                            {
+                                message:
+                                    "This teacher is not mapped to you."
+                            }
+                        );
 
-                        await conversation.save();
-
+                        return;
                     }
 
+                }
 
-                    // Tell conversation participants
-messenger.to(
-    messengerRoom(
-        conversationId
-    )
-).emit(
-    "messengerConversationRead",
-    {
-        conversationId,
-        userId:
-            socket.gpaUser._id
+            }
+
+
+            // -----------------------------------------
+            // FOUNDER
+            // -----------------------------------------
+
+            if (
+                sender.role ===
+                "founder"
+            ) {
+
+                // Founder can message all participants
+                // of a conversation.
+
+                // No additional receiver restriction
+                // is required here.
+
+            }
+
+
+            // -----------------------------------------
+            // CREATE MESSAGE
+            // -----------------------------------------
+
+            const newMessage =
+                await GPAMessage.create({
+
+                    conversation:
+                        conversation._id,
+
+                    sender:
+                        sender._id,
+
+                    // Backward compatibility:
+                    // store the first receiver here.
+                    receiver:
+                        receivers[0]._id,
+
+                    // New multi-recipient support.
+                    receivers:
+                        receivers.map(
+                            receiver =>
+                                receiver._id
+                        ),
+
+                    message:
+                        message.trim(),
+
+                    messageType:
+                        "text",
+
+                    isRead:
+                        false,
+
+                    readBy: []
+
+                });
+
+
+            // -----------------------------------------
+            // UPDATE CONVERSATION
+            // -----------------------------------------
+
+            conversation.lastMessage =
+                message.trim();
+
+            conversation.lastMessageAt =
+                new Date();
+
+            conversation.lastMessageSender =
+                sender._id;
+
+
+            // -----------------------------------------
+            // UPDATE UNREAD COUNT
+            // FOR EVERY RECEIVER
+            // -----------------------------------------
+
+            for (
+                const receiver
+                of receivers
+            ) {
+
+                let unreadEntry =
+                    conversation.unreadCounts?.find(
+                        item =>
+                            String(
+                                item.user
+                            ) ===
+                            String(
+                                receiver._id
+                            )
+                    );
+
+
+                if (
+                    unreadEntry
+                ) {
+
+                    unreadEntry.count += 1;
+
+                }
+                else {
+
+                    conversation.unreadCounts.push({
+
+                        user:
+                            receiver._id,
+
+                        count:
+                            1
+
+                    });
+
+                }
+
+            }
+
+
+            await conversation.save();
+
+
+            // -----------------------------------------
+            // POPULATE MESSAGE
+            // -----------------------------------------
+
+            const populatedMessage =
+                await GPAMessage.findById(
+                    newMessage._id
+                )
+                .populate(
+                    "sender",
+                    "_id name role"
+                )
+                .populate(
+                    "receiver",
+                    "_id name role"
+                )
+                .populate(
+                    "receivers",
+                    "_id name role"
+                );
+
+
+            // -----------------------------------------
+            // SEND TO CONVERSATION ROOM
+            // -----------------------------------------
+
+            messenger.to(
+                messengerRoom(
+                    conversationId
+                )
+            ).emit(
+                "newMessengerMessage",
+                populatedMessage
+            );
+
+
+            // -----------------------------------------
+            // SEND PERSONAL SOCKET
+            // NOTIFICATION TO EVERY RECEIVER
+            // -----------------------------------------
+
+            for (
+                const receiver
+                of receivers
+            ) {
+
+                messenger.to(
+                    `gpa-user:${receiver._id}`
+                ).emit(
+                    "messengerNewMessageNotification",
+                    {
+                        conversationId,
+
+                        message:
+                            populatedMessage
+                    }
+                );
+
+            }
+
+
+            // -----------------------------------------
+            // SEND FCM TO EVERY RECEIVER
+            // -----------------------------------------
+
+            await sendFCMNotification(
+
+                receivers.map(
+                    receiver =>
+                        receiver._id
+                ),
+
+                sender.name,
+
+                message.trim(),
+
+                conversationId
+
+            );
+
+
+        }
+        catch (error) {
+
+            console.error(
+                "SEND MESSENGER MESSAGE ERROR:",
+                error
+            );
+
+            socket.emit(
+                "messengerError",
+                {
+                    message:
+                        "Unable to send message."
+                }
+            );
+
+        }
+
     }
 );
 
 
-                }
-                catch (error) {
+        // =================================================
+// MARK CONVERSATION AS READ
+// =================================================
 
-                    console.error(
-                        "MARK MESSENGER READ ERROR:",
-                        error
+socket.on(
+    "markMessengerConversationRead",
+    async (conversationId) => {
+
+        try {
+
+            if (!conversationId) {
+                return;
+            }
+
+
+            const user =
+                socket.gpaUser;
+
+
+            const conversation =
+                await Conversation.findById(
+                    conversationId
+                );
+
+
+            if (!conversation) {
+                return;
+            }
+
+
+            // -------------------------------------------------
+            // ACCESS CHECK
+            // -------------------------------------------------
+
+            const allowed =
+                await canAccessConversation(
+                    user,
+                    conversation
+                );
+
+
+            if (!allowed) {
+                return;
+            }
+
+
+            // -------------------------------------------------
+            // FIND UNREAD MESSAGES FOR THIS USER
+            // -------------------------------------------------
+            //
+            // New messages:
+            // receivers contains the user.
+            //
+            // Old messages:
+            // receiver contains the user.
+            //
+
+            const messages =
+                await GPAMessage.find({
+
+                    conversation:
+                        conversationId,
+
+                    $or: [
+
+                        {
+                            receivers:
+                                user._id
+                        },
+
+                        {
+                            receiver:
+                                user._id
+                        }
+
+                    ]
+
+                });
+
+
+            // -------------------------------------------------
+            // MARK EACH MESSAGE AS READ FOR THIS USER
+            // -------------------------------------------------
+
+            for (
+                const message
+                of messages
+            ) {
+
+                const alreadyRead =
+                    message.readBy?.some(
+                        entry =>
+                            String(
+                                entry.user
+                            ) ===
+                            String(
+                                user._id
+                            )
                     );
+
+
+                if (
+                    !alreadyRead
+                ) {
+
+                    message.readBy =
+                        message.readBy || [];
+
+
+                    message.readBy.push({
+
+                        user:
+                            user._id,
+
+                        readAt:
+                            new Date()
+
+                    });
+
+
+                    // -----------------------------------------
+                    // BACKWARD COMPATIBILITY
+                    // -----------------------------------------
+
+                    // If this is an old direct message
+                    // whose receiver is this user, also
+                    // maintain the old fields.
+
+                    if (
+                        message.receiver &&
+                        String(
+                            message.receiver
+                        ) ===
+                        String(
+                            user._id
+                        )
+                    ) {
+
+                        message.isRead =
+                            true;
+
+                        message.readAt =
+                            new Date();
+
+                    }
+
+
+                    await message.save();
 
                 }
 
             }
-        );
+
+
+            // -------------------------------------------------
+            // CLEAR THIS USER'S UNREAD COUNT
+            // -------------------------------------------------
+
+            const unreadEntry =
+                conversation.unreadCounts?.find(
+                    item =>
+                        String(
+                            item.user
+                        ) ===
+                        String(
+                            user._id
+                        )
+                );
+
+
+            if (
+                unreadEntry
+            ) {
+
+                unreadEntry.count =
+                    0;
+
+                await conversation.save();
+
+            }
+
+
+            // -------------------------------------------------
+            // INFORM OTHER PARTICIPANTS
+            // -------------------------------------------------
+
+            messenger.to(
+                messengerRoom(
+                    conversationId
+                )
+            ).emit(
+                "messengerConversationRead",
+                {
+
+                    conversationId,
+
+                    userId:
+                        user._id
+
+                }
+            );
+
+
+        }
+        catch (error) {
+
+            console.error(
+                "MARK MESSENGER READ ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
 
 
         // =================================================

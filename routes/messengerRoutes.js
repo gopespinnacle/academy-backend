@@ -858,6 +858,275 @@ router.get(
     }
 );
 
+// =========================================================
+// FOUNDER — JOIN EXISTING CONVERSATION
+// =========================================================
+
+router.post(
+    "/conversations/:conversationId/join",
+    messengerAuth,
+    async (req, res) => {
+
+        try {
+
+            const user =
+                req.user;
+
+            // -------------------------------------------------
+            // ONLY FOUNDER CAN JOIN AN EXISTING CONVERSATION
+            // -------------------------------------------------
+
+            if (
+                user.role !== "founder"
+            ) {
+
+                return res.status(403).json({
+
+                    success: false,
+
+                    message:
+                        "Only the Founder can join an existing conversation."
+
+                });
+
+            }
+
+
+            const {
+                conversationId
+            } = req.params;
+
+
+            // -------------------------------------------------
+            // FIND CONVERSATION
+            // -------------------------------------------------
+
+            const conversation =
+                await Conversation.findById(
+                    conversationId
+                );
+
+
+            if (!conversation) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "Conversation not found."
+
+                });
+
+            }
+
+
+            // -------------------------------------------------
+            // CHECK WHETHER FOUNDER IS ALREADY A PARTICIPANT
+            // -------------------------------------------------
+
+            const alreadyParticipant =
+                conversation.participants.some(
+                    participant =>
+                        String(participant)
+                        ===
+                        String(user._id)
+                );
+
+
+            if (
+                alreadyParticipant
+            ) {
+
+                const populated =
+                    await Conversation.findById(
+                        conversation._id
+                    )
+                    .populate(
+                        "participants",
+                        "_id name email role studentId teacherId"
+                    )
+                    .populate(
+                        "lastMessageSender",
+                        "_id name role"
+                    );
+
+
+                return res.json({
+
+                    success: true,
+
+                    alreadyJoined: true,
+
+                    conversation:
+                        populated
+
+                });
+
+            }
+
+
+            // -------------------------------------------------
+            // LOAD PARTICIPANTS
+            // -------------------------------------------------
+
+            const participantUsers =
+                await User.find({
+
+                    _id: {
+                        $in:
+                            conversation.participants
+                    }
+
+                })
+                .select(
+                    "_id name email role studentId teacherId"
+                );
+
+
+            // -------------------------------------------------
+            // CHECK THAT THIS IS A TEACHER ↔ STUDENT
+            // CONVERSATION
+            // -------------------------------------------------
+
+            const hasTeacher =
+                participantUsers.some(
+                    participant =>
+                        participant.role ===
+                        "teacher"
+                );
+
+
+            const hasStudent =
+                participantUsers.some(
+                    participant =>
+                        participant.role ===
+                        "student"
+                );
+
+
+            if (
+                !hasTeacher ||
+                !hasStudent
+            ) {
+
+                return res.status(403).json({
+
+                    success: false,
+
+                    message:
+                        "Founder can join only Teacher-Student conversations."
+
+                });
+
+            }
+
+
+            // -------------------------------------------------
+            // ADD FOUNDER TO SAME CONVERSATION
+            // -------------------------------------------------
+
+            conversation.participants.push(
+                user._id
+            );
+
+
+            // -------------------------------------------------
+            // CREATE FOUNDER UNREAD COUNT
+            // -------------------------------------------------
+
+            const founderUnreadEntry =
+                conversation.unreadCounts?.find(
+                    item =>
+                        String(
+                            item.user
+                        ) ===
+                        String(
+                            user._id
+                        )
+                );
+
+
+            if (
+                !founderUnreadEntry
+            ) {
+
+                conversation.unreadCounts.push({
+
+                    user:
+                        user._id,
+
+                    count:
+                        0
+
+                });
+
+            }
+
+
+            // -------------------------------------------------
+            // CONVERT TO GROUP CONVERSATION
+            // -------------------------------------------------
+
+            conversation.conversationType =
+                "group";
+
+
+            await conversation.save();
+
+
+            // -------------------------------------------------
+            // RETURN UPDATED CONVERSATION
+            // -------------------------------------------------
+
+            const populated =
+                await Conversation.findById(
+                    conversation._id
+                )
+                .populate(
+                    "participants",
+                    "_id name email role studentId teacherId"
+                )
+                .populate(
+                    "lastMessageSender",
+                    "_id name role"
+                );
+
+
+            return res.json({
+
+                success: true,
+
+                alreadyJoined: false,
+
+                conversation:
+                    populated
+
+            });
+
+        }
+        catch (error) {
+
+            console.error(
+                "FOUNDER JOIN CONVERSATION ERROR:",
+                error
+            );
+
+
+            return res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to join conversation."
+
+            });
+
+        }
+
+    }
+);
+
 
 // =========================================================
 // GET MESSAGE HISTORY
@@ -961,72 +1230,125 @@ router.get(
 
 
             // =================================================
-            // MARK RECEIVED MESSAGES AS READ
-            // =================================================
+// MARK RECEIVED MESSAGES AS READ
+// =================================================
 
-            if (
-                user.role !==
-                "founder"
-            ) {
+const messagesToMarkRead =
+    await GPAMessage.find({
 
-                await GPAMessage.updateMany(
+        conversation:
+            conversationId,
 
-                    {
+        $or: [
 
-                        conversation:
-                            conversationId,
+            {
+                receivers:
+                    user._id
+            },
 
-                        receiver:
-                            user._id,
-
-                        isRead:
-                            false
-
-                    },
-
-                    {
-
-                        $set: {
-
-                            isRead:
-                                true,
-
-                            readAt:
-                                new Date()
-
-                        }
-
-                    }
-
-                );
-
-
-                const unreadEntry =
-                    conversation.unreadCounts
-                        ?.find(
-                            item =>
-                                String(
-                                    item.user
-                                )
-                                ===
-                                String(
-                                    user._id
-                                )
-                        );
-
-
-                if (
-                    unreadEntry
-                ) {
-
-                    unreadEntry.count =
-                        0;
-
-                    await conversation.save();
-
-                }
-
+            {
+                receiver:
+                    user._id
             }
+
+        ]
+
+    });
+
+
+for (
+    const message
+    of messagesToMarkRead
+) {
+
+    const alreadyRead =
+        message.readBy?.some(
+            entry =>
+                String(
+                    entry.user
+                ) ===
+                String(
+                    user._id
+                )
+        );
+
+
+    if (
+        !alreadyRead
+    ) {
+
+        message.readBy =
+            message.readBy || [];
+
+
+        message.readBy.push({
+
+            user:
+                user._id,
+
+            readAt:
+                new Date()
+
+        });
+
+
+        // -----------------------------------------
+        // BACKWARD COMPATIBILITY
+        // -----------------------------------------
+
+        if (
+            message.receiver &&
+            String(
+                message.receiver
+            ) ===
+            String(
+                user._id
+            )
+        ) {
+
+            message.isRead =
+                true;
+
+            message.readAt =
+                new Date();
+
+        }
+
+
+        await message.save();
+
+    }
+
+}
+
+
+// =================================================
+// CLEAR CURRENT USER UNREAD COUNT
+// =================================================
+
+const unreadEntry =
+    conversation.unreadCounts
+        ?.find(
+            item =>
+                String(
+                    item.user
+                ) ===
+                String(
+                    user._id
+                )
+        );
+
+
+if (
+    unreadEntry
+) {
+
+    unreadEntry.count =
+        0;
+
+    await conversation.save();
+
+}
 
 
             return res.json({
@@ -1060,6 +1382,7 @@ router.get(
 );
 
 
+
 // =========================================================
 // SEND TEXT MESSAGE
 // =========================================================
@@ -1080,9 +1403,13 @@ router.post(
                 req.user;
 
 
+            // =================================================
+            // BASIC VALIDATION
+            // =================================================
+
             if (
                 !conversationId ||
-                !message ||
+                typeof message !== "string" ||
                 !message.trim()
             ) {
 
@@ -1097,6 +1424,10 @@ router.post(
 
             }
 
+
+            // =================================================
+            // FIND CONVERSATION
+            // =================================================
 
             const conversation =
                 await Conversation.findById(
@@ -1119,63 +1450,100 @@ router.post(
 
 
             // =================================================
-            // DETERMINE RECEIVER
+            // PARTICIPANT CHECK
             // =================================================
 
-            let receiverId =
+            const isParticipant =
+                conversation.participants.some(
+                    participant =>
+                        String(
+                            participant
+                        ) ===
+                        String(
+                            sender._id
+                        )
+                );
+
+
+            // Founder can access conversations
+            // even before joining.
+            if (
+                !isParticipant &&
+                sender.role !== "founder"
+            ) {
+
+                return res.status(403).json({
+
+                    success: false,
+
+                    message:
+                        "You are not allowed to send messages in this conversation."
+
+                });
+
+            }
+
+
+            // =================================================
+            // GET ALL OTHER PARTICIPANTS
+            // =================================================
+
+            const receiverIds =
                 conversation.participants
-                    .find(
+                    .filter(
                         participant =>
                             String(
                                 participant
-                            )
-                            !==
+                            ) !==
                             String(
                                 sender._id
                             )
                     );
 
 
-            // Founder may send to either participant
-            if (
-                sender.role ===
-                "founder"
-            ) {
-
-                receiverId =
-                    conversation.participants[0];
-
-            }
-
-
-            if (!receiverId) {
+            if (!receiverIds.length) {
 
                 return res.status(400).json({
 
                     success: false,
 
                     message:
-                        "Receiver could not be determined."
+                        "No receiver found for this conversation."
 
                 });
 
             }
 
 
-            const receiver =
-                await User.findById(
-                    receiverId
+            // =================================================
+            // LOAD RECEIVERS
+            // =================================================
+
+            const receivers =
+                await User.find({
+
+                    _id: {
+                        $in:
+                            receiverIds
+                    }
+
+                })
+                .select(
+                    "_id name email role studentId teacherId"
                 );
 
 
-            if (!receiver) {
+            if (
+                receivers.length !==
+                receiverIds.length
+            ) {
 
-                return res.status(404).json({
+                return res.status(400).json({
 
                     success: false,
 
                     message:
-                        "Receiver not found."
+                        "One or more conversation participants could not be found."
 
                 });
 
@@ -1183,17 +1551,24 @@ router.post(
 
 
             // =================================================
-            // TEACHER / STUDENT SECURITY
+            // TEACHER SECURITY
             // =================================================
 
             if (
                 sender.role ===
-                    "teacher"
+                "teacher"
             ) {
 
+                const invalidReceiver =
+                    receivers.some(
+                        receiver =>
+                            receiver.role !==
+                            "student"
+                    );
+
+
                 if (
-                    receiver.role !==
-                    "student"
+                    invalidReceiver
                 ) {
 
                     return res.status(403).json({
@@ -1208,37 +1583,55 @@ router.post(
                 }
 
 
-                const allowed =
-                    await areTeacherAndStudentMapped(
-                        sender._id,
-                        receiver._id
-                    );
+                for (
+                    const receiver
+                    of receivers
+                ) {
+
+                    const mapped =
+                        await areTeacherAndStudentMapped(
+                            sender._id,
+                            receiver._id
+                        );
 
 
-                if (!allowed) {
+                    if (!mapped) {
 
-                    return res.status(403).json({
+                        return res.status(403).json({
 
-                        success: false,
+                            success: false,
 
-                        message:
-                            "This student is not mapped to you."
+                            message:
+                                "This student is not mapped to you."
 
-                    });
+                        });
+
+                    }
 
                 }
 
             }
 
 
+            // =================================================
+            // STUDENT SECURITY
+            // =================================================
+
             if (
                 sender.role ===
-                    "student"
+                "student"
             ) {
 
+                const invalidReceiver =
+                    receivers.some(
+                        receiver =>
+                            receiver.role !==
+                            "teacher"
+                    );
+
+
                 if (
-                    receiver.role !==
-                    "teacher"
+                    invalidReceiver
                 ) {
 
                     return res.status(403).json({
@@ -1253,25 +1646,47 @@ router.post(
                 }
 
 
-                const allowed =
-                    await areTeacherAndStudentMapped(
-                        receiver._id,
-                        sender._id
-                    );
+                for (
+                    const receiver
+                    of receivers
+                ) {
+
+                    const mapped =
+                        await areTeacherAndStudentMapped(
+                            receiver._id,
+                            sender._id
+                        );
 
 
-                if (!allowed) {
+                    if (!mapped) {
 
-                    return res.status(403).json({
+                        return res.status(403).json({
 
-                        success: false,
+                            success: false,
 
-                        message:
-                            "This teacher is not mapped to you."
+                            message:
+                                "This teacher is not mapped to you."
 
-                    });
+                        });
+
+                    }
 
                 }
+
+            }
+
+
+            // =================================================
+            // FOUNDER
+            // =================================================
+
+            if (
+                sender.role ===
+                "founder"
+            ) {
+
+                // Founder can message all participants
+                // of the existing conversation.
 
             }
 
@@ -1289,8 +1704,16 @@ router.post(
                     sender:
                         sender._id,
 
+                    // Backward compatibility
                     receiver:
-                        receiver._id,
+                        receivers[0]._id,
+
+                    // New multi-recipient support
+                    receivers:
+                        receivers.map(
+                            receiver =>
+                                receiver._id
+                        ),
 
                     message:
                         message.trim(),
@@ -1299,7 +1722,10 @@ router.post(
                         "text",
 
                     isRead:
-                        false
+                        false,
+
+                    readBy:
+                        []
 
                 });
 
@@ -1318,44 +1744,58 @@ router.post(
                 sender._id;
 
 
-            let unreadEntry =
-                conversation.unreadCounts
-                    ?.find(
+            // =================================================
+            // UPDATE UNREAD COUNT
+            // FOR EVERY RECEIVER
+            // =================================================
+
+            for (
+                const receiver
+                of receivers
+            ) {
+
+                let unreadEntry =
+                    conversation.unreadCounts?.find(
                         item =>
                             String(
                                 item.user
-                            )
-                            ===
+                            ) ===
                             String(
                                 receiver._id
                             )
                     );
 
 
-            if (
-                unreadEntry
-            ) {
+                if (
+                    unreadEntry
+                ) {
 
-                unreadEntry.count += 1;
+                    unreadEntry.count += 1;
 
-            }
-            else {
+                }
+                else {
 
-                conversation.unreadCounts.push({
+                    conversation.unreadCounts.push({
 
-                    user:
-                        receiver._id,
+                        user:
+                            receiver._id,
 
-                    count:
-                        1
+                        count:
+                            1
 
-                });
+                    });
+
+                }
 
             }
 
 
             await conversation.save();
 
+
+            // =================================================
+            // POPULATE MESSAGE
+            // =================================================
 
             const populatedMessage =
                 await GPAMessage.findById(
@@ -1367,6 +1807,10 @@ router.post(
                 )
                 .populate(
                     "receiver",
+                    "_id name role"
+                )
+                .populate(
+                    "receivers",
                     "_id name role"
                 );
 
@@ -1473,36 +1917,93 @@ router.put(
             }
 
 
-            await GPAMessage.updateMany(
+            const messagesToMarkRead =
+    await GPAMessage.find({
 
-                {
+        conversation:
+            conversationId,
 
-                    conversation:
-                        conversationId,
+        $or: [
 
-                    receiver:
-                        user._id,
+            {
+                receivers:
+                    user._id
+            },
 
-                    isRead:
-                        false
+            {
+                receiver:
+                    user._id
+            }
 
-                },
+        ]
 
-                {
+    });
 
-                    $set: {
 
-                        isRead:
-                            true,
+for (
+    const message
+    of messagesToMarkRead
+) {
 
-                        readAt:
-                            new Date()
+    const alreadyRead =
+        message.readBy?.some(
+            entry =>
+                String(
+                    entry.user
+                ) ===
+                String(
+                    user._id
+                )
+        );
 
-                    }
 
-                }
+    if (
+        !alreadyRead
+    ) {
 
-            );
+        message.readBy =
+            message.readBy || [];
+
+
+        message.readBy.push({
+
+            user:
+                user._id,
+
+            readAt:
+                new Date()
+
+        });
+
+
+        // -----------------------------------------
+        // BACKWARD COMPATIBILITY
+        // -----------------------------------------
+
+        if (
+            message.receiver &&
+            String(
+                message.receiver
+            ) ===
+            String(
+                user._id
+            )
+        ) {
+
+            message.isRead =
+                true;
+
+            message.readAt =
+                new Date();
+
+        }
+
+
+        await message.save();
+
+    }
+
+}
 
 
             const unreadEntry =

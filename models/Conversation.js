@@ -10,6 +10,14 @@ const conversationSchema = new mongoose.Schema(
             }
         ],
 
+        // direct = normal Teacher ↔ Student conversation
+        // group  = Founder has joined the conversation
+        conversationType: {
+            type: String,
+            enum: ["direct", "group"],
+            default: "direct"
+        },
+
         lastMessage: {
             type: String,
             default: ""
