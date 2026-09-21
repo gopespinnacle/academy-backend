@@ -323,7 +323,42 @@ async function canAccessConversation(
     if (!participantUsers.length) {
         return false;
     }
+// -------------------------------------------------------
+// ADMIN
+// -------------------------------------------------------
 
+if (user.role === "admin") {
+
+    // Admin can access ONLY direct 1-to-1 conversations
+    if (
+        conversation.conversationType !== "direct" ||
+        participantUsers.length !== 2
+    ) {
+        return false;
+    }
+
+    // Find the other person
+    const otherUser =
+        participantUsers.find(
+            participant =>
+                String(participant._id) !==
+                String(user._id)
+        );
+
+    if (!otherUser) {
+        return false;
+    }
+
+    // Admin can chat ONLY with Teacher or Student
+    if (
+        otherUser.role !== "teacher" &&
+        otherUser.role !== "student"
+    ) {
+        return false;
+    }
+
+    return true;
+}
 
   // -------------------------------------------------------
 // ADMIN
