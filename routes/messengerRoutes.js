@@ -209,12 +209,14 @@ async function getOrCreateConversation(
     let conversation =
         await Conversation.findOne({
 
-            participants: {
-                $all: [
-                    user1,
-                    user2
-                ]
-            },
+            conversationType: "direct",
+
+participants: {
+    $all: [
+        user1,
+        user2
+    ]
+},
 
             $expr: {
                 $eq: [
@@ -236,12 +238,15 @@ async function getOrCreateConversation(
 
 
     conversation =
-        await Conversation.create({
+    await Conversation.create({
 
-            participants: [
-                user1,
-                user2
-            ],
+        participants: [
+            user1,
+            user2
+        ],
+
+        conversationType:
+            "direct",
 
             unreadCounts: [
 
@@ -537,6 +542,45 @@ return res.json({
 
             }
 
+            // =================================================
+// ADMIN
+// ADMIN CAN CHAT ONLY WITH STUDENTS AND TEACHERS
+// =================================================
+
+if (
+    user.role ===
+    "admin"
+) {
+
+    const users =
+        await User.find({
+
+            role: {
+                $in: [
+                    "teacher",
+                    "student"
+                ]
+            }
+
+        })
+        .select(
+            "_id name email role studentId teacherId"
+        )
+        .sort({
+            name: 1
+        });
+
+
+    return res.json({
+
+        success: true,
+
+        contacts:
+            users
+
+    });
+
+}
 
             return res.status(403).json({
 
@@ -621,6 +665,35 @@ router.post(
                 });
 
             }
+
+            // =================================================
+// ADMIN PERMISSION
+// ADMIN CAN CREATE ONLY ONE-TO-ONE CHAT
+// WITH TEACHER OR STUDENT
+// =================================================
+
+if (
+    currentUser.role ===
+    "admin"
+) {
+
+    if (
+        targetUser.role !== "teacher" &&
+        targetUser.role !== "student"
+    ) {
+
+        return res.status(403).json({
+
+            success: false,
+
+            message:
+                "Admins can chat only with Teachers and Students."
+
+        });
+
+    }
+
+}
 
 
             // =================================================
@@ -837,33 +910,76 @@ router.get(
 
 
             }
-            else {
+            else if (
+    user.role === "admin"
+) {
 
-                // =================================================
-                // TEACHER / STUDENT
-                // =================================================
+    // =================================================
+    // ADMIN
+    // ONLY ONE-TO-ONE DIRECT CONVERSATIONS
+    // =================================================
 
-                conversations =
-                    await Conversation.find({
+    conversations =
+        await Conversation.find({
 
-                        participants:
-                            user._id
+            participants:
+                user._id,
 
-                    })
-                    .populate(
-                        "participants",
-                        "_id name email role studentId teacherId"
-                    )
-                    .populate(
-                        "lastMessageSender",
-                        "_id name role"
-                    )
-                    .sort({
-    lastMessageAt: -1,
-    updatedAt: -1
-});
+            conversationType:
+                "direct",
 
+            $expr: {
+                $eq: [
+                    {
+                        $size:
+                            "$participants"
+                    },
+                    2
+                ]
             }
+
+        })
+        .populate(
+            "participants",
+            "_id name email role studentId teacherId"
+        )
+        .populate(
+            "lastMessageSender",
+            "_id name role"
+        )
+        .sort({
+            lastMessageAt: -1,
+            updatedAt: -1
+        });
+
+}
+else {
+
+    // =================================================
+    // TEACHER / STUDENT
+    // =================================================
+
+    conversations =
+        await Conversation.find({
+
+            participants:
+                user._id
+
+        })
+        .populate(
+            "participants",
+            "_id name email role studentId teacherId"
+        )
+        .populate(
+            "lastMessageSender",
+            "_id name role"
+        )
+        .sort({
+            lastMessageAt: -1,
+            updatedAt: -1
+        });
+
+}
 
 
             return res.json({
@@ -1217,6 +1333,35 @@ router.get(
                         String(user._id)
                 );
 
+                // =================================================
+// ADMIN SECURITY
+// ADMIN CAN ACCESS ONLY DIRECT 1-TO-1 CHATS
+// =================================================
+
+if (
+    user.role === "admin"
+) {
+
+    if (
+        conversation.conversationType !==
+            "direct" ||
+        conversation.participants.length !==
+            2
+    ) {
+
+        return res.status(403).json({
+
+            success: false,
+
+            message:
+                "Admins can access only one-to-one conversations."
+
+        });
+
+    }
+
+}
+
 
             let allowed =
                 isParticipant;
@@ -1485,6 +1630,34 @@ router.post(
                 });
 
             }
+            // =================================================
+// ADMIN SECURITY
+// ADMIN CAN SEND ONLY IN DIRECT 1-TO-1 CHATS
+// =================================================
+
+if (
+    sender.role === "admin"
+) {
+
+    if (
+        conversation.conversationType !==
+            "direct" ||
+        conversation.participants.length !==
+            2
+    ) {
+
+        return res.status(403).json({
+
+            success: false,
+
+            message:
+                "Admins can send messages only in one-to-one conversations."
+
+        });
+
+    }
+
+}
 
 
             // =================================================
@@ -1586,6 +1759,39 @@ router.post(
                 });
 
             }
+
+            // =================================================
+// ADMIN RECEIVER SECURITY
+// =================================================
+
+if (
+    sender.role === "admin"
+) {
+
+    const invalidReceiver =
+        receivers.some(
+            receiver =>
+                receiver.role !== "teacher" &&
+                receiver.role !== "student"
+        );
+
+
+    if (
+        invalidReceiver
+    ) {
+
+        return res.status(403).json({
+
+            success: false,
+
+            message:
+                "Admins can only message Teachers and Students."
+
+        });
+
+    }
+
+}
 
 
             // =================================================
