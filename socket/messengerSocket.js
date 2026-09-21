@@ -1789,6 +1789,8 @@ socket.on(
 
 socket.on(
     "startVoiceCall",
+
+    
     async (data) => {
 
         try {
@@ -2038,7 +2040,244 @@ messenger
 
     }
 );
+// =========================================================
+// WEBRTC OFFER SIGNALING
+// =========================================================
 
+socket.on(
+    "voiceOffer",
+    async (data) => {
+
+        try {
+
+            const {
+                conversationId,
+                receiverId,
+                offer
+            } = data || {};
+
+            if (
+                !conversationId ||
+                !receiverId ||
+                !offer
+            ) {
+                return;
+            }
+
+            const conversation =
+                await Conversation.findById(
+                    conversationId
+                );
+
+            if (!conversation) {
+                return;
+            }
+
+            const caller =
+                socket.gpaUser;
+
+            const allowed =
+                await canAccessConversation(
+                    caller,
+                    conversation
+                );
+
+            if (!allowed) {
+                return;
+            }
+
+            messenger
+                .to(`gpa-user:${receiverId}`)
+                .emit(
+                    "voiceOffer",
+                    {
+                        conversationId:
+                            String(
+                                conversationId
+                            ),
+
+                        callerId:
+                            String(
+                                caller._id
+                            ),
+
+                        offer
+                    }
+                );
+
+        } catch (error) {
+
+            console.error(
+                "VOICE OFFER ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
+
+// =========================================================
+// WEBRTC ANSWER SIGNALING
+// =========================================================
+
+socket.on(
+    "voiceAnswer",
+    async (data) => {
+
+        try {
+
+            const {
+                conversationId,
+                callerId,
+                answer
+            } = data || {};
+
+            if (
+                !conversationId ||
+                !callerId ||
+                !answer
+            ) {
+                return;
+            }
+
+            const conversation =
+                await Conversation.findById(
+                    conversationId
+                );
+
+            if (!conversation) {
+                return;
+            }
+
+            const receiver =
+                socket.gpaUser;
+
+            const allowed =
+                await canAccessConversation(
+                    receiver,
+                    conversation
+                );
+
+            if (!allowed) {
+                return;
+            }
+
+            messenger
+                .to(`gpa-user:${callerId}`)
+                .emit(
+                    "voiceAnswer",
+                    {
+                        conversationId:
+                            String(
+                                conversationId
+                            ),
+
+                        receiverId:
+                            String(
+                                receiver._id
+                            ),
+
+                        answer
+                    }
+                );
+
+        }
+        catch (error) {
+
+            console.error(
+                "VOICE ANSWER ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
+
+// =========================================================
+// WEBRTC ICE CANDIDATE
+// =========================================================
+
+socket.on(
+    "voiceIceCandidate",
+    async (data) => {
+
+        try {
+
+            const {
+                conversationId,
+                receiverId,
+                candidate
+            } = data || {};
+
+            if (
+                !conversationId ||
+                !receiverId ||
+                !candidate
+            ) {
+                return;
+            }
+
+            const conversation =
+                await Conversation.findById(
+                    conversationId
+                );
+
+            if (!conversation) {
+                return;
+            }
+
+            const sender =
+                socket.gpaUser;
+
+            const allowed =
+                await canAccessConversation(
+                    sender,
+                    conversation
+                );
+
+            if (!allowed) {
+                return;
+            }
+
+            // -------------------------------------------------
+            // SEND ICE CANDIDATE TO OTHER USER
+            // -------------------------------------------------
+
+            messenger
+                .to(
+                    `gpa-user:${receiverId}`
+                )
+                .emit(
+                    "voiceIceCandidate",
+                    {
+                        conversationId:
+                            String(
+                                conversationId
+                            ),
+
+                        senderId:
+                            String(
+                                sender._id
+                            ),
+
+                        candidate
+                    }
+                );
+
+        }
+        catch (error) {
+
+            console.error(
+                "VOICE ICE CANDIDATE ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
 
 // =========================================================
 // ACCEPT VOICE CALL
