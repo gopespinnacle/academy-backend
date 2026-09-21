@@ -1803,6 +1803,365 @@ socket.on(
 
 }
 
+// =========================================================
+// VOICE CALL SIGNALING
+// =========================================================
+
+// ---------------------------------------------------------
+// START VOICE CALL
+// ---------------------------------------------------------
+
+socket.on(
+    "startVoiceCall",
+    async (data) => {
+
+        try {
+
+            const {
+                conversationId
+            } = data || {};
+
+
+            if (!conversationId) {
+
+                socket.emit(
+                    "voiceCallError",
+                    {
+                        message:
+                            "Conversation is required."
+                    }
+                );
+
+                return;
+
+            }
+
+
+            const conversation =
+                await Conversation.findById(
+                    conversationId
+                );
+
+
+            if (!conversation) {
+
+                socket.emit(
+                    "voiceCallError",
+                    {
+                        message:
+                            "Conversation not found."
+                    }
+                );
+
+                return;
+
+            }
+
+
+            const caller =
+                socket.gpaUser;
+
+
+            // -------------------------------------------------
+            // ONLY FOUNDER / ADMIN CAN START CALLS
+            // -------------------------------------------------
+
+            if (
+                caller.role !== "founder" &&
+                caller.role !== "admin"
+            ) {
+
+                socket.emit(
+                    "voiceCallError",
+                    {
+                        message:
+                            "Only Founder or Admin can start a voice call."
+                    }
+                );
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // VERIFY CONVERSATION ACCESS
+            // -------------------------------------------------
+
+            const allowed =
+                await canAccessConversation(
+                    caller,
+                    conversation
+                );
+
+
+            if (!allowed) {
+
+                socket.emit(
+                    "voiceCallError",
+                    {
+                        message:
+                            "You are not allowed to call in this conversation."
+                    }
+                );
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // GET OTHER PARTICIPANTS
+            // -------------------------------------------------
+
+            const receiverIds =
+                conversation.participants.filter(
+                    participant =>
+                        String(
+                            participant
+                        ) !==
+                        String(
+                            caller._id
+                        )
+                );
+
+
+            const receivers =
+                await User.find({
+                    _id: {
+                        $in: receiverIds
+                    }
+                })
+                .select(
+                    "_id name role"
+                );
+
+
+            // -------------------------------------------------
+            // ONLY TEACHER / STUDENT CAN RECEIVE
+            // -------------------------------------------------
+
+            const invalidReceiver =
+                receivers.some(
+                    receiver =>
+                        receiver.role !== "teacher" &&
+                        receiver.role !== "student"
+                );
+
+
+            if (invalidReceiver) {
+
+                socket.emit(
+                    "voiceCallError",
+                    {
+                        message:
+                            "Voice calls are only available between Founder/Admin and Teacher/Student."
+                    }
+                );
+
+                return;
+
+            }
+
+
+            // -------------------------------------------------
+            // SEND INCOMING CALL TO EACH RECEIVER
+            // -------------------------------------------------
+
+            for (
+                const receiver
+                of receivers
+            ) {
+
+                messenger
+                    .to(
+                        `gpa-user:${receiver._id}`
+                    )
+                    .emit(
+                        "incomingVoiceCall",
+                        {
+
+                            conversationId:
+                                String(
+                                    conversation._id
+                                ),
+
+                            callerId:
+                                String(
+                                    caller._id
+                                ),
+
+                            callerName:
+                                caller.name,
+
+                            callerRole:
+                                caller.role
+
+                        }
+                    );
+
+            }
+
+
+            // -------------------------------------------------
+            // CONFIRM CALL STARTED
+            // -------------------------------------------------
+
+            socket.emit(
+                "voiceCallStarted",
+                {
+
+                    conversationId:
+                        String(
+                            conversation._id
+                        )
+
+                }
+            );
+
+        }
+        catch (error) {
+
+            console.error(
+                "START VOICE CALL ERROR:",
+                error
+            );
+
+            socket.emit(
+                "voiceCallError",
+                {
+                    message:
+                        "Unable to start voice call."
+                }
+            );
+
+        }
+
+    }
+);
+
+
+// ---------------------------------------------------------
+// REJECT VOICE CALL
+// ---------------------------------------------------------
+
+socket.on(
+    "rejectVoiceCall",
+    async (data) => {
+
+        try {
+
+            const {
+                conversationId,
+                callerId
+            } = data || {};
+
+
+            if (
+                !conversationId ||
+                !callerId
+            ) {
+
+                return;
+
+            }
+
+
+            messenger
+                .to(
+                    `gpa-user:${callerId}`
+                )
+                .emit(
+                    "voiceCallRejected",
+                    {
+
+                        conversationId:
+                            String(
+                                conversationId
+                            ),
+
+                        rejectedBy:
+                            String(
+                                socket.gpaUser._id
+                            )
+
+                    }
+                );
+
+        }
+        catch (error) {
+
+            console.error(
+                "REJECT VOICE CALL ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
+
+
+// ---------------------------------------------------------
+// END VOICE CALL
+// ---------------------------------------------------------
+
+socket.on(
+    "endVoiceCall",
+    async (data) => {
+
+        try {
+
+            const {
+                conversationId,
+                otherUserId
+            } = data || {};
+
+
+            if (
+                !conversationId ||
+                !otherUserId
+            ) {
+
+                return;
+
+            }
+
+
+            messenger
+                .to(
+                    `gpa-user:${otherUserId}`
+                )
+                .emit(
+                    "voiceCallEnded",
+                    {
+
+                        conversationId:
+                            String(
+                                conversationId
+                            ),
+
+                        endedBy:
+                            String(
+                                socket.gpaUser._id
+                            )
+
+                    }
+                );
+
+        }
+        catch (error) {
+
+            console.error(
+                "END VOICE CALL ERROR:",
+                error
+            );
+
+        }
+
+    }
+);
+
 
 module.exports =
     registerMessengerSocket;
