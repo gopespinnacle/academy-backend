@@ -1113,48 +1113,114 @@ socket.on(
 
 
             // -----------------------------------------
-            // SEND PERSONAL SOCKET
-            // NOTIFICATION TO EVERY RECEIVER
+// SEND PERSONAL SOCKET NOTIFICATION
+// TO RECEIVERS + ALL FOUNDERS
+// -----------------------------------------
+
+const founderUsers =
+    await User.find({
+        role: "founder"
+    })
+    .select("_id");
+
+
+const socketNotificationUserIds =
+    [
+        ...receivers.map(
+            receiver =>
+                String(
+                    receiver._id
+                )
+        ),
+
+        ...founderUsers.map(
+            founder =>
+                String(
+                    founder._id
+                )
+        )
+    ];
+
+
+// Remove duplicate user IDs
+const uniqueSocketNotificationUserIds =
+    [
+        ...new Set(
+            socketNotificationUserIds
+        )
+    ];
+
+
+for (
+    const userId
+    of uniqueSocketNotificationUserIds
+) {
+
+    messenger.to(
+        `gpa-user:${userId}`
+    ).emit(
+        "messengerNewMessageNotification",
+        {
+            conversationId,
+
+            message:
+                populatedMessage
+        }
+    );
+
+}
+
+
             // -----------------------------------------
+// SEND FCM NOTIFICATION
+// TO RECEIVERS + ALL FOUNDERS
+// -----------------------------------------
 
-            for (
-                const receiver
-                of receivers
-            ) {
-
-                messenger.to(
-                    `gpa-user:${receiver._id}`
-                ).emit(
-                    "messengerNewMessageNotification",
-                    {
-                        conversationId,
-
-                        message:
-                            populatedMessage
-                    }
-                );
-
-            }
+const founderUsersForFCM =
+    await User.find({
+        role: "founder"
+    })
+    .select("_id");
 
 
-            // -----------------------------------------
-            // SEND FCM TO EVERY RECEIVER
-            // -----------------------------------------
+const fcmNotificationUserIds =
+    [
+        ...receivers.map(
+            receiver =>
+                String(
+                    receiver._id
+                )
+        ),
 
-            await sendFCMNotification(
+        ...founderUsersForFCM.map(
+            founder =>
+                String(
+                    founder._id
+                )
+        )
+    ];
 
-                receivers.map(
-                    receiver =>
-                        receiver._id
-                ),
 
-                sender.name,
+// Remove duplicate user IDs
+const uniqueFCMNotificationUserIds =
+    [
+        ...new Set(
+            fcmNotificationUserIds
+        )
+    ];
 
-                message.trim(),
 
-                conversationId
+await sendFCMNotification(
 
-            );
+    uniqueFCMNotificationUserIds,
+
+    sender.name,
+
+    message.trim(),
+
+    conversationId
+
+);
 
 
         }
