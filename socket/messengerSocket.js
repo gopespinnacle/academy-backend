@@ -2018,7 +2018,7 @@ messenger
                 }
             );
 
-        }
+                }
         catch (error) {
 
             console.error(
@@ -2032,6 +2032,65 @@ messenger
                     message:
                         "Unable to start voice call."
                 }
+            );
+
+        }
+
+    }
+);
+
+
+// =========================================================
+// ACCEPT VOICE CALL
+// =========================================================
+
+socket.on(
+    "acceptVoiceCall",
+    async (data) => {
+
+        try {
+
+            const {
+                conversationId,
+                callerId
+            } = data || {};
+
+            if (
+                !conversationId ||
+                !callerId
+            ) {
+
+                return;
+
+            }
+
+            messenger
+                .to(
+                    `gpa-user:${callerId}`
+                )
+                .emit(
+                    "voiceCallAccepted",
+                    {
+
+                        conversationId:
+                            String(
+                                conversationId
+                            ),
+
+                        acceptedBy:
+                            String(
+                                socket.gpaUser._id
+                            )
+
+                    }
+                );
+
+        }
+        catch (error) {
+
+            console.error(
+                "ACCEPT VOICE CALL ERROR:",
+                error
             );
 
         }
