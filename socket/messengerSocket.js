@@ -1025,9 +1025,15 @@ if (
     "admin"
 ) {
 
-    // Admin is allowed in a direct
-    // Admin ↔ Teacher conversation.
-    continue;
+    socket.emit(
+        "messengerError",
+        {
+            message:
+                "Teachers cannot reply to Admin messages."
+        }
+    );
+
+    return;
 
 }
 
@@ -1119,20 +1125,26 @@ if (
 
         }
 
-                // ---------------------------------------------
-        // ADMIN
-        // ---------------------------------------------
+         // ---------------------------------------------
+// ADMIN
+// ---------------------------------------------
 
-        if (
-            receiver.role ===
-            "admin"
-        ) {
+if (
+    receiver.role ===
+    "admin"
+) {
 
-            // Admin is allowed.
-            continue;
-
+    socket.emit(
+        "messengerError",
+        {
+            message:
+                "Students cannot reply to Admin messages."
         }
+    );
 
+    return;
+
+}
 
         // ---------------------------------------------
         // TEACHER
