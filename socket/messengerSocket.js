@@ -179,13 +179,42 @@ console.log(
                 },
 
                 webpush: {
+
     headers: {
+
         Urgency: "high"
+
     },
+
+    notification: {
+
+        title:
+            `${senderName} - GPA Messenger`,
+
+        body:
+            notificationBody,
+
+        icon:
+            "https://www.gopespinnacle.com/favicon.ico",
+
+        badge:
+            "https://www.gopespinnacle.com/favicon.ico",
+
+        tag:
+            `gpa-messenger-${conversationId}`,
+
+        requireInteraction:
+            false
+
+    },
+
     fcmOptions: {
+
         link:
             "https://www.gopespinnacle.com/gpa-messenger.html"
+
     }
+
 }
 
             });
