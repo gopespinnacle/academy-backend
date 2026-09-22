@@ -66,13 +66,18 @@ async function sendFCMNotification(
         // -----------------------------------------------------
 
         const tokenRecords =
-            await FCMToken.find({
+    await FCMToken.find({
 
-                user: {
-                    $in: receiverIds
-                }
+        user: {
+            $in: receiverIds
+        }
 
-            }).select("token");
+    })
+    .populate(
+        "user",
+        "_id name role"
+    )
+    .select("token user platform deviceId lastSeenAt");
 
 
         if (!tokenRecords.length) {
@@ -91,6 +96,42 @@ async function sendFCMNotification(
             tokenRecords.map(
                 item => item.token
             );
+            console.log(
+    "========== GPA FCM TARGET TOKENS =========="
+);
+
+tokenRecords.forEach(
+    item => {
+
+        console.log(
+            "FCM TARGET:",
+            {
+                userId:
+                    item.user?._id,
+
+                userName:
+                    item.user?.name,
+
+                role:
+                    item.user?.role,
+
+                platform:
+                    item.platform,
+
+                deviceId:
+                    item.deviceId,
+
+                lastSeenAt:
+                    item.lastSeenAt
+            }
+        );
+
+    }
+);
+
+console.log(
+    "============================================"
+);
 
 
         // -----------------------------------------------------
