@@ -2411,13 +2411,13 @@ socket.on(
 
             const {
                 conversationId,
-                otherUserId
+                receiverId
             } = data || {};
 
 
             if (
                 !conversationId ||
-                !otherUserId
+                !receiverId
             ) {
 
                 return;
@@ -2427,7 +2427,7 @@ socket.on(
 
             messenger
                 .to(
-                    `gpa-user:${otherUserId}`
+                    `gpa-user:${receiverId}`
                 )
                 .emit(
                     "voiceCallEnded",
