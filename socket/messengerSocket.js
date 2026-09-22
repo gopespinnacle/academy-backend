@@ -138,15 +138,14 @@ async function sendFCMNotification(
                 },
 
                 webpush: {
-
-                    fcmOptions: {
-
-                        link:
-                            "https://www.gopespinnacle.com/gpa-messenger.html"
-
-                    }
-
-                }
+    headers: {
+        Urgency: "high"
+    },
+    fcmOptions: {
+        link:
+            "https://www.gopespinnacle.com/gpa-messenger.html"
+    }
+}
 
             });
 
@@ -154,6 +153,34 @@ async function sendFCMNotification(
         console.log(
             `FCM notification sent: ${response.successCount} successful, ${response.failureCount} failed`
         );
+
+        response.responses.forEach(
+    (result, index) => {
+
+        if (!result.success) {
+
+            console.error(
+                "❌ FCM DELIVERY FAILED:",
+                {
+                    token: tokens[index],
+                    errorCode:
+                        result.error?.code,
+                    errorMessage:
+                        result.error?.message
+                }
+            );
+
+        } else {
+
+            console.log(
+                "✅ FCM DELIVERY SUCCESS:",
+                tokens[index]
+            );
+
+        }
+
+    }
+);
 
 
         // -----------------------------------------------------
