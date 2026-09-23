@@ -194,8 +194,8 @@ async function sendPushNotification({
         // -------------------------------------------------
 
         const response =
-            await admin.messaging()
-                .sendEachForMulticast({
+    await admin
+        .sendEachForMulticast({
 
                     tokens:
 
