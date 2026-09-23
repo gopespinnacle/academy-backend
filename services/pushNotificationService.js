@@ -3,7 +3,7 @@
 // NEW SYSTEM
 // ==========================================
 
-const admin =
+const { messaging } =
     require("../firebaseAdmin");
 
 const PushToken =
@@ -194,7 +194,7 @@ async function sendPushNotification({
         // -------------------------------------------------
 
         const response =
-    await admin
+    await messaging
         .sendEachForMulticast({
 
                     tokens:
