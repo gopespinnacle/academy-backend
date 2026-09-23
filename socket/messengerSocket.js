@@ -1513,18 +1513,18 @@ for (
 
 
             // -----------------------------------------
-// SEND FCM NOTIFICATION
+// SEND NEW PUSH NOTIFICATION
 // TO RECEIVERS + ALL FOUNDERS
 // -----------------------------------------
 
-const founderUsersForFCM =
+const founderUsersForPush =
     await User.find({
         role: "founder"
     })
     .select("_id");
 
 
-const fcmNotificationUserIds =
+const pushNotificationUserIds =
     [
         ...receivers.map(
             receiver =>
@@ -1533,7 +1533,7 @@ const fcmNotificationUserIds =
                 )
         ),
 
-        ...founderUsersForFCM.map(
+        ...founderUsersForPush.map(
             founder =>
                 String(
                     founder._id
@@ -1543,25 +1543,35 @@ const fcmNotificationUserIds =
 
 
 // Remove duplicate user IDs
-const uniqueFCMNotificationUserIds =
+const uniquePushNotificationUserIds =
     [
         ...new Set(
-            fcmNotificationUserIds
+            pushNotificationUserIds
         )
     ];
 
 
-await sendFCMNotification(
+await sendPushNotification({
 
-    uniqueFCMNotificationUserIds,
+    receiverIds:
+        uniquePushNotificationUserIds,
 
-    sender.name,
+    senderName:
+        sender.name,
 
-    message.trim(),
+    messageText:
+        message.trim(),
 
-    conversationId
+    conversationId:
+        conversationId,
 
-);
+    messageId:
+        newMessage._id,
+
+    senderId:
+        sender._id
+
+});
 
 
         }
