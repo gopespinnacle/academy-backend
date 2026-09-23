@@ -168,6 +168,9 @@ const studentRoutes =
     const messengerRoutes =
     require("./routes/messengerRoutes");
 
+    const pushTokenRoutes =
+    require("./routes/pushTokenRoutes");
+
 const admissionRoutes =
     require("./routes/admissionRoutes");
 
@@ -510,6 +513,12 @@ app.use(
 app.use(
     "/api/messenger",
     messengerRoutes
+);
+
+
+app.use(
+    "/api/push-token",
+    pushTokenRoutes
 );
 
 
