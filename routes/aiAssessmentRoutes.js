@@ -23,6 +23,11 @@ router.post(
 );
 
 router.get(
+    "/assessment/:id/status",
+    AIAssessmentController.getAssessmentStatus
+);
+
+router.get(
     "/question-bank/:id",
     AIAssessmentController.getQuestionBank
 );

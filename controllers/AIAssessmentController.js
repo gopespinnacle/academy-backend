@@ -25,85 +25,148 @@ exports.uploadChapter = async (req, res) => {
     try {
 
         const {
-    className,
-    subject,
-    chapter,
-    teacherId,
-    uploadMode,
-    questionLevel,
-    totalMarks,
-    duration,
-    questionMode,
-    questionTypes,
-    assignedStudents
-} = req.body;
+            className,
+            subject,
+            chapter,
+            teacherId,
+            uploadMode,
+            questionLevel,
+            totalMarks,
+            duration,
+            questionMode,
+            questionTypes,
+            assignedStudents
+        } = req.body;
 
-let selectedQuestionTypes = [];
 
-try {
+        /*
+        ====================================================
+        PARSE QUESTION TYPES
+        ====================================================
+        */
 
-    selectedQuestionTypes =
-        questionTypes
-            ? JSON.parse(questionTypes)
-            : [];
+        let selectedQuestionTypes = [];
 
-} catch (err) {
+        try {
 
-    selectedQuestionTypes = [];
+            selectedQuestionTypes =
+                questionTypes
+                    ? JSON.parse(questionTypes)
+                    : [];
 
-}
+        }
+        catch (err) {
 
-let selectedStudents = [];
+            selectedQuestionTypes = [];
 
-try {
+        }
 
-    selectedStudents =
-        assignedStudents
-            ? JSON.parse(assignedStudents)
-            : [];
 
-} catch (err) {
+        /*
+        ====================================================
+        PARSE STUDENTS
+        ====================================================
+        */
 
-    selectedStudents = [];
-}
+        let selectedStudents = [];
 
-if (!Array.isArray(selectedStudents) ||
-    selectedStudents.length === 0) {
+        try {
 
-    return res.status(400).json({
+            selectedStudents =
+                assignedStudents
+                    ? JSON.parse(assignedStudents)
+                    : [];
 
-        success: false,
+        }
+        catch (err) {
 
-        message:
-            "Please select at least one student."
+            selectedStudents = [];
 
-    });
+        }
 
-}
+
+        /*
+        ====================================================
+        VALIDATION
+        ====================================================
+        */
+
+        if (
+            !Array.isArray(selectedStudents) ||
+            selectedStudents.length === 0
+        ) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                message:
+                    "Please select at least one student."
+
+            });
+
+        }
+
 
         if (!req.file) {
+
             return res.status(400).json({
+
                 success: false,
-                message: "Please upload a PDF file."
+
+                message:
+                    "Please upload a PDF file."
+
             });
+
         }
 
-        if (!className || !subject || !chapter || !teacherId) {
+
+        if (
+            !className ||
+            !subject ||
+            !chapter ||
+            !teacherId
+        ) {
+
             return res.status(400).json({
+
                 success: false,
-                message: "Missing required fields."
+
+                message:
+                    "Missing required fields."
+
             });
+
         }
 
-        const latest = await AIAssessment
-            .findOne({
-                className,
-                subject,
-                chapter
-            })
-            .sort({ version: -1 });
 
-        if (latest && uploadMode !== "newVersion") {
+        /*
+        ====================================================
+        CHECK EXISTING VERSION
+        ====================================================
+        */
+
+        const latest =
+            await AIAssessment
+                .findOne({
+
+                    className,
+                    subject,
+                    chapter
+
+                })
+                .sort({
+
+                    version: -1
+
+                });
+
+
+        if (
+            latest &&
+            uploadMode !== "newVersion"
+        ) {
 
             return res.json({
 
@@ -111,9 +174,11 @@ if (!Array.isArray(selectedStudents) ||
 
                 duplicate: true,
 
-                latestVersion: latest.version,
+                latestVersion:
+                    latest.version,
 
-                assessmentId: latest._id,
+                assessmentId:
+                    latest._id,
 
                 message:
                     "Chapter already exists."
@@ -122,23 +187,109 @@ if (!Array.isArray(selectedStudents) ||
 
         }
 
+
+        /*
+        ====================================================
+        VERSION
+        ====================================================
+        */
+
         let version = 1;
 
-        if (latest && uploadMode === "newVersion") {
 
-            version = latest.version + 1;
+        if (
+            latest &&
+            uploadMode === "newVersion"
+        ) {
+
+            version =
+                latest.version + 1;
 
         }
 
-        const uploaded = await s3.uploadFile(
 
-            req.file,
+        /*
+        ====================================================
+        UPLOAD PDF TO S3
+        ====================================================
+        */
 
-            "AI/AssessmentChapters"
+        const uploaded =
+            await s3.uploadFile(
 
+                req.file,
+
+                "AI/AssessmentChapters"
+
+            );
+
+
+        /*
+        ====================================================
+        CREATE ASSESSMENT RECORD
+        ====================================================
+        */
+
+        const assessment =
+            await AIAssessment.create({
+
+                className,
+
+                subject,
+
+                chapter,
+
+                uploadedFileName:
+                    req.file.originalname,
+
+                s3Key:
+                    uploaded.Key,
+
+                s3Url:
+                    uploaded.Location,
+
+                uploadedBy:
+                    teacherId,
+
+                version,
+
+                status:
+                    "Uploaded",
+
+                questionLevel,
+
+                totalMarks:
+                    Number(totalMarks),
+
+                duration,
+
+                questionMode,
+
+                questionTypes:
+                    selectedQuestionTypes
+
+            });
+
+
+        console.log(
+            "AI ASSESSMENT CREATED:",
+            assessment._id
         );
 
-        const assessment = await AIAssessment.create({
+
+        /*
+        ====================================================
+        START BACKGROUND GENERATION
+        ====================================================
+        */
+
+        processQuestionBankGeneration({
+
+            assessmentId:
+                assessment._id,
+
+            pdfBuffer:
+                req.file.buffer,
 
             className,
 
@@ -146,173 +297,74 @@ if (!Array.isArray(selectedStudents) ||
 
             chapter,
 
-            uploadedFileName:
-                req.file.originalname,
-
-            s3Key:
-                uploaded.Key,
-
-            s3Url:
-                uploaded.Location,
-
-            uploadedBy:
-                teacherId,
+            teacherId,
 
             version,
 
-            status:
-                "Uploaded",
+            questionLevel,
 
-                questionLevel,
-totalMarks: Number(totalMarks),
-duration,
-questionMode,
-questionTypes: selectedQuestionTypes
+            totalMarks,
+
+            duration,
+
+            questionMode,
+
+            selectedQuestionTypes
+
+        })
+        .catch(error => {
+
+            console.error(
+                "BACKGROUND QUESTION GENERATION ERROR:",
+                error
+            );
 
         });
 
-        // ------------------------------------
-// Extract PDF Text
-// ------------------------------------
 
-const pdfData = await pdfExtractor.extractText(
-    req.file.buffer
-);
+        /*
+        ====================================================
+        IMMEDIATE RESPONSE
+        ====================================================
+        */
 
-// ------------------------------------
-// Generate AI Questions
-// ------------------------------------
+        return res.status(202).json({
 
-const aiResponse =
-await openAIService.generateQuestionBank({
+            success: true,
 
-    pdfText: pdfData.text,
+            processing: true,
 
-    pdfPages: pdfData.pageTexts,
+            assessmentId:
+                assessment._id,
 
-    className,
+            message:
+                "Question Bank generation started. Please wait while the chapter is processed."
 
-    subject,
-
-    chapter,
-
-    questionLevel,
-
-    totalMarks,
-
-    duration,
-
-    questionMode,
-
-    questionTypes: selectedQuestionTypes
-
-});
-
-// ------------------------------------
-// Convert JSON
-// ------------------------------------
-
-let parsed;
-
-try{
-
-    parsed = JSON.parse(aiResponse);
-
-}catch(err){
-
-    return res.status(500).json({
-
-        success:false,
-
-        message:"AI returned invalid JSON.",
-
-        aiResponse
-
-    });
-
-}
-
-// ------------------------------------
-// Save Question Bank
-// ------------------------------------
-
-const questionBank =
-await QuestionBank.create({
-
-    assessment: assessment._id,
-
-    className,
-
-    subject,
-
-    chapter,
-
-    version,
-
-    generatedBy: teacherId,
-
-    questionLevel,
-    totalMarks: Number(totalMarks),
-    duration,
-    questionMode,
-    questionTypes: selectedQuestionTypes,
-
-    questions: parsed.questions || [],
-
-    totalQuestions:
-        parsed.questions
-            ? parsed.questions.length
-            : 0,
-
-    aiModel:"gpt-5-mini"
-
-});
-
-// ------------------------------------
-// Link Question Bank
-// ------------------------------------
-
-assessment.questionBankId =
-questionBank._id;
-
-assessment.status =
-"QuestionBankReady";
-
-await assessment.save();
-
-       return res.json({
-
-    success: true,
-
-    message: "Question Bank generated successfully.",
-
-    assessment,
-
-    questionBank,
-
-    questionBankId: questionBank._id,
-
-    totalQuestions: questionBank.totalQuestions
-
-});
+        });
 
     }
-
     catch (err) {
 
-        console.error(err);
+        console.error(
+            "Upload Chapter Error:",
+            err
+        );
 
-        res.status(500).json({
+
+        return res.status(500).json({
 
             success: false,
 
-            message: err.message
+            message:
+                err.message
 
         });
 
     }
 
 };
+
+
 
 /*
 ====================================================
@@ -1698,6 +1750,360 @@ async (req, res) => {
 
         console.error(
             "Submit Student Answers Error:",
+            err
+        );
+
+
+        return res.status(500).json({
+
+            success: false,
+
+            message:
+                err.message
+
+        });
+
+    }
+
+};
+
+
+/*
+====================================================
+BACKGROUND QUESTION BANK GENERATION
+====================================================
+*/
+
+async function processQuestionBankGeneration({
+
+    assessmentId,
+
+    pdfBuffer,
+
+    className,
+
+    subject,
+
+    chapter,
+
+    teacherId,
+
+    version,
+
+    questionLevel,
+
+    totalMarks,
+
+    duration,
+
+    questionMode,
+
+    selectedQuestionTypes
+
+}) {
+
+    try {
+
+        console.log(
+            "===================================="
+        );
+
+        console.log(
+            "BACKGROUND AI GENERATION STARTED"
+        );
+
+        console.log(
+            "Assessment:",
+            assessmentId
+        );
+
+        console.log(
+            "Class:",
+            className
+        );
+
+        console.log(
+            "Subject:",
+            subject
+        );
+
+        console.log(
+            "Chapter:",
+            chapter
+        );
+
+        console.log(
+            "===================================="
+        );
+
+
+        /*
+        ====================================================
+        EXTRACT PDF TEXT
+        ====================================================
+        */
+
+        const pdfData =
+            await pdfExtractor.extractText(
+                pdfBuffer
+            );
+
+
+        console.log(
+            "BACKGROUND PDF EXTRACTION COMPLETE"
+        );
+
+        console.log(
+            "Pages:",
+            pdfData.pageTexts
+                ? pdfData.pageTexts.length
+                : 0
+        );
+
+
+        /*
+        ====================================================
+        GENERATE AI QUESTION BANK
+        ====================================================
+        */
+
+        const aiResponse =
+            await openAIService.generateQuestionBank({
+
+                pdfText:
+                    pdfData.text,
+
+                pdfPages:
+                    pdfData.pageTexts,
+
+                className,
+
+                subject,
+
+                chapter,
+
+                questionLevel,
+
+                totalMarks,
+
+                duration,
+
+                questionMode,
+
+                questionTypes:
+                    selectedQuestionTypes
+
+            });
+
+
+        console.log(
+            "BACKGROUND AI RESPONSE RECEIVED"
+        );
+
+
+        /*
+        ====================================================
+        PARSE AI RESPONSE
+        ====================================================
+        */
+
+        let parsed;
+
+
+        try {
+
+            parsed =
+                JSON.parse(
+                    aiResponse
+                );
+
+        }
+        catch (err) {
+
+            console.error(
+                "BACKGROUND AI INVALID JSON:",
+                err
+            );
+
+            return;
+
+        }
+
+
+        /*
+        ====================================================
+        SAVE QUESTION BANK
+        ====================================================
+        */
+
+        const questionBank =
+            await QuestionBank.create({
+
+                assessment:
+                    assessmentId,
+
+                className,
+
+                subject,
+
+                chapter,
+
+                version,
+
+                generatedBy:
+                    teacherId,
+
+                questionLevel,
+
+                totalMarks:
+                    Number(totalMarks),
+
+                duration,
+
+                questionMode,
+
+                questionTypes:
+                    selectedQuestionTypes,
+
+                questions:
+                    parsed.questions || [],
+
+                totalQuestions:
+                    parsed.questions
+                        ? parsed.questions.length
+                        : 0,
+
+                aiModel:
+                    "gpt-5-mini"
+
+            });
+
+
+        console.log(
+            "BACKGROUND QUESTION BANK SAVED:",
+            questionBank._id
+        );
+
+        console.log(
+            "TOTAL QUESTIONS:",
+            questionBank.totalQuestions
+        );
+
+
+        /*
+        ====================================================
+        UPDATE ASSESSMENT
+        ====================================================
+        */
+
+        await AIAssessment.findByIdAndUpdate(
+
+            assessmentId,
+
+            {
+
+                questionBankId:
+                    questionBank._id,
+
+                status:
+                    "QuestionBankReady"
+
+            }
+
+        );
+
+
+        console.log(
+            "===================================="
+        );
+
+        console.log(
+            "AI QUESTION BANK GENERATION COMPLETE"
+        );
+
+        console.log(
+            "Assessment:",
+            assessmentId
+        );
+
+        console.log(
+            "Question Bank:",
+            questionBank._id
+        );
+
+        console.log(
+            "Questions:",
+            questionBank.totalQuestions
+        );
+
+        console.log(
+            "===================================="
+        );
+
+    }
+    catch (err) {
+
+        console.error(
+            "BACKGROUND QUESTION GENERATION FAILED:",
+            err
+        );
+
+    }
+
+}
+
+/*
+====================================================
+GET QUESTION BANK GENERATION STATUS
+====================================================
+*/
+
+exports.getAssessmentStatus = async (req, res) => {
+
+    try {
+
+        const { id } = req.params;
+
+
+        const assessment =
+            await AIAssessment.findById(id);
+
+
+        if (!assessment) {
+
+            return res.status(404).json({
+
+                success: false,
+
+                message:
+                    "Assessment not found."
+
+            });
+
+        }
+
+
+        return res.json({
+
+            success: true,
+
+            status:
+                assessment.status,
+
+            assessmentId:
+                assessment._id,
+
+            questionBankId:
+                assessment.questionBankId || null
+
+        });
+
+    }
+
+    catch (err) {
+
+        console.error(
+            "Get Assessment Status Error:",
             err
         );
 
