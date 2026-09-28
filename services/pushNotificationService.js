@@ -259,29 +259,18 @@ async function sendPushNotification({
                         },
 
                         notification: {
-
-                            title:
-                                title,
-
-                            body:
-                                body,
-
-                            icon:
-                                "/favicon.ico",
-
-                            badge:
-                                "/favicon.ico",
-
-                            tag:
-                                "gpa-message-" +
-                                String(
-                                    messageId
-                                ),
-
-                            renotify:
-                                true
-
-                        },
+    title: title,
+    body: body,
+    icon: "/favicon.ico",
+    badge: "/favicon.ico",
+    tag:
+        "gpa-message-" +
+        String(messageId),
+    renotify: true,
+    requireInteraction: true,
+    silent: false,
+    vibrate: [200, 100, 200]
+},
 
                         fcmOptions: {
 
