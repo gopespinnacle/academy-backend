@@ -131,6 +131,23 @@ async function sendPushNotification({
                     record.token
             );
 
+            console.log(
+    "GPA PUSH TARGET TOKENS:",
+    uniqueRecords.map(record => ({
+        userName:
+            record.user?.name,
+
+        platform:
+            record.platform,
+
+        deviceId:
+            record.deviceId,
+
+        tokenLast10:
+            record.token?.slice(-10)
+    }))
+);
+
 
         if (!tokens.length) {
 
