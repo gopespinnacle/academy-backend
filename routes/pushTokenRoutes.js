@@ -123,6 +123,28 @@ router.post(
             }
 
 
+                        // -------------------------------------------------
+            // PUSH TOKEN REGISTRATION LOG
+            // -------------------------------------------------
+
+            console.log(
+                "GPA PUSH TOKEN REGISTERED:",
+                {
+                    userId:
+                        String(req.user._id),
+
+                    userName:
+                        req.user.name,
+
+                    platform:
+                        platform,
+
+                    deviceId:
+                        deviceId || ""
+                }
+            );
+
+
             // -------------------------------------------------
             // SUCCESS
             // -------------------------------------------------
