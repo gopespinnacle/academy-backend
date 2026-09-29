@@ -2112,6 +2112,96 @@ messenger
         }
     );
 
+    // =========================================================
+// ANDROID FCM - INCOMING VOICE CALL
+// =========================================================
+
+try {
+
+    const androidTokens =
+        await FCMToken.find({
+            user: receiver._id,
+            platform: "android"
+        }).select("token");
+
+    if (androidTokens.length) {
+
+        const tokens =
+            androidTokens.map(
+                item => item.token
+            );
+
+        const callId =
+            `${conversation._id}-${Date.now()}`;
+
+        const fcmResponse =
+            await messaging.sendEachForMulticast({
+
+                tokens: tokens,
+
+                // IMPORTANT:
+                // DATA ONLY
+                // Do NOT add "notification" here.
+                data: {
+
+                    type:
+                        "voice_call",
+
+                    callId:
+                        callId,
+
+                    conversationId:
+                        String(
+                            conversation._id
+                        ),
+
+                    callerId:
+                        String(
+                            caller._id
+                        ),
+
+                    callerName:
+                        caller.name,
+
+                    callerRole:
+                        caller.role
+                },
+
+                android: {
+
+                    priority:
+                        "high"
+                }
+            });
+
+        console.log(
+            "GPA ANDROID CALL FCM:",
+            {
+                success:
+                    fcmResponse.successCount,
+
+                failed:
+                    fcmResponse.failureCount
+            }
+        );
+
+    } else {
+
+        console.log(
+            "No Android FCM token found for receiver:",
+            String(receiver._id)
+        );
+    }
+
+}
+catch (fcmError) {
+
+    console.error(
+        "GPA ANDROID CALL FCM ERROR:",
+        fcmError
+    );
+}
+
 
             // -------------------------------------------------
             // CONFIRM CALL STARTED
