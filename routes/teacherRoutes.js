@@ -619,7 +619,10 @@ router.get("/all-period-assignments", async (req, res) => {
 
         const assignments = await PeriodAssignment.find({
     teacher: teacherId
-}).populate("assignments.student","name");
+}).populate(
+    "assignments.student",
+    "name studentId"
+);
 
 const grouped = [];
 
