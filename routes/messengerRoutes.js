@@ -1821,129 +1821,167 @@ if (
 
 
             // =================================================
-            // TEACHER SECURITY
+// TEACHER SECURITY
+// Teacher can message:
+// Founder
+// Admin
+// Mapped Students
+// =================================================
+
+if (
+    sender.role ===
+    "teacher"
+) {
+
+    const invalidReceiver =
+        receivers.some(
+            receiver =>
+                receiver.role !== "student" &&
+                receiver.role !== "founder" &&
+                receiver.role !== "admin"
+        );
+
+
+    if (
+        invalidReceiver
+    ) {
+
+        return res.status(403).json({
+
+            success: false,
+
+            message:
+                "Teachers can message Founder, Admins, and mapped Students."
+
+        });
+
+    }
+
+
+    // -------------------------------------------------
+    // ONLY CHECK MAPPING FOR STUDENT RECEIVERS
+    // -------------------------------------------------
+
+    for (
+        const receiver
+        of receivers
+    ) {
+
+        if (
+            receiver.role !==
+            "student"
+        ) {
+
+            continue;
+
+        }
+
+
+        const mapped =
+            await areTeacherAndStudentMapped(
+                sender._id,
+                receiver._id
+            );
+
+
+        if (!mapped) {
+
+            return res.status(403).json({
+
+                success: false,
+
+                message:
+                    "This student is not mapped to you."
+
+            });
+
+        }
+
+    }
+
+}
+
+
             // =================================================
+// STUDENT SECURITY
+// Student can message:
+// Founder
+// Admin
+// Mapped Teachers
+// =================================================
 
-            if (
-                sender.role ===
-                "teacher"
-            ) {
+if (
+    sender.role ===
+    "student"
+) {
 
-                const invalidReceiver =
-                    receivers.some(
-                        receiver =>
-                            receiver.role !==
-                            "student"
-                    );
-
-
-                if (
-                    invalidReceiver
-                ) {
-
-                    return res.status(403).json({
-
-                        success: false,
-
-                        message:
-                            "Teachers can only message mapped students."
-
-                    });
-
-                }
+    const invalidReceiver =
+        receivers.some(
+            receiver =>
+                receiver.role !== "teacher" &&
+                receiver.role !== "founder" &&
+                receiver.role !== "admin"
+        );
 
 
-                for (
-                    const receiver
-                    of receivers
-                ) {
+    if (
+        invalidReceiver
+    ) {
 
-                    const mapped =
-                        await areTeacherAndStudentMapped(
-                            sender._id,
-                            receiver._id
-                        );
+        return res.status(403).json({
 
+            success: false,
 
-                    if (!mapped) {
+            message:
+                "Students can message Founder, Admins, and mapped Teachers."
 
-                        return res.status(403).json({
+        });
 
-                            success: false,
-
-                            message:
-                                "This student is not mapped to you."
-
-                        });
-
-                    }
-
-                }
-
-            }
+    }
 
 
-            // =================================================
-            // STUDENT SECURITY
-            // =================================================
+    // -------------------------------------------------
+    // ONLY CHECK MAPPING FOR TEACHER RECEIVERS
+    // -------------------------------------------------
 
-            if (
-                sender.role ===
-                "student"
-            ) {
+    for (
+        const receiver
+        of receivers
+    ) {
 
-                const invalidReceiver =
-                    receivers.some(
-                        receiver =>
-                            receiver.role !==
-                            "teacher"
-                    );
+        if (
+            receiver.role !==
+            "teacher"
+        ) {
 
+            continue;
 
-                if (
-                    invalidReceiver
-                ) {
-
-                    return res.status(403).json({
-
-                        success: false,
-
-                        message:
-                            "Students can only message mapped teachers."
-
-                    });
-
-                }
+        }
 
 
-                for (
-                    const receiver
-                    of receivers
-                ) {
-
-                    const mapped =
-                        await areTeacherAndStudentMapped(
-                            receiver._id,
-                            sender._id
-                        );
+        const mapped =
+            await areTeacherAndStudentMapped(
+                receiver._id,
+                sender._id
+            );
 
 
-                    if (!mapped) {
+        if (!mapped) {
 
-                        return res.status(403).json({
+            return res.status(403).json({
 
-                            success: false,
+                success: false,
 
-                            message:
-                                "This teacher is not mapped to you."
+                message:
+                    "This teacher is not mapped to you."
 
-                        });
+            });
 
-                    }
+        }
 
-                }
+    }
 
-            }
+}
 
 
             // =================================================
