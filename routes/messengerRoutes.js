@@ -402,7 +402,7 @@ router.get(
 
 
                 // -------------------------------------------------
-// ADD FOUNDER AS A PERSONAL CHAT CONTACT
+// ADD FOUNDER + ADMIN AS PERSONAL CHAT CONTACTS
 // -------------------------------------------------
 
 const founders =
@@ -417,13 +417,26 @@ const founders =
     });
 
 
+const admins =
+    await User.find({
+        role: "admin"
+    })
+    .select(
+        "_id name email role studentId teacherId"
+    )
+    .sort({
+        name: 1
+    });
+
+
 const contacts =
-    [
-        ...founders,
-        ...Array.from(
-            studentMap.values()
-        )
-    ];
+[
+    ...founders,
+    ...admins,
+    ...Array.from(
+        studentMap.values()
+    )
+];
 
 
 return res.json({
@@ -508,7 +521,7 @@ return res.json({
 
 
                 // -------------------------------------------------
-// ADD FOUNDER AS A PERSONAL CHAT CONTACT
+// ADD FOUNDER + ADMIN AS PERSONAL CHAT CONTACTS
 // -------------------------------------------------
 
 const founders =
@@ -523,13 +536,26 @@ const founders =
     });
 
 
+const admins =
+    await User.find({
+        role: "admin"
+    })
+    .select(
+        "_id name email role studentId teacherId"
+    )
+    .sort({
+        name: 1
+    });
+
+
 const contacts =
-    [
-        ...founders,
-        ...Array.from(
-            teacherMap.values()
-        )
-    ];
+[
+    ...founders,
+    ...admins,
+    ...Array.from(
+        teacherMap.values()
+    )
+];
 
 
 return res.json({
