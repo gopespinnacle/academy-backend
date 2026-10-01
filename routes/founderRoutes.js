@@ -42,6 +42,8 @@ const {
     sendWhatsAppDocument
 } = require("../services/sendWhatsApp");
 const TeacherLeave = require("../models/TeacherLeave");
+const DailyClassRegister =
+    require("../models/DailyClassRegister");
 const MonthlyFee = require("../models/MonthlyFee");
 
 const FinanceCategory = require("../models/FinanceCategory");
@@ -3469,6 +3471,97 @@ router.put(
 
 
             await leave.save();
+
+            /* =====================================================
+   AUTOMATIC DAILY CLASS REGISTER FOR APPROVED LEAVE
+   ===================================================== */
+
+const period =
+    await PeriodAssignment.findById(
+        leave.periodAssignment
+    );
+
+
+if(!period){
+
+    return res.status(500).json({
+
+        success: false,
+
+        message:
+            "Leave approved, but the assigned period was not found."
+
+    });
+
+}
+
+
+/* =====================================================
+   PREVENT DUPLICATE DAILY REGISTER
+   ===================================================== */
+
+const existingRegister =
+    await DailyClassRegister.findOne({
+
+        teacher:
+            leave.teacher,
+
+        periodAssignment:
+            leave.periodAssignment,
+
+        date:
+            leave.date
+
+    });
+
+
+/* =====================================================
+   CREATE ONLY IF NOT ALREADY CREATED
+   ===================================================== */
+
+if(!existingRegister){
+
+    await DailyClassRegister.create({
+
+        teacher:
+            leave.teacher,
+
+        periodAssignment:
+            leave.periodAssignment,
+
+        date:
+            leave.date,
+
+        className:
+            period.className,
+
+        subject:
+            period.subject || "",
+
+        scheduledStartTime:
+            period.startTime,
+
+        scheduledEndTime:
+            period.endTime,
+
+        actualStartTime:
+            "",
+
+        actualEndTime:
+            "",
+
+        teacherStatus:
+            "Absent",
+
+        topicCovered:
+            "",
+
+        students:
+            []
+
+    });
+
+}
 
 
             res.json({
