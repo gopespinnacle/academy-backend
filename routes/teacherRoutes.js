@@ -19,6 +19,8 @@ const ExamCamera = require("../models/ExamCamera");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const TeacherSchedule = require("../models/TeacherSchedule");
 const TeacherLeave = require("../models/TeacherLeave");
+const DailyClassRegister =
+    require("../models/DailyClassRegister");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
 
@@ -1476,6 +1478,308 @@ router.get(
 
                 message:
                     "Unable to load leave requests."
+
+            });
+
+        }
+
+    }
+);
+
+
+/* ================= DAILY CLASS REGISTER ================= */
+
+router.post(
+    "/daily-class-register",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+
+        try {
+
+            const teacherId = req.user.id;
+
+            const {
+                periodAssignmentId,
+                date,
+                className,
+                subject,
+                scheduledStartTime,
+                scheduledEndTime,
+                actualStartTime,
+                actualEndTime,
+                teacherStatus,
+                topicCovered,
+                students
+            } = req.body;
+
+
+            /* ================= VALIDATION ================= */
+
+            if (
+                !periodAssignmentId ||
+                !date ||
+                !className ||
+                !subject ||
+                !scheduledStartTime ||
+                !scheduledEndTime ||
+                !teacherStatus
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Required class details are missing."
+                });
+
+            }
+
+
+            /* ================= VERIFY PERIOD ================= */
+
+            const period =
+                await PeriodAssignment.findById(
+                    periodAssignmentId
+                );
+
+
+            if (!period) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Class period not found."
+                });
+
+            }
+
+
+            /* ================= VERIFY TEACHER ================= */
+
+            if (
+                period.teacher.toString()
+                !== teacherId.toString()
+            ) {
+
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "You are not authorized to save this class."
+                });
+
+            }
+
+
+            /* ================= TEACHER ABSENT ================= */
+
+            if (teacherStatus === "Absent") {
+
+                const existingAbsent =
+                    await DailyClassRegister.findOne({
+                        teacher: teacherId,
+                        periodAssignment:
+                            periodAssignmentId,
+                        date: new Date(date)
+                    });
+
+
+                if (existingAbsent) {
+
+                    return res.status(409).json({
+                        success: false,
+                        message:
+                            "Daily class register already exists for this class and date."
+                    });
+
+                }
+
+
+                const absentRecord =
+                    await DailyClassRegister.create({
+
+                        teacher: teacherId,
+
+                        periodAssignment:
+                            periodAssignmentId,
+
+                        date: new Date(date),
+
+                        className,
+
+                        subject,
+
+                        scheduledStartTime,
+
+                        scheduledEndTime,
+
+                        actualStartTime: "",
+
+                        actualEndTime: "",
+
+                        teacherStatus: "Absent",
+
+                        topicCovered: "",
+
+                        students: []
+
+                    });
+
+
+                return res.status(201).json({
+
+                    success: true,
+
+                    message:
+                        "Teacher absence recorded successfully.",
+
+                    data: absentRecord
+
+                });
+
+            }
+
+
+            /* ================= PRESENT ================= */
+
+            if (
+                !Array.isArray(students) ||
+                students.length === 0
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Student attendance is required."
+                });
+
+            }
+
+
+            if (
+                !topicCovered ||
+                !topicCovered.trim()
+            ) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Topic covered is required."
+                });
+
+            }
+
+
+            /* ================= PREVENT DUPLICATE ================= */
+
+            const existing =
+                await DailyClassRegister.findOne({
+
+                    teacher: teacherId,
+
+                    periodAssignment:
+                        periodAssignmentId,
+
+                    date: new Date(date)
+
+                });
+
+
+            if (existing) {
+
+                return res.status(409).json({
+
+                    success: false,
+
+                    message:
+                        "Daily class register already exists for this class and date."
+
+                });
+
+            }
+
+
+            /* ================= SAVE ================= */
+
+            const register =
+                await DailyClassRegister.create({
+
+                    teacher: teacherId,
+
+                    periodAssignment:
+                        periodAssignmentId,
+
+                    date: new Date(date),
+
+                    className,
+
+                    subject,
+
+                    scheduledStartTime,
+
+                    scheduledEndTime,
+
+                    actualStartTime:
+                        actualStartTime || "",
+
+                    actualEndTime:
+                        actualEndTime || "",
+
+                    teacherStatus:
+                        "Present",
+
+                    topicCovered:
+                        topicCovered.trim(),
+
+                    students
+
+                });
+
+
+            res.status(201).json({
+
+                success: true,
+
+                message:
+                    "Daily class register saved successfully.",
+
+                data: register
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "Daily Class Register Error:",
+                error
+            );
+
+
+            /* ================= DUPLICATE INDEX ================= */
+
+            if (error.code === 11000) {
+
+                return res.status(409).json({
+
+                    success: false,
+
+                    message:
+                        "Daily class register already exists for this class and date."
+
+                });
+
+            }
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Error saving daily class register.",
+
+                error:
+                    error.message
 
             });
 
