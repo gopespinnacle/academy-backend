@@ -1439,6 +1439,98 @@ if (
                 );
 
 
+                // =========================================================
+// REALTIME SOCKET.IO MESSAGE BROADCAST
+// =========================================================
+
+try {
+
+    const io = req.app.get("io");
+
+    if (io && populatedMessage) {
+
+        const messenger =
+            io.of("/messenger");
+
+        const messengerRoom =
+            conversationId =>
+                `gpa-messenger:${conversationId}`;
+
+        // -----------------------------------------
+        // SEND TO CONVERSATION ROOM
+        // -----------------------------------------
+
+        messenger
+            .to(
+                messengerRoom(conversationId)
+            )
+            .emit(
+                "newMessengerMessage",
+                populatedMessage
+            );
+
+        // -----------------------------------------
+        // SEND PERSONAL NOTIFICATION
+        // -----------------------------------------
+
+        const founderUsers =
+            await User.find({
+                role: "founder"
+            }).select("_id");
+
+        const socketNotificationUserIds = [
+            ...receivers.map(
+                receiver =>
+                    String(receiver._id)
+            ),
+
+            ...founderUsers.map(
+                founder =>
+                    String(founder._id)
+            )
+        ];
+
+        const uniqueSocketNotificationUserIds =
+            [
+                ...new Set(
+                    socketNotificationUserIds
+                )
+            ];
+
+        for (
+            const userId
+            of uniqueSocketNotificationUserIds
+        ) {
+
+            messenger
+                .to(
+                    `gpa-user:${userId}`
+                )
+                .emit(
+                    "messengerNewMessageNotification",
+                    {
+                        conversationId:
+                            String(conversationId),
+
+                        message:
+                            populatedMessage
+                    }
+                );
+        }
+
+    }
+
+}
+catch (socketError) {
+
+    console.error(
+        "MESSENGER SOCKET BROADCAST ERROR:",
+        socketError
+    );
+
+}
+
+
             // -----------------------------------------
             // SEND TO CONVERSATION ROOM
             // -----------------------------------------
