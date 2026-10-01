@@ -1569,6 +1569,103 @@ router.post(
 
             }
 
+            /* ================= CHECK APPROVED LEAVE ================= */
+
+const approvedLeave =
+    await TeacherLeave.findOne({
+
+        teacher: teacherId,
+
+        periodAssignment:
+            periodAssignmentId,
+
+        date: date,
+
+        status: "Approved"
+
+    });
+
+
+/* ================= TEACHER ABSENT ================= */
+
+if (approvedLeave) {
+
+    const existingAbsent =
+        await DailyClassRegister.findOne({
+
+            teacher: teacherId,
+
+            periodAssignment:
+                periodAssignmentId,
+
+            date: date
+
+        });
+
+
+    if (existingAbsent) {
+
+        return res.status(409).json({
+
+            success: false,
+
+            message:
+                "Daily class register already exists for this class and date."
+
+        });
+
+    }
+
+
+    const absentRecord =
+        await DailyClassRegister.create({
+
+            teacher: teacherId,
+
+            periodAssignment:
+                periodAssignmentId,
+
+            date: new Date(date),
+
+            className:
+                period.className,
+
+            subject:
+                period.subject || "",
+
+            scheduledStartTime:
+                period.startTime,
+
+            scheduledEndTime:
+                period.endTime,
+
+            actualStartTime: "",
+
+            actualEndTime: "",
+
+            teacherStatus:
+                "Absent",
+
+            topicCovered: "",
+
+            students: []
+
+        });
+
+
+    return res.status(201).json({
+
+        success: true,
+
+        message:
+            "Teacher absence recorded from approved leave.",
+
+        data: absentRecord
+
+    });
+
+}
+
 
             /* ================= TEACHER ABSENT ================= */
 
@@ -1787,4 +1884,132 @@ router.post(
 
     }
 );
+
+/* ================= DAILY CLASS REGISTER - CHECK LEAVE ================= */
+
+router.get(
+    "/daily-class-register/check-leave",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+
+        try {
+
+            const {
+                periodAssignmentId,
+                date
+            } = req.query;
+
+
+            if (
+                !periodAssignmentId ||
+                !date
+            ) {
+
+                return res.status(400).json({
+
+                    success: false,
+
+                    message:
+                        "Period and date are required."
+
+                });
+
+            }
+
+
+            const period =
+                await PeriodAssignment.findById(
+                    periodAssignmentId
+                );
+
+
+            if (!period) {
+
+                return res.status(404).json({
+
+                    success: false,
+
+                    message:
+                        "Period not found."
+
+                });
+
+            }
+
+
+            /* ================= SECURITY ================= */
+
+            if (
+                period.teacher.toString()
+                !== req.user.id.toString()
+            ) {
+
+                return res.status(403).json({
+
+                    success: false,
+
+                    message:
+                        "You are not authorized to check this period."
+
+                });
+
+            }
+
+
+            /* ================= APPROVED LEAVE ================= */
+
+            const approvedLeave =
+                await TeacherLeave.findOne({
+
+                    teacher:
+                        req.user.id,
+
+                    periodAssignment:
+                        periodAssignmentId,
+
+                    date:
+                        date,
+
+                    status:
+                        "Approved"
+
+                });
+
+
+            res.json({
+
+                success: true,
+
+                hasApprovedLeave:
+                    !!approvedLeave,
+
+                leave:
+                    approvedLeave || null
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "DAILY REGISTER LEAVE CHECK ERROR:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to check teacher leave."
+
+            });
+
+        }
+
+    }
+);
+
 module.exports = router;
