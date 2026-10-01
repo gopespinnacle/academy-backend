@@ -4056,4 +4056,142 @@ res.json({
 
 });
 
+/* =========================================================
+   FOUNDER - DAILY CLASS REGISTER
+   ========================================================= */
+
+router.get(
+    "/daily-class-register",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const {
+                date,
+                teacher
+            } = req.query;
+
+
+            /* ================= FILTER ================= */
+
+            const filter = {};
+
+
+            if (date) {
+
+                const selectedDate =
+                    new Date(date);
+
+                if (isNaN(selectedDate.getTime())) {
+
+                    return res.status(400).json({
+
+                        success: false,
+
+                        message:
+                            "Invalid date."
+
+                    });
+
+                }
+
+
+                selectedDate.setHours(
+                    0,
+                    0,
+                    0,
+                    0
+                );
+
+
+                const nextDate =
+                    new Date(
+                        selectedDate
+                    );
+
+                nextDate.setDate(
+                    nextDate.getDate() + 1
+                );
+
+
+                filter.date = {
+
+                    $gte:
+                        selectedDate,
+
+                    $lt:
+                        nextDate
+
+                };
+
+            }
+
+
+            if (teacher) {
+
+                filter.teacher =
+                    teacher;
+
+            }
+
+
+            /* ================= LOAD ================= */
+
+            const registers =
+                await DailyClassRegister
+                    .find(filter)
+                    .populate(
+                        "teacher",
+                        "name email teacherId"
+                    )
+                    .populate(
+                        "periodAssignment",
+                        "className subject day startTime endTime"
+                    )
+                    .sort({
+                        date: -1,
+                        scheduledStartTime: 1,
+                        createdAt: -1
+                    });
+
+
+            /* ================= RESPONSE ================= */
+
+            res.json({
+
+                success: true,
+
+                count:
+                    registers.length,
+
+                data:
+                    registers
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "FOUNDER DAILY CLASS REGISTER ERROR:",
+                error
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Unable to load daily class register."
+
+            });
+
+        }
+
+    }
+);
+
 module.exports = router;
