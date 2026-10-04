@@ -9,6 +9,8 @@ const cors = require("cors");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
 const { Server } = require("socket.io");
+const messengerChatRoutes =
+    require("./messenger/chat/messengerChatRoutes");
 
 
 // =========================================================
@@ -474,6 +476,11 @@ app.use(
 app.use(
     "/api/academy-calendar",
     academyCalendarRoutes
+);
+
+app.use(
+    "/api/messenger/chat",
+    messengerChatRoutes
 );
 
 
