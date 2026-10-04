@@ -5,7 +5,7 @@
  *
  * Responsibility:
  * - Connect Chat Socket to the existing Messenger Socket.IO
- * - Wait for successful Messenger socket authentication
+ * - Detect already-authenticated Messenger sockets
  * - Create the private user chat room
  * - Register messengerChatSocket
  *
@@ -15,8 +15,6 @@
  * - Does NOT handle calls
  * - Does NOT handle notifications
  * - Does NOT contain chat business logic
- *
- * Existing Messenger Socket Authentication is reused.
  *
  * ============================================================
  */
@@ -72,7 +70,7 @@ const MessengerChatSocketBootstrap = {
          * SOCKET CONNECTION
          * ----------------------------------------------------
          *
-         * We listen to the SAME Socket.IO server used by
+         * We use the SAME Socket.IO server used by
          * GPA Messenger.
          *
          * We do NOT create another Socket.IO server.
@@ -82,7 +80,7 @@ const MessengerChatSocketBootstrap = {
             /**
              * Only Messenger sockets are handled here.
              *
-             * Existing Academy classroom sockets must remain
+             * Existing Academy classroom sockets remain
              * completely untouched.
              */
             if (
@@ -103,17 +101,19 @@ const MessengerChatSocketBootstrap = {
 
             /**
              * ------------------------------------------------
-             * REGISTER AUTHENTICATED CHAT USER
+             * REGISTER AUTHENTICATED USER
              * ------------------------------------------------
              *
-             * The existing Messenger Socket Authentication
-             * module emits:
+             * The existing Messenger authentication system
+             * places the verified identity directly on the
+             * socket:
              *
-             * messenger:socket:authenticated
+             * socket.messengerAuthenticated
+             * socket.messengerUserId
              *
-             * only after the JWT has been verified.
+             * We use those backend-verified values.
              *
-             * Therefore Chat waits for that event.
+             * We DO NOT trust a user ID sent by the frontend.
              */
             const registerAuthenticatedUser = () => {
 
@@ -123,7 +123,7 @@ const MessengerChatSocketBootstrap = {
 
                     console.warn(
                         "[GPA CHAT BOOTSTRAP] " +
-                        "Socket authentication not confirmed."
+                        "Messenger socket is not authenticated."
                     );
 
                     return;
@@ -154,8 +154,8 @@ const MessengerChatSocketBootstrap = {
                  *
                  * messenger:user:<USER_ID>
                  *
-                 * This room is used for delivering 1-to-1
-                 * messages directly to the intended user.
+                 * Only messages intended for this user are
+                 * delivered to this room.
                  */
                 const roomName =
                     `messenger:user:${userId}`;
@@ -186,24 +186,31 @@ const MessengerChatSocketBootstrap = {
 
 
             /**
-             * Wait for the existing Messenger authentication
-             * system to confirm this socket.
-             */
-            socket.once(
-                "messenger:socket:authenticated",
-                registerAuthenticatedUser
-            );
-
-
-            /**
-             * Safety check:
+             * ------------------------------------------------
+             * IMPORTANT AUTHENTICATION TIMING HANDLING
+             * ------------------------------------------------
              *
-             * If authentication has already completed before
-             * this listener was attached, register immediately.
+             * In our current architecture, Messenger
+             * authentication may already have completed
+             * before this Chat Bootstrap reaches this point.
+             *
+             * Therefore:
+             *
+             * 1. If authentication is already complete,
+             *    register immediately.
+             *
+             * 2. Otherwise wait for the authentication event.
              */
             if (socket.messengerAuthenticated) {
 
                 registerAuthenticatedUser();
+
+            } else {
+
+                socket.once(
+                    "messenger:socket:authenticated",
+                    registerAuthenticatedUser
+                );
             }
 
         });
