@@ -17,6 +17,8 @@
  * ============================================================
  */
 
+const MessengerCallSocket = require("./call/messengerCallSocket");
+
 const MessengerCore = {
     initialized: false,
 
@@ -56,6 +58,16 @@ const MessengerCore = {
         };
 
         this.options = options;
+
+        // Initialize Call Socket module
+if (options.io) {
+    MessengerCallSocket.initialize(options.io);
+
+    this.registerModule(
+        "callSocket",
+        MessengerCallSocket
+    );
+}
 
         this.initialized = true;
 
