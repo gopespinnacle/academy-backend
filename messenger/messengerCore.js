@@ -23,6 +23,9 @@ const MessengerCallWebRTC = require("./call/messengerCallWebRTC");
 
 const MessengerCallSession = require("./call/messengerCallSession");
 
+const MessengerCallManager =
+    require("./call/messengerCallManager");
+
 const MessengerCore = {
     initialized: false,
 
@@ -85,6 +88,12 @@ this.registerModule(
 this.registerModule(
     "callSession",
     MessengerCallSession
+);
+
+// Register Call Manager module
+this.registerModule(
+    "callManager",
+    MessengerCallManager
 );
 
 this.initialized = true;
