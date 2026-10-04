@@ -24,6 +24,9 @@ const MessengerCallManager = require("./call/messengerCallManager");
 const MessengerCallSocketBootstrap =
     require("./call/messengerCallSocketBootstrap");
 
+    const MessengerChatSocketBootstrap =
+    require("./chat/messengerChatSocketBootstrap");
+
 const MessengerCore = {
     initialized: false,
 
@@ -97,6 +100,16 @@ if (options.io) {
     this.registerModule(
         "callSocketBootstrap",
         MessengerCallSocketBootstrap
+    );
+
+
+    MessengerChatSocketBootstrap.initialize(
+        options.io
+    );
+
+    this.registerModule(
+        "chatSocketBootstrap",
+        MessengerChatSocketBootstrap
     );
 }
 
