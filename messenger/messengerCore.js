@@ -65,14 +65,7 @@ const MessengerCore = {
         this.options = options;
 
         // Initialize Call Socket module
-if (options.io) {
-    MessengerCallSocket.initialize(options.io);
 
-    this.registerModule(
-        "callSocket",
-        MessengerCallSocket
-    );
-}
 
 // Initialize WebRTC module
 MessengerCallWebRTC.initialize();
