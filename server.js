@@ -10,6 +10,14 @@ const multer = require("multer");
 const jwt = require("jsonwebtoken");
 const { Server } = require("socket.io");
 
+
+// =========================================================
+// GPA MESSENGER — CORE / HEART
+// =========================================================
+
+const MessengerCore =
+    require("./messenger/messengerCore");
+
 const discountRoutes =
     require("./routes/discountRoutes");
 
@@ -310,6 +318,18 @@ const io =
         ]
 
     });
+
+
+
+    // =========================================================
+// GPA MESSENGER — CORE / HEART
+// =========================================================
+
+MessengerCore.initialize({
+    app,
+    server,
+    io
+});
 
     // =========================================================
 // MAKE SOCKET.IO AVAILABLE TO EXPRESS ROUTES
