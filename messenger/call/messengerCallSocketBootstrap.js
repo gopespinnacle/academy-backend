@@ -19,6 +19,9 @@
 const MessengerSocketAuth =
     require("../permissions/messengerSocketAuth");
 
+const MessengerSocketDiagnostics =
+    require("../permissions/messengerSocketDiagnostics");
+
 const MessengerCallSocket =
     require("./messengerCallSocket");
 
@@ -153,6 +156,11 @@ class MessengerCallSocketBootstrap {
                 await MessengerSocketAuth
                     .authenticate(socket);
 
+                    // Run Messenger authentication diagnostics
+const authenticationResult =
+    MessengerSocketDiagnostics
+        .logAuthenticationResult(socket);
+
 
             /*
              * ------------------------------------------------
@@ -181,22 +189,25 @@ class MessengerCallSocketBootstrap {
              * ------------------------------------------------
              */
             socket.emit(
-                "messenger:socket:authenticated",
-                {
-                    success: true,
+    "messenger:socket:authenticated",
+    {
+        success: true,
 
-                    user: {
-                        _id:
-                            user._id,
+        authenticated:
+            authenticationResult.authenticated,
 
-                        name:
-                            user.name,
+        user: {
+            _id:
+                user._id,
 
-                        role:
-                            user.role
-                    }
-                }
-            );
+            name:
+                user.name,
+
+            role:
+                user.role
+        }
+    }
+);
 
 
             console.log(
