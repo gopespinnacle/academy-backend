@@ -31,9 +31,7 @@ const aiRoutes =
 const registerMeetingSocket =
     require("./socket/meetingSocket");
 
-    const registerMessengerSocket =
-    require("./socket/messengerSocket");
-
+  
 const meetingMemory =
     require("./core/meetingMemory");
 
@@ -165,12 +163,7 @@ const admissionAccountRoutes =
 const studentRoutes =
     require("./routes/studentRoutes");
 
-    const messengerRoutes =
-    require("./routes/messengerRoutes");
-
-    const pushTokenRoutes =
-    require("./routes/pushTokenRoutes");
-
+       
 const admissionRoutes =
     require("./routes/admissionRoutes");
 
@@ -330,8 +323,6 @@ app.set("io", io);
 // =========================================================
 
 registerMeetingSocket(io);
-
-registerMessengerSocket(io);
 
 
 // =========================================================
@@ -516,16 +507,8 @@ app.use(
 );
 
 
-app.use(
-    "/api/messenger",
-    messengerRoutes
-);
 
 
-app.use(
-    "/api/push-token",
-    pushTokenRoutes
-);
 
 
 // =========================================================
