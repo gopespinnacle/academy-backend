@@ -17,16 +17,11 @@
  * ============================================================
  */
 
-const MessengerCallSocket = require("./call/messengerCallSocket");
-
 const MessengerCallWebRTC = require("./call/messengerCallWebRTC");
-
 const MessengerCallSession = require("./call/messengerCallSession");
+const MessengerCallManager = require("./call/messengerCallManager");
 
-const MessengerCallManager =
-    require("./call/messengerCallManager");
-
-    const MessengerCallSocketBootstrap =
+const MessengerCallSocketBootstrap =
     require("./call/messengerCallSocketBootstrap");
 
 const MessengerCore = {
