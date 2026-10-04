@@ -19,6 +19,8 @@
 
 const MessengerCallSocket = require("./call/messengerCallSocket");
 
+const MessengerCallWebRTC = require("./call/messengerCallWebRTC");
+
 const MessengerCore = {
     initialized: false,
 
@@ -69,7 +71,15 @@ if (options.io) {
     );
 }
 
-        this.initialized = true;
+// Initialize WebRTC module
+MessengerCallWebRTC.initialize();
+
+this.registerModule(
+    "callWebRTC",
+    MessengerCallWebRTC
+);
+
+this.initialized = true;
 
         console.log("GPA Messenger Core initialized.");
         console.log("Modules ready for registration.");
