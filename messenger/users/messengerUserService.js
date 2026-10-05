@@ -17,7 +17,9 @@
 // ============================================================
 
 const User = require("../../models/User");
-const TeacherStudentMap = require("../../models/TeacherStudentMap");
+
+const TeacherStudentMap =
+    require("../../models/TeacherStudentMap");
 
 const {
     isMessengerRole
@@ -62,14 +64,15 @@ async function getMessengerUsers(currentUserId) {
 
 
     // ========================================================
-    // LOAD CURRENT USER
+    // CURRENT USER
     // ========================================================
 
-    const currentUser = await User.findById(
-        currentUserId
-    ).select(
-        "_id name role studentId teacherId adminId"
-    );
+    const currentUser =
+        await User.findById(
+            currentUserId
+        ).select(
+            "_id name role studentId teacherId adminId"
+        );
 
 
     if (!currentUser) {
@@ -93,26 +96,35 @@ async function getMessengerUsers(currentUserId) {
     // ========================================================
     // FOUNDER
     // ========================================================
+    //
+    // Founder can see:
+    // - Admins
+    // - Teachers
+    // - Students
+    //
+    // Founder is not included in own list.
+    // ========================================================
 
     if (currentUser.role === "founder") {
 
-        const users = await User.find({
+        const users =
+            await User.find({
 
-            role: {
-                $in: [
-                    "admin",
-                    "teacher",
-                    "student"
-                ]
-            }
+                role: {
+                    $in: [
+                        "admin",
+                        "teacher",
+                        "student"
+                    ]
+                }
 
-        })
-        .select(
-            "_id name role studentId teacherId adminId"
-        )
-        .sort({
-            name: 1
-        });
+            })
+            .select(
+                "_id name role studentId teacherId adminId"
+            )
+            .sort({
+                name: 1
+            });
 
 
         return users
@@ -125,31 +137,41 @@ async function getMessengerUsers(currentUserId) {
     // ========================================================
     // ADMIN
     // ========================================================
+    //
+    // Admin can see:
+    // - Founder
+    // - Other Admins
+    // - Teachers
+    // - Students
+    //
+    // Current admin is excluded.
+    // ========================================================
 
     if (currentUser.role === "admin") {
 
-        const users = await User.find({
+        const users =
+            await User.find({
 
-            _id: {
-                $ne: currentUser._id
-            },
+                _id: {
+                    $ne: currentUser._id
+                },
 
-            role: {
-                $in: [
-                    "founder",
-                    "admin",
-                    "teacher",
-                    "student"
-                ]
-            }
+                role: {
+                    $in: [
+                        "founder",
+                        "admin",
+                        "teacher",
+                        "student"
+                    ]
+                }
 
-        })
-        .select(
-            "_id name role studentId teacherId adminId"
-        )
-        .sort({
-            name: 1
-        });
+            })
+            .select(
+                "_id name role studentId teacherId adminId"
+            )
+            .sort({
+                name: 1
+            });
 
 
         return users
@@ -160,110 +182,140 @@ async function getMessengerUsers(currentUserId) {
 
 
     // ========================================================
-// TEACHER
-// ========================================================
-//
-// Teacher can see:
-// - Founder
-// - Admin
-// - Mapped Students
-//
-// Existing TeacherStudentMap is the
-// authoritative Academy mapping.
-// ========================================================
+    // TEACHER
+    // ========================================================
+    //
+    // Teacher can see:
+    // - Founder
+    // - Admin
+    // - Mapped Students
+    // - Mapped Teachers
+    //
+    // Existing TeacherStudentMap is used.
+    // ========================================================
 
-if (currentUser.role === "teacher") {
+    if (currentUser.role === "teacher") {
 
-    // ----------------------------------------------------
-    // Get this teacher's existing Academy mappings
-    // ----------------------------------------------------
+        // ----------------------------------------------------
+        // Find students directly mapped to this teacher
+        // ----------------------------------------------------
 
-    const mappings = await TeacherStudentMap.find({
-        teacher: currentUser._id
-    }).select(
-        "student"
-    );
+        const mappings =
+            await TeacherStudentMap.find({
 
+                teacher: currentUser._id
 
-    // ----------------------------------------------------
-    // Extract mapped student IDs
-    // ----------------------------------------------------
-
-    const studentIds = mappings
-        .map(mapping => mapping.student)
-        .filter(Boolean);
+            }).select(
+                "student"
+            );
 
 
-    console.log(
-        "[GPA MESSENGER USER SERVICE] Teacher mapping:",
-        {
-            teacherId: currentUser._id.toString(),
-            teacherName: currentUser.name,
-            mappedStudentCount: studentIds.length,
-            mappedStudentIds:
-                studentIds.map(id => id.toString())
+        const studentIds =
+            mappings
+                .map(mapping => mapping.student)
+                .filter(Boolean);
+
+
+        // ----------------------------------------------------
+        // Find other teachers who are also mapped to
+        // those same students.
+        //
+        // This does NOT create a new mapping system.
+        // It uses the existing Academy mapping.
+        // ----------------------------------------------------
+
+        let mappedTeacherIds = [];
+
+
+        if (studentIds.length > 0) {
+
+            const teacherMappings =
+                await TeacherStudentMap.find({
+
+                    student: {
+                        $in: studentIds
+                    }
+
+                }).select(
+                    "teacher"
+                );
+
+
+            mappedTeacherIds =
+                teacherMappings
+                    .map(mapping => mapping.teacher)
+                    .filter(Boolean);
+
         }
-    );
 
 
-    // ----------------------------------------------------
-    // Get ONLY:
-    // Founder
-    // Admin
-    // Mapped Students
-    // ----------------------------------------------------
+        // ----------------------------------------------------
+        // Remove current teacher
+        // ----------------------------------------------------
 
-    const users = await User.find({
+        mappedTeacherIds =
+            mappedTeacherIds.filter(
 
-        $or: [
+                teacherId =>
+                    teacherId.toString() !==
+                    currentUser._id.toString()
 
-            // Founder
-            {
-                role: "founder"
-            },
-
-            // Admin
-            {
-                role: "admin"
-            },
-
-            // This teacher's mapped students ONLY
-            {
-                _id: {
-                    $in: studentIds
-                },
-                role: "student"
-            }
-
-        ]
-
-    })
-    .select(
-        "_id name role studentId teacherId adminId"
-    )
-    .sort({
-        name: 1
-    });
+            );
 
 
-    console.log(
-        "[GPA MESSENGER USER SERVICE] Teacher users returned:",
-        {
-            teacherName: currentUser.name,
-            totalUsers: users.length,
-            studentsReturned:
-                users.filter(
-                    user => user.role === "student"
-                ).length
-        }
-    );
+        // ----------------------------------------------------
+        // Get allowed users
+        // ----------------------------------------------------
+
+        const users =
+            await User.find({
+
+                $or: [
+
+                    // Founder
+                    {
+                        role: "founder"
+                    },
+
+                    // Admin
+                    {
+                        role: "admin"
+                    },
+
+                    // Mapped Students
+                    {
+                        _id: {
+                            $in: studentIds
+                        },
+
+                        role: "student"
+                    },
+
+                    // Teachers sharing mapped students
+                    {
+                        _id: {
+                            $in: mappedTeacherIds
+                        },
+
+                        role: "teacher"
+                    }
+
+                ]
+
+            })
+            .select(
+                "_id name role studentId teacherId adminId"
+            )
+            .sort({
+                name: 1
+            });
 
 
-    return users
-        .map(getSafeUser)
-        .filter(Boolean);
+        return users
+            .map(getSafeUser)
+            .filter(Boolean);
 
-}
+    }
 
 
     // ========================================================
@@ -275,54 +327,68 @@ if (currentUser.role === "teacher") {
     // - Admin
     // - Mapped Teacher(s)
     //
-    // Existing TeacherStudentMap remains the
-    // authoritative mapping source.
+    // No unrelated teachers.
     // ========================================================
 
     if (currentUser.role === "student") {
 
-        const mappings = await TeacherStudentMap.find({
+        // ----------------------------------------------------
+        // Find teachers mapped to this student
+        // ----------------------------------------------------
 
-            student: currentUser._id
+        const mappings =
+            await TeacherStudentMap.find({
 
-        }).select(
-            "teacher"
-        );
-              
+                student: currentUser._id
+
+            }).select(
+                "teacher"
+            );
 
 
-        const users = await User.find({
+        const teacherIds =
+            mappings
+                .map(mapping => mapping.teacher)
+                .filter(Boolean);
 
-            $or: [
 
-                // Founder
-                {
-                    role: "founder"
-                },
+        // ----------------------------------------------------
+        // Get allowed users
+        // ----------------------------------------------------
 
-                // Admin
-                {
-                    role: "admin"
-                },
+        const users =
+            await User.find({
 
-                // Mapped teachers
-                {
-                    _id: {
-                        $in: teacherIds
+                $or: [
+
+                    // Founder
+                    {
+                        role: "founder"
                     },
 
-                    role: "teacher"
-                }
+                    // Admin
+                    {
+                        role: "admin"
+                    },
 
-            ]
+                    // Mapped Teachers
+                    {
+                        _id: {
+                            $in: teacherIds
+                        },
 
-        })
-        .select(
-            "_id name role studentId teacherId adminId"
-        )
-        .sort({
-            name: 1
-        });
+                        role: "teacher"
+                    }
+
+                ]
+
+            })
+            .select(
+                "_id name role studentId teacherId adminId"
+            )
+            .sort({
+                name: 1
+            });
 
 
         return users
