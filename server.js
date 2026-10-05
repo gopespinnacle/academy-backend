@@ -12,6 +12,9 @@ const { Server } = require("socket.io");
 const messengerChatRoutes =
     require("./messenger/chat/messengerChatRoutes");
 
+    const messengerUserRoutes =
+    require("./messenger/users/messengerUserRoutes");
+
 
 // =========================================================
 // GPA MESSENGER — CORE / HEART
@@ -481,6 +484,11 @@ app.use(
 app.use(
     "/api/messenger/chat",
     messengerChatRoutes
+);
+
+app.use(
+    "/api/messenger/users",
+    messengerUserRoutes
 );
 
 
