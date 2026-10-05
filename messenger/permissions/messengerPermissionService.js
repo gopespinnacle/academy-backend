@@ -1,617 +1,526 @@
-/**
- * ============================================================
- * GPA MESSENGER
- * Permission Service
- * ============================================================
- *
- * This file answers:
- *
- * "Can THIS USER perform THIS ACTION with THAT USER?"
- *
- * IMPORTANT:
- *
- * - Uses the existing User model.
- * - Uses the existing TeacherStudentMap model.
- * - Does NOT create a new mapping system.
- * - Does NOT handle HTTP requests.
- * - Does NOT handle Socket.IO.
- * - Does NOT handle Chat.
- * - Does NOT handle Calling itself.
- *
- * ============================================================
- */
+// ============================================================
+// GPA MESSENGER - PERMISSION SERVICE
+// ============================================================
+// Purpose:
+// - Backend-enforced Messenger permissions
+// - Controls who can chat with whom
+// - Controls audio/video call permissions
+// - Controls monitoring permissions
+// - Controls phone-number visibility
+//
+// IMPORTANT:
+// - This is the security layer.
+// - Frontend visibility is NOT security.
+// - Backend must always verify permission.
+// ============================================================
 
-const User =
-    require("../../models/User");
+const User = require("../../models/User");
 
 const TeacherStudentMap =
     require("../../models/TeacherStudentMap");
 
-const {
-    MESSENGER_ROLES,
-    MESSENGER_FEATURES,
-    canUseFeature,
-    isMessengerRole
-} =
-    require("./messengerPermission");
 
+// ============================================================
+// HELPER — CONVERT ID TO STRING
+// ============================================================
 
-/**
- * ============================================================
- * BASIC USER VALIDATION
- * ============================================================
- */
+function normalizeId(id) {
 
-function isValidUser(user) {
-
-    if (!user) {
-        return false;
-    }
-
-    if (!user._id) {
-        return false;
-    }
-
-    if (!isMessengerRole(user.role)) {
-        return false;
-    }
-
-    return true;
-}
-
-
-/**
- * ============================================================
- * SAME USER CHECK
- * ============================================================
- */
-
-function isSameUser(userA, userB) {
-
-    if (!userA || !userB) {
-        return false;
-    }
-
-    return String(userA._id) === String(userB._id);
-}
-
-
-/**
- * ============================================================
- * TEACHER ↔ STUDENT MAPPING
- * ============================================================
- *
- * This uses the EXISTING Academy mapping model.
- *
- * We intentionally do NOT create another mapping collection.
- *
- * The existing TeacherStudentMap represents:
- *
- * Teacher
- *    ↕
- * Student
- *
- * with subjects/languages/ECA information.
- * ============================================================
- */
-
-async function areTeacherAndStudentMapped(
-    teacherId,
-    studentId
-) {
-
-    if (!teacherId || !studentId) {
-        return false;
-    }
-
-    const mapping =
-        await TeacherStudentMap.findOne({
-
-            teacher: teacherId,
-
-            student: studentId
-
-        }).select("_id");
-
-    return !!mapping;
-}
-
-
-/**
- * ============================================================
- * USER-TO-USER MAPPING CHECK
- * ============================================================
- *
- * Returns true only when the two users have an Academy
- * teacher ↔ student relationship.
- *
- * Direction is handled automatically.
- * ============================================================
- */
-
-async function areUsersMapped(
-    userA,
-    userB
-) {
-
-    if (!isValidUser(userA)) {
-        return false;
-    }
-
-    if (!isValidUser(userB)) {
-        return false;
-    }
-
-
-    /*
-     * Teacher → Student
-     */
-
-    if (
-        userA.role === MESSENGER_ROLES.TEACHER &&
-        userB.role === MESSENGER_ROLES.STUDENT
-    ) {
-
-        return await areTeacherAndStudentMapped(
-            userA._id,
-            userB._id
-        );
-    }
-
-
-    /*
-     * Student → Teacher
-     */
-
-    if (
-        userA.role === MESSENGER_ROLES.STUDENT &&
-        userB.role === MESSENGER_ROLES.TEACHER
-    ) {
-
-        return await areTeacherAndStudentMapped(
-            userB._id,
-            userA._id
-        );
-    }
-
-
-    /*
-     * Teacher ↔ Teacher
-     *
-     * The supplied Academy mapping model does not define
-     * teacher-to-teacher mapping.
-     *
-     * Therefore we DO NOT invent a new rule here.
-     */
-
-    if (
-        userA.role === MESSENGER_ROLES.TEACHER &&
-        userB.role === MESSENGER_ROLES.TEACHER
-    ) {
-
-        return false;
-    }
-
-
-    /*
-     * Student ↔ Student
-     *
-     * Students are not mapped directly to other students.
-     */
-
-    if (
-        userA.role === MESSENGER_ROLES.STUDENT &&
-        userB.role === MESSENGER_ROLES.STUDENT
-    ) {
-
-        return false;
-    }
-
-
-    return false;
-}
-
-
-/**
- * ============================================================
- * CHAT PERMISSION
- * ============================================================
- *
- * Rules:
- *
- * Founder
- *   → everyone
- *
- * Admin
- *   → everyone
- *
- * Teacher
- *   → mapped students
- *   → Founder
- *   → Admin
- *
- * Student
- *   → mapped teacher(s)
- *   → Founder
- *   → Admin
- *
- * Self-chat is not allowed.
- * ============================================================
- */
-
-async function canChat(
-    currentUser,
-    targetUser
-) {
-
-    if (!isValidUser(currentUser)) {
-        return false;
-    }
-
-    if (!isValidUser(targetUser)) {
-        return false;
-    }
-
-    /*
-     * A user cannot start a Messenger conversation
-     * with themselves.
-     */
-
-    if (isSameUser(currentUser, targetUser)) {
-        return false;
-    }
-
-
-    /*
-     * The role itself must be allowed to use Chat.
-     */
-
-    if (
-        !canUseFeature(
-            currentUser.role,
-            MESSENGER_FEATURES.CHAT
-        )
-    ) {
-
-        return false;
-    }
-
-
-    /*
-     * Founder
-     *
-     * Founder can chat with everyone.
-     */
-
-    if (
-        currentUser.role ===
-        MESSENGER_ROLES.FOUNDER
-    ) {
-
-        return true;
-    }
-
-
-    /*
-     * Admin
-     *
-     * Admin can chat with everyone.
-     */
-
-    if (
-        currentUser.role ===
-        MESSENGER_ROLES.ADMIN
-    ) {
-
-        return true;
-    }
-
-
-    /*
-     * Teacher
-     */
-
-    if (
-        currentUser.role ===
-        MESSENGER_ROLES.TEACHER
-    ) {
-
-        /*
-         * Teacher → Founder
-         */
-
-        if (
-            targetUser.role ===
-            MESSENGER_ROLES.FOUNDER
-        ) {
-
-            return true;
-        }
-
-
-        /*
-         * Teacher → Admin
-         */
-
-        if (
-            targetUser.role ===
-            MESSENGER_ROLES.ADMIN
-        ) {
-
-            return true;
-        }
-
-
-        /*
-         * Teacher → mapped Student
-         */
-
-        if (
-            targetUser.role ===
-            MESSENGER_ROLES.STUDENT
-        ) {
-
-            return await areUsersMapped(
-                currentUser,
-                targetUser
-            );
-        }
-
-
-        /*
-         * Teacher → unrelated Teacher
-         *
-         * No teacher-to-teacher mapping is defined
-         * in the supplied Academy mapping model.
-         */
-
-        return false;
-    }
-
-
-    /*
-     * Student
-     */
-
-    if (
-        currentUser.role ===
-        MESSENGER_ROLES.STUDENT
-    ) {
-
-        /*
-         * Student → Founder
-         */
-
-        if (
-            targetUser.role ===
-            MESSENGER_ROLES.FOUNDER
-        ) {
-
-            return true;
-        }
-
-
-        /*
-         * Student → Admin
-         */
-
-        if (
-            targetUser.role ===
-            MESSENGER_ROLES.ADMIN
-        ) {
-
-            return true;
-        }
-
-
-        /*
-         * Student → mapped Teacher
-         */
-
-        if (
-            targetUser.role ===
-            MESSENGER_ROLES.TEACHER
-        ) {
-
-            return await areUsersMapped(
-                currentUser,
-                targetUser
-            );
-        }
-
-
-        /*
-         * Student → Student
-         */
-
-        return false;
-    }
-
-
-    return false;
-}
-
-
-/**
- * ============================================================
- * AUDIO CALL PERMISSION
- * ============================================================
- *
- * Only:
- *
- * Founder → Teacher
- * Founder → Student
- *
- * Admin → Teacher
- * Admin → Student
- *
- * Teachers and Students cannot initiate calls.
- *
- * Video calling is NOT part of GPA Messenger.
- * ============================================================
- */
-
-async function canAudioCall(
-    currentUser,
-    targetUser
-) {
-
-    if (!isValidUser(currentUser)) {
-        return false;
-    }
-
-    if (!isValidUser(targetUser)) {
-        return false;
-    }
-
-    if (isSameUser(currentUser, targetUser)) {
-        return false;
-    }
-
-
-    /*
-     * Role-level audio-call permission.
-     */
-
-    if (
-        !canUseFeature(
-            currentUser.role,
-            MESSENGER_FEATURES.AUDIO_CALL
-        )
-    ) {
-
-        return false;
-    }
-
-
-    /*
-     * Target must be Teacher or Student.
-     */
-
-    const targetIsAllowed =
-        targetUser.role ===
-            MESSENGER_ROLES.TEACHER ||
-
-        targetUser.role ===
-            MESSENGER_ROLES.STUDENT;
-
-
-    if (!targetIsAllowed) {
-        return false;
-    }
-
-
-    /*
-     * Founder → Teacher / Student
-     */
-
-    if (
-        currentUser.role ===
-        MESSENGER_ROLES.FOUNDER
-    ) {
-
-        return true;
-    }
-
-
-    /*
-     * Admin → Teacher / Student
-     */
-
-    if (
-        currentUser.role ===
-        MESSENGER_ROLES.ADMIN
-    ) {
-
-        return true;
-    }
-
-
-    return false;
-}
-
-
-/**
- * ============================================================
- * VIDEO CALL PERMISSION
- * ============================================================
- *
- * Always false.
- *
- * GPA Messenger is AUDIO ONLY.
- * ============================================================
- */
-
-function canVideoCall() {
-
-    return false;
-}
-
-
-/**
- * ============================================================
- * MONITORING PERMISSION
- * ============================================================
- *
- * Founder only.
- * ============================================================
- */
-
-function canMonitor(
-    currentUser
-) {
-
-    if (!isValidUser(currentUser)) {
-        return false;
-    }
-
-    return canUseFeature(
-        currentUser.role,
-        MESSENGER_FEATURES.MONITORING
-    );
-}
-
-
-/**
- * ============================================================
- * PHONE NUMBER ACCESS
- * ============================================================
- *
- * Messenger users must never receive phone numbers.
- * ============================================================
- */
-
-function canSeePhoneNumber() {
-
-    return false;
-}
-
-
-/**
- * ============================================================
- * GET SAFE USER PROFILE
- * ============================================================
- *
- * This function is intentionally designed to prevent
- * Messenger from accidentally exposing private fields.
- *
- * Phone number is NEVER returned.
- *
- * Password is NEVER returned.
- *
- * Login credentials are NEVER returned.
- * ============================================================
- */
-
-function getSafeMessengerUser(user) {
-
-    if (!user) {
+    if (!id) {
         return null;
     }
 
+    return String(id);
+
+}
+
+
+// ============================================================
+// HELPER — CHECK SAME USER
+// ============================================================
+
+function isSameUser(userId, targetUserId) {
+
+    const user =
+        normalizeId(userId);
+
+    const target =
+        normalizeId(targetUserId);
+
+    return (
+        user &&
+        target &&
+        user === target
+    );
+
+}
+
+
+// ============================================================
+// CHAT PERMISSION
+// ============================================================
+
+async function canChat(
+    userId,
+    targetUserId
+) {
+
+    try {
+
+        // ----------------------------------------------------
+        // Basic validation
+        // ----------------------------------------------------
+
+        if (!userId || !targetUserId) {
+
+            console.warn(
+                "[GPA MESSENGER PERMISSION] Missing user ID."
+            );
+
+            return false;
+
+        }
+
+
+        // ----------------------------------------------------
+        // Prevent self chat
+        // ----------------------------------------------------
+
+        if (
+            isSameUser(
+                userId,
+                targetUserId
+            )
+        ) {
+
+            return false;
+
+        }
+
+
+        // ----------------------------------------------------
+        // Load current user
+        // ----------------------------------------------------
+
+        const user =
+            await User
+                .findById(userId)
+                .select("_id name role");
+
+
+        // ----------------------------------------------------
+        // Load target user
+        // ----------------------------------------------------
+
+        const targetUser =
+            await User
+                .findById(targetUserId)
+                .select("_id name role");
+
+
+        if (!user) {
+
+            console.warn(
+                "[GPA MESSENGER PERMISSION] Current user not found:",
+                userId
+            );
+
+            return false;
+
+        }
+
+
+        if (!targetUser) {
+
+            console.warn(
+                "[GPA MESSENGER PERMISSION] Target user not found:",
+                targetUserId
+            );
+
+            return false;
+
+        }
+
+
+        // ----------------------------------------------------
+        // Normalize roles
+        // ----------------------------------------------------
+
+        const userRole =
+            String(user.role || "")
+                .toLowerCase()
+                .trim();
+
+
+        const targetRole =
+            String(targetUser.role || "")
+                .toLowerCase()
+                .trim();
+
+
+        console.log(
+            "[GPA MESSENGER PERMISSION] Chat check:",
+            {
+                userId: normalizeId(user._id),
+                userRole,
+                targetId: normalizeId(targetUser._id),
+                targetRole
+            }
+        );
+
+
+        // ====================================================
+        // FOUNDER
+        // ====================================================
+        // Founder can chat with everyone.
+        // ====================================================
+
+        if (userRole === "founder") {
+
+            console.log(
+                "[GPA MESSENGER PERMISSION] Founder chat ALLOWED."
+            );
+
+            return true;
+
+        }
+
+
+        // ====================================================
+        // ADMIN
+        // ====================================================
+        // Admin can chat with everyone.
+        // ====================================================
+
+        if (userRole === "admin") {
+
+            console.log(
+                "[GPA MESSENGER PERMISSION] Admin chat ALLOWED."
+            );
+
+            return true;
+
+        }
+
+
+        // ====================================================
+        // TEACHER
+        // ====================================================
+
+        if (userRole === "teacher") {
+
+            // -----------------------------------------------
+            // Teacher can chat with Founder
+            // -----------------------------------------------
+
+            if (targetRole === "founder") {
+
+                return true;
+
+            }
+
+
+            // -----------------------------------------------
+            // Teacher can chat with Admin
+            // -----------------------------------------------
+
+            if (targetRole === "admin") {
+
+                return true;
+
+            }
+
+
+            // -----------------------------------------------
+            // Teacher → Student
+            // Must use existing Academy mapping.
+            // -----------------------------------------------
+
+            if (targetRole === "student") {
+
+                const mapping =
+                    await TeacherStudentMap.findOne({
+
+                        teacher: user._id,
+
+                        student: targetUser._id
+
+                    });
+
+
+                return !!mapping;
+
+            }
+
+
+            // -----------------------------------------------
+            // Teacher → unrelated Teacher
+            // Not allowed unless an existing Academy
+            // mapping system explicitly supports it.
+            // -----------------------------------------------
+
+            return false;
+
+        }
+
+
+        // ====================================================
+        // STUDENT
+        // ====================================================
+
+        if (userRole === "student") {
+
+            // -----------------------------------------------
+            // Student can chat with Founder
+            // -----------------------------------------------
+
+            if (targetRole === "founder") {
+
+                return true;
+
+            }
+
+
+            // -----------------------------------------------
+            // Student can chat with Admin
+            // -----------------------------------------------
+
+            if (targetRole === "admin") {
+
+                return true;
+
+            }
+
+
+            // -----------------------------------------------
+            // Student → Teacher
+            // Must use existing Academy mapping.
+            // -----------------------------------------------
+
+            if (targetRole === "teacher") {
+
+                const mapping =
+                    await TeacherStudentMap.findOne({
+
+                        teacher: targetUser._id,
+
+                        student: user._id
+
+                    });
+
+
+                return !!mapping;
+
+            }
+
+
+            // -----------------------------------------------
+            // Student → Student
+            // -----------------------------------------------
+
+            return false;
+
+        }
+
+
+        // ====================================================
+        // UNKNOWN ROLE
+        // ====================================================
+
+        return false;
+
+
+    } catch (error) {
+
+        console.error(
+            "[GPA MESSENGER PERMISSION] canChat error:",
+            error
+        );
+
+        return false;
+
+    }
+
+}
+
+
+// ============================================================
+// AUDIO CALL PERMISSION
+// ============================================================
+
+async function canAudioCall(
+    userId,
+    targetUserId
+) {
+
+    try {
+
+        const user =
+            await User
+                .findById(userId)
+                .select("_id role");
+
+
+        const targetUser =
+            await User
+                .findById(targetUserId)
+                .select("_id role");
+
+
+        if (!user || !targetUser) {
+
+            return false;
+
+        }
+
+
+        const userRole =
+            String(user.role || "")
+                .toLowerCase()
+                .trim();
+
+
+        const targetRole =
+            String(targetUser.role || "")
+                .toLowerCase()
+                .trim();
+
+
+        // Founder → Teacher / Student
+
+        if (
+            userRole === "founder" &&
+            (
+                targetRole === "teacher" ||
+                targetRole === "student"
+            )
+        ) {
+
+            return true;
+
+        }
+
+
+        // Admin → Teacher / Student
+
+        if (
+            userRole === "admin" &&
+            (
+                targetRole === "teacher" ||
+                targetRole === "student"
+            )
+        ) {
+
+            return true;
+
+        }
+
+
+        return false;
+
+
+    } catch (error) {
+
+        console.error(
+            "[GPA MESSENGER PERMISSION] canAudioCall error:",
+            error
+        );
+
+        return false;
+
+    }
+
+}
+
+
+// ============================================================
+// VIDEO CALL
+// ============================================================
+// GPA Messenger does NOT support video calling.
+// ============================================================
+
+async function canVideoCall() {
+
+    return false;
+
+}
+
+
+// ============================================================
+// FOUNDER MONITORING
+// ============================================================
+
+async function canMonitor(
+    userId
+) {
+
+    try {
+
+        const user =
+            await User
+                .findById(userId)
+                .select("_id role");
+
+
+        if (!user) {
+
+            return false;
+
+        }
+
+
+        return (
+            String(user.role || "")
+                .toLowerCase()
+                .trim() === "founder"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "[GPA MESSENGER PERMISSION] canMonitor error:",
+            error
+        );
+
+        return false;
+
+    }
+
+}
+
+
+// ============================================================
+// PHONE NUMBER
+// ============================================================
+// Phone numbers are NEVER exposed through Messenger.
+// ============================================================
+
+async function canSeePhoneNumber() {
+
+    return false;
+
+}
+
+
+// ============================================================
+// SAFE USER OBJECT
+// ============================================================
+
+function getSafeMessengerUser(
+    user
+) {
+
+    if (!user) {
+
+        return null;
+
+    }
+
+
     return {
 
-        id: user._id,
+        _id: user._id,
 
         name: user.name,
 
@@ -627,24 +536,15 @@ function getSafeMessengerUser(user) {
             user.adminId || null
 
     };
+
 }
 
 
-/**
- * ============================================================
- * EXPORTS
- * ============================================================
- */
+// ============================================================
+// EXPORT
+// ============================================================
 
 module.exports = {
-
-    isValidUser,
-
-    isSameUser,
-
-    areTeacherAndStudentMapped,
-
-    areUsersMapped,
 
     canChat,
 
@@ -659,3 +559,8 @@ module.exports = {
     getSafeMessengerUser
 
 };
+
+
+// ============================================================
+// END GPA MESSENGER PERMISSION SERVICE
+// ============================================================
