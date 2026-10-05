@@ -183,10 +183,10 @@ async function requireMessengerChatAccess(
          */
 
         const allowed =
-            await canChat(
-                req.user,
-                targetUser
-            );
+    await canChat(
+        req.user._id,
+        targetUser._id
+    );
 
 
         if (!allowed) {
@@ -324,10 +324,10 @@ async function requireMessengerAudioCallAccess(
          */
 
         const allowed =
-            await canAudioCall(
-                req.user,
-                targetUser
-            );
+    await canAudioCall(
+        req.user._id,
+        targetUser._id
+    );
 
 
         if (!allowed) {
@@ -406,7 +406,7 @@ async function requireMessengerMonitoringAccess(
 
 
         const allowed =
-            canMonitor(req.user);
+    await canMonitor(req.user._id);
 
 
         if (!allowed) {
