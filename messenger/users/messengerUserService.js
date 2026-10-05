@@ -3,8 +3,8 @@
 // ============================================================
 // Purpose:
 // - Find users available inside GPA Messenger
-// - Apply Messenger user visibility rules
-// - Reuse existing Academy Teacher-Student mapping
+// - Apply Messenger visibility rules
+// - Reuse EXISTING Academy PeriodAssignment system
 // - Return only safe Messenger user information
 //
 // IMPORTANT:
@@ -13,13 +13,10 @@
 // - No phone numbers
 // - No password
 // - No duplicate mapping system
-// - Backend remains responsible for access control
 // ============================================================
 
 const User = require("../../models/User");
-
-const TeacherStudentMap =
-    require("../../models/TeacherStudentMap");
+const PeriodAssignment = require("../../models/PeriodAssignment");
 
 const {
     isMessengerRole
@@ -49,7 +46,7 @@ function getSafeUser(user) {
 
 
 // ============================================================
-// GET USERS AVAILABLE TO A MESSENGER USER
+// GET USERS AVAILABLE TO MESSENGER USER
 // ============================================================
 
 async function getMessengerUsers(currentUserId) {
@@ -64,15 +61,14 @@ async function getMessengerUsers(currentUserId) {
 
 
     // ========================================================
-    // CURRENT USER
+    // LOAD CURRENT USER
     // ========================================================
 
     const currentUser =
-        await User.findById(
-            currentUserId
-        ).select(
-            "_id name role studentId teacherId adminId"
-        );
+        await User.findById(currentUserId)
+            .select(
+                "_id name role studentId teacherId adminId"
+            );
 
 
     if (!currentUser) {
@@ -95,14 +91,6 @@ async function getMessengerUsers(currentUserId) {
 
     // ========================================================
     // FOUNDER
-    // ========================================================
-    //
-    // Founder can see:
-    // - Admins
-    // - Teachers
-    // - Students
-    //
-    // Founder is not included in own list.
     // ========================================================
 
     if (currentUser.role === "founder") {
@@ -136,15 +124,6 @@ async function getMessengerUsers(currentUserId) {
 
     // ========================================================
     // ADMIN
-    // ========================================================
-    //
-    // Admin can see:
-    // - Founder
-    // - Other Admins
-    // - Teachers
-    // - Students
-    //
-    // Current admin is excluded.
     // ========================================================
 
     if (currentUser.role === "admin") {
@@ -186,85 +165,83 @@ async function getMessengerUsers(currentUserId) {
     // ========================================================
     //
     // Teacher can see:
-    // - Founder
-    // - Admin
-    // - Mapped Students
-    // - Mapped Teachers
     //
-    // Existing TeacherStudentMap is used.
+    // 1. Founder
+    // 2. Admin
+    // 3. Students assigned to this teacher
+    //
+    // IMPORTANT:
+    // The EXISTING Academy PeriodAssignment system is used.
+    //
+    // This is the same system used by:
+    //
+    // /api/teacher/all-period-assignments
+    //
+    // Therefore Messenger and "My Students" use the
+    // SAME source of truth.
     // ========================================================
 
     if (currentUser.role === "teacher") {
 
         // ----------------------------------------------------
-        // Find students directly mapped to this teacher
+        // Find all periods belonging to this teacher
         // ----------------------------------------------------
 
-        const mappings =
-            await TeacherStudentMap.find({
+        const periods =
+            await PeriodAssignment.find({
 
                 teacher: currentUser._id
 
-            }).select(
-                "student"
+            })
+            .populate(
+                "assignments.student",
+                "name studentId"
             );
+
+
+        // ----------------------------------------------------
+        // Collect unique student IDs
+        // ----------------------------------------------------
+
+        const studentIdSet = new Set();
+
+
+        periods.forEach(period => {
+
+            if (
+                !period.assignments ||
+                !Array.isArray(period.assignments)
+            ) {
+                return;
+            }
+
+
+            period.assignments.forEach(assignment => {
+
+                const student =
+                    assignment.student;
+
+
+                if (!student || !student._id) {
+                    return;
+                }
+
+
+                studentIdSet.add(
+                    String(student._id)
+                );
+
+            });
+
+        });
 
 
         const studentIds =
-            mappings
-                .map(mapping => mapping.student)
-                .filter(Boolean);
+            Array.from(studentIdSet);
 
 
         // ----------------------------------------------------
-        // Find other teachers who are also mapped to
-        // those same students.
-        //
-        // This does NOT create a new mapping system.
-        // It uses the existing Academy mapping.
-        // ----------------------------------------------------
-
-        let mappedTeacherIds = [];
-
-
-        if (studentIds.length > 0) {
-
-            const teacherMappings =
-                await TeacherStudentMap.find({
-
-                    student: {
-                        $in: studentIds
-                    }
-
-                }).select(
-                    "teacher"
-                );
-
-
-            mappedTeacherIds =
-                teacherMappings
-                    .map(mapping => mapping.teacher)
-                    .filter(Boolean);
-
-        }
-
-
-        // ----------------------------------------------------
-        // Remove current teacher
-        // ----------------------------------------------------
-
-        mappedTeacherIds =
-            mappedTeacherIds.filter(
-
-                teacherId =>
-                    teacherId.toString() !==
-                    currentUser._id.toString()
-
-            );
-
-
-        // ----------------------------------------------------
-        // Get allowed users
+        // Load Founder + Admin + mapped students
         // ----------------------------------------------------
 
         const users =
@@ -282,22 +259,14 @@ async function getMessengerUsers(currentUserId) {
                         role: "admin"
                     },
 
-                    // Mapped Students
+                    // Students assigned through
+                    // existing PeriodAssignment system
                     {
                         _id: {
                             $in: studentIds
                         },
 
                         role: "student"
-                    },
-
-                    // Teachers sharing mapped students
-                    {
-                        _id: {
-                            $in: mappedTeacherIds
-                        },
-
-                        role: "teacher"
                     }
 
                 ]
@@ -309,6 +278,22 @@ async function getMessengerUsers(currentUserId) {
             .sort({
                 name: 1
             });
+
+
+        console.log(
+            "[GPA MESSENGER USER SERVICE] Teacher:",
+            currentUser.name
+        );
+
+        console.log(
+            "[GPA MESSENGER USER SERVICE] Periods found:",
+            periods.length
+        );
+
+        console.log(
+            "[GPA MESSENGER USER SERVICE] Students found:",
+            studentIds.length
+        );
 
 
         return users
@@ -325,35 +310,56 @@ async function getMessengerUsers(currentUserId) {
     // Student can see:
     // - Founder
     // - Admin
-    // - Mapped Teacher(s)
+    // - Teachers who are assigned to the student
     //
-    // No unrelated teachers.
+    // We again use the EXISTING PeriodAssignment system.
     // ========================================================
 
     if (currentUser.role === "student") {
 
         // ----------------------------------------------------
-        // Find teachers mapped to this student
+        // Find PeriodAssignments containing this student
         // ----------------------------------------------------
 
-        const mappings =
-            await TeacherStudentMap.find({
+        const periods =
+            await PeriodAssignment.find({
 
-                student: currentUser._id
+                "assignments.student":
+                    currentUser._id
 
-            }).select(
+            })
+            .select(
                 "teacher"
             );
 
 
+        // ----------------------------------------------------
+        // Collect teacher IDs
+        // ----------------------------------------------------
+
+        const teacherIdSet = new Set();
+
+
+        periods.forEach(period => {
+
+            if (!period.teacher) {
+                return;
+            }
+
+
+            teacherIdSet.add(
+                String(period.teacher)
+            );
+
+        });
+
+
         const teacherIds =
-            mappings
-                .map(mapping => mapping.teacher)
-                .filter(Boolean);
+            Array.from(teacherIdSet);
 
 
         // ----------------------------------------------------
-        // Get allowed users
+        // Load Founder + Admin + mapped teachers
         // ----------------------------------------------------
 
         const users =
@@ -371,7 +377,8 @@ async function getMessengerUsers(currentUserId) {
                         role: "admin"
                     },
 
-                    // Mapped Teachers
+                    // Teachers assigned through
+                    // existing PeriodAssignment system
                     {
                         _id: {
                             $in: teacherIds
