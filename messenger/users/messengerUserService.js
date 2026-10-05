@@ -61,6 +61,10 @@ async function getMessengerUsers(currentUserId) {
     }
 
 
+    // ========================================================
+    // LOAD CURRENT USER
+    // ========================================================
+
     const currentUser = await User.findById(
         currentUserId
     ).select(
@@ -89,18 +93,11 @@ async function getMessengerUsers(currentUserId) {
     // ========================================================
     // FOUNDER
     // ========================================================
-    // Founder can see:
-    // - Admins
-    // - Teachers
-    // - Students
-    //
-    // Founder cannot see:
-    // - Parents
-    // ========================================================
 
     if (currentUser.role === "founder") {
 
         const users = await User.find({
+
             role: {
                 $in: [
                     "admin",
@@ -108,9 +105,12 @@ async function getMessengerUsers(currentUserId) {
                     "student"
                 ]
             }
-        }).select(
+
+        })
+        .select(
             "_id name role studentId teacherId adminId"
-        ).sort({
+        )
+        .sort({
             name: 1
         });
 
@@ -125,19 +125,15 @@ async function getMessengerUsers(currentUserId) {
     // ========================================================
     // ADMIN
     // ========================================================
-    // Admin can see:
-    // - Founder
-    // - Admins
-    // - Teachers
-    // - Students
-    // ========================================================
 
     if (currentUser.role === "admin") {
 
         const users = await User.find({
+
             _id: {
                 $ne: currentUser._id
             },
+
             role: {
                 $in: [
                     "founder",
@@ -146,9 +142,12 @@ async function getMessengerUsers(currentUserId) {
                     "student"
                 ]
             }
-        }).select(
+
+        })
+        .select(
             "_id name role studentId teacherId adminId"
-        ).sort({
+        )
+        .sort({
             name: 1
         });
 
@@ -163,20 +162,25 @@ async function getMessengerUsers(currentUserId) {
     // ========================================================
     // TEACHER
     // ========================================================
+    //
     // Teacher can see:
     // - Founder
     // - Admin
     // - Mapped Students
+    // - Mapped Teachers
     //
-    // No unrelated teachers.
+    // Existing TeacherStudentMap remains the
+    // authoritative mapping source.
     // ========================================================
 
     if (currentUser.role === "teacher") {
 
         const mappings = await TeacherStudentMap.find({
+
             teacher: currentUser._id
+
         }).select(
-            "student"
+            "student teacher"
         );
 
 
@@ -185,28 +189,64 @@ async function getMessengerUsers(currentUserId) {
             .filter(Boolean);
 
 
+        const teacherIds = mappings
+            .map(mapping => mapping.teacher)
+            .filter(Boolean);
+
+
+        // ----------------------------------------------------
+        // Remove current teacher from teacher list
+        // ----------------------------------------------------
+
+        const otherTeacherIds = teacherIds.filter(
+
+            id =>
+                id &&
+                id.toString() !==
+                currentUser._id.toString()
+
+        );
+
+
         const users = await User.find({
+
             $or: [
 
+                // Founder
                 {
                     role: "founder"
                 },
 
+                // Admin
                 {
                     role: "admin"
                 },
 
+                // Mapped students
                 {
                     _id: {
                         $in: studentIds
                     },
+
                     role: "student"
+                },
+
+                // Mapped teachers
+                {
+                    _id: {
+                        $in: otherTeacherIds
+                    },
+
+                    role: "teacher"
                 }
 
             ]
-        }).select(
+
+        })
+        .select(
             "_id name role studentId teacherId adminId"
-        ).sort({
+        )
+        .sort({
             name: 1
         });
 
@@ -221,18 +261,22 @@ async function getMessengerUsers(currentUserId) {
     // ========================================================
     // STUDENT
     // ========================================================
+    //
     // Student can see:
     // - Founder
     // - Admin
     // - Mapped Teacher(s)
     //
-    // No unrelated teachers.
+    // Existing TeacherStudentMap remains the
+    // authoritative mapping source.
     // ========================================================
 
     if (currentUser.role === "student") {
 
         const mappings = await TeacherStudentMap.find({
+
             student: currentUser._id
+
         }).select(
             "teacher"
         );
@@ -244,27 +288,35 @@ async function getMessengerUsers(currentUserId) {
 
 
         const users = await User.find({
+
             $or: [
 
+                // Founder
                 {
                     role: "founder"
                 },
 
+                // Admin
                 {
                     role: "admin"
                 },
 
+                // Mapped teachers
                 {
                     _id: {
                         $in: teacherIds
                     },
+
                     role: "teacher"
                 }
 
             ]
-        }).select(
+
+        })
+        .select(
             "_id name role studentId teacherId adminId"
-        ).sort({
+        )
+        .sort({
             name: 1
         });
 
@@ -275,6 +327,10 @@ async function getMessengerUsers(currentUserId) {
 
     }
 
+
+    // ========================================================
+    // FALLBACK
+    // ========================================================
 
     return [];
 
