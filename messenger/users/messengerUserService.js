@@ -160,102 +160,110 @@ async function getMessengerUsers(currentUserId) {
 
 
     // ========================================================
-    // TEACHER
-    // ========================================================
-    //
-    // Teacher can see:
-    // - Founder
-    // - Admin
-    // - Mapped Students
-    // - Mapped Teachers
-    //
-    // Existing TeacherStudentMap remains the
-    // authoritative mapping source.
-    // ========================================================
+// TEACHER
+// ========================================================
+//
+// Teacher can see:
+// - Founder
+// - Admin
+// - Mapped Students
+//
+// Existing TeacherStudentMap is the
+// authoritative Academy mapping.
+// ========================================================
 
-    if (currentUser.role === "teacher") {
+if (currentUser.role === "teacher") {
 
-        const mappings = await TeacherStudentMap.find({
+    // ----------------------------------------------------
+    // Get this teacher's existing Academy mappings
+    // ----------------------------------------------------
 
-            teacher: currentUser._id
-
-        }).select(
-            "student teacher"
-        );
-
-
-        const studentIds = mappings
-            .map(mapping => mapping.student)
-            .filter(Boolean);
+    const mappings = await TeacherStudentMap.find({
+        teacher: currentUser._id
+    }).select(
+        "student"
+    );
 
 
-        const teacherIds = mappings
-            .map(mapping => mapping.teacher)
-            .filter(Boolean);
+    // ----------------------------------------------------
+    // Extract mapped student IDs
+    // ----------------------------------------------------
+
+    const studentIds = mappings
+        .map(mapping => mapping.student)
+        .filter(Boolean);
 
 
-        // ----------------------------------------------------
-        // Remove current teacher from teacher list
-        // ----------------------------------------------------
-
-        const otherTeacherIds = teacherIds.filter(
-
-            id =>
-                id &&
-                id.toString() !==
-                currentUser._id.toString()
-
-        );
+    console.log(
+        "[GPA MESSENGER USER SERVICE] Teacher mapping:",
+        {
+            teacherId: currentUser._id.toString(),
+            teacherName: currentUser.name,
+            mappedStudentCount: studentIds.length,
+            mappedStudentIds:
+                studentIds.map(id => id.toString())
+        }
+    );
 
 
-        const users = await User.find({
+    // ----------------------------------------------------
+    // Get ONLY:
+    // Founder
+    // Admin
+    // Mapped Students
+    // ----------------------------------------------------
 
-            $or: [
+    const users = await User.find({
 
-                // Founder
-                {
-                    role: "founder"
+        $or: [
+
+            // Founder
+            {
+                role: "founder"
+            },
+
+            // Admin
+            {
+                role: "admin"
+            },
+
+            // This teacher's mapped students ONLY
+            {
+                _id: {
+                    $in: studentIds
                 },
+                role: "student"
+            }
 
-                // Admin
-                {
-                    role: "admin"
-                },
+        ]
 
-                // Mapped students
-                {
-                    _id: {
-                        $in: studentIds
-                    },
-
-                    role: "student"
-                },
-
-                // Mapped teachers
-                {
-                    _id: {
-                        $in: otherTeacherIds
-                    },
-
-                    role: "teacher"
-                }
-
-            ]
-
-        })
-        .select(
-            "_id name role studentId teacherId adminId"
-        )
-        .sort({
-            name: 1
-        });
+    })
+    .select(
+        "_id name role studentId teacherId adminId"
+    )
+    .sort({
+        name: 1
+    });
 
 
-        return users
-            .map(getSafeUser)
-            .filter(Boolean);
+    console.log(
+        "[GPA MESSENGER USER SERVICE] Teacher users returned:",
+        {
+            teacherName: currentUser.name,
+            totalUsers: users.length,
+            studentsReturned:
+                users.filter(
+                    user => user.role === "student"
+                ).length
+        }
+    );
 
-    }
+
+    return users
+        .map(getSafeUser)
+        .filter(Boolean);
+
+}
 
 
     // ========================================================
@@ -280,11 +288,7 @@ async function getMessengerUsers(currentUserId) {
         }).select(
             "teacher"
         );
-
-
-        const teacherIds = mappings
-            .map(mapping => mapping.teacher)
-            .filter(Boolean);
+              
 
 
         const users = await User.find({
