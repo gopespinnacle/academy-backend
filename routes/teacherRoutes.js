@@ -522,6 +522,64 @@ router.post("/homework", protect, authorize("teacher"), async (req,res)=>{
     res.json(result);
 });
 
+/* ================= TEACHER MEETING LINK ================= */
+
+router.get(
+    "/my-meeting-link",
+    protect,
+    authorize("teacher"),
+    async (req,res)=>{
+
+        try{
+
+            const teacher = await User.findById(
+                req.user.id
+            ).select(
+                "name teacherId meetingLink"
+            );
+
+            if(!teacher){
+
+                return res.status(404).json({
+                    message:"Teacher not found"
+                });
+
+            }
+
+            if(!teacher.meetingLink){
+
+                return res.status(404).json({
+                    message:"Meeting link not configured for this teacher"
+                });
+
+            }
+
+            res.json({
+
+                teacherId:teacher._id,
+
+                teacherName:teacher.name,
+
+                meetingLink:teacher.meetingLink
+
+            });
+
+        }catch(err){
+
+            console.error(
+                "TEACHER MEETING LINK ERROR:",
+                err
+            );
+
+            res.status(500).json({
+                message:"Unable to get teacher meeting link"
+            });
+
+        }
+
+    }
+);
+
 /* ================= PERIOD STUDENTS ================= */
 
 router.get("/period-students", protect, authorize("teacher"), async (req,res)=>{
