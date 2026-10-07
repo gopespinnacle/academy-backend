@@ -555,10 +555,6 @@ app.use(
     aiClassroomRoutes
 );
 
-app.use(
-    "/api/ai",
-    aiSpeechRoutes
-);
 
 app.use(
     "/api/founder/bank-statements",
