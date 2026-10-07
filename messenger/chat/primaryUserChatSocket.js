@@ -27,7 +27,8 @@
  * ============================================================
  */
 
-
+const PrimaryUserMessage =
+    require("./primaryUserMessage");
 class PrimaryUserChatSocket {
 
 
@@ -73,7 +74,7 @@ class PrimaryUserChatSocket {
 
                 socket.on(
                     "gpa:primary:message",
-                    (message) => {
+                    async (message) => {
 
                         console.log(
                             "[GPA PRIMARY CHAT SOCKET] " +
@@ -160,6 +161,49 @@ class PrimaryUserChatSocket {
                                 socket.id
 
                         };
+
+                        // ========================================================
+// MODULE 3
+// SAVE MESSAGE TO MONGODB
+// ========================================================
+
+try {
+
+    await PrimaryUserMessage.create({
+
+        messageId:
+            serverMessage.id,
+
+        text:
+            serverMessage.text,
+
+        sender:
+            serverMessage.sender,
+
+        sentAt:
+            serverMessage.receivedAt
+
+    });
+
+
+    console.log(
+        "[GPA PRIMARY CHAT DATABASE] " +
+        "Message saved to MongoDB:",
+        serverMessage.id
+    );
+
+
+} catch (error) {
+
+    console.error(
+        "[GPA PRIMARY CHAT DATABASE] " +
+        "Failed to save message:",
+        error
+    );
+
+    return;
+
+}
 
 
                         // ----------------------------------------
