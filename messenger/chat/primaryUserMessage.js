@@ -66,6 +66,43 @@ const primaryUserMessageSchema =
 
             },
 
+            // ------------------------------------------------
+// CONVERSATION
+// ------------------------------------------------
+
+conversationId: {
+
+    type:
+        mongoose.Schema.Types.ObjectId,
+
+    ref:
+        "MessengerConversation",
+
+    required: true,
+
+    index: true
+
+},
+
+
+// ------------------------------------------------
+// RECEIVER
+// ------------------------------------------------
+
+receiverId: {
+
+    type:
+        mongoose.Schema.Types.ObjectId,
+
+    ref:
+        "User",
+
+    required: true,
+
+    index: true
+
+},
+
 
             // ------------------------------------------------
             // SENDER

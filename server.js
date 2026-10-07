@@ -332,6 +332,15 @@ PrimaryUserChatSocket.initialize(io);
 
 // =========================================================
 // GPA MESSENGER
+// MODULE 5
+// CONTACTS API
+// =========================================================
+
+const messengerContactsRoutes =
+    require("./messenger/chat/messengerContactsRoutes");
+
+// =========================================================
+// GPA MESSENGER
 // MODULE 4
 // PRIMARY USER MESSAGE HISTORY
 // =========================================================
@@ -447,6 +456,18 @@ app.use(
 app.use(
     "/api/assessment-curriculum",
     assessmentCurriculumRoutes
+);
+
+
+// =========================================================
+// GPA MESSENGER
+// MODULE 5
+// CONTACTS API
+// =========================================================
+
+app.use(
+    "/api/messenger/contacts",
+    messengerContactsRoutes
 );
 
 // =========================================================
