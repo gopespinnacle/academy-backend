@@ -330,6 +330,17 @@ const PrimaryUserChatSocket =
 
 PrimaryUserChatSocket.initialize(io);
 
+// =========================================================
+// GPA MESSENGER
+// MODULE 4
+// PRIMARY USER MESSAGE HISTORY
+// =========================================================
+
+const PrimaryUserMessageHistorySocket =
+    require("./messenger/chat/primaryUserMessageHistorySocket");
+
+PrimaryUserMessageHistorySocket.initialize(io);
+
 
 
     
