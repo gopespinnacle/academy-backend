@@ -1,121 +1,102 @@
 /**
  * ============================================================
  * GPA MESSENGER
- * MODULE 4
  * PRIMARY USER MESSAGE HISTORY SOCKET
  * ============================================================
- *
- * PURPOSE:
- *
- * Load previously saved Primary User messages
- * from MongoDB when requested by the frontend.
- *
- * THIS MODULE ONLY HANDLES MESSAGE HISTORY.
- *
- * It does NOT:
- *
- * - send new messages
- * - save new messages
- * - handle receivers
- * - handle notifications
- * - handle calls
- * - handle attachments
- *
- * ============================================================
  */
-
 
 const PrimaryUserMessage =
     require("./primaryUserMessage");
 
-
-
 class PrimaryUserMessageHistorySocket {
-
-
-    // ============================================================
-    // INITIALIZE
-    // ============================================================
 
     initialize(io) {
 
-
         if (!io) {
-
             throw new Error(
                 "[GPA PRIMARY MESSAGE HISTORY] " +
                 "Socket.IO instance is required."
             );
-
         }
-
 
         console.log(
             "[GPA PRIMARY MESSAGE HISTORY] " +
             "Module initialized."
         );
 
-
-        // --------------------------------------------------------
-        // SOCKET CONNECTION
-        // --------------------------------------------------------
-
         io.on(
             "connection",
             (socket) => {
 
+                console.log(
+                    "[GPA PRIMARY MESSAGE HISTORY] " +
+                    "Socket connected:",
+                    socket.id
+                );
 
-                // ------------------------------------------------
-                // LOAD PRIMARY USER MESSAGE HISTORY
-                // ------------------------------------------------
+                // ====================================================
+                // LOAD MESSAGE HISTORY FOR ONE CONVERSATION
+                // ====================================================
 
                 socket.on(
                     "gpa:primary:message:history",
-                    async () => {
-
-
-                        console.log(
-                            "[GPA PRIMARY MESSAGE HISTORY] " +
-                            "History requested by Primary User."
-                        );
-
+                    async (data) => {
 
                         try {
 
+                            console.log(
+                                "[GPA PRIMARY MESSAGE HISTORY] " +
+                                "History request received:",
+                                data
+                            );
 
-                            // ------------------------------------
-                            // GET SAVED MESSAGES
-                            // ------------------------------------
+                            if (
+                                !data ||
+                                !data.conversationId
+                            ) {
+
+                                console.warn(
+                                    "[GPA PRIMARY MESSAGE HISTORY] " +
+                                    "conversationId is required."
+                                );
+
+                                socket.emit(
+                                    "gpa:primary:message:history:received",
+                                    []
+                                );
+
+                                return;
+                            }
 
                             const messages =
                                 await PrimaryUserMessage
-                                    .find({})
+                                    .find({
+                                        conversationId:
+                                            data.conversationId
+                                    })
                                     .sort({
                                         sentAt: 1
                                     })
                                     .lean();
 
+                            console.log(
+                                "[GPA PRIMARY MESSAGE HISTORY] " +
+                                "Conversation:",
+                                data.conversationId
+                            );
 
-                            // ------------------------------------
-                            // SEND HISTORY TO SAME USER
-                            // ------------------------------------
+                            console.log(
+                                "[GPA PRIMARY MESSAGE HISTORY] " +
+                                "Messages loaded:",
+                                messages.length
+                            );
 
                             socket.emit(
                                 "gpa:primary:message:history:received",
                                 messages
                             );
 
-
-                            console.log(
-                                "[GPA PRIMARY MESSAGE HISTORY] " +
-                                "History sent:",
-                                messages.length,
-                                "messages."
-                            );
-
-
                         } catch (error) {
-
 
                             console.error(
                                 "[GPA PRIMARY MESSAGE HISTORY] " +
@@ -123,21 +104,15 @@ class PrimaryUserMessageHistorySocket {
                                 error
                             );
 
-
                             socket.emit(
-                                "gpa:primary:message:history:error",
-                                {
-                                    message:
-                                        "Unable to load message history."
-                                }
+                                "gpa:primary:message:history:received",
+                                []
                             );
-
 
                         }
 
                     }
                 );
-
 
             }
         );
@@ -145,8 +120,6 @@ class PrimaryUserMessageHistorySocket {
     }
 
 }
-
-
 
 module.exports =
     new PrimaryUserMessageHistorySocket();
