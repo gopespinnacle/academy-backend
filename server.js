@@ -9,19 +9,12 @@ const cors = require("cors");
 const multer = require("multer");
 const jwt = require("jsonwebtoken");
 const { Server } = require("socket.io");
-const messengerChatRoutes =
-    require("./messenger/chat/messengerChatRoutes");
-
-    const messengerUserRoutes =
-    require("./messenger/users/messengerUserRoutes");
 
 
 // =========================================================
 // GPA MESSENGER — CORE / HEART
 // =========================================================
 
-const MessengerCore =
-    require("./messenger/messengerCore");
 
 const discountRoutes =
     require("./routes/discountRoutes");
@@ -325,16 +318,21 @@ const io =
     });
 
 
-
     // =========================================================
-// GPA MESSENGER — CORE / HEART
+// GPA MESSENGER
+// MODULE 2
+// PRIMARY USER CHAT SOCKET
 // =========================================================
 
-MessengerCore.initialize({
-    app,
-    server,
-    io
-});
+const PrimaryUserChatSocket =
+    require("./messenger/chat/primaryUserChatSocket");
+
+
+PrimaryUserChatSocket.initialize(io);
+
+
+
+    
 
     // =========================================================
 // MAKE SOCKET.IO AVAILABLE TO EXPRESS ROUTES
@@ -481,15 +479,9 @@ app.use(
     academyCalendarRoutes
 );
 
-app.use(
-    "/api/messenger/chat",
-    messengerChatRoutes
-);
 
-app.use(
-    "/api/messenger/users",
-    messengerUserRoutes
-);
+
+
 
 
 // =========================================================
