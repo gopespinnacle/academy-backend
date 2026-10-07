@@ -146,22 +146,18 @@ const messengerConversationSchema =
 
 messengerConversationSchema.pre(
     "validate",
-    function (next) {
+    function () {
 
         if (
             !this.participants ||
             this.participants.length !== 2
         ) {
 
-            return next(
-                new Error(
-                    "A Messenger conversation must have exactly 2 participants."
-                )
+            throw new Error(
+                "A Messenger conversation must have exactly 2 participants."
             );
 
         }
-
-        next();
 
     }
 );
