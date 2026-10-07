@@ -9,26 +9,20 @@
  *
  * Receive a message from the Primary User through Socket.IO.
  *
- * IMPORTANT:
+ * MODULE 9 UPDATE:
  *
- * This module ONLY receives and confirms the message.
+ * Message now belongs to:
  *
- * It does NOT:
- *
- * - save to MongoDB
- * - send to another user
- * - load message history
- * - handle notifications
- * - handle calls
- * - handle attachments
- *
- * Those will be separate modules.
+ * - conversationId
+ * - receiverId
  *
  * ============================================================
  */
 
 const PrimaryUserMessage =
     require("./primaryUserMessage");
+
+
 class PrimaryUserChatSocket {
 
 
@@ -44,6 +38,7 @@ class PrimaryUserChatSocket {
                 "[GPA PRIMARY CHAT SOCKET] " +
                 "Socket.IO instance is required."
             );
+
         }
 
 
@@ -53,9 +48,9 @@ class PrimaryUserChatSocket {
         );
 
 
-        // --------------------------------------------------------
+        // ========================================================
         // SOCKET CONNECTION
-        // --------------------------------------------------------
+        // ========================================================
 
         io.on(
             "connection",
@@ -68,9 +63,9 @@ class PrimaryUserChatSocket {
                 );
 
 
-                // ------------------------------------------------
+                // ==================================================
                 // PRIMARY USER MESSAGE
-                // ------------------------------------------------
+                // ==================================================
 
                 socket.on(
                     "gpa:primary:message",
@@ -78,14 +73,14 @@ class PrimaryUserChatSocket {
 
                         console.log(
                             "[GPA PRIMARY CHAT SOCKET] " +
-                            "Message received from Primary User:",
+                            "Message received:",
                             message
                         );
 
 
-                        // ----------------------------------------
+                        // ------------------------------------------
                         // BASIC VALIDATION
-                        // ----------------------------------------
+                        // ------------------------------------------
 
                         if (!message) {
 
@@ -127,9 +122,43 @@ class PrimaryUserChatSocket {
                         }
 
 
-                        // ----------------------------------------
+                        // ------------------------------------------
+                        // CONVERSATION VALIDATION
+                        // ------------------------------------------
+
+                        if (
+                            !message.conversationId
+                        ) {
+
+                            console.warn(
+                                "[GPA PRIMARY CHAT SOCKET] " +
+                                "conversationId is required."
+                            );
+
+                            return;
+                        }
+
+
+                        // ------------------------------------------
+                        // RECEIVER VALIDATION
+                        // ------------------------------------------
+
+                        if (
+                            !message.receiverId
+                        ) {
+
+                            console.warn(
+                                "[GPA PRIMARY CHAT SOCKET] " +
+                                "receiverId is required."
+                            );
+
+                            return;
+                        }
+
+
+                        // ------------------------------------------
                         // CREATE SERVER MESSAGE
-                        // ----------------------------------------
+                        // ------------------------------------------
 
                         const serverMessage = {
 
@@ -145,70 +174,78 @@ class PrimaryUserChatSocket {
                                 ),
 
                             text:
-
                                 text,
 
                             sender:
-
                                 "primary-user",
 
-                            receivedAt:
+                            conversationId:
+                                message.conversationId,
 
+                            receiverId:
+                                message.receiverId,
+
+                            receivedAt:
                                 new Date().toISOString(),
 
                             socketId:
-
                                 socket.id
 
                         };
 
+
                         // ========================================================
-// MODULE 3
-// SAVE MESSAGE TO MONGODB
-// ========================================================
+                        // SAVE MESSAGE TO MONGODB
+                        // ========================================================
 
-try {
+                        try {
 
-    await PrimaryUserMessage.create({
+                            await PrimaryUserMessage.create({
 
-        messageId:
-            serverMessage.id,
+    messageId:
+        serverMessage.id,
 
-        text:
-            serverMessage.text,
+    conversationId:
+        message.conversationId,
 
-        sender:
-            serverMessage.sender,
+    receiverId:
+        message.receiverId,
 
-        sentAt:
-            serverMessage.receivedAt
+    text:
+        serverMessage.text,
 
-    });
+    sender:
+        serverMessage.sender,
 
+    sentAt:
+        serverMessage.receivedAt
 
-    console.log(
-        "[GPA PRIMARY CHAT DATABASE] " +
-        "Message saved to MongoDB:",
-        serverMessage.id
-    );
+});
 
 
-} catch (error) {
-
-    console.error(
-        "[GPA PRIMARY CHAT DATABASE] " +
-        "Failed to save message:",
-        error
-    );
-
-    return;
-
-}
+                            console.log(
+                                "[GPA PRIMARY CHAT DATABASE] " +
+                                "Message saved to MongoDB:",
+                                serverMessage.id
+                            );
 
 
-                        // ----------------------------------------
+                        } catch (error) {
+
+                            console.error(
+                                "[GPA PRIMARY CHAT DATABASE] " +
+                                "Failed to save message:",
+                                error
+                            );
+
+                            return;
+
+                        }
+
+
+                        // ========================================================
                         // CONFIRM TO SAME PRIMARY USER
-                        // ----------------------------------------
+                        // ========================================================
 
                         socket.emit(
                             "gpa:primary:message:received",
@@ -226,9 +263,9 @@ try {
                 );
 
 
-                // ------------------------------------------------
+                // ==================================================
                 // DISCONNECT
-                // ------------------------------------------------
+                // ==================================================
 
                 socket.on(
                     "disconnect",
