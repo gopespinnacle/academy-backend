@@ -339,6 +339,16 @@ PrimaryUserChatSocket.initialize(io);
 const messengerContactsRoutes =
     require("./messenger/chat/messengerContactsRoutes");
 
+    // =========================================================
+// GPA MESSENGER
+// MODULE 5
+// STEP 8
+// CONVERSATION API
+// =========================================================
+
+const messengerConversationRoutes =
+    require("./messenger/chat/messengerConversationRoutes");
+
 // =========================================================
 // GPA MESSENGER
 // MODULE 4
@@ -468,6 +478,18 @@ app.use(
 app.use(
     "/api/messenger/contacts",
     messengerContactsRoutes
+);
+
+// =========================================================
+// GPA MESSENGER
+// MODULE 5
+// STEP 8
+// CONVERSATION API
+// =========================================================
+
+app.use(
+    "/api/messenger/conversation",
+    messengerConversationRoutes
 );
 
 // =========================================================
