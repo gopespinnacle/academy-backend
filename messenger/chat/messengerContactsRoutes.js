@@ -2,19 +2,13 @@
  * ============================================================
  * GPA MESSENGER
  * MODULE 5
- * STEP 2
- * CONTACTS API ROUTES
- * ============================================================
- *
- * PURPOSE:
- *
- * Provide the Founder with the Messenger contact list
- * from the existing User collection.
- *
+ * STEP 4
+ * CONTACTS API
  * ============================================================
  */
 
 const express = require("express");
+const jwt = require("jsonwebtoken");
 
 const MessengerContacts =
     require("./messengerContacts");
@@ -29,11 +23,7 @@ const router = express.Router();
  * GET
  * /api/messenger/contacts
  *
- * For now, the Founder ID is received through the query:
- *
- * /api/messenger/contacts?founderId=XXXXXXXX
- *
- * Authentication will be connected separately.
+ * Uses the existing Academy login token.
  *
  * ============================================================
  */
@@ -44,23 +34,76 @@ router.get(
 
         try {
 
-            const founderId =
-                req.query.founderId;
+            // =================================================
+            // GET EXISTING LOGIN TOKEN
+            // =================================================
 
-            if (!founderId) {
+            const authHeader =
+                req.headers.authorization;
 
-                return res.status(400).json({
+            if (
+                !authHeader ||
+                !authHeader.startsWith("Bearer ")
+            ) {
+
+                return res.status(401).json({
                     success: false,
                     message:
-                        "Founder ID is required."
+                        "Login token is required."
                 });
+
             }
+
+            const token =
+                authHeader.split(" ")[1];
+
+            // =================================================
+            // VERIFY EXISTING ACADEMY TOKEN
+            // =================================================
+
+            const decoded =
+                jwt.verify(
+                    token,
+                    process.env.JWT_SECRET
+                );
+
+            // =================================================
+            // ONLY FOUNDER CAN LOAD THIS CONTACT LIST
+            // =================================================
+
+            if (
+                !decoded ||
+                decoded.role !== "founder"
+            ) {
+
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "Only Founder can access Messenger contacts."
+                });
+
+            }
+
+            // =================================================
+            // FOUNDER ID COMES FROM TOKEN
+            // =================================================
+
+            const founderId =
+                decoded.id;
+
+            // =================================================
+            // LOAD CONTACTS
+            // =================================================
 
             const contacts =
                 await MessengerContacts
                     .getFounderContacts(
                         founderId
                     );
+
+            // =================================================
+            // SEND CONTACTS
+            // =================================================
 
             return res.status(200).json({
 
@@ -82,14 +125,15 @@ router.get(
                 error
             );
 
-            return res.status(500).json({
+            return res.status(401).json({
 
                 success: false,
 
                 message:
-                    "Unable to load Messenger contacts."
+                    "Invalid or expired login token."
 
             });
+
         }
     }
 );
