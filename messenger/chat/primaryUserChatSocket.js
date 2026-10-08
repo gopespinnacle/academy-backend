@@ -244,23 +244,91 @@ class PrimaryUserChatSocket {
 
 
                         // ========================================================
-                        // CONFIRM TO SAME PRIMARY USER
-                        // ========================================================
+// REAL-TIME CONVERSATION DELIVERY
+// ========================================================
 
-                        socket.emit(
-                            "gpa:primary:message:received",
-                            serverMessage
-                        );
+const roomName =
+    "gpa:conversation:" +
+    message.conversationId;
 
 
-                        console.log(
-                            "[GPA PRIMARY CHAT SOCKET] " +
-                            "Primary User message confirmed:",
-                            serverMessage
-                        );
+// --------------------------------------------------------
+// SEND MESSAGE TO EVERYONE IN THIS CONVERSATION
+// --------------------------------------------------------
+
+io.to(roomName).emit(
+    "gpa:primary:conversation:message",
+    serverMessage
+);
+
+
+console.log(
+    "[GPA PRIMARY CHAT SOCKET] " +
+    "Message delivered to conversation room:",
+    roomName
+);
+
+
+// ========================================================
+// CONFIRM TO SENDER
+// ========================================================
+
+socket.emit(
+    "gpa:primary:message:received",
+    serverMessage
+);
+
+
+console.log(
+    "[GPA PRIMARY CHAT SOCKET] " +
+    "Primary User message confirmed:",
+    serverMessage
+);
 
                     }
                 );
+
+                // ==================================================
+// JOIN CONVERSATION ROOM
+// ==================================================
+
+socket.on(
+    "gpa:primary:conversation:join",
+    (data) => {
+
+        console.log(
+            "[GPA PRIMARY CHAT SOCKET] " +
+            "Conversation join request:",
+            data
+        );
+
+        if (
+            !data ||
+            !data.conversationId
+        ) {
+
+            console.warn(
+                "[GPA PRIMARY CHAT SOCKET] " +
+                "conversationId is required for room join."
+            );
+
+            return;
+        }
+
+        const roomName =
+            "gpa:conversation:" +
+            data.conversationId;
+
+        socket.join(roomName);
+
+        console.log(
+            "[GPA PRIMARY CHAT SOCKET] " +
+            "Socket joined conversation room:",
+            roomName
+        );
+
+    }
+);
 
 
                 // ==================================================
