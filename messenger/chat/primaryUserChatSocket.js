@@ -22,6 +22,9 @@
 const PrimaryUserMessage =
     require("./primaryUserMessage");
 
+    const jwt =
+    require("jsonwebtoken");
+
     const MessengerConversation =
     require("./messengerConversation");
 
@@ -64,6 +67,86 @@ class PrimaryUserChatSocket {
                     "Socket connected:",
                     socket.id
                 );
+
+                // ========================================================
+// SOCKET JWT AUTHENTICATION
+// ========================================================
+
+const token =
+    socket.handshake.auth &&
+    socket.handshake.auth.token;
+
+if (!token) {
+
+    console.warn(
+        "[GPA PRIMARY CHAT SOCKET] " +
+        "Socket authentication token is missing."
+    );
+
+    socket.disconnect(true);
+
+    return;
+}
+
+let decodedUser;
+
+try {
+
+    decodedUser =
+        jwt.verify(
+            token,
+            process.env.JWT_SECRET
+        );
+
+} catch (error) {
+
+    console.warn(
+        "[GPA PRIMARY CHAT SOCKET] " +
+        "Invalid socket authentication token."
+    );
+
+    socket.disconnect(true);
+
+    return;
+}
+
+if (
+    !decodedUser ||
+    !decodedUser.id ||
+    !decodedUser.role
+) {
+
+    console.warn(
+        "[GPA PRIMARY CHAT SOCKET] " +
+        "Invalid socket user information."
+    );
+
+    socket.disconnect(true);
+
+    return;
+}
+
+// ========================================================
+// STORE AUTHENTICATED USER ON SOCKET
+// ========================================================
+
+socket.userId =
+    decodedUser.id;
+
+socket.userRole =
+    decodedUser.role;
+
+console.log(
+    "[GPA PRIMARY CHAT SOCKET] " +
+    "Authenticated user:",
+    socket.userId
+);
+
+console.log(
+    "[GPA PRIMARY CHAT SOCKET] " +
+    "Authenticated role:",
+    socket.userRole
+);
 
 
                 // ==================================================
@@ -239,40 +322,104 @@ if (
 
 
 // ========================================================
-// FIND ACTUAL SENDER
-// ========================================================
-//
-// The conversation contains exactly:
-//
-// Participant A
-// Participant B
-//
-// receiverId is already known.
-//
-// Therefore the OTHER participant is the sender.
-//
-// This prevents the browser from deciding who the
-// sender is.
-//
+// VERIFY AUTHENTICATED USER IS A PARTICIPANT
 // ========================================================
 
-const senderId =
-    messengerConversation.participants.find(
+const isParticipant =
+    messengerConversation.participants.some(
         participant =>
-            String(participant) !==
-            String(message.receiverId)
+            String(participant) ===
+            String(socket.userId)
     );
 
+if (!isParticipant) {
+
+    console.error(
+        "[GPA PRIMARY CHAT SOCKET] " +
+        "Authenticated user is not a participant in this conversation."
+    );
+
+    return;
+}
+
+
+// ========================================================
+// ACTUAL SENDER
+// ========================================================
+//
+// The sender MUST come from the authenticated socket.
+//
+// NEVER trust senderId from the browser.
+//
+
+const senderId =
+    socket.userId;
 
 if (!senderId) {
 
     console.error(
         "[GPA PRIMARY CHAT SOCKET] " +
-        "Unable to determine sender ID."
+        "Authenticated sender ID is missing."
     );
 
     return;
 }
+
+
+// ========================================================
+// ACTUAL RECEIVER
+// ========================================================
+//
+// The receiver is the OTHER participant in the
+// two-person conversation.
+//
+// This means the browser cannot choose the receiver.
+//
+
+const actualReceiverId =
+    messengerConversation.participants.find(
+        participant =>
+            String(participant) !==
+            String(socket.userId)
+    );
+
+if (!actualReceiverId) {
+
+    console.error(
+        "[GPA PRIMARY CHAT SOCKET] " +
+        "Unable to determine receiver ID."
+    );
+
+    return;
+}
+
+
+// ========================================================
+// USE BACKEND-DETERMINED RECEIVER
+// ========================================================
+
+serverMessage.senderId =
+    senderId;
+
+serverMessage.receiverId =
+    actualReceiverId;
+
+
+// ========================================================
+// LOG AUTHENTICATED MESSAGE OWNERSHIP
+// ========================================================
+
+console.log(
+    "[GPA PRIMARY CHAT SOCKET] " +
+    "Authenticated sender:",
+    senderId
+);
+
+console.log(
+    "[GPA PRIMARY CHAT SOCKET] " +
+    "Backend determined receiver:",
+    actualReceiverId
+);
 
 
 // ========================================================
@@ -299,7 +446,7 @@ await PrimaryUserMessage.create({
         senderId,
 
     receiverId:
-        message.receiverId,
+    actualReceiverId,
 
     text:
         serverMessage.text,
