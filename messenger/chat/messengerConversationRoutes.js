@@ -90,21 +90,43 @@ router.post(
             // ONLY FOUNDER CAN START CONVERSATION
             // =================================================
 
-            if (
-                !decoded ||
-                decoded.role !== "founder"
-            ) {
+            // ============================================================
+// MESSENGER CONVERSATION PERMISSION
+// ============================================================
+//
+// Allowed Messenger users:
+// Founder
+// Teacher
+// Student
+// Parent
+// Admin
+//
+// The actual conversation rules will be checked below.
+// ============================================================
 
-                return res.status(403).json({
+const allowedRoles = [
+    "founder",
+    "teacher",
+    "student",
+    "parent",
+    "admin"
+];
 
-                    success: false,
+if (
+    !req.user ||
+    !allowedRoles.includes(req.user.role)
+) {
 
-                    message:
-                        "Only Founder can start Messenger conversations."
+    return res.status(403).json({
 
-                });
+        success: false,
 
-            }
+        message:
+            "You are not allowed to start Messenger conversations."
+
+    });
+
+}
 
 
             // =================================================
