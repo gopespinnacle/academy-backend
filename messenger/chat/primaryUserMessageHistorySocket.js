@@ -4,9 +4,14 @@
  * PRIMARY USER MESSAGE HISTORY SOCKET
  * ============================================================
  */
+const mongoose =
+    require("mongoose");
 
 const PrimaryUserMessage =
     require("./primaryUserMessage");
+
+const MessengerConversation =
+    require("./messengerConversation");
 
 class PrimaryUserMessageHistorySocket {
 
@@ -35,84 +40,252 @@ class PrimaryUserMessageHistorySocket {
                 );
 
                 // ====================================================
-                // LOAD MESSAGE HISTORY FOR ONE CONVERSATION
-                // ====================================================
+// LOAD MESSAGE HISTORY FOR ONE CONVERSATION
+// ====================================================
 
-                socket.on(
-                    "gpa:primary:message:history",
-                    async (data) => {
+socket.on(
+    "gpa:primary:message:history",
+    async (data) => {
 
-                        try {
+        try {
 
-                            console.log(
-                                "[GPA PRIMARY MESSAGE HISTORY] " +
-                                "History request received:",
-                                data
-                            );
+            console.log(
+                "[GPA PRIMARY MESSAGE HISTORY] " +
+                "History request received:",
+                data
+            );
 
-                            if (
-                                !data ||
-                                !data.conversationId
-                            ) {
 
-                                console.warn(
-                                    "[GPA PRIMARY MESSAGE HISTORY] " +
-                                    "conversationId is required."
-                                );
+            // ====================================================
+            // 1. CHECK CONVERSATION ID
+            // ====================================================
 
-                                socket.emit(
-                                    "gpa:primary:message:history:received",
-                                    []
-                                );
+            if (
+                !data ||
+                !data.conversationId
+            ) {
 
-                                return;
-                            }
+                console.warn(
+                    "[GPA PRIMARY MESSAGE HISTORY] " +
+                    "conversationId is required."
+                );
 
-                            const messages =
-                                await PrimaryUserMessage
-                                    .find({
-                                        conversationId:
-                                            data.conversationId
-                                    })
-                                    .sort({
-                                        sentAt: 1
-                                    })
-                                    .lean();
+                socket.emit(
+                    "gpa:primary:message:history:received",
+                    []
+                );
 
-                            console.log(
-                                "[GPA PRIMARY MESSAGE HISTORY] " +
-                                "Conversation:",
-                                data.conversationId
-                            );
+                return;
+            }
 
-                            console.log(
-                                "[GPA PRIMARY MESSAGE HISTORY] " +
-                                "Messages loaded:",
-                                messages.length
-                            );
 
-                            socket.emit(
-                                "gpa:primary:message:history:received",
-                                messages
-                            );
+            // ====================================================
+            // 2. CHECK AUTHENTICATED USER
+            // ====================================================
 
-                        } catch (error) {
+            if (!socket.userId) {
 
-                            console.error(
-                                "[GPA PRIMARY MESSAGE HISTORY] " +
-                                "Failed to load history:",
-                                error
-                            );
+                console.warn(
+                    "[GPA PRIMARY MESSAGE HISTORY] " +
+                    "Authenticated user is missing."
+                );
 
-                            socket.emit(
-                                "gpa:primary:message:history:received",
-                                []
-                            );
+                socket.emit(
+                    "gpa:primary:message:history:received",
+                    []
+                );
 
-                        }
+                return;
+            }
 
+
+            // ====================================================
+            // 3. VALIDATE CONVERSATION ID
+            // ====================================================
+
+            if (
+                !mongoose.Types.ObjectId.isValid(
+                    data.conversationId
+                )
+            ) {
+
+                console.warn(
+                    "[GPA PRIMARY MESSAGE HISTORY] " +
+                    "Invalid conversation ID."
+                );
+
+                socket.emit(
+                    "gpa:primary:message:history:received",
+                    []
+                );
+
+                return;
+            }
+
+
+            // ====================================================
+            // 4. LOAD CONVERSATION
+            // ====================================================
+
+            const conversation =
+                await MessengerConversation
+                    .findById(
+                        data.conversationId
+                    )
+                    .select(
+                        "participants status"
+                    )
+                    .lean();
+
+
+            // ====================================================
+            // 5. CHECK CONVERSATION EXISTS
+            // ====================================================
+
+            if (
+                !conversation ||
+                !Array.isArray(
+                    conversation.participants
+                ) ||
+                conversation.participants.length !== 2
+            ) {
+
+                console.warn(
+                    "[GPA PRIMARY MESSAGE HISTORY] " +
+                    "Conversation not found or invalid."
+                );
+
+                socket.emit(
+                    "gpa:primary:message:history:received",
+                    []
+                );
+
+                return;
+            }
+
+
+            // ====================================================
+            // 6. CHECK CONVERSATION STATUS
+            // ====================================================
+
+            if (
+                conversation.status !==
+                "active"
+            ) {
+
+                console.warn(
+                    "[GPA PRIMARY MESSAGE HISTORY] " +
+                    "Conversation is not active."
+                );
+
+                socket.emit(
+                    "gpa:primary:message:history:received",
+                    []
+                );
+
+                return;
+            }
+
+
+            // ====================================================
+            // 7. VERIFY USER IS A PARTICIPANT
+            // ====================================================
+
+            const isParticipant =
+                conversation.participants.some(
+                    participant =>
+                        String(participant) ===
+                        String(socket.userId)
+                );
+
+
+            if (!isParticipant) {
+
+                console.warn(
+                    "[GPA PRIMARY MESSAGE HISTORY] " +
+                    "HISTORY ACCESS DENIED: " +
+                    "User is not a conversation participant.",
+                    {
+                        userId:
+                            socket.userId,
+
+                        conversationId:
+                            data.conversationId
                     }
                 );
+
+                socket.emit(
+                    "gpa:primary:message:history:received",
+                    []
+                );
+
+                return;
+            }
+
+
+            // ====================================================
+            // 8. LOAD HISTORY
+            // ====================================================
+
+            const messages =
+                await PrimaryUserMessage
+                    .find({
+                        conversationId:
+                            data.conversationId
+                    })
+                    .sort({
+                        sentAt: 1
+                    })
+                    .lean();
+
+
+            // ====================================================
+            // 9. LOG SUCCESS
+            // ====================================================
+
+            console.log(
+                "[GPA PRIMARY MESSAGE HISTORY] " +
+                "Authorized history access:",
+                {
+                    userId:
+                        socket.userId,
+
+                    conversationId:
+                        data.conversationId,
+
+                    messages:
+                        messages.length
+                }
+            );
+
+
+            // ====================================================
+            // 10. RETURN HISTORY
+            // ====================================================
+
+            socket.emit(
+                "gpa:primary:message:history:received",
+                messages
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "[GPA PRIMARY MESSAGE HISTORY] " +
+                "Failed to load history:",
+                error
+            );
+
+            socket.emit(
+                "gpa:primary:message:history:received",
+                []
+            );
+
+        }
+
+    }
+);
 
             }
         );
