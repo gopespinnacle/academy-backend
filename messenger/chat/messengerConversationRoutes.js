@@ -87,22 +87,8 @@ router.post(
 
 
             // =================================================
-            // ONLY FOUNDER CAN START CONVERSATION
-            // =================================================
-
-            // ============================================================
-// MESSENGER CONVERSATION PERMISSION
-// ============================================================
-//
-// Allowed Messenger users:
-// Founder
-// Teacher
-// Student
-// Parent
-// Admin
-//
-// The actual conversation rules will be checked below.
-// ============================================================
+// MESSENGER USER PERMISSION
+// =================================================
 
 const allowedRoles = [
     "founder",
@@ -112,9 +98,33 @@ const allowedRoles = [
     "admin"
 ];
 
+
+// =================================================
+// VERIFY LOGGED-IN USER ROLE FROM JWT
+// =================================================
+
 if (
-    !req.user ||
-    !allowedRoles.includes(req.user.role)
+    !decoded ||
+    !decoded.id ||
+    !decoded.role
+) {
+
+    return res.status(401).json({
+
+        success: false,
+
+        message:
+            "Invalid Messenger authentication."
+
+    });
+
+}
+
+
+if (
+    !allowedRoles.includes(
+        decoded.role
+    )
 ) {
 
     return res.status(403).json({
@@ -152,11 +162,11 @@ if (
 
 
             // =================================================
-            // FOUNDER ID FROM EXISTING TOKEN
-            // =================================================
+// CURRENT USER ID FROM EXISTING TOKEN
+// =================================================
 
-            const founderId =
-                decoded.id;
+const currentUserId =
+    decoded.id;
 
 
             // =================================================
@@ -164,11 +174,11 @@ if (
             // =================================================
 
             const conversation =
-                await MessengerConversationService
-                    .getOrCreateConversation(
-                        founderId,
-                        receiverId
-                    );
+    await MessengerConversationService
+        .getOrCreateConversation(
+            currentUserId,
+            receiverId
+        );
 
 
             // =================================================
