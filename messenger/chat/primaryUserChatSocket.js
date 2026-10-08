@@ -22,6 +22,9 @@
 const PrimaryUserMessage =
     require("./primaryUserMessage");
 
+    const MessengerConversation =
+    require("./messengerConversation");
+
 
 class PrimaryUserChatSocket {
 
@@ -200,13 +203,100 @@ class PrimaryUserChatSocket {
 
                         try {
 
-                            await PrimaryUserMessage.create({
+                            // ========================================================
+// FIND CONVERSATION
+// ========================================================
+
+const messengerConversation =
+    await MessengerConversation
+        .findById(
+            message.conversationId
+        )
+        .select(
+            "participants"
+        );
+
+
+// ========================================================
+// VALIDATE CONVERSATION
+// ========================================================
+
+if (
+    !messengerConversation ||
+    !Array.isArray(
+        messengerConversation.participants
+    ) ||
+    messengerConversation.participants.length !== 2
+) {
+
+    console.error(
+        "[GPA PRIMARY CHAT SOCKET] " +
+        "Invalid Messenger conversation."
+    );
+
+    return;
+}
+
+
+// ========================================================
+// FIND ACTUAL SENDER
+// ========================================================
+//
+// The conversation contains exactly:
+//
+// Participant A
+// Participant B
+//
+// receiverId is already known.
+//
+// Therefore the OTHER participant is the sender.
+//
+// This prevents the browser from deciding who the
+// sender is.
+//
+// ========================================================
+
+const senderId =
+    messengerConversation.participants.find(
+        participant =>
+            String(participant) !==
+            String(message.receiverId)
+    );
+
+
+if (!senderId) {
+
+    console.error(
+        "[GPA PRIMARY CHAT SOCKET] " +
+        "Unable to determine sender ID."
+    );
+
+    return;
+}
+
+
+// ========================================================
+// ADD SENDER ID TO REAL-TIME MESSAGE
+// ========================================================
+
+serverMessage.senderId =
+    senderId;
+
+
+// ========================================================
+// SAVE MESSAGE
+// ========================================================
+
+await PrimaryUserMessage.create({
 
     messageId:
         serverMessage.id,
 
     conversationId:
         message.conversationId,
+
+    senderId:
+        senderId,
 
     receiverId:
         message.receiverId,
@@ -219,8 +309,14 @@ class PrimaryUserChatSocket {
 
     sentAt:
         serverMessage.receivedAt
-
 });
+
+
+console.log(
+    "[GPA PRIMARY CHAT SOCKET] " +
+    "Message saved with sender ID:",
+    senderId
+);
 
 
                             console.log(
