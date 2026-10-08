@@ -549,45 +549,256 @@ console.log(
                 // ==================================================
 // JOIN CONVERSATION ROOM
 // ==================================================
+//
+// SECURITY:
+// The browser is NOT trusted to decide whether it
+// can join a conversation.
+//
+// The authenticated socket user must be one of the
+// two participants stored in MongoDB.
+//
+// ==================================================
 
 socket.on(
     "gpa:primary:conversation:join",
-    (data) => {
+    async (data) => {
 
-        console.log(
-            "[GPA PRIMARY CHAT SOCKET] " +
-            "Conversation join request:",
-            data
-        );
+        try {
 
-        if (
-            !data ||
-            !data.conversationId
-        ) {
-
-            console.warn(
+            console.log(
                 "[GPA PRIMARY CHAT SOCKET] " +
-                "conversationId is required for room join."
+                "Conversation join request:",
+                data
             );
 
-            return;
+
+            // ==================================================
+            // 1. CHECK CONVERSATION ID
+            // ==================================================
+
+            if (
+                !data ||
+                !data.conversationId
+            ) {
+
+                console.warn(
+                    "[GPA PRIMARY CHAT SOCKET] " +
+                    "conversationId is required for room join."
+                );
+
+                return;
+            }
+
+
+            // ==================================================
+            // 2. CHECK AUTHENTICATED SOCKET USER
+            // ==================================================
+
+            if (!socket.userId) {
+
+                console.warn(
+                    "[GPA PRIMARY CHAT SOCKET] " +
+                    "Authenticated user is missing."
+                );
+
+                socket.emit(
+                    "gpa:primary:conversation:join:denied",
+                    {
+                        conversationId:
+                            data.conversationId,
+
+                        message:
+                            "Authentication required."
+                    }
+                );
+
+                return;
+            }
+
+
+            // ==================================================
+            // 3. LOAD CONVERSATION FROM MONGODB
+            // ==================================================
+
+            const messengerConversation =
+                await MessengerConversation
+                    .findById(
+                        data.conversationId
+                    )
+                    .select(
+                        "participants status"
+                    );
+
+
+            // ==================================================
+            // 4. CHECK CONVERSATION EXISTS
+            // ==================================================
+
+            if (
+                !messengerConversation ||
+                !Array.isArray(
+                    messengerConversation.participants
+                ) ||
+                messengerConversation.participants.length !== 2
+            ) {
+
+                console.warn(
+                    "[GPA PRIMARY CHAT SOCKET] " +
+                    "Conversation not found or invalid."
+                );
+
+                socket.emit(
+                    "gpa:primary:conversation:join:denied",
+                    {
+                        conversationId:
+                            data.conversationId,
+
+                        message:
+                            "Conversation not found."
+                    }
+                );
+
+                return;
+            }
+
+
+            // ==================================================
+            // 5. CHECK CONVERSATION STATUS
+            // ==================================================
+
+            if (
+                messengerConversation.status !==
+                "active"
+            ) {
+
+                console.warn(
+                    "[GPA PRIMARY CHAT SOCKET] " +
+                    "Conversation is not active."
+                );
+
+                socket.emit(
+                    "gpa:primary:conversation:join:denied",
+                    {
+                        conversationId:
+                            data.conversationId,
+
+                        message:
+                            "Conversation is not active."
+                    }
+                );
+
+                return;
+            }
+
+
+            // ==================================================
+            // 6. VERIFY USER IS A PARTICIPANT
+            // ==================================================
+
+            const isParticipant =
+                messengerConversation.participants.some(
+                    participant =>
+                        String(participant) ===
+                        String(socket.userId)
+                );
+
+
+            if (!isParticipant) {
+
+                console.warn(
+                    "[GPA PRIMARY CHAT SOCKET] " +
+                    "ROOM JOIN DENIED: User is not a conversation participant.",
+                    {
+                        userId:
+                            socket.userId,
+
+                        conversationId:
+                            data.conversationId
+                    }
+                );
+
+                socket.emit(
+                    "gpa:primary:conversation:join:denied",
+                    {
+                        conversationId:
+                            data.conversationId,
+
+                        message:
+                            "You are not a participant in this conversation."
+                    }
+                );
+
+                return;
+            }
+
+
+            // ==================================================
+            // 7. USER IS AUTHORIZED
+            // ==================================================
+
+            const roomName =
+                "gpa:conversation:" +
+                data.conversationId;
+
+
+            socket.join(
+                roomName
+            );
+
+
+            // ==================================================
+            // 8. CONFIRM SUCCESS
+            // ==================================================
+
+            console.log(
+                "[GPA PRIMARY CHAT SOCKET] " +
+                "SECURE ROOM JOIN APPROVED:",
+                {
+                    userId:
+                        socket.userId,
+
+                    conversationId:
+                        data.conversationId,
+
+                    room:
+                        roomName
+                }
+            );
+
+
+            socket.emit(
+                "gpa:primary:conversation:join:approved",
+                {
+                    conversationId:
+                        data.conversationId
+                }
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "[GPA PRIMARY CHAT SOCKET] " +
+                "Conversation room join failed:",
+                error
+            );
+
+
+            socket.emit(
+                "gpa:primary:conversation:join:denied",
+                {
+                    conversationId:
+                        data?.conversationId || null,
+
+                    message:
+                        "Unable to join conversation."
+                }
+            );
+
         }
-
-        const roomName =
-            "gpa:conversation:" +
-            data.conversationId;
-
-        socket.join(roomName);
-
-        console.log(
-            "[GPA PRIMARY CHAT SOCKET] " +
-            "Socket joined conversation room:",
-            roomName
-        );
 
     }
 );
-
 
                 // ==================================================
                 // DISCONNECT
