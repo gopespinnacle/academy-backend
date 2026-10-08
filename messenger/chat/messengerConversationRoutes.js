@@ -1,21 +1,11 @@
-/**
- * ============================================================
- * GPA MESSENGER
- * MODULE 5
- * STEP 8
- * CONVERSATION API ROUTES
- * ============================================================
- *
- * PURPOSE:
- *
- * Create or load a Messenger conversation between
- * the logged-in Founder and a selected Academy user.
- *
- * ============================================================
- */
-
 const express = require("express");
 const jwt = require("jsonwebtoken");
+
+const User =
+    require("../../models/User");
+
+const PeriodAssignment =
+    require("../../models/PeriodAssignment");
 
 const MessengerConversationService =
     require("./messengerConversationService");
@@ -23,22 +13,229 @@ const MessengerConversationService =
 const router = express.Router();
 
 
-/**
- * ============================================================
- * CREATE / GET CONVERSATION
- * ============================================================
- *
- * POST
- * /api/messenger/conversation
- *
- * Body:
- *
- * {
- *     "receiverId": "USER_ID"
- * }
- *
- * ============================================================
- */
+// ============================================================
+// GPA MESSENGER
+// STEP 3F
+// SECURE CONVERSATION CREATION
+// ============================================================
+
+
+// ============================================================
+// CHECK WHETHER TWO USERS ARE ALLOWED TO COMMUNICATE
+// ============================================================
+
+async function canUsersCommunicate(
+    currentUser,
+    receiverUser
+) {
+
+    // --------------------------------------------------------
+    // BASIC CHECK
+    // --------------------------------------------------------
+
+    if (
+        !currentUser ||
+        !receiverUser
+    ) {
+        return false;
+    }
+
+
+    // --------------------------------------------------------
+    // USER CANNOT MESSAGE THEMSELVES
+    // --------------------------------------------------------
+
+    if (
+        String(currentUser._id) ===
+        String(receiverUser._id)
+    ) {
+        return false;
+    }
+
+
+    // --------------------------------------------------------
+    // FOUNDER
+    // Founder can message:
+    // Teacher
+    // Student
+    // Admin
+    // --------------------------------------------------------
+
+    if (
+        currentUser.role === "founder"
+    ) {
+
+        return [
+            "teacher",
+            "student",
+            "admin"
+        ].includes(
+            receiverUser.role
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // ADMIN
+    // Admin can message:
+    // Founder
+    // Teacher
+    // Student
+    // --------------------------------------------------------
+
+    if (
+        currentUser.role === "admin"
+    ) {
+
+        return [
+            "founder",
+            "teacher",
+            "student"
+        ].includes(
+            receiverUser.role
+        );
+
+    }
+
+
+    // --------------------------------------------------------
+    // TEACHER
+    // Teacher can message:
+    // Founder
+    // Admin
+    // Assigned Students
+    // --------------------------------------------------------
+
+    if (
+        currentUser.role === "teacher"
+    ) {
+
+        // Founder / Admin
+        if (
+            receiverUser.role === "founder" ||
+            receiverUser.role === "admin"
+        ) {
+
+            return true;
+
+        }
+
+
+        // Only students assigned to this teacher
+        if (
+            receiverUser.role === "student"
+        ) {
+
+            const assignment =
+                await PeriodAssignment.findOne({
+                    $or: [
+                        {
+                            teacher:
+                                currentUser._id
+                        },
+                        {
+                            assistantTeacher:
+                                currentUser._id
+                        }
+                    ],
+                    "assignments.student":
+                        receiverUser._id
+                })
+                .select("_id")
+                .lean();
+
+            return !!assignment;
+
+        }
+
+
+        return false;
+    }
+
+
+    // --------------------------------------------------------
+    // STUDENT
+    // Student can message:
+    // Founder
+    // Admin
+    // Assigned Teachers
+    // --------------------------------------------------------
+
+    if (
+        currentUser.role === "student"
+    ) {
+
+        // Founder / Admin
+        if (
+            receiverUser.role === "founder" ||
+            receiverUser.role === "admin"
+        ) {
+
+            return true;
+
+        }
+
+
+        // Only teachers assigned to this student
+        if (
+            receiverUser.role === "teacher"
+        ) {
+
+            const assignment =
+                await PeriodAssignment.findOne({
+                    "assignments.student":
+                        currentUser._id,
+                    $or: [
+                        {
+                            teacher:
+                                receiverUser._id
+                        },
+                        {
+                            assistantTeacher:
+                                receiverUser._id
+                        }
+                    ]
+                })
+                .select("_id")
+                .lean();
+
+            return !!assignment;
+
+        }
+
+
+        return false;
+    }
+
+
+    // --------------------------------------------------------
+    // PARENT
+    //
+    // Parent communication rules will be added later after
+    // the Parent ↔ Student ↔ Teacher relationship is defined.
+    // --------------------------------------------------------
+
+    if (
+        currentUser.role === "parent"
+    ) {
+
+        return false;
+
+    }
+
+
+    // --------------------------------------------------------
+    // UNKNOWN ROLE
+    // --------------------------------------------------------
+
+    return false;
+}
+
+
+// ============================================================
+// CREATE / LOAD CONVERSATION
+// ============================================================
 
 router.post(
     "/",
@@ -46,13 +243,12 @@ router.post(
 
         try {
 
-            // =================================================
-            // GET EXISTING LOGIN TOKEN
-            // =================================================
+            // ====================================================
+            // 1. CHECK AUTHORIZATION HEADER
+            // ====================================================
 
             const authHeader =
                 req.headers.authorization;
-
 
             if (
                 !authHeader ||
@@ -60,24 +256,20 @@ router.post(
             ) {
 
                 return res.status(401).json({
-
                     success: false,
-
                     message:
                         "Login token is required."
-
                 });
 
             }
 
 
+            // ====================================================
+            // 2. VERIFY TOKEN
+            // ====================================================
+
             const token =
                 authHeader.split(" ")[1];
-
-
-            // =================================================
-            // VERIFY TOKEN
-            // =================================================
 
             const decoded =
                 jwt.verify(
@@ -86,111 +278,196 @@ router.post(
                 );
 
 
-            // =================================================
-// MESSENGER USER PERMISSION
-// =================================================
+            // ====================================================
+            // 3. CHECK TOKEN DATA
+            // ====================================================
 
-const allowedRoles = [
-    "founder",
-    "teacher",
-    "student",
-    "parent",
-    "admin"
-];
+            if (
+                !decoded ||
+                !decoded.id ||
+                !decoded.role
+            ) {
 
-
-// =================================================
-// VERIFY LOGGED-IN USER ROLE FROM JWT
-// =================================================
-
-if (
-    !decoded ||
-    !decoded.id ||
-    !decoded.role
-) {
-
-    return res.status(401).json({
-
-        success: false,
-
-        message:
-            "Invalid Messenger authentication."
-
-    });
-
-}
-
-
-if (
-    !allowedRoles.includes(
-        decoded.role
-    )
-) {
-
-    return res.status(403).json({
-
-        success: false,
-
-        message:
-            "You are not allowed to start Messenger conversations."
-
-    });
-
-}
-
-
-            // =================================================
-            // GET SELECTED USER
-            // =================================================
-
-            const receiverId =
-                req.body.receiverId;
-
-
-            if (!receiverId) {
-
-                return res.status(400).json({
-
+                return res.status(401).json({
                     success: false,
-
                     message:
-                        "Receiver ID is required."
-
+                        "Invalid Messenger authentication."
                 });
 
             }
 
 
-            // =================================================
-// CURRENT USER ID FROM EXISTING TOKEN
-// =================================================
+            // ====================================================
+            // 4. ALLOWED MESSENGER ROLES
+            // ====================================================
 
-const currentUserId =
-    decoded.id;
+            const allowedRoles = [
+                "founder",
+                "teacher",
+                "student",
+                "parent",
+                "admin"
+            ];
+
+            if (
+                !allowedRoles.includes(
+                    decoded.role
+                )
+            ) {
+
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "You are not allowed to use Messenger."
+                });
+
+            }
 
 
-            // =================================================
-            // GET OR CREATE CONVERSATION
-            // =================================================
+            // ====================================================
+            // 5. RECEIVER ID
+            // ====================================================
+
+            const receiverId =
+                req.body.receiverId;
+
+            if (!receiverId) {
+
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Receiver ID is required."
+                });
+
+            }
+
+
+            // ====================================================
+            // 6. LOAD CURRENT USER
+            // ====================================================
+
+            const currentUser =
+                await User.findById(
+                    decoded.id
+                )
+                .select("_id name role")
+                .lean();
+
+
+            if (!currentUser) {
+
+                return res.status(401).json({
+                    success: false,
+                    message:
+                        "Current user was not found."
+                });
+
+            }
+
+
+            // ====================================================
+            // 7. LOAD RECEIVER
+            // ====================================================
+
+            const receiverUser =
+                await User.findById(
+                    receiverId
+                )
+                .select("_id name role")
+                .lean();
+
+
+            if (!receiverUser) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Receiver user was not found."
+                });
+
+            }
+
+
+            // ====================================================
+            // 8. CHECK COMMUNICATION PERMISSION
+            // ====================================================
+
+            const allowed =
+                await canUsersCommunicate(
+                    currentUser,
+                    receiverUser
+                );
+
+
+            if (!allowed) {
+
+                console.warn(
+                    "[GPA MESSENGER CONVERSATION] " +
+                    "Conversation creation denied:",
+                    {
+                        currentUserId:
+                            currentUser._id,
+                        currentUserRole:
+                            currentUser.role,
+                        receiverId:
+                            receiverUser._id,
+                        receiverRole:
+                            receiverUser.role
+                    }
+                );
+
+                return res.status(403).json({
+                    success: false,
+                    message:
+                        "You are not allowed to start a conversation with this user."
+                });
+
+            }
+
+
+            // ====================================================
+            // 9. CREATE / LOAD CONVERSATION
+            // ====================================================
 
             const conversation =
-    await MessengerConversationService
-        .getOrCreateConversation(
-            currentUserId,
-            receiverId
-        );
+                await MessengerConversationService
+                    .getOrCreateConversation(
+                        currentUser._id,
+                        receiverUser._id
+                    );
 
 
-            // =================================================
-            // RETURN CONVERSATION
-            // =================================================
+            // ====================================================
+            // 10. SUCCESS LOG
+            // ====================================================
+
+            console.log(
+                "[GPA MESSENGER CONVERSATION] " +
+                "Conversation access approved:",
+                {
+                    currentUserId:
+                        currentUser._id,
+                    currentUserRole:
+                        currentUser.role,
+                    receiverId:
+                        receiverUser._id,
+                    receiverRole:
+                        receiverUser.role,
+                    conversationId:
+                        conversation._id
+                }
+            );
+
+
+            // ====================================================
+            // 11. RETURN CONVERSATION
+            // ====================================================
 
             return res.status(200).json({
 
                 success: true,
 
                 conversation: {
-
                     _id:
                         conversation._id,
 
@@ -205,10 +482,10 @@ const currentUserId =
 
                     status:
                         conversation.status
-
                 }
 
             });
+
 
         } catch (error) {
 
@@ -218,14 +495,10 @@ const currentUserId =
                 error
             );
 
-
             return res.status(401).json({
-
                 success: false,
-
                 message:
                     "Unable to create or load conversation."
-
             });
 
         }
