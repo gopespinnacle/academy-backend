@@ -1,33 +1,9 @@
-/**
- * ============================================================
- * GPA MESSENGER
- * MODULE 3
- * PRIMARY USER MESSAGE MODEL
- * ============================================================
- *
- * PURPOSE:
- *
- * Store Primary User messages in MongoDB.
- *
- * THIS MODULE ONLY DEFINES THE DATABASE MODEL.
- *
- * It does NOT:
- *
- * - send messages
- * - receive Socket.IO messages
- * - load message history
- * - send notifications
- * - handle calls
- * - handle attachments
- *
- * ============================================================
- */
-
 const mongoose = require("mongoose");
 
 
 // ============================================================
-// MESSAGE SCHEMA
+// GPA MESSENGER
+// PRIMARY USER MESSAGE MODEL
 // ============================================================
 
 const primaryUserMessageSchema =
@@ -35,101 +11,148 @@ const primaryUserMessageSchema =
 
         {
 
-            // ------------------------------------------------
-            // MESSAGE IDENTITY
-            // ------------------------------------------------
+            // ==================================================
+            // CONVERSATION
+            // ==================================================
+
+            conversationId: {
+
+                type:
+                    mongoose.Schema.Types.ObjectId,
+
+                ref:
+                    "MessengerConversation",
+
+                required:
+                    true,
+
+                index:
+                    true
+
+            },
+
+
+            // ==================================================
+            // SENDER
+            // ==================================================
+            //
+            // Actual Academy User MongoDB ID.
+            //
+            // This identifies who actually sent the message.
+            //
+            // Founder / Teacher / Student / Parent / Admin
+            // can all use the same field.
+            // ==================================================
+
+            senderId: {
+
+                type:
+                    mongoose.Schema.Types.ObjectId,
+
+                ref:
+                    "User",
+
+                required:
+                    true,
+
+                index:
+                    true
+
+            },
+
+
+            // ==================================================
+            // RECEIVER
+            // ==================================================
+
+            receiverId: {
+
+                type:
+                    mongoose.Schema.Types.ObjectId,
+
+                ref:
+                    "User",
+
+                required:
+                    true,
+
+                index:
+                    true
+
+            },
+
+
+            // ==================================================
+            // MESSAGE ID
+            // ==================================================
 
             messageId: {
 
-                type: String,
+                type:
+                    String,
 
-                required: true,
+                required:
+                    true,
 
-                unique: true,
+                unique:
+                    true,
 
-                index: true
+                index:
+                    true
 
             },
 
 
-            // ------------------------------------------------
+            // ==================================================
             // MESSAGE TEXT
-            // ------------------------------------------------
+            // ==================================================
 
             text: {
 
-                type: String,
+                type:
+                    String,
 
-                required: true,
+                required:
+                    true,
 
-                trim: true
+                trim:
+                    true
 
             },
 
-            // ------------------------------------------------
-// CONVERSATION
-// ------------------------------------------------
 
-conversationId: {
-
-    type:
-        mongoose.Schema.Types.ObjectId,
-
-    ref:
-        "MessengerConversation",
-
-    required: true,
-
-    index: true
-
-},
-
-
-// ------------------------------------------------
-// RECEIVER
-// ------------------------------------------------
-
-receiverId: {
-
-    type:
-        mongoose.Schema.Types.ObjectId,
-
-    ref:
-        "User",
-
-    required: true,
-
-    index: true
-
-},
-
-
-            // ------------------------------------------------
-            // SENDER
-            // ------------------------------------------------
+            // ==================================================
+            // MESSAGE TYPE / SOURCE
+            // ==================================================
 
             sender: {
 
-                type: String,
+                type:
+                    String,
 
-                required: true,
+                required:
+                    true,
 
-                default: "primary-user"
+                default:
+                    "primary-user"
 
             },
 
 
-            // ------------------------------------------------
-            // MESSAGE CREATED TIME
-            // ------------------------------------------------
+            // ==================================================
+            // SENT TIME
+            // ==================================================
 
             sentAt: {
 
-                type: Date,
+                type:
+                    Date,
 
-                required: true,
+                required:
+                    true,
 
-                default: Date.now
+                default:
+                    Date.now
 
             }
 
@@ -137,21 +160,15 @@ receiverId: {
 
 
         {
-
-            // Automatically creates:
-            //
-            // createdAt
-            // updatedAt
-
-            timestamps: true
-
+            timestamps:
+                true
         }
 
     );
 
 
 // ============================================================
-// EXPORT MODEL
+// EXPORT
 // ============================================================
 
 module.exports =
