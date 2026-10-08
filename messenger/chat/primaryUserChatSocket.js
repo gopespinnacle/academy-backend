@@ -244,7 +244,7 @@ class PrimaryUserChatSocket {
 
 
                         // ========================================================
-// REAL-TIME CONVERSATION DELIVERY
+// DELIVER MESSAGE TO OTHER PARTICIPANT
 // ========================================================
 
 const roomName =
@@ -252,25 +252,40 @@ const roomName =
     message.conversationId;
 
 
-// --------------------------------------------------------
-// SEND MESSAGE TO EVERYONE IN THIS CONVERSATION
-// --------------------------------------------------------
+// ========================================================
+// IMPORTANT
+// ========================================================
+// Send the message to everyone in the conversation room
+// EXCEPT the socket that originally sent the message.
+//
+// This prevents the sender from receiving the same message
+// again because the frontend already displays the sent
+// message immediately.
+//
+// Result:
+//
+// Sender   → message displayed once on sender screen
+// Receiver → message displayed immediately
+// ========================================================
 
-io.to(roomName).emit(
-    "gpa:primary:conversation:message",
-    serverMessage
-);
+io
+    .to(roomName)
+    .except(socket.id)
+    .emit(
+        "gpa:primary:conversation:message",
+        serverMessage
+    );
 
 
 console.log(
     "[GPA PRIMARY CHAT SOCKET] " +
-    "Message delivered to conversation room:",
+    "Message delivered to other participant in conversation room:",
     roomName
 );
 
 
 // ========================================================
-// CONFIRM TO SENDER
+// SEND CONFIRMATION ONLY TO SENDER
 // ========================================================
 
 socket.emit(
