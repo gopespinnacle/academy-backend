@@ -929,15 +929,28 @@ console.log("[GPA RECEIPT DEBUG] Message found:", {
 
         // Recipient confirms the message reached their device.
         socket.on(
-            "gpa:primary:message:delivered",
-            data => updateMessageReceipt(data, "delivered")
-        );
+    "gpa:primary:message:delivered",
+    data => {
+        console.log("[GPA RECEIPT DEBUG] DELIVERED event received:", {
+            data,
+            authenticatedUserId: socket.userId
+        });
 
-        // Recipient confirms they have opened/read the message.
-        socket.on(
-            "gpa:primary:message:read",
-            data => updateMessageReceipt(data, "read")
-        );
+        updateMessageReceipt(data, "delivered");
+    }
+);
+
+socket.on(
+    "gpa:primary:message:read",
+    data => {
+        console.log("[GPA RECEIPT DEBUG] READ event received:", {
+            data,
+            authenticatedUserId: socket.userId
+        });
+
+        updateMessageReceipt(data, "read");
+    }
+);
 
 
                 // ==================================================
