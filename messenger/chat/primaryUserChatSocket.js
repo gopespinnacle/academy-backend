@@ -434,29 +434,24 @@ serverMessage.senderId =
 // SAVE MESSAGE
 // ========================================================
 
-await PrimaryUserMessage.create({
 
-    messageId:
-        serverMessage.id,
-
-    conversationId:
-        message.conversationId,
-
-    senderId:
-        senderId,
-
-    receiverId:
-    actualReceiverId,
-
-    text:
-        serverMessage.text,
-
-    sender:
-        serverMessage.sender,
-
-    sentAt:
-        serverMessage.receivedAt
+const savedMessage = await PrimaryUserMessage.create({
+    messageId: serverMessage.id,
+    conversationId: message.conversationId,
+    senderId: senderId,
+    receiverId: actualReceiverId,
+    text: serverMessage.text,
+    sender: serverMessage.sender,
+    sentAt: serverMessage.receivedAt,
+    deliveryStatus: "sent",
+    deliveredAt: null,
+    readAt: null
 });
+
+serverMessage.deliveryStatus = savedMessage.deliveryStatus;
+serverMessage.deliveredAt = savedMessage.deliveredAt;
+serverMessage.readAt = savedMessage.readAt;
+
 
 
 console.log(
@@ -799,6 +794,117 @@ socket.on(
 
     }
 );
+
+
+        // ==================================================
+        // MESSAGE DELIVERY AND READ RECEIPTS
+        // ==================================================
+
+        async function updateMessageReceipt(data, status) {
+            try {
+                if (
+                    !data ||
+                    !data.messageId ||
+                    !data.conversationId
+                ) {
+                    return;
+                }
+
+                if (!socket.userId) {
+                    return;
+                }
+
+                const conversation =
+                    await MessengerConversation.findById(
+                        data.conversationId
+                    ).select("participants status");
+
+                if (
+                    !conversation ||
+                    conversation.status !== "active" ||
+                    !Array.isArray(conversation.participants) ||
+                    conversation.participants.length !== 2 ||
+                    !conversation.participants.some(
+                        participant =>
+                            String(participant) ===
+                            String(socket.userId)
+                    )
+                ) {
+                    return;
+                }
+
+                const message =
+                    await PrimaryUserMessage.findOne({
+                        messageId: data.messageId,
+                        conversationId: data.conversationId,
+                        receiverId: socket.userId
+                    });
+
+                // Only the authenticated recipient can acknowledge
+                // delivery or reading of this message.
+                if (!message) {
+                    return;
+                }
+
+                const now = new Date();
+
+                if (status === "delivered") {
+                    if (message.deliveryStatus === "sent") {
+                        message.deliveryStatus = "delivered";
+                        message.deliveredAt = now;
+                        await message.save();
+                    }
+                } else if (status === "read") {
+                    if (message.deliveryStatus !== "read") {
+                        message.deliveryStatus = "read";
+
+                        if (!message.deliveredAt) {
+                            message.deliveredAt = now;
+                        }
+
+                        message.readAt = now;
+                        await message.save();
+                    }
+                }
+
+                const receipt = {
+                    messageId: message.messageId,
+                    conversationId: String(message.conversationId),
+                    senderId: String(message.senderId),
+                    receiverId: String(message.receiverId),
+                    deliveryStatus: message.deliveryStatus,
+                    deliveredAt: message.deliveredAt,
+                    readAt: message.readAt
+                };
+
+                const roomName =
+                    "gpa:conversation:" + data.conversationId;
+
+                io.to(roomName).emit(
+                    "gpa:primary:message:status",
+                    receipt
+                );
+
+            } catch (error) {
+                console.error(
+                    "[GPA PRIMARY CHAT SOCKET] Receipt update failed:",
+                    error
+                );
+            }
+        }
+
+        // Recipient confirms the message reached their device.
+        socket.on(
+            "gpa:primary:message:delivered",
+            data => updateMessageReceipt(data, "delivered")
+        );
+
+        // Recipient confirms they have opened/read the message.
+        socket.on(
+            "gpa:primary:message:read",
+            data => updateMessageReceipt(data, "read")
+        );
+
 
                 // ==================================================
                 // DISCONNECT

@@ -143,18 +143,33 @@ const primaryUserMessageSchema =
             // SENT TIME
             // ==================================================
 
-            sentAt: {
+            
+sentAt: {
+    type: Date,
+    required: true,
+    default: Date.now
+},
 
-                type:
-                    Date,
+// Message delivery status
+deliveryStatus: {
+    type: String,
+    enum: ["sent", "delivered", "read"],
+    default: "sent",
+    index: true
+},
 
-                required:
-                    true,
+// Time the recipient's device acknowledged delivery
+deliveredAt: {
+    type: Date,
+    default: null
+},
 
-                default:
-                    Date.now
+// Time the recipient read the message
+readAt: {
+    type: Date,
+    default: null
+}
 
-            }
 
         },
 
