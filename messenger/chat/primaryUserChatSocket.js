@@ -919,6 +919,12 @@ console.log("[GPA RECEIPT DEBUG] Message found:", {
                     receipt
                 );
 
+                console.log("[GPA RECEIPT DEBUG] Status broadcast:", {
+    messageId: receipt.messageId,
+    deliveryStatus: receipt.deliveryStatus,
+    conversationId: receipt.conversationId
+});
+
             } catch (error) {
                 console.error(
                     "[GPA PRIMARY CHAT SOCKET] Receipt update failed:",
