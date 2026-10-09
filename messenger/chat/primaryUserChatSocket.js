@@ -833,18 +833,37 @@ socket.on(
                     return;
                 }
 
-                const message =
-                    await PrimaryUserMessage.findOne({
-                        messageId: data.messageId,
-                        conversationId: data.conversationId,
-                        receiverId: socket.userId
-                    });
+                
+console.log("[GPA RECEIPT DEBUG] Incoming receipt:", {
+    status,
+    messageId: data.messageId,
+    conversationId: data.conversationId,
+    authenticatedUserId: socket.userId
+});
+
+const message = await PrimaryUserMessage.findOne({
+    messageId: data.messageId,
+    conversationId: data.conversationId,
+    receiverId: socket.userId
+});
+
 
                 // Only the authenticated recipient can acknowledge
                 // delivery or reading of this message.
                 if (!message) {
-                    return;
-                }
+    console.warn("[GPA RECEIPT DEBUG] Message not found:", {
+        messageId: data.messageId,
+        conversationId: data.conversationId,
+        authenticatedUserId: socket.userId
+    });
+    return;
+}
+
+console.log("[GPA RECEIPT DEBUG] Message found:", {
+    messageId: message.messageId,
+    deliveryStatus: message.deliveryStatus,
+    receiverId: String(message.receiverId)
+});
 
                 const now = new Date();
 
