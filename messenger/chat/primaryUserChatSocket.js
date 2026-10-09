@@ -802,13 +802,28 @@ socket.on(
 
         async function updateMessageReceipt(data, status) {
             try {
-                if (
-                    !data ||
-                    !data.messageId ||
-                    !data.conversationId
-                ) {
-                    return;
-                }
+               if (
+    !data ||
+    !data.messageId ||
+    !data.conversationId
+) {
+    console.warn("[GPA RECEIPT DEBUG] Invalid receipt payload:", data);
+    return;
+}
+
+if (!socket.userId) {
+    console.warn(
+        "[GPA RECEIPT DEBUG] Socket has no authenticated user ID"
+    );
+    return;
+}
+
+console.log("[GPA RECEIPT DEBUG] Receipt request:", {
+    status,
+    messageId: data.messageId,
+    conversationId: data.conversationId,
+    authenticatedUserId: String(socket.userId)
+});
 
                 if (!socket.userId) {
                     return;
