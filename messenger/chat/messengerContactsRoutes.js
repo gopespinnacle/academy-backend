@@ -422,6 +422,18 @@ router.get(
                     contacts.length
                 );
 
+                console.log("[GPA MESSENGER DEBUG] Teacher ID:", currentUser._id);
+console.log("[GPA MESSENGER DEBUG] Founder count:", founders.length);
+console.log("[GPA MESSENGER DEBUG] Admin count:", admins.length);
+console.log(
+    "[GPA MESSENGER DEBUG] Mapped student count:",
+    studentMap.size
+);
+console.log(
+    "[GPA MESSENGER DEBUG] Contact roles:",
+    contacts.map(contact => contact.role)
+);
+
 
                 return res.status(200).json({
 
