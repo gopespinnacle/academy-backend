@@ -238,45 +238,35 @@ app.use(
 // CORS
 // =========================================================
 
-app.use(
-    cors({
 
-        origin: [
+// CORS configuration
+const corsOptions = {
+    origin: [
+        "https://www.gopespinnacle.com",
+        "https://gopespinnacle.com",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500"
+    ],
 
-            "https://www.gopespinnacle.com",
+    credentials: true,
 
-            "https://gopespinnacle.com",
+    methods: [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE",
+        "OPTIONS"
+    ],
 
-            "http://localhost:5500",
+    allowedHeaders: [
+        "Content-Type",
+        "Authorization"
+    ]
+};
 
-            "http://127.0.0.1:5500"
+app.use(cors(corsOptions));
 
-        ],
-
-        credentials: true,
-
-        methods: [
-
-            "GET",
-            "POST",
-            "PUT",
-            "DELETE",
-            "OPTIONS"
-
-        ],
-
-        allowedHeaders: [
-
-            "Content-Type",
-            "Authorization"
-
-        ]
-
-    })
-);
-
-app.options("*", cors());
-
+app.options("*", cors(corsOptions));
 
 // =========================================================
 // HTTP SERVER
