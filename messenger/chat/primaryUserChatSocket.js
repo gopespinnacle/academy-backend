@@ -29,6 +29,13 @@ const PrimaryUserMessage =
     require("./messengerConversation");
 
 
+    const User =
+    require("../../models/User");
+
+const { sendPushNotification } =
+    require("../../services/fcmService");
+
+
 class PrimaryUserChatSocket {
 
 
@@ -479,6 +486,77 @@ console.log(
                             return;
 
                         }
+
+
+
+                        // ========================================================
+    // SEND FCM PUSH NOTIFICATION
+    // ========================================================
+    // Run separately so notification errors cannot interrupt
+    // Socket.IO message delivery or read receipts.
+    // ========================================================
+
+    (async () => {
+        try {
+            const receiverUser = await User.findById(
+                actualReceiverId
+            ).select("fcmToken");
+
+            if (
+                !receiverUser ||
+                !receiverUser.fcmToken
+            ) {
+                console.log(
+                    "[GPA FCM] Receiver has no registered FCM token."
+                );
+                return;
+            }
+
+            const senderUser = await User.findById(
+                senderId
+            ).select("name fullName username email");
+
+            const senderName =
+                senderUser?.name ||
+                senderUser?.fullName ||
+                senderUser?.username ||
+                senderUser?.email ||
+                "New message";
+
+            const preview =
+                text.length > 150
+                    ? text.substring(0, 147) + "..."
+                    : text;
+
+            const result = await sendPushNotification({
+                token: receiverUser.fcmToken,
+                title: senderName,
+                body: preview,
+                data: {
+                    type: "chat_message",
+                    conversationId: String(message.conversationId),
+                    messageId: String(serverMessage.id),
+                    senderId: String(senderId)
+                }
+            });
+
+            if (result.success) {
+                console.log(
+                    "[GPA FCM] Message notification sent successfully."
+                );
+            } else {
+                console.warn(
+                    "[GPA FCM] Notification was not sent:",
+                    result.reason
+                );
+            }
+        } catch (fcmError) {
+            console.error(
+                "[GPA FCM] Notification error:",
+                fcmError.message
+            );
+        }
+    })();
 
 
                         // ========================================================
