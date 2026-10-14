@@ -171,6 +171,8 @@ const admissionAccountRoutes =
 const studentRoutes =
     require("./routes/studentRoutes");
 
+    const studentMaterialRoutes = require("./routes/studentMaterialRoutes");
+
        
 const admissionRoutes =
     require("./routes/admissionRoutes");
@@ -591,7 +593,7 @@ app.use(
 );
 
 
-
+app.use("/api/student-materials", studentMaterialRoutes);
 
 
 
