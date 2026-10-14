@@ -506,13 +506,14 @@ const roomName =
 // Receiver → message displayed immediately
 // ========================================================
 
+
 io
     .to(roomName)
-    .except(socket.id)
     .emit(
         "gpa:primary:conversation:message",
         serverMessage
     );
+
 
 
 console.log(
