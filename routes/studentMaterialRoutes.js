@@ -290,7 +290,7 @@ router.post(
                 chapter: chapter.trim(),
                 originalFileName: safeName,
                 fileKey: s3Result.Key,
-                contentType: req.file.mimetype,
+                mimeType: req.file.mimetype,
                 fileSize: req.file.size
             });
 

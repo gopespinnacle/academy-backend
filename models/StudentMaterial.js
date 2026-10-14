@@ -39,19 +39,17 @@ const studentMaterialSchema = new mongoose.Schema(
             required: true
         },
 
-        contentType: {
-            type: String,
-            required: true
-        },
-
         fileSize: {
             type: Number,
             required: true
+        },
+
+        mimeType: {
+            type: String,
+            required: true
         }
     },
-    {
-        timestamps: true
-    }
+    { timestamps: true }
 );
 
 module.exports = mongoose.model(
