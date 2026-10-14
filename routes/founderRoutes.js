@@ -2795,6 +2795,48 @@ router.get(
 );
 
 
+router.delete(
+    "/cleanup-orphan-periods",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            // Recheck every candidate before deleting anything.
+            const periods = await PeriodAssignment.find().lean();
+            const idsToDelete = [];
+
+            for (const period of periods) {
+                const currentSchedule = await TeacherSchedule.findOne({
+                    teacher: period.teacher,
+                    className: period.className,
+                    day: period.day,
+                    startTime: period.startTime,
+                    endTime: period.endTime
+                }).lean();
+
+                if (!currentSchedule) {
+                    idsToDelete.push(period._id);
+                }
+            }
+
+            // Delete only the records that still have no matching schedule.
+            const result = await PeriodAssignment.deleteMany({
+                _id: { $in: idsToDelete }
+            });
+
+            return res.json({
+                message: "Orphan period cleanup completed.",
+                deletedCount: result.deletedCount
+            });
+        } catch (error) {
+            console.error("Orphan cleanup error:", error);
+            return res.status(500).json({
+                message: "Could not clean up orphan periods."
+            });
+        }
+    }
+);
+
 
 router.get("/compensation-report", async (req,res)=>{
     try{
