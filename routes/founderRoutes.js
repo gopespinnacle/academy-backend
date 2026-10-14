@@ -2745,6 +2745,57 @@ console.log("Period assignments deleted:", deletedPeriods.deletedCount);
     }
 );
 
+
+
+router.get(
+    "/preview-orphan-periods",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            const periods = await PeriodAssignment.find().lean();
+            const orphanPeriods = [];
+
+            for (const period of periods) {
+                // Look for a current schedule for this teacher,
+                // class, day and time.
+                const currentSchedule = await TeacherSchedule.findOne({
+                    teacher: period.teacher,
+                    className: period.className,
+                    day: period.day,
+                    startTime: period.startTime,
+                    endTime: period.endTime
+                }).lean();
+
+                if (!currentSchedule) {
+                    orphanPeriods.push({
+                        periodId: period._id,
+                        teacher: period.teacher,
+                        className: period.className,
+                        subject: period.subject,
+                        day: period.day,
+                        startTime: period.startTime,
+                        endTime: period.endTime
+                    });
+                }
+            }
+
+            return res.json({
+                count: orphanPeriods.length,
+                message: "Review these records before deleting them.",
+                data: orphanPeriods
+            });
+        } catch (error) {
+            console.error("Orphan period preview error:", error);
+            return res.status(500).json({
+                message: "Could not preview old period assignments."
+            });
+        }
+    }
+);
+
+
+
 router.get("/compensation-report", async (req,res)=>{
     try{
 

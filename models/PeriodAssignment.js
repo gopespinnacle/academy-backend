@@ -2,6 +2,13 @@ const mongoose = require("mongoose");
 
 const periodAssignmentSchema = new mongoose.Schema({
 
+        teacherSchedule: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "TeacherSchedule",
+        default: null,
+        index: true
+    },
+
     teacher:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User"
