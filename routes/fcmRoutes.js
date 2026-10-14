@@ -9,6 +9,8 @@ router.post("/register-token", protect, async (req, res) => {
     try {
         const { fcmToken } = req.body;
 
+        console.log("[GPA FCM] Token registration request received");
+
         if (
             typeof fcmToken !== "string" ||
             !fcmToken.trim()
@@ -21,6 +23,8 @@ router.post("/register-token", protect, async (req, res) => {
 
         req.user.fcmToken = fcmToken.trim();
         await req.user.save();
+
+        console.log("[GPA FCM] Token saved successfully");
 
         return res.status(200).json({
             success: true,
