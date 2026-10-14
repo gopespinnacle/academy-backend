@@ -150,44 +150,52 @@ ref: "User"
 
     ,
 
-menuPermissions: {
 
-    dashboard: {
-        type: Boolean,
-        default: true
+    menuPermissions: {
+
+        dashboard: {
+            type: Boolean,
+            default: true
+        },
+
+        myClasses: {
+            type: Boolean,
+            default: true
+        },
+
+        attendance: {
+            type: Boolean,
+            default: true
+        },
+
+        aiAssessment: {
+            type: Boolean,
+            default: true
+        },
+
+        homework: {
+            type: Boolean,
+            default: true
+        },
+
+        calendar: {
+            type: Boolean,
+            default: true
+        },
+
+        marksEntry: {
+            type: Boolean,
+            default: true
+        }
+
     },
 
-    myClasses: {
-        type: Boolean,
-        default: true
-    },
-
-    attendance: {
-        type: Boolean,
-        default: true
-    },
-
-    aiAssessment: {
-        type: Boolean,
-        default: true
-    },
-
-    homework: {
-        type: Boolean,
-        default: true
-    },
-
-    calendar: {
-        type: Boolean,
-        default: true
-    },
-
-    marksEntry: {
-        type: Boolean,
-        default: true
+    // Firebase Cloud Messaging device token
+    fcmToken: {
+        type: String,
+        default: ""
     }
 
-}
 
 }, { timestamps: true });
 

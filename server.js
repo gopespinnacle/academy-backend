@@ -130,6 +130,10 @@ const founderTimeClashRoutes =
 const authRoutes =
     require("./routes/authRoutes");
 
+
+    const fcmRoutes =
+    require("./routes/fcmRoutes");
+
     const livekitRoutes =
     require("./routes/livekitRoutes");
 
@@ -499,6 +503,11 @@ app.use(
     authRoutes
 );
 
+
+app.use(
+    "/api/fcm",
+    fcmRoutes
+);
 
 
 app.use(
