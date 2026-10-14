@@ -2638,32 +2638,24 @@ router.delete(
             );
 
 
-            // =====================================================
-            // 4. DELETE THE RELATED PERIOD ASSIGNMENT
-            // =====================================================
+           // =====================================================
+// 4. DELETE ALL MATCHING PERIOD ASSIGNMENTS
+// =====================================================
 
-            const deletedPeriods =
-                await PeriodAssignment.deleteMany({
+const deletedPeriods = await PeriodAssignment.deleteMany({
+    teacher: schedule.teacher,
+    className: schedule.className,
+    day: schedule.day,
+    startTime: schedule.startTime,
+    endTime: schedule.endTime,
 
-                    teacher:
-                        schedule.teacher,
+    // Match the subject when it exists in the schedule.
+    ...(schedule.subject
+        ? { subject: schedule.subject }
+        : {})
+});
 
-                    className:
-                        schedule.className,
-
-                    subject:
-                        schedule.subject,
-
-                    day:
-                        schedule.day,
-
-                    startTime:
-                        schedule.startTime,
-
-                    endTime:
-                        schedule.endTime
-
-                });
+console.log("Period assignments deleted:", deletedPeriods.deletedCount);
 
 
             // =====================================================
