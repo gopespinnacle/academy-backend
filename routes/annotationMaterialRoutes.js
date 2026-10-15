@@ -1,13 +1,36 @@
-/*
- * Mount AFTER your existing JWT/auth middleware so req.user is populated.
- * Expected req.user identity: _id or id or userId; role: teacher/student/founder.
- * Do not mount this router publicly without authentication.
- */
+/* Authenticated annotation-material routes. This router verifies the same Bearer JWT used by the existing APIs. */
 const express = require('express');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
 const AnnotationMaterial = require('../models/AnnotationMaterial');
 const PeriodAssignment = require('../models/PeriodAssignment');
+
+// server.js mounts this router without a global req.user middleware, so verify the existing JWT here.
+router.use((req, res, next) => {
+  const auth = String(req.headers.authorization || '');
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (!token) return res.status(401).json({ success: false, message: 'Please sign in again. Your login token is missing.' });
+  if (!process.env.JWT_SECRET) {
+    console.error('ANNOTATION MATERIALS: JWT_SECRET is not configured.');
+    return res.status(500).json({ success: false, message: 'Authentication is not configured on the server.' });
+  }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const nested = decoded.user && typeof decoded.user === 'object' ? decoded.user : {};
+    req.user = {
+      ...nested,
+      ...decoded,
+      _id: decoded._id || decoded.id || decoded.userId || decoded.teacherId || decoded.sub || nested._id || nested.id || nested.userId,
+      role: decoded.role || nested.role,
+      name: decoded.name || decoded.fullName || nested.name || nested.fullName
+    };
+    if (!req.user._id || !req.user.role) return res.status(401).json({ success: false, message: 'Your login token does not contain a user ID and role. Please sign in again.' });
+    next();
+  } catch (error) {
+    return res.status(401).json({ success: false, message: 'Your login session has expired or is invalid. Please sign in again.' });
+  }
+});
 
 function currentUser(req) { return req.user || req.authUser || null; }
 function userIdOf(user) { return user && (user._id || user.id || user.userId); }
