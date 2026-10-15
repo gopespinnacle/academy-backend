@@ -1,876 +1,143 @@
 /*
-===========================================================
-GOPES PINNACLE ACADEMY
-ANNOTATION MATERIAL ROUTES
-===========================================================
+ * Mount AFTER your existing JWT/auth middleware so req.user is populated.
+ * Expected req.user identity: _id or id or userId; role: teacher/student/founder.
+ * Do not mount this router publicly without authentication.
+ */
+const express = require('express');
+const mongoose = require('mongoose');
+const router = express.Router();
+const AnnotationMaterial = require('../models/AnnotationMaterial');
+const PeriodAssignment = require('../models/PeriodAssignment');
 
-Purpose:
-
-Permanent learning materials created from
-teacher annotation sessions.
-
-Routes:
-
-POST   /api/annotation-materials
-PUT    /api/annotation-materials/:id
-GET    /api/annotation-materials/teacher/:teacherId
-GET    /api/annotation-materials/student/:studentId
-GET    /api/annotation-materials/founder
-GET    /api/annotation-materials/:id
-===========================================================
-*/
-
-const express =
-    require("express");
-
-const router =
-    express.Router();
-
-const mongoose =
-    require("mongoose");
-
-
-const AnnotationMaterial =
-    require(
-        "../models/AnnotationMaterial"
-    );
-
-const User =
-    require(
-        "../models/User"
-    );
-
-    const PeriodAssignment =
-    require(
-        "../models/PeriodAssignment"
-    );
-
-
-/*
-===========================================================
-CREATE MATERIAL
-===========================================================
-*/
-
-router.post(
-    "/",
-    async (req, res) => {
-
-        try {
-
-            const {
-    teacher,
-    teacherName,
-    className,
-    subject,
-
-    chapterNo,
-    chapterName,
-
-    topic,
-    description,
-
-    materialDate,
-    room,
-
+function currentUser(req) { return req.user || req.authUser || null; }
+function userIdOf(user) { return user && (user._id || user.id || user.userId); }
+function sameId(a, b) { return !!a && !!b && String(a) === String(b); }
+function normalizeGrade(value) {
+  const s = String(value || '').trim();
+  const m = s.match(/^Grade[\s-]*(\d+)$/i);
+  return m ? `Grade-${m[1]}` : (/^\d+$/.test(s) ? `Grade-${s}` : s.toLowerCase());
+}
+function getPeriodTeacherIds(period) {
+  const ids = [period && period.teacher, period && period.teacherId, period && period.assignedTeacher, period && period.assignedTeacherId];
+  for (const a of (period && Array.isArray(period.assignments) ? period.assignments : [])) {
+    if (a && (a.teacher || a.teacherId || a.assignedTeacher || a.assignedTeacherId)) ids.push(a.teacher || a.teacherId || a.assignedTeacher || a.assignedTeacherId);
+  }
+  return ids.filter(Boolean).map(String);
+}
+function getPeriodStudentIds(period) {
+  const ids = [];
+  for (const a of (period && Array.isArray(period.assignments) ? period.assignments : [])) {
+    if (a && a.student) ids.push(a.student._id || a.student);
+    if (a && a.studentId) ids.push(a.studentId._id || a.studentId);
+    if (a && Array.isArray(a.students)) a.students.forEach(s => ids.push(s && (s._id || s.studentId || s)));
+  }
+  if (period && Array.isArray(period.students)) period.students.forEach(s => ids.push(s && (s._id || s.studentId || s)));
+  return ids.filter(Boolean).map(String);
+}
+async function requirePeriodTeacher(periodId, teacherId) {
+  if (!mongoose.Types.ObjectId.isValid(String(periodId))) throw Object.assign(new Error('A valid assigned period is required.'), { status: 400 });
+  const period = await PeriodAssignment.findById(periodId).lean();
+  if (!period) throw Object.assign(new Error('The assigned period was not found.'), { status: 404 });
+  const teacherIds = getPeriodTeacherIds(period);
+  if (!teacherIds.length || !teacherIds.includes(String(teacherId))) {
+    throw Object.assign(new Error('This period is not mapped to the logged-in teacher. Please reopen the material from your assigned period.'), { status: 403 });
+  }
+  return period;
+}
+function formatPages(pages, backgrounds) {
+  const safe = Array.isArray(pages) ? pages : [];
+  return safe.map((item, index) => {
+    const history = Array.isArray(item) ? item : (item && Array.isArray(item.history) ? item.history : []);
+    const background = (item && item.background) || (Array.isArray(backgrounds) && backgrounds[index]) || 'white';
+    const validBackground = ['white', 'ruled', 'four-line', 'grid', 'dots'].includes(background) ? background : 'white';
+    return { pageNumber: index + 1, history, background: validBackground };
+  });
+}
+function materialPayload(body, teacherId, teacherName, periodId) {
+  const pages = formatPages(body.pages, body.pageBackgrounds);
+  return {
+    teacher: teacherId,
+    teacherName: teacherName || body.teacherName || 'Teacher',
+    className: String(body.className || '').trim(),
+    subject: String(body.subject || 'General').trim(),
+    chapterNo: String(body.chapterNo || body.chapterNumber || '1').trim(),
+    chapterName: String(body.chapterName || body.topic || 'Learning Material').trim(),
+    topic: String(body.topic || 'General').trim(),
+    description: String(body.description || ''),
+    materialDate: body.materialDate || new Date(),
+    room: String(body.room || `period-${periodId}`),
     periodId,
-
-    pages
-
-} = req.body;
-
-
-            /*
-            ------------------------------------------------
-            REQUIRED FIELDS
-            ------------------------------------------------
-            */
-
-            if (
-                !teacher ||
-                !teacherName ||
-                !className ||
-                !subject ||
-                !chapterNo ||
-                !chapterName ||
-                !topic ||
-                !materialDate ||
-                 !room ||
-    !periodId
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Required material details are missing"
-
-                });
-
-            }
-
-
-            /*
-            ------------------------------------------------
-            VALIDATE PAGES
-            ------------------------------------------------
-            */
-
-            const safePages =
-                Array.isArray(pages)
-                    ? pages
-                    : [];
-
-
-            /*
-            ------------------------------------------------
-            CREATE PAGE NUMBERS
-            ------------------------------------------------
-            */
-
-            const formattedPages =
-                safePages.map(
-                    (page, index) => ({
-
-                        pageNumber:
-                            index + 1,
-
-                        history:
-                            Array.isArray(
-                                page
-                            )
-                                ? page
-                                : (
-                                    page &&
-                                    Array.isArray(
-                                        page.history
-                                    )
-                                        ? page.history
-                                        : []
-                                )
-
-                    })
-                );
-
-
-            /*
-            ------------------------------------------------
-            CREATE MATERIAL
-            ------------------------------------------------
-            */
-
-            const material =
-    await AnnotationMaterial.create({
-
-        teacher,
-
-        teacherName,
-
-        className,
-
-        subject,
-
-        chapterNo,
-
-        chapterName,
-
-        topic,
-
-        description:
-            description || "",
-
-        materialDate,
-
-        room,
-
-        periodId,
-
-        pages:
-            formattedPages,
-
-        totalPages:
-            Math.max(
-                formattedPages.length,
-                1
-            )
-
-    });
-
-
-            return res.status(201).json({
-
-                success: true,
-
-                message:
-                    "Learning material created successfully",
-
-                material
-
-            });
-
-        }
-        catch (error) {
-
-            console.error(
-                "ANNOTATION MATERIAL CREATE ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Failed to create learning material"
-
-            });
-
-        }
-
-    }
-);
-
-
-/*
-===========================================================
-UPDATE MATERIAL
-===========================================================
-*/
-
-router.put(
-    "/:id",
-    async (req, res) => {
-
-        try {
-
-            const {
-                id
-            } = req.params;
-
-
-            if (
-                !mongoose.Types.ObjectId.isValid(
-                    id
-                )
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Invalid material ID"
-
-                });
-
-            }
-
-
-            const {
-
-                chapterNo,
-                chapterName,
-
-                topic,
-                description,
-
-                materialDate,
-
-                pages
-
-            } = req.body;
-
-
-            /*
-            ------------------------------------------------
-            FORMAT PAGES
-            ------------------------------------------------
-            */
-
-            const safePages =
-                Array.isArray(pages)
-                    ? pages
-                    : [];
-
-
-            const formattedPages =
-                safePages.map(
-                    (page, index) => ({
-
-                        pageNumber:
-                            index + 1,
-
-                        history:
-                            Array.isArray(
-                                page
-                            )
-                                ? page
-                                : (
-                                    page &&
-                                    Array.isArray(
-                                        page.history
-                                    )
-                                        ? page.history
-                                        : []
-                                )
-
-                    })
-                );
-
-
-            /*
-            ------------------------------------------------
-            UPDATE
-            ------------------------------------------------
-            */
-
-            const material =
-                await AnnotationMaterial.findByIdAndUpdate(
-
-                    id,
-
-                    {
-
-                        ...(chapterNo !== undefined && {
-                            chapterNo
-                        }),
-
-                        ...(chapterName !== undefined && {
-                            chapterName
-                        }),
-
-                        ...(topic !== undefined && {
-                            topic
-                        }),
-
-                        ...(description !== undefined && {
-                            description
-                        }),
-
-                        ...(materialDate !== undefined && {
-                            materialDate
-                        }),
-
-                        pages:
-                            formattedPages,
-
-                        totalPages:
-                            Math.max(
-                                formattedPages.length,
-                                1
-                            )
-
-                    },
-
-                    {
-                        new: true,
-
-                        runValidators: true
-
-                    }
-
-                );
-
-
-            if (!material) {
-
-                return res.status(404).json({
-
-                    success: false,
-
-                    message:
-                        "Learning material not found"
-
-                });
-
-            }
-
-
-            return res.json({
-
-                success: true,
-
-                message:
-                    "Learning material updated successfully",
-
-                material
-
-            });
-
-        }
-        catch (error) {
-
-            console.error(
-                "ANNOTATION MATERIAL UPDATE ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Failed to update learning material"
-
-            });
-
-        }
-
-    }
-);
-
-
-/*
-===========================================================
-GET TEACHER MATERIALS
-===========================================================
-*/
-
-router.get(
-    "/teacher/:teacherId",
-    async (req, res) => {
-
-        try {
-
-            const {
-                teacherId
-            } = req.params;
-
-
-            if (
-                !mongoose.Types.ObjectId.isValid(
-                    teacherId
-                )
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Invalid teacher ID"
-
-                });
-
-            }
-
-
-            const materials =
-                await AnnotationMaterial.find({
-
-                    teacher:
-                        teacherId
-
-                })
-                .sort({
-                    materialDate: -1,
-                    createdAt: -1
-                });
-
-
-            return res.json({
-
-                success: true,
-
-                materials
-
-            });
-
-        }
-        catch (error) {
-
-            console.error(
-                "ANNOTATION MATERIAL TEACHER LIST ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Failed to load teacher materials"
-
-            });
-
-        }
-
-    }
-);
-
-
-/*
-===========================================================
-GET STUDENT MATERIALS
-===========================================================
-*/
-
-router.get(
-    "/student/:studentId",
-    async (req, res) => {
-
-        try {
-
-            const {
-                studentId
-            } = req.params;
-
-
-            if (
-                !mongoose.Types.ObjectId.isValid(
-                    studentId
-                )
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Invalid student ID"
-
-                });
-
-            }
-
-
-            /*
-            ------------------------------------------------
-            GET STUDENT
-            ------------------------------------------------
-            */
-
-            const student =
-                await User.findById(
-                    studentId
-                );
-
-
-            if (!student) {
-
-                return res.status(404).json({
-
-                    success: false,
-
-                    message:
-                        "Student not found"
-
-                });
-
-            }
-
-
-            /*
-            ------------------------------------------------
-            STUDENT CLASS
-            ------------------------------------------------
-
-            We use the student's class to determine
-            which learning materials can be viewed.
-            ------------------------------------------------
-            */
-
-           let studentClass =
-    student.className ||
-    student.class ||
-    student.grade;
-
-
-/*
-=========================================================
-NORMALIZE STUDENT GRADE
-=========================================================
-*/
-
-if (studentClass) {
-
-    const gradeMatch =
-        String(studentClass)
-            .trim()
-            .match(/^Grade[\s-]*(\d+)$/i);
-
-    if (gradeMatch) {
-
-        studentClass =
-            `Grade-${gradeMatch[1]}`;
-
-    }
-    else if (
-        /^\d+$/.test(
-            String(studentClass).trim()
-        )
-    ) {
-
-        studentClass =
-            `Grade-${String(
-                studentClass
-            ).trim()}`;
-
-    }
-
+    pages,
+    totalPages: Math.max(pages.length, 1)
+  };
 }
 
+// Save or update the logged-in teacher's material. Never trust teacher ID from the browser.
+router.post('/', async (req, res) => {
+  try {
+    const user = currentUser(req); const teacherId = userIdOf(user);
+    if (!user || !teacherId || String(user.role || '').toLowerCase() !== 'teacher') return res.status(401).json({ success: false, message: 'Teacher login is required.' });
+    const periodId = req.body.periodId;
+    const period = await requirePeriodTeacher(periodId, teacherId);
+    const data = materialPayload(req.body, teacherId, user.name || user.fullName || req.body.teacherName, period._id);
+    if (!data.className) data.className = String(period.className || period.grade || period.class || '');
+    if (!data.className || !data.subject || !data.topic) return res.status(400).json({ success: false, message: 'Class, subject, and topic are required.' });
+    const material = await AnnotationMaterial.create(data);
+    return res.status(201).json({ success: true, message: 'Learning material saved.', material });
+  } catch (e) { console.error('ANNOTATION MATERIAL CREATE:', e); return res.status(e.status || 500).json({ success: false, message: e.status ? e.message : 'Failed to save learning material.' }); }
+});
 
-console.log(
-    "ANNOTATION MATERIALS: STUDENT CLASS",
-    studentClass
-);
+router.put('/:id', async (req, res) => {
+  try {
+    const user = currentUser(req); const teacherId = userIdOf(user);
+    if (!user || !teacherId || String(user.role || '').toLowerCase() !== 'teacher') return res.status(401).json({ success: false, message: 'Teacher login is required.' });
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ success: false, message: 'Invalid material ID.' });
+    const existing = await AnnotationMaterial.findById(req.params.id);
+    if (!existing) return res.status(404).json({ success: false, message: 'Learning material not found.' });
+    if (!sameId(existing.teacher, teacherId)) return res.status(403).json({ success: false, message: 'You cannot edit another teacher’s material.' });
+    await requirePeriodTeacher(existing.periodId, teacherId);
+    const body = { ...existing.toObject(), ...req.body, periodId: existing.periodId };
+    const data = materialPayload(body, teacherId, existing.teacherName, existing.periodId);
+    const material = await AnnotationMaterial.findByIdAndUpdate(existing._id, data, { new: true, runValidators: true });
+    return res.json({ success: true, message: 'Learning material updated.', material });
+  } catch (e) { console.error('ANNOTATION MATERIAL UPDATE:', e); return res.status(e.status || 500).json({ success: false, message: e.status ? e.message : 'Failed to update learning material.' }); }
+});
 
-
-            if (!studentClass) {
-
-                return res.json({
-
-                    success: true,
-
-                    materials: []
-
-                });
-
-            }
-
-
-            /*
-------------------------------------------------
-GET STUDENT PERIOD ASSIGNMENTS
-------------------------------------------------
-*/
-
-
-
-const periodAssignments =
-    await PeriodAssignment.find({
-
-        "assignments.student":
-            studentId
-
-    });
-
-
-/*
-------------------------------------------------
-GET PERIOD IDS
-------------------------------------------------
-*/
-
-const periodIds =
-    periodAssignments.map(
-        period => period._id
-    );
-
-
-console.log(
-    "ANNOTATION MATERIALS: STUDENT PERIOD IDS",
-    periodIds
-);
-
-
-/*
-------------------------------------------------
-GET MATERIALS FOR ASSIGNED PERIODS
-------------------------------------------------
-*/
-
-const materials =
-    await AnnotationMaterial.find({
-
-        periodId: {
-            $in: periodIds
-        }
-
-    })
-    .sort({
-
-        materialDate: -1,
-
-        createdAt: -1
-
-    });
-
-
-            return res.json({
-
-                success: true,
-
-                materials
-
-            });
-
-        }
-        catch (error) {
-
-            console.error(
-                "ANNOTATION MATERIAL STUDENT LIST ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Failed to load student materials"
-
-            });
-
-        }
-
+// Role-scoped listing endpoint for teacher-materials.html and student-materials.html.
+router.get('/mine', async (req, res) => {
+  try {
+    const user = currentUser(req); const id = userIdOf(user); const role = String(user && user.role || '').toLowerCase();
+    if (!user || !id) return res.status(401).json({ success: false, message: 'Please sign in again.' });
+    let materials = [];
+    if (role === 'teacher') {
+      materials = await AnnotationMaterial.find({ teacher: id }).sort({ materialDate: -1, createdAt: -1 }).lean();
+    } else if (role === 'student') {
+      const assignments = await PeriodAssignment.find({ 'assignments.student': id }).select('_id assignments').lean();
+      const allowedPeriodIds = assignments.filter(p => getPeriodStudentIds(p).includes(String(id))).map(p => p._id);
+      materials = await AnnotationMaterial.find({ periodId: { $in: allowedPeriodIds } }).sort({ materialDate: -1, createdAt: -1 }).lean();
+    } else {
+      return res.status(403).json({ success: false, message: 'This page is only available to assigned teachers and students.' });
     }
-);
+    return res.json({ success: true, materials });
+  } catch (e) { console.error('ANNOTATION MATERIAL LIST:', e); return res.status(500).json({ success: false, message: 'Failed to load learning materials.' }); }
+});
 
-
-/*
-===========================================================
-GET ALL MATERIALS — FOUNDER
-===========================================================
-*/
-
-router.get(
-    "/founder",
-    async (req, res) => {
-
-        try {
-
-            const materials =
-                await AnnotationMaterial.find({})
-                .sort({
-
-                    materialDate: -1,
-
-                    createdAt: -1
-
-                });
-
-
-            return res.json({
-
-                success: true,
-
-                materials
-
-            });
-
-        }
-        catch (error) {
-
-            console.error(
-                "ANNOTATION MATERIAL FOUNDER LIST ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Failed to load learning materials"
-
-            });
-
-        }
-
+// Detail retrieval is also permission-checked; frontend hiding alone is not security.
+router.get('/:id', async (req, res) => {
+  try {
+    const user = currentUser(req); const id = userIdOf(user); const role = String(user && user.role || '').toLowerCase();
+    if (!user || !id) return res.status(401).json({ success: false, message: 'Please sign in again.' });
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.status(400).json({ success: false, message: 'Invalid material ID.' });
+    const material = await AnnotationMaterial.findById(req.params.id).lean();
+    if (!material) return res.status(404).json({ success: false, message: 'Learning material not found.' });
+    let allowed = role === 'teacher' && sameId(material.teacher, id);
+    if (role === 'student') {
+      const assignment = await PeriodAssignment.findOne({ _id: material.periodId, 'assignments.student': id }).lean();
+      allowed = !!assignment && getPeriodStudentIds(assignment).includes(String(id));
     }
-);
+    if (!allowed) return res.status(403).json({ success: false, message: 'You are not assigned to this learning material.' });
+    return res.json({ success: true, material });
+  } catch (e) { console.error('ANNOTATION MATERIAL DETAIL:', e); return res.status(500).json({ success: false, message: 'Failed to load learning material.' }); }
+});
 
-
-/*
-===========================================================
-VIEW ONE MATERIAL
-===========================================================
-*/
-
-router.get(
-    "/:id",
-    async (req, res) => {
-
-        try {
-
-            const {
-                id
-            } = req.params;
-
-
-            if (
-                !mongoose.Types.ObjectId.isValid(
-                    id
-                )
-            ) {
-
-                return res.status(400).json({
-
-                    success: false,
-
-                    message:
-                        "Invalid material ID"
-
-                });
-
-            }
-
-
-            const material =
-                await AnnotationMaterial.findById(
-                    id
-                );
-
-
-            if (!material) {
-
-                return res.status(404).json({
-
-                    success: false,
-
-                    message:
-                        "Learning material not found"
-
-                });
-
-            }
-
-
-            return res.json({
-
-                success: true,
-
-                material
-
-            });
-
-        }
-        catch (error) {
-
-            console.error(
-                "ANNOTATION MATERIAL VIEW ERROR:",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                success: false,
-
-                message:
-                    "Failed to load learning material"
-
-            });
-
-        }
-
-    }
-);
-
-
-/*
-===========================================================
-EXPORT
-===========================================================
-*/
-
-module.exports =
-    router;
+module.exports = router;
