@@ -87,7 +87,40 @@ function materialPayload(body, teacherId, teacherName, periodId) {
     chapterName: String(body.chapterName || body.topic || 'Learning Material').trim(),
     topic: String(body.topic || 'General').trim(),
     description: String(body.description || ''),
-    materialDate: body.materialDate || new Date(),
+    materialDate: (() => {
+  const rawDate = body.materialDate;
+
+  if (!rawDate) return new Date();
+
+  // Convert DD/MM/YYYY to a valid JavaScript Date
+  const match = String(rawDate).trim().match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+
+  if (match) {
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3]);
+
+    const date = new Date(year, month - 1, day);
+
+    if (
+      date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day
+    ) {
+      return date;
+    }
+
+    throw Object.assign(new Error("Invalid material date."), { status: 400 });
+  }
+
+  const date = new Date(rawDate);
+
+  if (Number.isNaN(date.getTime())) {
+    throw Object.assign(new Error("Invalid material date."), { status: 400 });
+  }
+
+  return date;
+})(),
     room: String(body.room || `period-${periodId}`),
     periodId,
     pages,
