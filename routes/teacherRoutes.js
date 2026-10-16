@@ -2070,4 +2070,91 @@ router.get(
     }
 );
 
+
+/* =========================================================
+   TEACHER REGISTER SUMMARY - VIEW OWN RECORDS
+   ========================================================= */
+
+router.get(
+    "/daily-class-register",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+        try {
+            // Always use the authenticated teacher's ID.
+            const filter = {
+                teacher: req.user.id
+            };
+
+            // Optional date filters: ?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+            const { startDate, endDate } = req.query;
+
+            if (startDate || endDate) {
+                const dateFilter = {};
+
+                if (startDate) {
+                    const start = new Date(startDate + "T00:00:00.000");
+                    if (isNaN(start.getTime())) {
+                        return res.status(400).json({
+                            success: false,
+                            message: "Invalid start date."
+                        });
+                    }
+                    dateFilter.$gte = start;
+                }
+
+                if (endDate) {
+                    const end = new Date(endDate + "T00:00:00.000");
+                    if (isNaN(end.getTime())) {
+                        return res.status(400).json({
+                            success: false,
+                            message: "Invalid end date."
+                        });
+                    }
+
+                    // Include the entire selected end date.
+                    end.setDate(end.getDate() + 1);
+                    dateFilter.$lt = end;
+                }
+
+                if (
+                    startDate &&
+                    endDate &&
+                    dateFilter.$gte >= dateFilter.$lt
+                ) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "End date must be on or after start date."
+                    });
+                }
+
+                filter.date = dateFilter;
+            }
+
+            const registers = await DailyClassRegister.find(filter)
+                .populate("periodAssignment", "className subject day startTime endTime")
+                .sort({
+                    date: -1,
+                    scheduledStartTime: 1,
+                    createdAt: -1
+                });
+
+            return res.json({
+                success: true,
+                count: registers.length,
+                data: registers
+            });
+
+        } catch (error) {
+            console.error("Teacher Register Summary Error:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to load your register summary."
+            });
+        }
+    }
+);
+
+
 module.exports = router;
