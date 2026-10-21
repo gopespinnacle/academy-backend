@@ -334,18 +334,21 @@ router.get(
                         }
 
 
-                        period.assignments.forEach(
-                            assignment => {
+                        
+period.assignments.forEach(
+    assignment => {
 
-                                const student =
-                                    assignment.student;
+        const student =
+            assignment.student;
 
+        // Only allow actual student accounts
+        if (
+            !student ||
+            student.role !== "student"
+        ) {
+            return;
+        }
 
-                                if (!student) {
-
-                                    return;
-
-                                }
 
 
                                 studentMap.set(
