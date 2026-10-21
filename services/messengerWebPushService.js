@@ -6,7 +6,7 @@ function configure() {
     if (configured) return true;
     const publicKey = process.env.WEB_PUSH_VAPID_PUBLIC_KEY;
     const privateKey = process.env.WEB_PUSH_VAPID_PRIVATE_KEY;
-    const subject = process.env.WEB_PUSH_VAPID_SUBJECT || "mailto:admin@gopespinnacle.com";
+    const subject = process.env.WEB_PUSH_VAPID_SUBJECT || "mailto:gopestalks@gmail.com";
     if (!publicKey || !privateKey) {
         console.warn("[GPA WEB PUSH] VAPID keys are not configured; Web Push is disabled.");
         return false;
