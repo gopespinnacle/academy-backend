@@ -324,6 +324,9 @@ const PrimaryUserChatSocket =
 
 PrimaryUserChatSocket.initialize(io);
 
+
+
+
 // =========================================================
 // GPA MESSENGER
 // MODULE 5
@@ -332,6 +335,8 @@ PrimaryUserChatSocket.initialize(io);
 
 const messengerContactsRoutes =
     require("./messenger/chat/messengerContactsRoutes");
+
+
 
     // =========================================================
 // GPA MESSENGER
@@ -463,6 +468,10 @@ app.use(
 );
 
 
+const messengerWebPushRoutes =
+    require("./messenger/chat/messengerWebPushRoutes");
+
+
 // =========================================================
 // GPA MESSENGER
 // MODULE 5
@@ -473,6 +482,13 @@ app.use(
     "/api/messenger/contacts",
     messengerContactsRoutes
 );
+
+
+app.use(
+    "/api/messenger/push",
+    messengerWebPushRoutes
+);
+
 
 // =========================================================
 // GPA MESSENGER
