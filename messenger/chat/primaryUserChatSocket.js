@@ -35,6 +35,9 @@ const PrimaryUserMessage =
 const { sendPushNotification } =
     require("../../services/fcmService");
 
+const { sendMessengerWebPush } =
+    require("../../services/messengerWebPushService");
+
 
 class PrimaryUserChatSocket {
 
@@ -142,6 +145,9 @@ socket.userId =
 
 socket.userRole =
     decodedUser.role;
+
+// Dedicated authenticated-user room for notification events across chats.
+socket.join("gpa:user:" + String(socket.userId));
 
 console.log(
     "[GPA PRIMARY CHAT SOCKET] " +
@@ -591,6 +597,40 @@ io
         "gpa:primary:conversation:message",
         serverMessage
     );
+
+// Notify all sessions belonging to the recipient, even when they are not
+// currently inside this conversation. This event supports open/background tabs.
+io.to("gpa:user:" + String(actualReceiverId)).emit(
+    "gpa:primary:notification:message",
+    serverMessage
+);
+
+// Web Push is delivered by the browser push service and can arrive while the
+// website is backgrounded or the browser is closed. Failures must not interrupt chat.
+(async () => {
+    try {
+        const senderUser = await User.findById(senderId)
+            .select("name fullName username email")
+            .lean();
+        const senderName = senderUser?.name || senderUser?.fullName ||
+            senderUser?.username || senderUser?.email || "New message";
+        const preview = String(serverMessage.text || "New message");
+        await sendMessengerWebPush({
+            userId: actualReceiverId,
+            title: senderName,
+            body: preview.length > 150 ? preview.slice(0, 147) + "..." : preview,
+            data: {
+                type: "chat_message",
+                conversationId: String(message.conversationId),
+                messageId: String(serverMessage.id),
+                senderId: String(senderId),
+                url: "/messenger/messenger.html"
+            }
+        });
+    } catch (pushError) {
+        console.error("[GPA WEB PUSH] Notification error:", pushError.message);
+    }
+})();
 
 
 
