@@ -505,8 +505,8 @@ console.log(
     (async () => {
         try {
             const receiverUser = await User.findById(
-                actualReceiverId
-            ).select("fcmToken");
+    serverMessage.receiverId
+).select("fcmToken");
 
             if (
                 !receiverUser ||
@@ -600,7 +600,7 @@ io
 
 // Notify all sessions belonging to the recipient, even when they are not
 // currently inside this conversation. This event supports open/background tabs.
-io.to("gpa:user:" + String(actualReceiverId)).emit(
+io.to("gpa:user:" + String(serverMessage.receiverId)).emit(
     "gpa:primary:notification:message",
     serverMessage
 );
@@ -616,7 +616,7 @@ io.to("gpa:user:" + String(actualReceiverId)).emit(
             senderUser?.username || senderUser?.email || "New message";
         const preview = String(serverMessage.text || "New message");
         await sendMessengerWebPush({
-            userId: actualReceiverId,
+            userId: serverMessage.receiverId,
             title: senderName,
             body: preview.length > 150 ? preview.slice(0, 147) + "..." : preview,
             data: {
