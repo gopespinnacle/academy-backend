@@ -495,74 +495,88 @@ console.log(
 
 
 
-                        // ========================================================
-    // SEND FCM PUSH NOTIFICATION
-    // ========================================================
-    // Run separately so notification errors cannot interrupt
-    // Socket.IO message delivery or read receipts.
-    // ========================================================
+                        
+        // ========================================================
+        // SEND FCM PUSH NOTIFICATION
+        // ========================================================
+        // Notification failures must never interrupt chat delivery.
+        // ========================================================
 
-    (async () => {
-        try {
-            const receiverUser = await User.findById(
-    serverMessage.receiverId
-).select("fcmToken");
+        (async () => {
+            try {
+                const receiverId = serverMessage.receiverId;
+                const messageSenderId = serverMessage.senderId;
 
-            if (
-                !receiverUser ||
-                !receiverUser.fcmToken
-            ) {
-                console.log(
-                    "[GPA FCM] Receiver has no registered FCM token."
-                );
-                return;
-            }
-
-            const senderUser = await User.findById(
-                senderId
-            ).select("name fullName username email");
-
-            const senderName =
-                senderUser?.name ||
-                senderUser?.fullName ||
-                senderUser?.username ||
-                senderUser?.email ||
-                "New message";
-
-            const preview =
-                text.length > 150
-                    ? text.substring(0, 147) + "..."
-                    : text;
-
-            const result = await sendPushNotification({
-                token: receiverUser.fcmToken,
-                title: senderName,
-                body: preview,
-                data: {
-                    type: "chat_message",
-                    conversationId: String(message.conversationId),
-                    messageId: String(serverMessage.id),
-                    senderId: String(senderId)
+                if (!receiverId || !messageSenderId) {
+                    console.warn(
+                        "[GPA FCM] Missing sender or receiver ID."
+                    );
+                    return;
                 }
-            });
 
-            if (result.success) {
-                console.log(
-                    "[GPA FCM] Message notification sent successfully."
+                const receiverUser = await User.findById(receiverId)
+                    .select("fcmToken")
+                    .lean();
+
+                if (!receiverUser || !receiverUser.fcmToken) {
+                    console.log(
+                        "[GPA FCM] Receiver has no registered FCM token:",
+                        String(receiverId)
+                    );
+                    return;
+                }
+
+                const senderUser = await User.findById(messageSenderId)
+                    .select("name fullName username email")
+                    .lean();
+
+                const senderName =
+                    senderUser?.name ||
+                    senderUser?.fullName ||
+                    senderUser?.username ||
+                    senderUser?.email ||
+                    "New message";
+
+                const messageText = String(
+                    serverMessage.text || "New message"
                 );
-            } else {
-                console.warn(
-                    "[GPA FCM] Notification was not sent:",
-                    result.reason
+
+                const result = await sendPushNotification({
+                    token: receiverUser.fcmToken,
+                    title: senderName,
+                    body: messageText.length > 150
+                        ? messageText.slice(0, 147) + "..."
+                        : messageText,
+                    data: {
+                        type: "chat_message",
+                        conversationId: String(
+                            serverMessage.conversationId
+                        ),
+                        messageId: String(
+                            serverMessage.id || serverMessage._id
+                        ),
+                        senderId: String(messageSenderId)
+                    }
+                });
+
+                if (result.success) {
+                    console.log(
+                        "[GPA FCM] Message notification sent successfully."
+                    );
+                } else {
+                    console.warn(
+                        "[GPA FCM] Notification was not sent:",
+                        result.reason
+                    );
+                }
+            } catch (fcmError) {
+                console.error(
+                    "[GPA FCM] Notification error:",
+                    fcmError.message
                 );
             }
-        } catch (fcmError) {
-            console.error(
-                "[GPA FCM] Notification error:",
-                fcmError.message
-            );
-        }
-    })();
+        })();
+
 
 
                         // ========================================================
@@ -605,32 +619,56 @@ io.to("gpa:user:" + String(serverMessage.receiverId)).emit(
     serverMessage
 );
 
-// Web Push is delivered by the browser push service and can arrive while the
-// website is backgrounded or the browser is closed. Failures must not interrupt chat.
+
 (async () => {
     try {
-        const senderUser = await User.findById(senderId)
+        const receiverId = serverMessage.receiverId;
+        const messageSenderId = serverMessage.senderId;
+
+        if (!receiverId || !messageSenderId) {
+            console.warn(
+                "[GPA WEB PUSH] Missing sender or receiver ID."
+            );
+            return;
+        }
+
+        const senderUser = await User.findById(messageSenderId)
             .select("name fullName username email")
             .lean();
-        const senderName = senderUser?.name || senderUser?.fullName ||
-            senderUser?.username || senderUser?.email || "New message";
+
+        const senderName =
+            senderUser?.name ||
+            senderUser?.fullName ||
+            senderUser?.username ||
+            senderUser?.email ||
+            "New message";
+
         const preview = String(serverMessage.text || "New message");
+
         await sendMessengerWebPush({
-            userId: serverMessage.receiverId,
+            userId: receiverId,
             title: senderName,
-            body: preview.length > 150 ? preview.slice(0, 147) + "..." : preview,
+            body: preview.length > 150
+                ? preview.slice(0, 147) + "..."
+                : preview,
             data: {
                 type: "chat_message",
-                conversationId: String(message.conversationId),
-                messageId: String(serverMessage.id),
-                senderId: String(senderId),
+                conversationId: String(serverMessage.conversationId),
+                messageId: String(
+                    serverMessage.id || serverMessage._id
+                ),
+                senderId: String(messageSenderId),
                 url: "/messenger/messenger.html"
             }
         });
     } catch (pushError) {
-        console.error("[GPA WEB PUSH] Notification error:", pushError.message);
+        console.error(
+            "[GPA WEB PUSH] Notification error:",
+            pushError.message
+        );
     }
 })();
+
 
 
 
