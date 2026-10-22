@@ -32,6 +32,72 @@ const PrimaryUserMessage =
     const User =
     require("../../models/User");
 
+    
+/* =========================================
+   MESSENGER ONLINE PRESENCE
+   Track all active sockets per user.
+========================================= */
+
+const onlineUsers = new Map();
+
+function addOnlineSocket(userId, socketId) {
+    const id = String(userId);
+
+    if (!onlineUsers.has(id)) {
+        onlineUsers.set(id, new Set());
+    }
+
+    onlineUsers.get(id).add(socketId);
+}
+
+function removeOnlineSocket(userId, socketId) {
+    const id = String(userId);
+    const sockets = onlineUsers.get(id);
+
+    if (!sockets) return false;
+
+    sockets.delete(socketId);
+
+    if (sockets.size === 0) {
+        onlineUsers.delete(id);
+        return true;
+    }
+
+    return false;
+}
+
+function isUserOnline(userId) {
+    const sockets = onlineUsers.get(String(userId));
+    return Boolean(sockets && sockets.size > 0);
+}
+
+
+async function broadcastUserPresence(io, userId, isOnline, lastSeenAt = null) {
+    try {
+        const conversations = await MessengerConversation.find({
+            participants: userId
+        }).select("_id");
+
+        for (const conversation of conversations) {
+            io.to("gpa:conversation:" + String(conversation._id)).emit(
+                "gpa:primary:presence:update",
+                {
+                    userId: String(userId),
+                    isOnline: Boolean(isOnline),
+                    lastSeenAt: lastSeenAt
+                }
+            );
+        }
+    } catch (error) {
+        console.error(
+            "[GPA PRIMARY CHAT SOCKET] Presence broadcast failed:",
+            error
+        );
+    }
+}
+
+
+
 const { sendPushNotification } =
     require("../../services/fcmService");
 
@@ -68,9 +134,7 @@ class PrimaryUserChatSocket {
         // SOCKET CONNECTION
         // ========================================================
 
-        io.on(
-            "connection",
-            (socket) => {
+       io.on("connection", async (socket) => {
 
                 console.log(
                     "[GPA PRIMARY CHAT SOCKET] " +
@@ -148,6 +212,19 @@ socket.userRole =
 
 // Dedicated authenticated-user room for notification events across chats.
 socket.join("gpa:user:" + String(socket.userId));
+
+const wasOnline = isUserOnline(socket.userId);
+
+addOnlineSocket(socket.userId, socket.id);
+
+if (!wasOnline) {
+    await broadcastUserPresence(
+        io,
+        socket.userId,
+        true,
+        null
+    );
+}
 
 console.log(
     "[GPA PRIMARY CHAT SOCKET] " +
@@ -967,6 +1044,64 @@ socket.on(
     }
 );
 
+
+        // ==================================================
+        // REQUEST CURRENT CONTACT PRESENCE
+        // ==================================================
+
+        socket.on(
+            "gpa:primary:presence:request",
+            async (data) => {
+                try {
+                    if (!socket.userId || !data || !data.contactId) {
+                        return;
+                    }
+
+                    const contactId = String(data.contactId);
+
+                    // Do not allow a user to request their own status.
+                    if (contactId === String(socket.userId)) {
+                        return;
+                    }
+
+                    // Verify both users share an active conversation.
+                    const conversation = await MessengerConversation.findOne({
+                        participants: {
+                            $all: [socket.userId, contactId]
+                        },
+                        status: "active"
+                    }).select("_id");
+
+                    if (!conversation) {
+                        return;
+                    }
+
+                    // Read the contact's saved last-seen time.
+                    const contact = await User.findById(contactId)
+                        .select("lastSeenAt")
+                        .lean();
+
+                    if (!contact) {
+                        return;
+                    }
+
+                    // Reply only to the requesting user's socket.
+                    socket.emit("gpa:primary:presence:update", {
+                        userId: contactId,
+                        isOnline: isUserOnline(contactId),
+                        lastSeenAt: contact.lastSeenAt || null
+                    });
+
+                } catch (error) {
+                    console.error(
+                        "[GPA PRIMARY CHAT SOCKET] Presence request failed:",
+                        error
+                    );
+                }
+            }
+        );
+
+
         // ==================================================
         // LIVE TYPING INDICATOR
         // ==================================================
@@ -1192,19 +1327,58 @@ socket.on(
                 // DISCONNECT
                 // ==================================================
 
-                socket.on(
-                    "disconnect",
-                    (reason) => {
+                
+socket.on(
+    "disconnect",
+    async (reason) => {
+        console.log(
+            "[GPA PRIMARY CHAT SOCKET] " +
+            "Socket disconnected:",
+            socket.id,
+            reason
+        );
 
-                        console.log(
-                            "[GPA PRIMARY CHAT SOCKET] " +
-                            "Socket disconnected:",
-                            socket.id,
-                            reason
-                        );
+        // Remove this socket from the user's active connections.
+        const wentOffline = removeOnlineSocket(
+            socket.userId,
+            socket.id
+        );
 
-                    }
+        // Only update last seen when the user's final socket closes.
+        if (wentOffline) {
+            try {
+                const lastSeenAt = new Date();
+
+                await User.findByIdAndUpdate(
+                    socket.userId,
+                    { lastSeenAt: lastSeenAt },
+                    { new: true }
                 );
+
+                
+await broadcastUserPresence(
+    io,
+    socket.userId,
+    false,
+    lastSeenAt
+);
+
+
+                console.log(
+                    "[GPA PRIMARY CHAT SOCKET] User went offline:",
+                    socket.userId,
+                    lastSeenAt
+                );
+            } catch (error) {
+                console.error(
+                    "[GPA PRIMARY CHAT SOCKET] Failed to save last seen:",
+                    error
+                );
+            }
+        }
+    }
+);
+
 
             }
         );

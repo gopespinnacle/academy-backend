@@ -190,11 +190,19 @@ ref: "User"
 
     },
 
+    
     // Firebase Cloud Messaging device token
     fcmToken: {
         type: String,
         default: ""
+    },
+
+    // Messenger: last time this user went offline
+    lastSeenAt: {
+        type: Date,
+        default: null
     }
+
 
 
 }, { timestamps: true });
