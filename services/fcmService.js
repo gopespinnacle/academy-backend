@@ -17,6 +17,10 @@ function initializeFirebaseAdmin() {
         const serviceAccountJson =
             process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
+            console.log("[GPA FCM DEBUG] Service account variable type:", typeof serviceAccountJson);
+console.log("[GPA FCM DEBUG] Service account variable length:",
+    typeof serviceAccountJson === "string" ? serviceAccountJson.length : "not a string");
+
         if (!serviceAccountJson) {
             console.error(
                 "[GPA FCM] ERROR: FIREBASE_SERVICE_ACCOUNT_JSON is missing."
