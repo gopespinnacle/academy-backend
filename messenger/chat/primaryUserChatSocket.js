@@ -582,12 +582,14 @@ console.log("[GPA FCM] Receiver token validated:", {
                         result.reason
                     );
                 }
-            } catch (fcmError) {
-                console.error(
-                    "[GPA FCM] Notification error:",
-                    fcmError.message
-                );
-            }
+            
+} catch (fcmError) {
+    console.error(
+        "[GPA FCM] Notification error:",
+        fcmError.stack || fcmError
+    );
+}
+
         })();
 
 
