@@ -3,27 +3,29 @@ const admin = require("firebase-admin");
 
 let firebaseInitialized = false;
 
+
 function initializeFirebaseAdmin() {
-    if (admin.apps.length > 0) {
-        firebaseInitialized = true;
-        return true;
-    }
-
-    if (firebaseInitialized) {
-        return true;
-    }
-
     try {
+        // Check whether Firebase Admin is already initialized.
+        if (Array.isArray(admin.apps) && admin.apps.length > 0) {
+            firebaseInitialized = true;
+            return true;
+        }
+
         const serviceAccountJson =
             process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
-            console.log("[GPA FCM DEBUG] Service account variable type:", typeof serviceAccountJson);
-console.log("[GPA FCM DEBUG] Service account variable length:",
-    typeof serviceAccountJson === "string" ? serviceAccountJson.length : "not a string");
+        console.log(
+            "[GPA FCM DEBUG] Firebase Admin apps:",
+            Array.isArray(admin.apps) ? admin.apps.length : "unavailable"
+        );
 
-        if (!serviceAccountJson) {
+        if (
+            typeof serviceAccountJson !== "string" ||
+            !serviceAccountJson.trim()
+        ) {
             console.error(
-                "[GPA FCM] ERROR: FIREBASE_SERVICE_ACCOUNT_JSON is missing."
+                "[GPA FCM] FIREBASE_SERVICE_ACCOUNT_JSON is missing or empty."
             );
             return false;
         }
@@ -32,36 +34,38 @@ console.log("[GPA FCM DEBUG] Service account variable length:",
 
         try {
             serviceAccount = JSON.parse(serviceAccountJson);
-        } catch (parseError) {
+        } catch (error) {
             console.error(
-                "[GPA FCM] ERROR: Service account environment variable is not valid JSON:",
-                parseError.message
+                "[GPA FCM] Invalid service account JSON:",
+                error.message
             );
             return false;
         }
 
         if (
-            !serviceAccount ||
             !serviceAccount.project_id ||
             !serviceAccount.client_email ||
             !serviceAccount.private_key
         ) {
             console.error(
-                "[GPA FCM] ERROR: Service account JSON is missing project_id, client_email, or private_key."
+                "[GPA FCM] Service account is missing required fields."
             );
             return false;
         }
 
         admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
+            credential: admin.credential.cert({
+                projectId: serviceAccount.project_id,
+                clientEmail: serviceAccount.client_email,
+                privateKey: serviceAccount.private_key.replace(/\\n/g, "\n")
+            }),
             projectId: serviceAccount.project_id
         });
 
         firebaseInitialized = true;
 
         console.log(
-            "[GPA FCM] Firebase Admin initialized successfully for project:",
-            serviceAccount.project_id
+            "[GPA FCM] Firebase Admin initialized successfully."
         );
 
         return true;
@@ -70,7 +74,6 @@ console.log("[GPA FCM DEBUG] Service account variable length:",
             "[GPA FCM] INITIALIZATION ERROR:",
             error.stack || error
         );
-
         return false;
     }
 }
