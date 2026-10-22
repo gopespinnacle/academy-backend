@@ -967,6 +967,63 @@ socket.on(
     }
 );
 
+        // ==================================================
+        // LIVE TYPING INDICATOR
+        // ==================================================
+
+        socket.on("gpa:primary:typing", async (data) => {
+            try {
+                if (
+                    !data ||
+                    !data.conversationId ||
+                    typeof data.isTyping !== "boolean" ||
+                    !socket.userId
+                ) {
+                    return;
+                }
+
+                const conversationId = String(data.conversationId);
+                const roomName = "gpa:conversation:" + conversationId;
+
+                // Only allow typing events from an authorized room member.
+                if (!socket.rooms.has(roomName)) {
+                    return;
+                }
+
+                // Verify conversation and authenticated user.
+                const conversation = await MessengerConversation
+                    .findById(conversationId)
+                    .select("participants status");
+
+                if (
+                    !conversation ||
+                    conversation.status !== "active" ||
+                    !Array.isArray(conversation.participants) ||
+                    !conversation.participants.some(
+                        participant =>
+                            String(participant) === String(socket.userId)
+                    )
+                ) {
+                    return;
+                }
+
+                // Send to the other participant, not back to this socket.
+                socket.to(roomName).emit(
+                    "gpa:primary:conversation:typing",
+                    {
+                        conversationId,
+                        userId: String(socket.userId),
+                        isTyping: data.isTyping
+                    }
+                );
+            } catch (error) {
+                console.error(
+                    "[GPA PRIMARY CHAT SOCKET] Typing event failed:",
+                    error.message
+                );
+            }
+        });
+
 
         // ==================================================
         // MESSAGE DELIVERY AND READ RECEIPTS
