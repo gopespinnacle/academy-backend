@@ -1,10 +1,15 @@
+
 const admin = require("firebase-admin");
 
 let firebaseInitialized = false;
 
 function initializeFirebaseAdmin() {
-    if (firebaseInitialized || admin.apps.length > 0) {
+    if (admin.apps.length > 0) {
         firebaseInitialized = true;
+        return true;
+    }
+
+    if (firebaseInitialized) {
         return true;
     }
 
@@ -14,26 +19,52 @@ function initializeFirebaseAdmin() {
 
         if (!serviceAccountJson) {
             console.error(
-                "FCM ERROR: FIREBASE_SERVICE_ACCOUNT_JSON is missing"
+                "[GPA FCM] ERROR: FIREBASE_SERVICE_ACCOUNT_JSON is missing."
             );
             return false;
         }
 
-        const serviceAccount = JSON.parse(serviceAccountJson);
+        let serviceAccount;
+
+        try {
+            serviceAccount = JSON.parse(serviceAccountJson);
+        } catch (parseError) {
+            console.error(
+                "[GPA FCM] ERROR: Service account environment variable is not valid JSON:",
+                parseError.message
+            );
+            return false;
+        }
+
+        if (
+            !serviceAccount ||
+            !serviceAccount.project_id ||
+            !serviceAccount.client_email ||
+            !serviceAccount.private_key
+        ) {
+            console.error(
+                "[GPA FCM] ERROR: Service account JSON is missing project_id, client_email, or private_key."
+            );
+            return false;
+        }
 
         admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount)
+            credential: admin.credential.cert(serviceAccount),
+            projectId: serviceAccount.project_id
         });
 
         firebaseInitialized = true;
 
-        console.log("Firebase Admin initialized successfully");
+        console.log(
+            "[GPA FCM] Firebase Admin initialized successfully for project:",
+            serviceAccount.project_id
+        );
 
         return true;
     } catch (error) {
         console.error(
-            "FCM INITIALIZATION ERROR:",
-            error.message
+            "[GPA FCM] INITIALIZATION ERROR:",
+            error.stack || error
         );
 
         return false;
@@ -46,45 +77,44 @@ async function sendPushNotification({
     body,
     data = {}
 }) {
-    if (!token) {
+    if (typeof token !== "string" || !token.trim()) {
         return {
             success: false,
-            reason: "No FCM token"
+            reason: "Missing or invalid FCM token"
         };
     }
 
     if (!initializeFirebaseAdmin()) {
         return {
             success: false,
-            reason: "Firebase Admin is not initialized"
+            reason: "Firebase Admin initialization failed"
         };
     }
 
     try {
         const stringData = {};
 
-        for (const [key, value] of Object.entries(data)) {
+        for (const [key, value] of Object.entries(data || {})) {
             if (value !== undefined && value !== null) {
                 stringData[key] = String(value);
             }
         }
 
-        const messageId = await admin.messaging().send({
-            token,
+        const message = {
+            token: token.trim(),
             notification: {
-                title,
-                body
+                title: String(title || "Gopes Pinnacle Academy"),
+                body: String(body || "You have a new message.")
             },
-            data: stringData,
-            android: {
-                priority: "high",
-                notification: {
-                    channelId: "gpa_messages"
-                }
-            }
-        });
+            data: stringData
+        };
 
-        console.log("FCM notification sent:", messageId);
+        const messageId = await admin.messaging().send(message);
+
+        console.log(
+            "[GPA FCM] Notification sent successfully:",
+            messageId
+        );
 
         return {
             success: true,
@@ -92,14 +122,13 @@ async function sendPushNotification({
         };
     } catch (error) {
         console.error(
-            "FCM SEND ERROR:",
-            error.code || "",
-            error.message
+            "[GPA FCM] SEND ERROR:",
+            error.stack || error
         );
 
         return {
             success: false,
-            reason: error.code || error.message
+            reason: error.code || error.message || "Unknown FCM error"
         };
     }
 }
