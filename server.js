@@ -240,6 +240,7 @@ app.use(
 
 
 // CORS configuration
+
 const corsOptions = {
     origin: [
         "https://www.gopespinnacle.com",
@@ -261,8 +262,11 @@ const corsOptions = {
     allowedHeaders: [
         "Content-Type",
         "Authorization"
-    ]
+    ],
+
+    optionsSuccessStatus: 204
 };
+
 
 app.use(cors(corsOptions));
 
