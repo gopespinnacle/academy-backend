@@ -514,17 +514,30 @@ console.log(
                     return;
                 }
 
-                const receiverUser = await User.findById(receiverId)
-                    .select("fcmToken")
-                    .lean();
+                
+const receiverUser = await User.findById(receiverId)
+    .select("fcmToken")
+    .lean();
 
-                if (!receiverUser || !receiverUser.fcmToken) {
-                    console.log(
-                        "[GPA FCM] Receiver has no registered FCM token:",
-                        String(receiverId)
-                    );
-                    return;
-                }
+const fcmToken =
+    typeof receiverUser?.fcmToken === "string"
+        ? receiverUser.fcmToken.trim()
+        : "";
+
+if (!fcmToken) {
+    console.log(
+        "[GPA FCM] Receiver has no valid registered FCM token:",
+        String(receiverId)
+    );
+    return;
+}
+
+console.log("[GPA FCM] Receiver token validated:", {
+    receiverId: String(receiverId),
+    tokenType: typeof fcmToken,
+    tokenLength: fcmToken.length
+});
+
 
                 const senderUser = await User.findById(messageSenderId)
                     .select("name fullName username email")
@@ -542,7 +555,7 @@ console.log(
                 );
 
                 const result = await sendPushNotification({
-                    token: receiverUser.fcmToken,
+                    token: fcmToken,
                     title: senderName,
                     body: messageText.length > 150
                         ? messageText.slice(0, 147) + "..."
