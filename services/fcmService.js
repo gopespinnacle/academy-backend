@@ -53,14 +53,18 @@ function initializeFirebaseAdmin() {
             return false;
         }
 
-        admin.initializeApp({
-            credential: admin.credential.cert({
-                projectId: serviceAccount.project_id,
-                clientEmail: serviceAccount.client_email,
-                privateKey: serviceAccount.private_key.replace(/\\n/g, "\n")
-            }),
-            projectId: serviceAccount.project_id
-        });
+        const { initializeApp, cert, getApps } = require("firebase-admin/app");
+
+if (getApps().length === 0) {
+    initializeApp({
+        credential: cert({
+            projectId: serviceAccount.project_id,
+            clientEmail: serviceAccount.client_email,
+            privateKey: serviceAccount.private_key.replace(/\\n/g, "\n")
+        }),
+        projectId: serviceAccount.project_id
+    });
+}
 
         firebaseInitialized = true;
 
@@ -116,7 +120,8 @@ async function sendPushNotification({
             data: stringData
         };
 
-        const messageId = await admin.messaging().send(message);
+        const { getMessaging } = require("firebase-admin/messaging");
+const messageId = await getMessaging().send(message);
 
         console.log(
             "[GPA FCM] Notification sent successfully:",
