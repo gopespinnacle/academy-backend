@@ -111,14 +111,25 @@ async function sendPushNotification({
             }
         }
 
-        const message = {
-            token: token.trim(),
-            notification: {
-                title: String(title || "Gopes Pinnacle Academy"),
-                body: String(body || "You have a new message.")
-            },
-            data: stringData
-        };
+        const notificationTitle = String(
+    title || "Gopes Pinnacle Academy"
+);
+
+const notificationBody = String(
+    body || "You have a new message."
+);
+
+const message = {
+    token: token.trim(),
+    data: {
+        ...stringData,
+        title: notificationTitle,
+        body: notificationBody
+    },
+    android: {
+        priority: "high"
+    }
+};
 
         const { getMessaging } = require("firebase-admin/messaging");
 const messageId = await getMessaging().send(message);
