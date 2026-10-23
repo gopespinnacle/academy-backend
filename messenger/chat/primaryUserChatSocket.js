@@ -34,6 +34,96 @@ const PrimaryUserMessage =
 
     
 /* =========================================
+   GPA MESSENGER — UNREAD MESSAGE COUNTS
+   Uses the existing message database model.
+========================================= */
+
+async function sendUnreadCounts(io, userId) {
+    try {
+        if (!userId) return;
+
+        const unreadMessages = await PrimaryUserMessage.aggregate([
+            {
+                $match: {
+                    receiverId: new (require("mongoose").Types.ObjectId)(
+                        String(userId)
+                    ),
+                    readAt: null
+                }
+            },
+            {
+                $group: {
+                    _id: "$conversationId",
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        
+const counts = {};
+
+const conversationIds = unreadMessages.map(
+    (item) => item._id
+);
+
+const conversations = await MessengerConversation.find({
+    _id: { $in: conversationIds }
+})
+    .select("participants")
+    .lean();
+
+const conversationParticipants = new Map();
+
+conversations.forEach((conversation) => {
+    const participants = (conversation.participants || []).map(
+        (participant) =>
+            String(
+                participant?._id ||
+                participant?.id ||
+                participant
+            )
+    );
+
+    const otherUserId = participants.find(
+        (participantId) =>
+            participantId !== String(userId)
+    );
+
+    if (otherUserId) {
+        conversationParticipants.set(
+            String(conversation._id),
+            otherUserId
+        );
+    }
+});
+
+unreadMessages.forEach((item) => {
+    const contactId = conversationParticipants.get(
+        String(item._id)
+    );
+
+    if (contactId) {
+        counts[contactId] =
+            (counts[contactId] || 0) + item.count;
+    }
+});
+
+
+        io.to("gpa:user:" + String(userId)).emit(
+            "gpa:primary:unread:counts",
+            counts
+        );
+    } catch (error) {
+        console.error(
+            "[GPA MESSENGER] Unread-count update failed:",
+            error
+        );
+    }
+}
+
+
+    
+/* =========================================
    MESSENGER ONLINE PRESENCE
    Track all active sockets per user.
 ========================================= */
@@ -212,6 +302,8 @@ socket.userRole =
 
 // Dedicated authenticated-user room for notification events across chats.
 socket.join("gpa:user:" + String(socket.userId));
+
+sendUnreadCounts(io, socket.userId);
 
 const wasOnline = isUserOnline(socket.userId);
 
@@ -710,6 +802,8 @@ io.to("gpa:user:" + String(serverMessage.receiverId)).emit(
     "gpa:primary:notification:message",
     serverMessage
 );
+
+sendUnreadCounts(io, serverMessage.receiverId);
 
 
 (async () => {
@@ -1282,6 +1376,10 @@ console.log("[GPA RECEIPT DEBUG] Message found:", {
                     "gpa:primary:message:status",
                     receipt
                 );
+
+                if (status === "read") {
+    await sendUnreadCounts(io, socket.userId);
+}
 
                 console.log("[GPA RECEIPT DEBUG] Status broadcast:", {
     messageId: receipt.messageId,
