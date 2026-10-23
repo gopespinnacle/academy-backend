@@ -1346,18 +1346,30 @@ console.log("[GPA RECEIPT DEBUG] Message found:", {
                         message.deliveredAt = now;
                         await message.save();
                     }
-                } else if (status === "read") {
-                    if (message.deliveryStatus !== "read") {
-                        message.deliveryStatus = "read";
+                
+} else if (status === "read") {
+    const needsSave =
+        message.deliveryStatus !== "read" ||
+        !message.readAt ||
+        !message.deliveredAt;
 
-                        if (!message.deliveredAt) {
-                            message.deliveredAt = now;
-                        }
+    if (message.deliveryStatus !== "read") {
+        message.deliveryStatus = "read";
+    }
 
-                        message.readAt = now;
-                        await message.save();
-                    }
-                }
+    if (!message.deliveredAt) {
+        message.deliveredAt = now;
+    }
+
+    if (!message.readAt) {
+        message.readAt = now;
+    }
+
+    if (needsSave) {
+        await message.save();
+    }
+}
+
 
                 const receipt = {
                     messageId: message.messageId,
