@@ -48,7 +48,7 @@ async function sendUnreadCounts(io, userId) {
                     receiverId: new (require("mongoose").Types.ObjectId)(
                         String(userId)
                     ),
-                    readAt: null
+                    deliveryStatus: { $ne: "read" }
                 }
             },
             {
