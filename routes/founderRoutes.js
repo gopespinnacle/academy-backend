@@ -69,15 +69,26 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 
 // Schedule/student mapping compatibility helpers. TeacherSchedule is the primary record;
 // PeriodAssignment mirrors are maintained for legacy live-class, attendance, and leave routes.
-function normalizeScheduleAssignments(assignments) {
+
+function normalizeScheduleAssignments(assignments, scheduleData = {}) {
     if (!Array.isArray(assignments)) return [];
-    return assignments.filter(a => a && (a.studentId || a.student?._id || a.student)).map(a => ({
-        student: a.studentId || a.student?._id || a.student,
-        subjects: Array.isArray(a.subjects) ? a.subjects : [],
-        languages: Array.isArray(a.languages) ? a.languages : [],
-        eca: Array.isArray(a.eca) ? a.eca : []
-    }));
+
+    return assignments
+        .filter(a => a && (a.studentId || a.student?._id || a.student))
+        .map(a => ({
+            student: a.studentId || a.student?._id || a.student,
+            subjects: Array.isArray(a.subjects)
+                ? a.subjects
+                : (scheduleData.subject || []),
+            languages: Array.isArray(a.languages)
+                ? a.languages
+                : (scheduleData.language || []),
+            eca: Array.isArray(a.eca)
+                ? a.eca
+                : (scheduleData.eca || [])
+        }));
 }
+
 async function syncLegacyPeriodAssignments(schedule) {
     await PeriodAssignment.deleteMany({ teacherSchedule: schedule._id });
     const activityNames = [...new Set([...(schedule.subject || []), ...(schedule.language || []), ...(schedule.eca || [])].filter(Boolean))];
@@ -2288,265 +2299,53 @@ router.post("/add-schedule", protect, authorize("founder"), async (req, res) => 
             eca: Array.isArray(req.body.eca) ? req.body.eca : (req.body.eca ? [req.body.eca] : []),
             language: Array.isArray(req.body.language) ? req.body.language : (req.body.language ? [req.body.language] : []),
             startTime: req.body.startTime, endTime: req.body.endTime,
-            assignments: normalizeScheduleAssignments(req.body.assignments)
+            assignments: normalizeScheduleAssignments(req.body.assignments, {
+    subject: Array.isArray(req.body.subject) ? req.body.subject : (req.body.subject ? [req.body.subject] : []),
+    language: Array.isArray(req.body.language) ? req.body.language : (req.body.language ? [req.body.language] : []),
+    eca: Array.isArray(req.body.eca) ? req.body.eca : (req.body.eca ? [req.body.eca] : [])
+})
         };
-        const schedule = await TeacherSchedule.create(payload);
-        await syncLegacyPeriodAssignments(schedule);
+        const schedule = await TeacherStudentSchedule.create(payload);
+        
         res.status(201).json({ success: true, message: "Schedule and student mapping saved", scheduleId: schedule._id, schedule });
     } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 });
 
 router.get("/schedules", protect, authorize("founder"), async (req, res) => {
     try {
-        const schedules = await TeacherSchedule.find().populate("teacher", "name subject teacherId").populate("assistantTeacher", "name teacherId").populate("assignments.student", "name studentId subject language eca").sort({ day: 1, startTime: 1 });
+        const schedules = await TeacherStudentSchedule.find().populate("teacher", "name subject teacherId").populate("assistantTeacher", "name teacherId").populate("assignments.student", "name studentId subject language eca").sort({ day: 1, startTime: 1 });
         res.json({ schedules });
     } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 });
 
 
-
-router.post(
-    "/migrate-teacher-student-schedules",
-    protect,
-    authorize("founder"),
-    async (req, res) => {
-        try {
-            // SAFETY CHECK: do not overwrite an existing migration destination.
-            const existingNewSchedules =
-                await TeacherStudentSchedule.countDocuments();
-
-            if (existingNewSchedules > 0) {
-                return res.status(409).json({
-                    success: false,
-                    message:
-                        "Migration stopped: teacherstudentschedules already contains records. No data was changed.",
-                    existingNewSchedules
-                });
-            }
-
-            const oldSchedules = await TeacherSchedule.find().lean();
-            const oldPeriods = await PeriodAssignment.find().lean();
-
-            const scheduleDocuments = new Map();
-
-            // Preserve each original TeacherSchedule ID.
-            for (const schedule of oldSchedules) {
-                scheduleDocuments.set(String(schedule._id), {
-                    _id: schedule._id,
-                    teacher: schedule.teacher,
-                    assistantTeacher: schedule.assistantTeacher || null,
-                    day: schedule.day,
-                    className: schedule.className,
-                    subject: Array.isArray(schedule.subject)
-                        ? [...schedule.subject]
-                        : schedule.subject
-                            ? [schedule.subject]
-                            : [],
-                    language: Array.isArray(schedule.language)
-                        ? [...schedule.language]
-                        : schedule.language
-                            ? [schedule.language]
-                            : [],
-                    eca: Array.isArray(schedule.eca)
-                        ? [...schedule.eca]
-                        : schedule.eca
-                            ? [schedule.eca]
-                            : [],
-                    startTime: schedule.startTime,
-                    endTime: schedule.endTime,
-                    assignments: (schedule.assignments || []).map(a => ({
-                        student: a.student,
-                        subjects: a.subjects || [],
-                        languages: a.languages || [],
-                        eca: a.eca || []
-                    })),
-                    createdAt: schedule.createdAt || new Date(),
-                    updatedAt: schedule.updatedAt || new Date()
-                });
-            }
-
-            let unmatchedPeriods = 0;
-
-            // Merge each legacy period into its matching timetable record.
-            for (const period of oldPeriods) {
-                let target = null;
-
-                if (period.teacherSchedule) {
-                    target = scheduleDocuments.get(
-                        String(period.teacherSchedule)
-                    );
-                }
-
-                // If the original link is missing, match by timetable details.
-if (!target) {
-    const candidates = [...scheduleDocuments.values()].filter(
-        s =>
-            String(s.teacher) === String(period.teacher) &&
-            s.className === period.className &&
-            s.day === period.day &&
-            s.startTime === period.startTime &&
-            s.endTime === period.endTime
-    );
-
-    if (candidates.length === 1) {
-        target = candidates[0];
-    }
-}
-
-// Preserve unmatched periods instead of silently skipping them.
-if (!target) {
-    const newId = new (require("mongoose").Types.ObjectId)();
-
-    target = {
-        _id: newId,
-        teacher: period.teacher,
-        assistantTeacher: period.assistantTeacher || null,
-        day: period.day,
-        className: period.className,
-        subject: period.subject ? [period.subject] : [],
-        language: [],
-        eca: [],
-        startTime: period.startTime,
-        endTime: period.endTime,
-        assignments: [],
-        createdAt: new Date(),
-        updatedAt: new Date()
-    };
-
-    scheduleDocuments.set(String(newId), target);
-}
-
-                if (period.subject) {
-    const activity = period.subject;
-
-    if (target.language.includes(activity)) {
-        // Already classified as a language.
-    } else if (target.eca.includes(activity)) {
-        // Already classified as an ECA activity.
-    } else if (!target.subject.includes(activity)) {
-        target.subject.push(activity);
-    }
-}
-
-                for (const assignment of period.assignments || []) {
-                    if (!assignment.student) continue;
-
-                    let existing = target.assignments.find(
-                        a =>
-                            String(a.student) ===
-                            String(assignment.student)
-                    );
-
-                    if (!existing) {
-                        existing = {
-                            student: assignment.student,
-                            subjects: [],
-                            languages: [],
-                            eca: []
-                        };
-
-                        target.assignments.push(existing);
-                    }
-
-                    for (const subject of assignment.subjects || []) {
-                        if (!existing.subjects.includes(subject)) {
-                            existing.subjects.push(subject);
-                        }
-                    }
-
-                    for (const language of assignment.languages || []) {
-                        if (!existing.languages.includes(language)) {
-                            existing.languages.push(language);
-                        }
-                    }
-
-                    for (const activity of assignment.eca || []) {
-                        if (!existing.eca.includes(activity)) {
-                            existing.eca.push(activity);
-                        }
-                    }
-
-                    // Legacy records store one subject in period.subject.
-                    // Preserve that mapping for the assigned student.
-                    if (period.subject) {
-                        const activity = period.subject;
-
-                        if (target.language.includes(activity)) {
-                            if (!existing.languages.includes(activity)) {
-                                existing.languages.push(activity);
-                            }
-                        } else if (target.eca.includes(activity)) {
-                            if (!existing.eca.includes(activity)) {
-                                existing.eca.push(activity);
-                            }
-                        } else if (!existing.subjects.includes(activity)) {
-                            existing.subjects.push(activity);
-                        }
-                    }
-                }
-            }
-
-            const documents = [...scheduleDocuments.values()];
-
-            // Validate and insert as a batch. Do not delete legacy records.
-            if (documents.length > 0) {
-                await TeacherStudentSchedule.insertMany(documents, {
-                    ordered: true
-                });
-            }
-
-            const totalInNewCollection =
-                await TeacherStudentSchedule.countDocuments();
-
-            return res.json({
-                success: true,
-                message: "Migration copy completed. Legacy collections were preserved.",
-                sourceSchedules: oldSchedules.length,
-                legacyPeriodAssignments: oldPeriods.length,
-                migratedSchedules: documents.length,
-                unmatchedPeriods,
-                totalInNewCollection
-            });
-        } catch (error) {
-            console.error(
-                "TEACHER STUDENT SCHEDULE MIGRATION ERROR:",
-                error
-            );
-
-            return res.status(500).json({
-                success: false,
-                message: error.message,
-                note:
-                    "Legacy collections were not deleted. If insertion partially succeeded, inspect the destination before retrying."
-            });
-        }
-    }
-);
-
-
-
 router.get("/period/:id", protect, authorize("founder"), async (req, res) => {
     try {
-        const schedule = await TeacherSchedule.findById(req.params.id).populate("teacher", "name subject").populate("assignments.student", "name studentId");
+        const schedule = await TeacherStudentSchedule.findById(req.params.id).populate("teacher", "name subject").populate("assignments.student", "name studentId");
         if (!schedule) return res.status(404).json({ message: "Schedule not found" });
-        let assignments = await PeriodAssignment.find({ teacherSchedule: schedule._id }).populate("assignments.student", "name studentId");
-        if (!assignments.length) assignments = await PeriodAssignment.find({ teacher: schedule.teacher?._id || schedule.teacher, className: schedule.className, day: schedule.day, startTime: schedule.startTime, endTime: schedule.endTime }).populate("assignments.student", "name studentId");
+        const assignments = schedule.assignments || [];
         res.json({ schedule, assignments });
     } catch (error) { console.error(error); res.status(500).json({ message: "Server Error" }); }
 });
 
 router.put("/update-schedule/:id", protect, authorize("founder"), async (req, res) => {
     try {
-        const schedule = await TeacherSchedule.findById(req.params.id);
+        const schedule = await TeacherStudentSchedule.findById(req.params.id);
         if (!schedule) return res.status(404).json({ success: false, message: "Schedule not found" });
         if (req.body.teacher || req.body.teacherId) schedule.teacher = req.body.teacher || req.body.teacherId;
         if (Object.prototype.hasOwnProperty.call(req.body, "assistantTeacher")) schedule.assistantTeacher = req.body.assistantTeacher || null;
         for (const key of ["day", "className", "startTime", "endTime"]) if (Object.prototype.hasOwnProperty.call(req.body, key)) schedule[key] = req.body[key];
         for (const key of ["subject", "eca", "language"]) if (Object.prototype.hasOwnProperty.call(req.body, key)) schedule[key] = Array.isArray(req.body[key]) ? req.body[key] : (req.body[key] ? [req.body[key]] : []);
-        if (Object.prototype.hasOwnProperty.call(req.body, "assignments")) schedule.assignments = normalizeScheduleAssignments(req.body.assignments);
+        if (Object.prototype.hasOwnProperty.call(req.body, "assignments")) {
+    schedule.assignments = normalizeScheduleAssignments(req.body.assignments, {
+        subject: schedule.subject || [],
+        language: schedule.language || [],
+        eca: schedule.eca || []
+    });
+}
         await schedule.save();
-        await syncLegacyPeriodAssignments(schedule);
-        const updated = await TeacherSchedule.findById(schedule._id).populate("teacher", "name subject teacherId").populate("assignments.student", "name studentId");
+        
+        const updated = await TeacherStudentSchedule.findById(schedule._id).populate("teacher", "name subject teacherId").populate("assignments.student", "name studentId");
         res.json({ success: true, message: "Schedule updated successfully", data: updated });
     } catch (error) { console.error(error); res.status(500).json({ success: false, message: error.message }); }
 });
@@ -2679,11 +2478,9 @@ router.put("/update-teacher/:id", async (req,res)=>{
 router.get("/teacher-schedule/:teacherId", async (req, res) => {
     try {
 
-        const schedule = await TeacherSchedule.find({
-            teacher: req.params.teacherId
-        });
+        const schedules = await TeacherStudentSchedule.find({ teacher: req.params.teacherId });
 
-        res.json({ schedule });
+        res.json({ schedule: schedules });
 
     } catch (error) {
         console.log(error);
@@ -2712,11 +2509,15 @@ router.post("/assign-period", async (req, res) => {
         const { scheduleId, teacherScheduleId, teacherId, className, subject, day, startTime, endTime, students } = req.body;
         const id = scheduleId || teacherScheduleId;
         if (id) {
-            const schedule = await TeacherSchedule.findById(id);
+            const schedule = await TeacherStudentSchedule.findById(id);
             if (!schedule) return res.status(404).json({ success: false, message: "Schedule not found" });
-            schedule.assignments = normalizeScheduleAssignments(students || []);
+            schedule.assignments = normalizeScheduleAssignments(students || [], {
+    subject: schedule.subject || [],
+    language: schedule.language || [],
+    eca: schedule.eca || []
+});
             await schedule.save();
-            await syncLegacyPeriodAssignments(schedule);
+            
             return res.json({ success: true, assignments: schedule.assignments, scheduleId: schedule._id });
         }
         // Backward-compatible path for the older student-assignment page.
@@ -2739,9 +2540,9 @@ router.delete(
             // =====================================================
 
             const schedule =
-                await TeacherSchedule.findById(
-                    req.params.id
-                );
+    await TeacherStudentSchedule.findById(
+        req.params.id
+    );
 
 
             // =====================================================
@@ -2764,9 +2565,9 @@ router.delete(
             // 3. DELETE THE TEACHER SCHEDULE
             // =====================================================
 
-            await TeacherSchedule.findByIdAndDelete(
-                req.params.id
-            );
+            await TeacherStudentSchedule.findByIdAndDelete(
+    req.params.id
+);
 
 
            // =====================================================
