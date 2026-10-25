@@ -52,6 +52,7 @@ const Marks = require("../models/Marks");
 const Assessment = require("../models/Assessment");
 const AuditLog = require("../models/AuditLog");
 const TeacherSchedule = require("../models/TeacherSchedule");
+const TeacherStudentSchedule = require("../models/TeacherStudentSchedule");
 const TeacherSession = require("../models/TeacherSession");
 const TeacherAttendance = require("../models/TeacherAttendance");
 const TeacherStudentMap = require("../models/TeacherStudentMap");
@@ -2301,6 +2302,228 @@ router.get("/schedules", protect, authorize("founder"), async (req, res) => {
         res.json({ schedules });
     } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 });
+
+
+
+router.post(
+    "/migrate-teacher-student-schedules",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            // SAFETY CHECK: do not overwrite an existing migration destination.
+            const existingNewSchedules =
+                await TeacherStudentSchedule.countDocuments();
+
+            if (existingNewSchedules > 0) {
+                return res.status(409).json({
+                    success: false,
+                    message:
+                        "Migration stopped: teacherstudentschedules already contains records. No data was changed.",
+                    existingNewSchedules
+                });
+            }
+
+            const oldSchedules = await TeacherSchedule.find().lean();
+            const oldPeriods = await PeriodAssignment.find().lean();
+
+            const scheduleDocuments = new Map();
+
+            // Preserve each original TeacherSchedule ID.
+            for (const schedule of oldSchedules) {
+                scheduleDocuments.set(String(schedule._id), {
+                    _id: schedule._id,
+                    teacher: schedule.teacher,
+                    assistantTeacher: schedule.assistantTeacher || null,
+                    day: schedule.day,
+                    className: schedule.className,
+                    subject: Array.isArray(schedule.subject)
+                        ? [...schedule.subject]
+                        : schedule.subject
+                            ? [schedule.subject]
+                            : [],
+                    language: Array.isArray(schedule.language)
+                        ? [...schedule.language]
+                        : schedule.language
+                            ? [schedule.language]
+                            : [],
+                    eca: Array.isArray(schedule.eca)
+                        ? [...schedule.eca]
+                        : schedule.eca
+                            ? [schedule.eca]
+                            : [],
+                    startTime: schedule.startTime,
+                    endTime: schedule.endTime,
+                    assignments: (schedule.assignments || []).map(a => ({
+                        student: a.student,
+                        subjects: a.subjects || [],
+                        languages: a.languages || [],
+                        eca: a.eca || []
+                    })),
+                    createdAt: schedule.createdAt || new Date(),
+                    updatedAt: schedule.updatedAt || new Date()
+                });
+            }
+
+            let unmatchedPeriods = 0;
+
+            // Merge each legacy period into its matching timetable record.
+            for (const period of oldPeriods) {
+                let target = null;
+
+                if (period.teacherSchedule) {
+                    target = scheduleDocuments.get(
+                        String(period.teacherSchedule)
+                    );
+                }
+
+                // If the original link is missing, match by timetable details.
+if (!target) {
+    const candidates = [...scheduleDocuments.values()].filter(
+        s =>
+            String(s.teacher) === String(period.teacher) &&
+            s.className === period.className &&
+            s.day === period.day &&
+            s.startTime === period.startTime &&
+            s.endTime === period.endTime
+    );
+
+    if (candidates.length === 1) {
+        target = candidates[0];
+    }
+}
+
+// Preserve unmatched periods instead of silently skipping them.
+if (!target) {
+    const newId = new (require("mongoose").Types.ObjectId)();
+
+    target = {
+        _id: newId,
+        teacher: period.teacher,
+        assistantTeacher: period.assistantTeacher || null,
+        day: period.day,
+        className: period.className,
+        subject: period.subject ? [period.subject] : [],
+        language: [],
+        eca: [],
+        startTime: period.startTime,
+        endTime: period.endTime,
+        assignments: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+    };
+
+    scheduleDocuments.set(String(newId), target);
+}
+
+                if (period.subject) {
+    const activity = period.subject;
+
+    if (target.language.includes(activity)) {
+        // Already classified as a language.
+    } else if (target.eca.includes(activity)) {
+        // Already classified as an ECA activity.
+    } else if (!target.subject.includes(activity)) {
+        target.subject.push(activity);
+    }
+}
+
+                for (const assignment of period.assignments || []) {
+                    if (!assignment.student) continue;
+
+                    let existing = target.assignments.find(
+                        a =>
+                            String(a.student) ===
+                            String(assignment.student)
+                    );
+
+                    if (!existing) {
+                        existing = {
+                            student: assignment.student,
+                            subjects: [],
+                            languages: [],
+                            eca: []
+                        };
+
+                        target.assignments.push(existing);
+                    }
+
+                    for (const subject of assignment.subjects || []) {
+                        if (!existing.subjects.includes(subject)) {
+                            existing.subjects.push(subject);
+                        }
+                    }
+
+                    for (const language of assignment.languages || []) {
+                        if (!existing.languages.includes(language)) {
+                            existing.languages.push(language);
+                        }
+                    }
+
+                    for (const activity of assignment.eca || []) {
+                        if (!existing.eca.includes(activity)) {
+                            existing.eca.push(activity);
+                        }
+                    }
+
+                    // Legacy records store one subject in period.subject.
+                    // Preserve that mapping for the assigned student.
+                    if (period.subject) {
+                        const activity = period.subject;
+
+                        if (target.language.includes(activity)) {
+                            if (!existing.languages.includes(activity)) {
+                                existing.languages.push(activity);
+                            }
+                        } else if (target.eca.includes(activity)) {
+                            if (!existing.eca.includes(activity)) {
+                                existing.eca.push(activity);
+                            }
+                        } else if (!existing.subjects.includes(activity)) {
+                            existing.subjects.push(activity);
+                        }
+                    }
+                }
+            }
+
+            const documents = [...scheduleDocuments.values()];
+
+            // Validate and insert as a batch. Do not delete legacy records.
+            if (documents.length > 0) {
+                await TeacherStudentSchedule.insertMany(documents, {
+                    ordered: true
+                });
+            }
+
+            const totalInNewCollection =
+                await TeacherStudentSchedule.countDocuments();
+
+            return res.json({
+                success: true,
+                message: "Migration copy completed. Legacy collections were preserved.",
+                sourceSchedules: oldSchedules.length,
+                legacyPeriodAssignments: oldPeriods.length,
+                migratedSchedules: documents.length,
+                unmatchedPeriods,
+                totalInNewCollection
+            });
+        } catch (error) {
+            console.error(
+                "TEACHER STUDENT SCHEDULE MIGRATION ERROR:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: error.message,
+                note:
+                    "Legacy collections were not deleted. If insertion partially succeeded, inspect the destination before retrying."
+            });
+        }
+    }
+);
+
+
 
 router.get("/period/:id", protect, authorize("founder"), async (req, res) => {
     try {
