@@ -18,17 +18,17 @@ type:String,
 required:true
 },
 
-subject:{
-type:String,
-default:""
+subject: {
+    type: [String],
+    default: []
 },
-eca:{
-type:String,
-default:""
+eca: {
+    type: [String],
+    default: []
 },
-language:{
-type:String,
-default:""
+language: {
+    type: [String],
+    default: []
 },
 
 startTime:{
