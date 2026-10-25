@@ -561,25 +561,16 @@ lessonPlan.lessons.forEach((lesson,index)=>{
 
 
 // Find the assigned students for this period
-const period = await PeriodAssignment.findOne({
-
-    teacher: req.body.teacherId,
-
-    className: req.body.className,
-
-    subject: req.body.subject,
-
-    day: req.body.day,
-
-    startTime: req.body.startTime
-
-}).populate("assignments.student");
+const period = req.body.periodId
+    ? await PeriodAssignment.findById(req.body.periodId)
+        .populate("assignments.student")
+    : null;
 
 if (period && period.assignments.length > 0) {
 
     for (const assignment of period.assignments) {
 
-        const studentId = assignment.student._id;
+        const studentId = assignment.student?._id || assignment.student;
 
         for (const lesson of lessonPlan.lessons) {
 
@@ -893,19 +884,10 @@ const updated = await LessonPlan.findById(req.params.id);
 console.log("UPDATED LESSON PLAN");
 console.log(updated);
 
-const period = await PeriodAssignment.findOne({
-
-teacher: updated.teacherId,
-
-className: updated.className,
-
-subject: updated.subject,
-
-day: updated.day,
-
-startTime: updated.startTime
-
-}).populate("assignments.student");
+const period = updated.periodId
+    ? await PeriodAssignment.findById(updated.periodId)
+        .populate("assignments.student")
+    : null;
 
 console.log("PERIOD FOUND");
 console.log(period);
@@ -921,7 +903,7 @@ if(period && period.assignments.length){
 
 for(const assignment of period.assignments){
 
-const studentId = assignment.student._id;
+const studentId = assignment.student?._id || assignment.student;
 
 for(const lesson of updated.lessons){
 
