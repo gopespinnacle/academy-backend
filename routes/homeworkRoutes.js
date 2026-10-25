@@ -15,6 +15,7 @@ require("../models/ClassSummary");
 const LessonPlan = require("../models/LessonPlan");
 const Homework = require("../models/Homework");
 const PeriodAssignment = require("../models/PeriodAssignment");
+const TeacherSchedule = require("../models/TeacherSchedule");
 const s3 = require("../config/s3");
 
 router.post(
@@ -562,14 +563,19 @@ lessonPlan.lessons.forEach((lesson,index)=>{
 
 
 // Find the assigned students for this period
-const period = req.body.periodId
-    ? await PeriodAssignment.findById(req.body.periodId)
-        .populate("assignments.student")
+const primarySchedule = req.body.periodId
+    ? await TeacherSchedule.findById(req.body.periodId).populate("assignments.student")
     : null;
+const legacyPeriod = (!primarySchedule && req.body.periodId)
+    ? await PeriodAssignment.findById(req.body.periodId).populate("assignments.student")
+    : null;
+const periodAssignments = primarySchedule?.assignments?.length
+    ? primarySchedule.assignments
+    : (legacyPeriod?.assignments || []);
 
-if (period && period.assignments.length > 0) {
+if (periodAssignments.length > 0) {
 
-    for (const assignment of period.assignments) {
+    for (const assignment of periodAssignments) {
 
         const studentId = assignment.student?._id || assignment.student;
 
@@ -888,13 +894,18 @@ const updated = await LessonPlan.findById(req.params.id);
 console.log("UPDATED LESSON PLAN");
 console.log(updated);
 
-const period = updated.periodId
-    ? await PeriodAssignment.findById(updated.periodId)
-        .populate("assignments.student")
+const primarySchedule = updated.periodId
+    ? await TeacherSchedule.findById(updated.periodId).populate("assignments.student")
     : null;
+const legacyPeriod = (!primarySchedule && updated.periodId)
+    ? await PeriodAssignment.findById(updated.periodId).populate("assignments.student")
+    : null;
+const periodAssignments = primarySchedule?.assignments?.length
+    ? primarySchedule.assignments
+    : (legacyPeriod?.assignments || []);
 
 console.log("PERIOD FOUND");
-console.log(period);
+console.log(primarySchedule || legacyPeriod);
 
 
 console.log("Teacher :", updated.teacherId);
@@ -903,9 +914,9 @@ console.log("Subject :", updated.subject);
 console.log("Day     :", updated.day);
 console.log("Start   :", updated.startTime);
 
-if(period && period.assignments.length){
+if(periodAssignments.length){
 
-for(const assignment of period.assignments){
+for(const assignment of periodAssignments){
 
 const studentId = assignment.student?._id || assignment.student;
 
