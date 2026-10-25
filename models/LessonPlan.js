@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const lessonSchema = new mongoose.Schema({
 
+        subject: {
+        type: String,
+        default: ""
+    },
+
     topic: {
         type: String,
         default: ""
