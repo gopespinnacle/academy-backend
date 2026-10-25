@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { protect, authorize } = require("../middleware/authMiddleware");
+
 
 const multer = require("multer");
 
@@ -782,7 +782,8 @@ router.get("/lesson-plans", async (req, res) => {
 try{
 
 
-const teacherId = req.user.id;
+const teacherId = req.query.teacherId;
+
 
 const periodId = req.query.periodId;
 
@@ -1326,95 +1327,5 @@ router.post("/delete-reviewed-file", async (req, res) => {
     }
 
 });
-
-/* TEACHER HOMEWORK TRACKING */
-
-
-router.get(
-    "/teacher-homework-tracking",
-    protect,
-    authorize("teacher"),
-    async (req, res) => {
-
-        try {
-            const teacherId = req.user.id;
-
-            
-
-            const periods = await PeriodAssignment.find({
-                teacher: teacherId
-            }).select("assignments.student");
-
-            const studentIds = [
-                ...new Set(
-                    periods.flatMap(period =>
-                        (period.assignments || [])
-                            .map(item => item.student)
-                            .filter(Boolean)
-                            .map(student =>
-                                String(student._id || student)
-                            )
-                    )
-                )
-            ];
-
-            const plans = await LessonPlan.find({
-                teacherId: teacherId
-            }).sort({ date: -1, createdAt: -1 }).lean();
-
-            const planIds = plans.map(plan => plan._id);
-
-            const records = await Homework.find({
-                student: { $in: studentIds },
-                lessonPlan: { $in: planIds }
-            })
-                .populate("student", "name studentName grade studentId")
-                .lean();
-
-            const data = records.map(hw => {
-                const plan = plans.find(
-                    p => String(p._id) === String(hw.lessonPlan)
-                );
-
-                const lesson = (plan?.lessons || []).find(
-                    item => item.topicId === hw.topicId
-                );
-
-                return {
-                    _id: hw._id,
-                    date: plan?.date || hw.createdAt,
-                    teacherName: plan?.teacherName || "",
-                    student: hw.student,
-                    className: plan?.className || "",
-                    subject: lesson?.subject || "",
-                    topic: lesson?.topic || "",
-                    homework: lesson?.homework || "",
-                    homeworkDocuments: lesson?.homeworkDocuments || [],
-                    status: hw.status || "Pending",
-                    submittedFiles: hw.submittedFiles || [],
-                    submittedAt: hw.submittedAt || null,
-                    reviewedAt: hw.reviewedAt || null,
-                    reviewFiles: hw.reviewFiles || [],
-                    remarks: hw.remarks || "",
-                    marks: hw.marks ?? 0
-                };
-            });
-
-            res.json({
-                success: true,
-                data
-            });
-
-        } catch (err) {
-            console.error("TEACHER HOMEWORK TRACKING ERROR:", err);
-
-            res.status(500).json({
-                success: false,
-                message: "Unable to load homework tracking"
-            });
-        }
-    }
-);
-
 
 module.exports = router;
