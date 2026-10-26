@@ -1006,47 +1006,57 @@ allowed:false
 
 });
 
+
 router.get("/homework-classes/:teacherId", async (req, res) => {
+    try {
+        const teacherId = req.params.teacherId;
 
-try{
+        const periods = await TeacherStudentSchedule.find({
+            teacher: teacherId
+        }).sort({
+            day: 1,
+            startTime: 1
+        });
 
-const teacherId = req.params.teacherId;
+        const homeworkClasses = [];
 
-const periods = await PeriodAssignment.find({
+        periods.forEach(period => {
+            const activities = [
+                ...(period.subject || []),
+                ...(period.language || []),
+                ...(period.eca || [])
+            ];
 
-teacher: teacherId
+            activities.forEach(activity => {
+                homeworkClasses.push({
+                    _id: period._id,
+                    teacher: period.teacher,
+                    assistantTeacher: period.assistantTeacher,
+                    className: period.className,
+                    subject: activity,
+                    day: period.day,
+                    startTime: period.startTime,
+                    endTime: period.endTime,
+                    assignments: period.assignments || []
+                });
+            });
+        });
 
-}).sort({
+        res.json({
+            success: true,
+            data: homeworkClasses
+        });
 
-day:1,
+    } catch (err) {
+        console.error("Homework Classes Error:", err);
 
-startTime:1
-
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
 });
 
-res.json({
-
-success:true,
-
-data:periods
-
-});
-
-}catch(err){
-
-console.error(err);
-
-res.status(500).json({
-
-success:false,
-
-message:err.message
-
-});
-
-}
-
-});
 
 /* ================= TEACHER CALENDAR ================= */
 
