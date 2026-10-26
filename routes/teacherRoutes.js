@@ -589,65 +589,54 @@ router.get("/period-students", protect, authorize("teacher"), async (req,res)=>{
 
         const { className, subject, language, eca, day, startTime } = req.query;
 
-        let filter = {
-            teacher: teacherId,
-            className: className?.trim(),
-            day: day?.trim(),
-            startTime: startTime
-        };
+        
+const filter = {
+    teacher: teacherId,
+    className: className?.trim(),
+    day: day?.trim(),
+    startTime: startTime
+};
 
-        let orConditions = [];
-
-        if(subject) orConditions.push({ subject });
-        if(language) orConditions.push({ languages: { $in: [language] } });
-        if(eca) orConditions.push({ eca: { $in: [eca] } });
-
-        if(orConditions.length > 0){
-            filter.$or = orConditions;
-        }
-
-        console.log("Teacher ID:", teacherId);
-console.log("Request Query:", req.query);
-console.log("Mongo Filter:", filter);
-
-const data = await PeriodAssignment.find(filter)
-.populate("assignments.student","name");
-
-console.log("Students Found:", data);
+const schedules = await TeacherStudentSchedule.find(filter)
+    .populate("assignments.student", "name studentId")
+    .lean();
 
 const finalData = [];
 
-data.forEach(period=>{
+schedules.forEach(schedule => {
+    (schedule.assignments || []).forEach(assignment => {
+        if (!assignment.student) return;
 
-    period.assignments.forEach(a=>{
+        const subjects = assignment.subjects || [];
+        const languages = assignment.languages || [];
+        const ecaSubjects = assignment.eca || [];
+
+        const requestedSubject = subject?.trim();
+        const requestedLanguage = language?.trim();
+        const requestedEca = eca?.trim();
+
+        if (requestedSubject && !subjects.includes(requestedSubject)) return;
+        if (requestedLanguage && !languages.includes(requestedLanguage)) return;
+        if (requestedEca && !ecaSubjects.includes(requestedEca)) return;
 
         finalData.push({
-
-            className: period.className,
-
-            subject: period.subject,
-
-            day: period.day,
-
-            startTime: period.startTime,
-
-            endTime: period.endTime,
-
-            student: a.student,
-
-            subjects: a.subjects,
-
-            languages: a.languages,
-
-            eca: a.eca
-
+            className: schedule.className,
+            subject: subjects,
+            language: languages,
+            eca: ecaSubjects,
+            day: schedule.day,
+            startTime: schedule.startTime,
+            endTime: schedule.endTime,
+            student: assignment.student,
+            subjects,
+            languages,
+            eca: ecaSubjects
         });
-
     });
-
 });
 
 res.json({ data: finalData });
+
 
     }catch(err){
         res.status(500).json({message:"Error"});
