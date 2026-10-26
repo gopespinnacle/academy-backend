@@ -1978,9 +1978,9 @@ router.get(
 
 
             const period =
-                await PeriodAssignment.findById(
-                    periodAssignmentId
-                );
+    await TeacherStudentSchedule.findById(
+        periodAssignmentId
+    );
 
 
             if (!period) {
