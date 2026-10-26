@@ -546,7 +546,7 @@ app.use(
 );
 
 app.use(
-    "/api/homework-flow",
+    "/api",
     homeworkFlowRoutes
 );
 
