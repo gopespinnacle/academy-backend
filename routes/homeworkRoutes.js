@@ -815,21 +815,51 @@ if(periodId){
 
 }
 
-const plans = await LessonPlan.find(
-    filter
-).sort({
 
+const plans = await LessonPlan.find(filter).sort({
     date: -1,
-
     createdAt: -1
-
 });
+
+const plansWithStudents = await Promise.all(
+    plans.map(async (plan) => {
+        let students = [];
+
+        if (plan.periodId) {
+            const schedule = await TeacherStudentSchedule.findById(
+                plan.periodId
+            ).populate("assignments.student", "name studentName studentId");
+
+            if (schedule && Array.isArray(schedule.assignments)) {
+                students = schedule.assignments
+                    .map((assignment) => {
+                        const student = assignment.student;
+
+                        if (!student) return null;
+
+                        return {
+                            _id: student._id,
+                            name: student.studentName || student.name || "Unknown Student",
+                            studentId: student.studentId || ""
+                        };
+                    })
+                    .filter(Boolean);
+            }
+        }
+
+        return {
+            ...plan.toObject(),
+            assignedStudents: students
+        };
+    })
+);
+
 
 res.json({
 
     success: true,
 
-    data: plans
+    data: plansWithStudents
 
 });
 
