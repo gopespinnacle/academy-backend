@@ -737,11 +737,18 @@ assignments.forEach(a=>{
 
 });
 
+
 res.json({
-
-    data: grouped
-
+    data: grouped.map(period => ({
+        ...period,
+        students: (period.students || []).filter(Boolean).map(student => ({
+            _id: student._id || student,
+            name: student.name || "",
+            studentId: student.studentId || ""
+        }))
+    }))
 });
+
 
     } catch (err) {
         console.log(err); // 🔥 ADD THIS (important)
