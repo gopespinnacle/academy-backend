@@ -149,6 +149,9 @@ const teacherRoutes =
 const founderRoutes =
     require("./routes/founderRoutes");
 
+    const homeworkFlowRoutes =
+    require("./routes/homeworkFlowRoutes");
+
 const aiClassroomRoutes =
     require("./routes/aiClassroomRoutes");
 
@@ -540,6 +543,11 @@ app.use(
 app.use(
     "/api/teacher-session",
     teacherSessionRoutes
+);
+
+app.use(
+    "/api/homework-flow",
+    homeworkFlowRoutes
 );
 
 app.use(
