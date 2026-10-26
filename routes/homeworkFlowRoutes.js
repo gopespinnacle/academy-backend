@@ -156,7 +156,7 @@ router.get("/homework-flow/teacher/assignments", authenticate, allowRoles("teach
         const homeworkIds = data.map(item => item._id);
         const submissions = await HomeworkSubmission.find({ homework: { $in: homeworkIds } })
             .populate("student", "name studentId")
-            .select("homework student status submittedAt marks feedback reviewedAt");
+            .select("homework student status submittedAt answerText attachments marks feedback reviewedAt");
 
         const counts = new Map();
         for (const submission of submissions) {
