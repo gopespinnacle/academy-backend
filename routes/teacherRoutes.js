@@ -615,9 +615,18 @@ schedules.forEach(schedule => {
         const requestedLanguage = language?.trim();
         const requestedEca = eca?.trim();
 
-        if (requestedSubject && !subjects.includes(requestedSubject)) return;
-        if (requestedLanguage && !languages.includes(requestedLanguage)) return;
-        if (requestedEca && !ecaSubjects.includes(requestedEca)) return;
+        if (
+    requestedSubject &&
+    !requestedSubject.split(",").some(value => subjects.includes(value.trim()))
+) return;
+        if (
+    requestedLanguage &&
+    !requestedLanguage.split(",").some(value => languages.includes(value.trim()))
+) return;
+        if (
+    requestedEca &&
+    !requestedEca.split(",").some(value => ecaSubjects.includes(value.trim()))
+) return;
 
         finalData.push({
             className: schedule.className,
