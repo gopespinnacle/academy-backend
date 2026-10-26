@@ -119,6 +119,7 @@ router.post("/homework-flow/assignments", authenticate, allowRoles("teacher"), a
             topic: String(topic || "").trim(),
             dueDate: parsedDueDate,
             attachments: cleanAttachments(req.body.attachments),
+materialAttachments: cleanAttachments(req.body.materialAttachments),
             assignedStudents: studentIds,
             status: "published"
         });

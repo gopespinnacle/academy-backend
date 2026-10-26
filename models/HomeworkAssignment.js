@@ -54,6 +54,14 @@ const homeworkAssignmentSchema = new mongoose.Schema(
             }],
             default: []
         },
+
+        materialAttachments: {
+    type: [{
+        name: { type: String, default: "" },
+        url: { type: String, required: true }
+    }],
+    default: []
+},
         assignedStudents: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
