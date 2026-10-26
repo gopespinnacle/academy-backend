@@ -305,6 +305,7 @@ router.patch("/homework-flow/submissions/:id/review", authenticate, allowRoles("
 
         submission.marks = marks === null || marks === undefined || marks === "" ? null : Number(marks);
         submission.feedback = String(req.body?.feedback || "").trim();
+        submission.reviewedAttachments = cleanAttachments(req.body?.reviewedAttachments);
         submission.status = req.body?.returnToStudent === true ? "returned" : "reviewed";
         submission.reviewedBy = req.user.id;
         submission.reviewedAt = new Date();

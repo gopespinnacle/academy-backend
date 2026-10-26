@@ -46,6 +46,14 @@ const homeworkSubmissionSchema = new mongoose.Schema(
             default: "",
             maxlength: 10000
         },
+
+        reviewedAttachments: {
+    type: [{
+        name: { type: String, default: "" },
+        url: { type: String, required: true }
+    }],
+    default: []
+},
         reviewedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
