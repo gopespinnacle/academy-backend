@@ -14,8 +14,7 @@ const ClassSummary =
 require("../models/ClassSummary");
 const LessonPlan = require("../models/LessonPlan");
 const Homework = require("../models/Homework");
-const PeriodAssignment = require("../models/PeriodAssignment");
-const TeacherSchedule = require("../models/TeacherSchedule");
+const TeacherStudentSchedule = require("../models/TeacherStudentSchedule");
 const s3 = require("../config/s3");
 
 router.post(
@@ -563,15 +562,26 @@ lessonPlan.lessons.forEach((lesson,index)=>{
 
 
 // Find the assigned students for this period
-const primarySchedule = req.body.periodId
-    ? await TeacherSchedule.findById(req.body.periodId).populate("assignments.student")
-    : null;
-const legacyPeriod = (!primarySchedule && req.body.periodId)
-    ? await PeriodAssignment.findById(req.body.periodId).populate("assignments.student")
-    : null;
-const periodAssignments = primarySchedule?.assignments?.length
-    ? primarySchedule.assignments
-    : (legacyPeriod?.assignments || []);
+
+        // Find assigned students from the new schedule model
+        const schedule = req.body.periodId
+            ? await TeacherStudentSchedule.findById(req.body.periodId)
+                .populate("assignments.student")
+            : null;
+
+        const periodAssignments = (schedule?.assignments || []).filter(assignment => {
+    const subjects = assignment.subjects || [];
+    const languages = assignment.languages || [];
+    const eca = assignment.eca || [];
+
+    return subjects.includes(req.body.subject) ||
+           languages.includes(req.body.subject) ||
+           eca.includes(req.body.subject);
+});
+
+console.log("HOMEWORK SUBJECT:", req.body.subject);
+console.log("MATCHED STUDENTS:", periodAssignments.map(a => a.student?.name || a.student));
+
 
 if (periodAssignments.length > 0) {
 
@@ -894,18 +904,17 @@ const updated = await LessonPlan.findById(req.params.id);
 console.log("UPDATED LESSON PLAN");
 console.log(updated);
 
-const primarySchedule = updated.periodId
-    ? await TeacherSchedule.findById(updated.periodId).populate("assignments.student")
-    : null;
-const legacyPeriod = (!primarySchedule && updated.periodId)
-    ? await PeriodAssignment.findById(updated.periodId).populate("assignments.student")
-    : null;
-const periodAssignments = primarySchedule?.assignments?.length
-    ? primarySchedule.assignments
-    : (legacyPeriod?.assignments || []);
+
+        const schedule = updated.periodId
+            ? await TeacherStudentSchedule.findById(updated.periodId)
+                .populate("assignments.student")
+            : null;
+
+        const periodAssignments = schedule?.assignments || [];
+
 
 console.log("PERIOD FOUND");
-console.log(primarySchedule || legacyPeriod);
+console.log(schedule);
 
 
 console.log("Teacher :", updated.teacherId);
