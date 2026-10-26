@@ -24,6 +24,7 @@ const ExamCamera = require("../models/ExamCamera");
 const TeacherLeave = require("../models/TeacherLeave");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const TeacherSchedule = require("../models/TeacherSchedule");
+const TeacherStudentSchedule = require("../models/TeacherStudentSchedule");
 const mongoose = require("mongoose");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -144,7 +145,7 @@ router.post("/join-class", protect, authorize("student"), async (req,res)=>{
 
 router.get("/timetable", protect, authorize("student"), async (req,res)=>{
     try{
-        const schedules = await TeacherSchedule.find()
+        const schedules = await TeacherStudentSchedule.find()
         .populate("teacher","name subject")
         .sort({ day:1, startTime:1 });
 
@@ -157,20 +158,39 @@ router.get("/timetable", protect, authorize("student"), async (req,res)=>{
 
 /* ================= MY TIMETABLE ================= */
 
-router.get("/my-timetable", protect, authorize("student"), async (req,res)=>{
-    try{
+
+router.get("/my-timetable", protect, authorize("student"), async (req, res) => {
+    try {
         const studentId = req.user.id;
 
-        const data = await PeriodAssignment.find({
-    "assignments.student": studentId
-});
+        const data = await TeacherStudentSchedule.find({
+            "assignments.student": studentId
+        })
+        .populate("teacher", "name teacherId")
+        .populate("assistantTeacher", "name teacherId")
+        .lean();
 
-        res.json({ data });
+        const myTimetable = data.map(schedule => {
+            const myAssignment = (schedule.assignments || []).find(
+                assignment =>
+                    String(assignment.student) === String(studentId)
+            );
 
-    }catch(err){
-        res.status(500).json({message:"Error"});
+            return {
+                ...schedule,
+                subject: myAssignment?.subjects || [],
+                language: myAssignment?.languages || [],
+                eca: myAssignment?.eca || []
+            };
+        });
+
+        res.json(myTimetable);
+    } catch (error) {
+        console.error("My timetable error:", error);
+        res.status(500).json({ message: "Error fetching timetable" });
     }
 });
+
 
 /* ================= MY ATTENDANCE ================= */
 const { getAttendance } = require("../controllers/attendanceController");

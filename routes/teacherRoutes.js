@@ -18,6 +18,7 @@ const ExamActivity = require("../models/ExamActivity");
 const ExamCamera = require("../models/ExamCamera");
 const PeriodAssignment = require("../models/PeriodAssignment");
 const TeacherSchedule = require("../models/TeacherSchedule");
+const TeacherStudentSchedule = require("../models/TeacherStudentSchedule");
 const TeacherLeave = require("../models/TeacherLeave");
 const DailyClassRegister =
     require("../models/DailyClassRegister");
@@ -659,9 +660,11 @@ router.get("/schedule", async (req, res) => {
 
         const teacherId = decoded.id;
 
-        const schedule = await TeacherSchedule.find({
-            teacher: teacherId
-        });
+        const schedule = await TeacherStudentSchedule.find({
+    teacher: teacherId
+})
+.populate("assignments.student", "name studentId")
+.sort({ day: 1, startTime: 1 });
 
         res.json({ schedule });
 
@@ -677,7 +680,7 @@ router.get("/all-period-assignments", async (req, res) => {
 
         const teacherId = decoded.id;
 
-        const assignments = await PeriodAssignment.find({
+        const assignments = await TeacherStudentSchedule.find({
     teacher: teacherId
 }).populate(
     "assignments.student",
@@ -688,23 +691,23 @@ const grouped = [];
 
 assignments.forEach(a=>{
 
-    const existing = grouped.find(x=>
+    const existing = grouped.find(x =>
 
-        x.className === a.className &&
+    x.className === a.className &&
 
-        x.subject === a.subject &&
+    JSON.stringify(x.subject) === JSON.stringify(a.subject) &&
 
-        x.language === a.language &&
+    JSON.stringify(x.language) === JSON.stringify(a.language) &&
 
-        x.eca === a.eca &&
+    JSON.stringify(x.eca) === JSON.stringify(a.eca) &&
 
-        x.day === a.day &&
+    x.day === a.day &&
 
-        x.startTime === a.startTime &&
+    x.startTime === a.startTime &&
 
-        x.endTime === a.endTime
+    x.endTime === a.endTime
 
-    );
+);
 
     if(existing){
 
