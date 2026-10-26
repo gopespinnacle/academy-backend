@@ -1596,10 +1596,10 @@ router.post(
 
             /* ================= VERIFY PERIOD ================= */
 
-            const period =
-                await PeriodAssignment.findById(
-                    periodAssignmentId
-                );
+           const period =
+    await TeacherStudentSchedule.findById(
+        periodAssignmentId
+    );
 
 
             if (!period) {
