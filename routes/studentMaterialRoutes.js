@@ -7,7 +7,7 @@ const router = express.Router();
 
 const { protect } = require("../middleware/authMiddleware");
 const User = require("../models/User");
-const PeriodAssignment = require("../models/PeriodAssignment");
+const TeacherStudentSchedule = require("../models/TeacherStudentSchedule");
 const StudentMaterial = require("../models/StudentMaterial");
 const { uploadFile, deleteFile } = require("../config/s3");
 
@@ -71,12 +71,14 @@ function safeFileName(name) {
         .slice(0, 150);
 }
 
+
 async function getStudentPeriods(studentId) {
-    return PeriodAssignment.find({
+    return TeacherStudentSchedule.find({
         "assignments.student": studentId
     }).populate([
         { path: "teacher", select: "name teacherId role" },
-        { path: "assistantTeacher", select: "name teacherId role" }
+        { path: "assistantTeacher", select: "name teacherId role" },
+        { path: "assignments.student", select: "name studentId" }
     ]);
 }
 
@@ -88,9 +90,8 @@ function teacherMatchesPeriod(teacherId, period) {
 }
 
 async function studentCanUseTeacher(studentId, teacherId, subject) {
-    const periods = await PeriodAssignment.find({
-        "assignments.student": studentId
-    });
+    const periods = await getStudentPeriods(studentId);
+    const requestedSubject = String(subject).trim().toLowerCase();
 
     return periods.some(period => {
         if (!teacherMatchesPeriod(teacherId, period)) {
@@ -98,7 +99,7 @@ async function studentCanUseTeacher(studentId, teacherId, subject) {
         }
 
         const assignment = period.assignments.find(
-            item => String(item.student) === String(studentId)
+            item => String(item.student?._id || item.student) === String(studentId)
         );
 
         if (!assignment) {
@@ -106,15 +107,20 @@ async function studentCanUseTeacher(studentId, teacherId, subject) {
         }
 
         const allowedSubjects = [
-            period.subject,
-            ...(assignment.subjects || [])
+            ...(period.subject || []),
+            ...(assignment.subjects || []),
+            ...(period.language || []),
+            ...(assignment.languages || []),
+            ...(period.eca || []),
+            ...(assignment.eca || [])
         ]
             .filter(Boolean)
             .map(value => String(value).trim().toLowerCase());
 
-        return allowedSubjects.includes(String(subject).trim().toLowerCase());
+        return allowedSubjects.includes(requestedSubject);
     });
 }
+
 
 function canAccessMaterial(user, material) {
     if (user.role === "founder") {
@@ -137,6 +143,7 @@ function canAccessMaterial(user, material) {
    GET /api/student-materials/teachers
 ===================================================== */
 
+
 router.get("/teachers", protect, async (req, res) => {
     try {
         if (req.user.role !== "student") {
@@ -145,14 +152,18 @@ router.get("/teachers", protect, async (req, res) => {
             });
         }
 
-        const periods = await getStudentPeriods(req.user._id);
+        const schedules = await getStudentPeriods(req.user._id);
         const teacherMap = new Map();
 
-        for (const period of periods) {
-            for (const teacher of [period.teacher, period.assistantTeacher]) {
-                if (!teacher || teacher.role !== "teacher") {
-                    continue;
-                }
+        for (const schedule of schedules) {
+            const assignment = schedule.assignments.find(
+                item => String(item.student?._id || item.student) === String(req.user._id)
+            );
+
+            if (!assignment) continue;
+
+            for (const teacher of [schedule.teacher, schedule.assistantTeacher]) {
+                if (!teacher || teacher.role !== "teacher") continue;
 
                 const id = String(teacher._id);
 
@@ -165,14 +176,14 @@ router.get("/teachers", protect, async (req, res) => {
                     });
                 }
 
-                const assignment = period.assignments.find(
-                    item => String(item.student) === String(req.user._id)
-                );
-
                 const subjects = [
-                    period.subject,
-                    ...(assignment?.subjects || [])
-                ].filter(Boolean);
+                    ...(schedule.subject || []),
+                    ...(assignment.subjects || []),
+                    ...(schedule.language || []),
+                    ...(assignment.languages || []),
+                    ...(schedule.eca || []),
+                    ...(assignment.eca || [])
+                ];
 
                 for (const subject of subjects) {
                     const cleaned = String(subject).trim();
@@ -199,6 +210,7 @@ router.get("/teachers", protect, async (req, res) => {
         });
     }
 });
+
 
 /* =====================================================
    UPLOAD A STUDENT MATERIAL
