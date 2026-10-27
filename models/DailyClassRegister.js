@@ -55,10 +55,10 @@ const dailyClassRegisterSchema =
                ========================= */
 
             periodAssignment: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "PeriodAssignment",
-                required: true
-            },
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "TeacherStudentSchedule",
+    required: true
+},
 
 
             /* =========================

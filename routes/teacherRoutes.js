@@ -1105,57 +1105,42 @@ router.get("/calendar", protect, authorize("teacher"), async (req, res) => {
    TEACHER LEAVE - PERIODS
    ========================================================= */
 
+
 router.get(
     "/leave-periods",
     protect,
     authorize("teacher"),
     async (req, res) => {
-
         try {
-
-            const periods = await PeriodAssignment.find({
-                teacher: req.user.id
+            const periods = await TeacherStudentSchedule.find({
+                $or: [
+                    { teacher: req.user.id },
+                    { assistantTeacher: req.user.id }
+                ]
             })
-            .select(
-                "className subject language eca day startTime endTime assignments"
-            )
-            .populate(
-                "assignments.student",
-                "name studentName"
-            )
-            .sort({
-                day: 1,
-                startTime: 1
-            });
+                .select(
+                    "teacher assistantTeacher className subject language eca day startTime endTime assignments"
+                )
+                .populate("teacher", "name teacherName teacherId")
+                .populate("assistantTeacher", "name teacherName teacherId")
+                .populate("assignments.student", "name studentName studentId")
+                .sort({ day: 1, startTime: 1 });
 
-            res.json({
-
+            return res.json({
                 success: true,
-
                 data: periods
-
             });
-
         } catch (err) {
+            console.error("LEAVE PERIODS ERROR:", err);
 
-            console.error(
-                "LEAVE PERIODS ERROR:",
-                err
-            );
-
-            res.status(500).json({
-
+            return res.status(500).json({
                 success: false,
-
-                message:
-                    "Unable to load teacher periods."
-
+                message: "Unable to load teacher periods."
             });
-
         }
-
     }
 );
+
 
 /* =========================================================
    TEACHER LEAVE - APPLY
@@ -1246,9 +1231,9 @@ router.post(
             /* ================= GET PERIOD ================= */
 
             const period =
-                await PeriodAssignment.findById(
-                    periodAssignmentId
-                );
+    await TeacherStudentSchedule.findById(
+        periodAssignmentId
+    );
 
             if (!period) {
 
@@ -1266,10 +1251,14 @@ router.post(
 
             /* ================= TEACHER SECURITY ================= */
 
-            if (
-                period.teacher.toString()
-                !== req.user.id.toString()
-            ) {
+         
+if (
+    String(period.teacher?._id || period.teacher) !==
+        String(req.user.id) &&
+    String(period.assistantTeacher?._id || period.assistantTeacher) !==
+        String(req.user.id)
+) {
+
 
                 return res.status(403).json({
 
@@ -1425,8 +1414,11 @@ router.post(
                     className:
                         period.className,
 
-                    subject:
-                        period.subject || "",
+                    subject: [
+    ...(period.subject || []),
+    ...(period.language || []),
+    ...(period.eca || [])
+].join(", "),
 
 
                     date:
