@@ -2008,10 +2008,10 @@ router.get(
 
             /* ================= SECURITY ================= */
 
-            if (
-                period.teacher.toString()
-                !== req.user.id.toString()
-            ) {
+    if (
+    String(period.teacher?._id || period.teacher) !== String(req.user.id) &&
+    String(period.assistantTeacher?._id || period.assistantTeacher) !== String(req.user.id)
+) {
 
                 return res.status(403).json({
 
