@@ -190,7 +190,20 @@ router.get("/homework-flow/student/assignments", authenticate, allowRoles("stude
             assignedStudents: req.user.id,
             status: "published"
         };
-        if (req.query.subject) filter.subject = String(req.query.subject);
+        if (req.query.subject) {
+    filter.subject = String(req.query.subject).trim();
+}
+
+if (req.query.scheduleId) {
+    if (!validId(req.query.scheduleId)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid timetable period ID."
+        });
+    }
+
+    filter.schedule = req.query.scheduleId;
+}
 
         const homework = await HomeworkAssignment.find(filter)
             .populate("teacher", "name teacherId")
