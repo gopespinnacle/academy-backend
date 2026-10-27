@@ -3494,7 +3494,7 @@ router.put(
    ===================================================== */
 
 const period =
-    await PeriodAssignment.findById(
+    await TeacherStudentSchedule.findById(
         leave.periodAssignment
     );
 
@@ -3552,8 +3552,11 @@ if(!existingRegister){
         className:
             period.className,
 
-        subject:
-            period.subject || "",
+        subject: [
+    ...(period.subject || []),
+    ...(period.language || []),
+    ...(period.eca || [])
+].join(", "),
 
         scheduledStartTime:
             period.startTime,
