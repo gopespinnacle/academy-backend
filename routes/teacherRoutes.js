@@ -2142,7 +2142,10 @@ router.get(
             }
 
             const registers = await DailyClassRegister.find(filter)
-                .populate("periodAssignment", "className subject day startTime endTime")
+                .populate(
+    "periodAssignment",
+    "className subject language eca day startTime endTime"
+)
                 .sort({
                     date: -1,
                     scheduledStartTime: 1,
