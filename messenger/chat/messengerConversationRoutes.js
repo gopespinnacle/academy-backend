@@ -4,8 +4,8 @@ const jwt = require("jsonwebtoken");
 const User =
     require("../../models/User");
 
-const PeriodAssignment =
-    require("../../models/PeriodAssignment");
+const TeacherStudentSchedule =
+    require("../../models/TeacherStudentSchedule");
 
 const MessengerConversationService =
     require("./messengerConversationService");
@@ -128,22 +128,19 @@ async function canUsersCommunicate(
         ) {
 
             const assignment =
-                await PeriodAssignment.findOne({
-                    $or: [
-                        {
-                            teacher:
-                                currentUser._id
-                        },
-                        {
-                            assistantTeacher:
-                                currentUser._id
-                        }
-                    ],
-                    "assignments.student":
-                        receiverUser._id
-                })
-                .select("_id")
-                .lean();
+    await TeacherStudentSchedule.findOne({
+        $or: [
+            {
+                teacher: currentUser._id
+            },
+            {
+                assistantTeacher: currentUser._id
+            }
+        ],
+        "assignments.student": receiverUser._id
+    })
+    .select("_id")
+    .lean();
 
             return !!assignment;
 
@@ -183,22 +180,19 @@ async function canUsersCommunicate(
         ) {
 
             const assignment =
-                await PeriodAssignment.findOne({
-                    "assignments.student":
-                        currentUser._id,
-                    $or: [
-                        {
-                            teacher:
-                                receiverUser._id
-                        },
-                        {
-                            assistantTeacher:
-                                receiverUser._id
-                        }
-                    ]
-                })
-                .select("_id")
-                .lean();
+    await TeacherStudentSchedule.findOne({
+        "assignments.student": currentUser._id,
+        $or: [
+            {
+                teacher: receiverUser._id
+            },
+            {
+                assistantTeacher: receiverUser._id
+            }
+        ]
+    })
+    .select("_id")
+    .lean();
 
             return !!assignment;
 
