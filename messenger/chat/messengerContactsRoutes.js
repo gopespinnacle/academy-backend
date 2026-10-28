@@ -43,8 +43,8 @@ const jwt =
 const User =
     require("../../models/User");
 
-const PeriodAssignment =
-    require("../../models/PeriodAssignment");
+const TeacherStudentSchedule =
+    require("../../models/TeacherStudentSchedule");
 
 const router =
     express.Router();
@@ -287,28 +287,28 @@ router.get(
                 // ----------------------------------------------
 
                 const periods =
-                    await PeriodAssignment.find({
+    await TeacherStudentSchedule.find({
 
-                        $or: [
+        $or: [
 
-                            {
-                                teacher:
-                                    currentUser._id
-                            },
+            {
+                teacher:
+                    currentUser._id
+            },
 
-                            {
-                                assistantTeacher:
-                                    currentUser._id
-                            }
+            {
+                assistantTeacher:
+                    currentUser._id
+            }
 
-                        ]
+        ]
 
-                    })
-                    .populate(
-                        "assignments.student",
-                        "_id name email role grade board studentId"
-                    )
-                    .lean();
+    })
+    .populate(
+        "assignments.student",
+        "_id name email role grade board studentId"
+    )
+    .lean();
 
 
                 // ----------------------------------------------
@@ -467,21 +467,21 @@ console.log(
                 // ----------------------------------------------
 
                 const periods =
-                    await PeriodAssignment.find({
+    await TeacherStudentSchedule.find({
 
-                        "assignments.student":
-                            currentUser._id
+        "assignments.student":
+            currentUser._id
 
-                    })
-                    .populate(
-                        "teacher",
-                        "_id name email role teacherId"
-                    )
-                    .populate(
-                        "assistantTeacher",
-                        "_id name email role teacherId"
-                    )
-                    .lean();
+    })
+    .populate(
+        "teacher",
+        "_id name email role teacherId"
+    )
+    .populate(
+        "assistantTeacher",
+        "_id name email role teacherId"
+    )
+    .lean();
 
 
                 // ----------------------------------------------
