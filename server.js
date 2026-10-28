@@ -337,7 +337,9 @@ const PrimaryUserChatSocket =
 
 PrimaryUserChatSocket.initialize(io);
 
-
+// GPA AUDIO CALL — SEPARATE SOCKET MODULE
+const gpaAudioCallSocket = require("./socket/gpaAudioCallSocket");
+gpaAudioCallSocket.initialize(io);
 
 
 // =========================================================
