@@ -1514,14 +1514,10 @@ router.get(
                         req.user.id
 
                 })
-                .populate(
-                    "periodAssignment",
-                    "className subject day startTime endTime"
-                )
-                .sort({
-                    date: -1,
-                    createdAt: -1
-                });
+               .sort({
+    date: -1,
+    createdAt: -1
+});
 
 
             res.json({
@@ -1624,18 +1620,17 @@ router.post(
 
             /* ================= VERIFY TEACHER ================= */
 
-            if (
-                period.teacher.toString()
-                !== teacherId.toString()
-            ) {
+            
+if (
+    String(period.teacher?._id || period.teacher) !== String(teacherId) &&
+    String(period.assistantTeacher?._id || period.assistantTeacher) !== String(teacherId)
+) {
+    return res.status(403).json({
+        success: false,
+        message: "You are not authorized to save this class."
+    });
+}
 
-                return res.status(403).json({
-                    success: false,
-                    message:
-                        "You are not authorized to save this class."
-                });
-
-            }
 
             /* ================= CHECK APPROVED LEAVE ================= */
 
