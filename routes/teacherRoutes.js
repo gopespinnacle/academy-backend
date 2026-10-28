@@ -1698,8 +1698,11 @@ if (approvedLeave) {
             className:
                 period.className,
 
-            subject:
-                period.subject || "",
+            subject: [
+    ...(period.subject || []),
+    ...(period.language || []),
+    ...(period.eca || [])
+].join(", "),
 
             scheduledStartTime:
                 period.startTime,
