@@ -137,6 +137,11 @@ const authRoutes =
     const livekitRoutes =
     require("./routes/livekitRoutes");
 
+    const gpaAudioCallRoutes =
+    require("./routes/gpaAudioCallRoutes");
+
+
+
 const annotationMaterialRoutes =
     require("./routes/annotationMaterialRoutes");
 
@@ -529,6 +534,11 @@ app.use(
 app.use(
     "/api/livekit",
     livekitRoutes
+);
+
+app.use(
+    "/api/gpa-audio-call",
+    gpaAudioCallRoutes
 );
 
 app.use(
