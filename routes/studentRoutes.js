@@ -318,76 +318,73 @@ res.status(500).json({message:"Dashboard error"});
 
 /* ================= GET MEETING LINK ================= */
 
+
+/* ================= GET MEETING LINK FROM TEACHER STUDENT SCHEDULE ================= */
+
 router.get(
-"/meeting-link/:periodId",
-protect,
-authorize("student"),
-async(req,res)=>{
+    "/meeting-link/:periodId",
+    protect,
+    authorize("student"),
+    async (req, res) => {
+        try {
+            const schedule = await TeacherStudentSchedule
+                .findById(req.params.periodId)
+                .populate("teacher", "name meetingLink role")
+                .populate("assistantTeacher", "name meetingLink role")
+                .lean();
 
-try{
+            if (!schedule) {
+                return res.status(404).json({
+                    message: "Teacher student schedule not found"
+                });
+            }
 
-const period = await PeriodAssignment
-.findById(req.params.periodId)
-.populate(
-    "teacher",
-    "name meetingLink role"
+            // Verify that this student belongs to this schedule
+            const myAssignment = (schedule.assignments || []).find(
+                assignment =>
+                    String(assignment.student) === String(req.user.id)
+            );
+
+            if (!myAssignment) {
+                return res.status(403).json({
+                    message: "You are not assigned to this class"
+                });
+            }
+
+            // Get the teacher's meeting link
+            const teacher = schedule.teacher;
+
+            if (!teacher || !teacher.meetingLink) {
+                return res.status(404).json({
+                    message: "Teacher meeting link not found"
+                });
+            }
+
+            console.log("TeacherStudentSchedule ID:", schedule._id);
+            console.log("Student ID:", req.user.id);
+
+            return res.json({
+                scheduleId: schedule._id,
+                teacherId: teacher._id,
+                teacherName: teacher.name,
+                className: schedule.className,
+                day: schedule.day,
+                startTime: schedule.startTime,
+                endTime: schedule.endTime,
+                subjects: myAssignment.subjects || [],
+                meetingLink: teacher.meetingLink
+            });
+
+        } catch (err) {
+            console.error("Meeting link error:", err);
+
+            return res.status(500).json({
+                message: "Server error fetching meeting link"
+            });
+        }
+    }
 );
 
-if(!period){
-    return res.status(404).json({
-        message:"Period not found"
-    });
-}
-
-/* Extra Security */
-console.log("Period ID:", req.params.periodId);
-console.log("Student ID:", req.user.id);
-
-console.log("Period:", period);
-
-if (period) {
-    console.log("Assignments:", period.assignments);
-}
-const assigned = period.assignments.some(a =>
-    a.student.toString() === req.user.id
-);
-
-if (!assigned) {
-    return res.status(403).json({
-        message: "Not your class"
-    });
-}
-
-if(
-!period.teacher ||
-!period.teacher.meetingLink
-){
-    return res.status(404).json({
-        message:"Teacher meeting link not found"
-    });
-}
-
-res.json({
-
-teacherId:period.teacher._id,
-teacherName:period.teacher.name,
-
-meetingLink:
-period.teacher.meetingLink
-
-});
-
-}catch(err){
-
-console.log(err);
-
-res.status(500).json({
-message:"Server Error"
-});
-
-}
-
-});
 
 
 router.get(
