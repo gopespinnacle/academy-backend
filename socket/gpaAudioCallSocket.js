@@ -2,6 +2,8 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
+const { sendPushNotification } =
+    require("../../services/fcmService");
 let activeCallLookup = () => null;
 function initialize(io) {
   const audioNamespace = io.of("/gpa-audio-call");
@@ -162,6 +164,61 @@ function initialize(io) {
             role: socket.user.role
           }
         });
+
+        // ========================================================
+// GPA AUDIO CALL — FCM INCOMING-CALL NOTIFICATION
+// This must never interrupt the existing call flow.
+// ========================================================
+(async () => {
+    try {
+        const recipientForPush = await User.findById(recipientId)
+            .select("fcmToken")
+            .lean();
+
+        const fcmToken =
+            typeof recipientForPush?.fcmToken === "string"
+                ? recipientForPush.fcmToken.trim()
+                : "";
+
+        if (!fcmToken) {
+            console.log(
+                "[GPA AUDIO CALL] Recipient has no FCM token:",
+                recipientId
+            );
+            return;
+        }
+
+        const pushResult = await sendPushNotification({
+            token: fcmToken,
+            title: "Incoming GPA Audio Call",
+            body: `${socket.user.name || "Academy user"} is calling you.`,
+            data: {
+                type: "incoming_call",
+                callId: String(callId),
+                callerId: String(userId),
+                callerName: String(socket.user.name || "Academy user"),
+                url: "/messenger/messenger.html"
+            }
+        });
+
+        if (pushResult.success) {
+            console.log(
+                "[GPA AUDIO CALL] Incoming-call push sent:",
+                callId
+            );
+        } else {
+            console.warn(
+                "[GPA AUDIO CALL] Push notification failed:",
+                pushResult.reason
+            );
+        }
+    } catch (pushError) {
+        console.error(
+            "[GPA AUDIO CALL] Push notification error:",
+            pushError.message
+        );
+    }
+})();
 
         if (typeof acknowledge === "function") {
           acknowledge({
