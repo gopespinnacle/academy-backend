@@ -89,6 +89,70 @@ function normalizeScheduleAssignments(assignments, scheduleData = {}) {
         }));
 }
 
+function timeToMinutes(time) {
+    if (!/^\d{2}:\d{2}$/.test(time || "")) return NaN;
+
+    const [hours, minutes] = time.split(":").map(Number);
+
+    if (hours > 23 || minutes > 59) return NaN;
+
+    return hours * 60 + minutes;
+}
+
+async function findTeacherScheduleClash({
+    teacher,
+    day,
+    startTime,
+    endTime,
+    excludeId = null
+}) {
+    const start = timeToMinutes(startTime);
+    const end = timeToMinutes(endTime);
+
+    if (
+        !teacher ||
+        !day ||
+        !Number.isFinite(start) ||
+        !Number.isFinite(end) ||
+        end <= start
+    ) {
+        return {
+            invalid: true,
+            message: "Please select a teacher and enter a valid day and time."
+        };
+    }
+
+    const query = { teacher, day };
+
+    if (excludeId) {
+        query._id = { $ne: excludeId };
+    }
+
+    const existingSchedules = await TeacherStudentSchedule.find(query);
+
+    const clash = existingSchedules.find(schedule => {
+        const oldStart = timeToMinutes(schedule.startTime);
+        const oldEnd = timeToMinutes(schedule.endTime);
+
+        if (!Number.isFinite(oldStart) || !Number.isFinite(oldEnd)) {
+            return false;
+        }
+
+        // Require at least a 2-minute gap between classes.
+        return start < oldEnd + 2 && end > oldStart - 2;
+    });
+
+    if (!clash) return null;
+
+    return {
+        clash: true,
+        message:
+            `Teacher already has a class on ${day}, ` +
+            `${clash.startTime}–${clash.endTime}. ` +
+            "Keep at least a 2-minute gap between classes."
+    };
+}
+
 async function syncLegacyPeriodAssignments(schedule) {
     await PeriodAssignment.deleteMany({ teacherSchedule: schedule._id });
     const activityNames = [...new Set([...(schedule.subject || []), ...(schedule.language || []), ...(schedule.eca || [])].filter(Boolean))];
@@ -2305,6 +2369,28 @@ router.post("/add-schedule", protect, authorize("founder"), async (req, res) => 
     eca: Array.isArray(req.body.eca) ? req.body.eca : (req.body.eca ? [req.body.eca] : [])
 })
         };
+
+        const clashResult = await findTeacherScheduleClash({
+    teacher: payload.teacher,
+    day: payload.day,
+    startTime: payload.startTime,
+    endTime: payload.endTime
+});
+
+if (clashResult?.invalid) {
+    return res.status(400).json({
+        success: false,
+        message: clashResult.message
+    });
+}
+
+if (clashResult?.clash) {
+    return res.status(409).json({
+        success: false,
+        clash: true,
+        message: clashResult.message
+    });
+}
         const schedule = await TeacherStudentSchedule.create(payload);
         
         res.status(201).json({ success: true, message: "Schedule and student mapping saved", scheduleId: schedule._id, schedule });
@@ -2341,6 +2427,29 @@ router.put("/update-schedule/:id", protect, authorize("founder"), async (req, re
         subject: schedule.subject || [],
         language: schedule.language || [],
         eca: schedule.eca || []
+    });
+}
+
+const clashResult = await findTeacherScheduleClash({
+    teacher: schedule.teacher,
+    day: schedule.day,
+    startTime: schedule.startTime,
+    endTime: schedule.endTime,
+    excludeId: schedule._id
+});
+
+if (clashResult?.invalid) {
+    return res.status(400).json({
+        success: false,
+        message: clashResult.message
+    });
+}
+
+if (clashResult?.clash) {
+    return res.status(409).json({
+        success: false,
+        clash: true,
+        message: clashResult.message
     });
 }
         await schedule.save();
