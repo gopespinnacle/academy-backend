@@ -2,13 +2,35 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
-
+let activeCallLookup = () => null;
 function initialize(io) {
   const audioNamespace = io.of("/gpa-audio-call");
 
   // Active calls are kept in memory for this initial version.
   const activeCalls = new Map();
   const userActiveCalls = new Map();
+
+
+    activeCallLookup = (callId, userId) => {
+    const call = activeCalls.get(String(callId));
+
+    if (
+        !call ||
+        call.status !== "active" ||
+        (
+            call.callerId !== String(userId) &&
+            call.recipientId !== String(userId)
+        )
+    ) {
+        return null;
+    }
+
+    return {
+        callId: call.callId,
+        roomName: `gpa-audio-${call.callId}`,
+        userId: String(userId)
+    };
+};
 
   function sendError(acknowledge, message) {
     if (typeof acknowledge === "function") {
@@ -241,6 +263,41 @@ function initialize(io) {
       }
     });
 
+    
+    // Coordinate LiveKit fallback for both participants.
+    socket.on("call:fallback-request", (data = {}, acknowledge) => {
+        const call = activeCalls.get(String(data.callId || ""));
+
+        if (
+            !call ||
+            call.status !== "active" ||
+            (call.callerId !== userId && call.recipientId !== userId)
+        ) {
+            return sendError(acknowledge, "No active call found for fallback.");
+        }
+
+        const fallbackData = {
+            callId: call.callId,
+            roomName: `gpa-audio-${call.callId}`
+        };
+
+        // Notify both participants so they join the same LiveKit room.
+        audioNamespace.to(`user:${call.callerId}`).emit(
+            "call:fallback",
+            fallbackData
+        );
+
+        audioNamespace.to(`user:${call.recipientId}`).emit(
+            "call:fallback",
+            fallbackData
+        );
+
+        if (typeof acknowledge === "function") {
+            acknowledge({ ok: true });
+        }
+    });
+
+
     // Either participant can end an existing call.
     socket.on("call:end", (data = {}, acknowledge) => {
       const call = activeCalls.get(String(data.callId || ""));
@@ -271,4 +328,9 @@ function initialize(io) {
   });
 }
 
-module.exports = { initialize };
+module.exports = {
+    initialize,
+
+    getActiveCallForUser: (...args) =>
+        activeCallLookup(...args)
+};
