@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const User = require("../models/User");
 const { sendPushNotification } =
-    require("../../services/fcmService");
+    require("../services/fcmService");
 let activeCallLookup = () => null;
 function initialize(io) {
   const audioNamespace = io.of("/gpa-audio-call");
