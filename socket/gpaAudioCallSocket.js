@@ -94,6 +94,60 @@ function initialize(io) {
 
     console.log("GPA Audio Call connected:", userId);
 
+    // Recover a ringing call when the recipient reconnects.
+socket.on("call:check-pending", async (acknowledge) => {
+    try {
+        const callId = userActiveCalls.get(userId);
+        const call = callId ? activeCalls.get(callId) : null;
+
+        if (
+            !call ||
+            call.status !== "ringing" ||
+            call.recipientId !== userId
+        ) {
+            if (typeof acknowledge === "function") {
+                acknowledge({ ok: true, pending: false });
+            }
+            return;
+        }
+
+        const caller = await User.findById(call.callerId)
+            .select("name role")
+            .lean();
+
+        if (!caller) {
+            if (typeof acknowledge === "function") {
+                acknowledge({ ok: true, pending: false });
+            }
+            return;
+        }
+
+        const incomingCall = {
+            callId: call.callId,
+            caller: {
+                id: call.callerId,
+                name: caller.name || "Academy user",
+                role: caller.role
+            }
+        };
+
+        socket.emit("call:incoming", incomingCall);
+
+        if (typeof acknowledge === "function") {
+            acknowledge({ ok: true, pending: true });
+        }
+    } catch (error) {
+        console.error(
+            "[GPA AUDIO CALL] Pending-call recovery error:",
+            error.message
+        );
+
+        if (typeof acknowledge === "function") {
+            acknowledge({ ok: false });
+        }
+    }
+});
+
     // Only founders and admins can initiate calls.
     socket.on("call:invite", async (data = {}, acknowledge) => {
       try {
@@ -374,14 +428,26 @@ function initialize(io) {
     });
 
     socket.on("disconnect", () => {
-      const callId = userActiveCalls.get(userId);
+    const callId = userActiveCalls.get(userId);
+    const call = callId ? activeCalls.get(callId) : null;
 
-      if (callId) {
-        endCall(callId, "connection-lost");
-      }
+    if (call) {
+        // Preserve an unanswered call when its recipient disconnects.
+        if (
+            call.status === "ringing" &&
+            call.recipientId === userId
+        ) {
+            console.log(
+                "[GPA AUDIO CALL] Recipient disconnected; preserving ringing call:",
+                call.callId
+            );
+        } else {
+            endCall(callId, "connection-lost");
+        }
+    }
 
-      console.log("GPA Audio Call disconnected:", userId);
-    });
+    console.log("GPA Audio Call disconnected:", userId);
+});
   });
 }
 
