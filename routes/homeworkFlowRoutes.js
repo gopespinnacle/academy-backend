@@ -354,4 +354,56 @@ router.patch("/homework-flow/assignments/:id/status", authenticate, allowRoles("
     }
 });
 
+// Founder: read-only tracking for HomeworkAssignment + HomeworkSubmission.
+// Add this route in the same homework-flow router, before module.exports.
+router.get(
+    "/homework-flow/founder/assignments",
+    authenticate,
+    allowRoles("founder", "admin"),
+    async (req, res) => {
+        try {
+            const assignments = await HomeworkAssignment.find({})
+                .populate("teacher", "name teacherId mobile")
+                .populate("assignedStudents", "name studentId mobile")
+                .sort({ createdAt: -1 })
+                .lean();
+
+            const homeworkIds = assignments.map(item => item._id);
+
+            const submissions = homeworkIds.length
+                ? await HomeworkSubmission.find({ homework: { $in: homeworkIds } })
+                    .populate("student", "name studentId mobile")
+                    .populate("reviewedBy", "name teacherId")
+                    .sort({ submittedAt: -1 })
+                    .lean()
+                : [];
+
+            const submissionsByHomework = new Map();
+
+            for (const submission of submissions) {
+                const key = String(submission.homework);
+                if (!submissionsByHomework.has(key)) {
+                    submissionsByHomework.set(key, []);
+                }
+                submissionsByHomework.get(key).push(submission);
+            }
+
+            return res.json({
+                success: true,
+                data: assignments.map(homework => ({
+                    ...homework,
+                    submissions: submissionsByHomework.get(String(homework._id)) || []
+                }))
+            });
+        } catch (error) {
+            console.error("HOMEWORK FLOW FOUNDER TRACKING ERROR:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Could not load founder homework tracking."
+            });
+        }
+    }
+);
+
+
 module.exports = router;
