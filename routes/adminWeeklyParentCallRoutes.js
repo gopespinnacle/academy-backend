@@ -119,28 +119,150 @@ router.get("/academic/:studentId", async (req, res) => {
         const present = knownAttendance.filter(r => r.attendance === "Present").length;
         const absent = knownAttendance.filter(r => r.attendance === "Absent").length;
 
+        
+        // TOPICS COMPLETED — FILTER FOR THE SELECTED STUDENT AND WEEK
         const topics = [];
+
+        // Find only schedules where this student is assigned.
+        const studentSchedules = await TeacherStudentSchedule.find({
+            "assignments.student": student._id
+        })
+            .populate("teacher", "name teacherId")
+            .lean();
+
+        // Build the student's valid class/teacher/subject combinations.
+        const studentScheduleKeys = new Set();
+
+        for (const schedule of studentSchedules) {
+            const assigned = (schedule.assignments || []).find(
+                item => String(item.student?._id || item.student) === String(student._id)
+            );
+
+            if (!assigned) continue;
+
+            const allowedSubjects = [
+                ...(assigned.subjects || []),
+                ...(assigned.languages || []),
+                ...(assigned.eca || []),
+                ...(schedule.subject || []),
+                ...(schedule.language || []),
+                ...(schedule.eca || [])
+            ]
+                .map(value => String(value).trim().toLowerCase())
+                .filter(Boolean);
+
+            studentScheduleKeys.add(JSON.stringify({
+                className: String(schedule.className || "").trim().toLowerCase(),
+                teacherId: String(schedule.teacher?._id || schedule.teacher || ""),
+                subjects: [...new Set(allowedSubjects)]
+            }));
+        }
+
+        // Check whether a lesson plan belongs to one of the student's schedules.
         for (const plan of plans) {
             const planDate = plan.date ? new Date(plan.date) : null;
-            const inWeek = planDate && Number.isFinite(planDate.getTime())
-                ? planDate >= bounds.start && planDate <= bounds.end
-                : (String(plan.date || "") >= bounds.start.toISOString().slice(0, 10) &&
-                   String(plan.date || "") <= bounds.end.toISOString().slice(0, 10));
-            if (!inWeek) continue;
-            const schedule = plan.periodId ? null : null;
+
+            if (
+                !planDate ||
+                !Number.isFinite(planDate.getTime()) ||
+                planDate < bounds.start ||
+                planDate > bounds.end
+            ) {
+                continue;
+            }
+
+            const planClass = String(plan.className || "").trim().toLowerCase();
+            const planTeacherId = String(plan.teacherId || "");
+            const planTeacherName = String(plan.teacherName || "").trim().toLowerCase();
+
+            const matchingSchedule = studentSchedules.find(schedule => {
+                const assigned = (schedule.assignments || []).some(
+                    item => String(item.student?._id || item.student) === String(student._id)
+                );
+
+                if (!assigned) return false;
+
+                const sameClass =
+                    String(schedule.className || "").trim().toLowerCase() === planClass;
+
+                const sameTeacher =
+                    String(schedule.teacher?._id || schedule.teacher || "") === planTeacherId ||
+                    (
+                        schedule.teacher?.name &&
+                        schedule.teacher.name.trim().toLowerCase() === planTeacherName
+                    );
+
+                return sameClass && sameTeacher;
+            });
+
+            if (!matchingSchedule) continue;
+
+            const assigned = (matchingSchedule.assignments || []).find(
+                item => String(item.student?._id || item.student) === String(student._id)
+            );
+
+            const allowedSubjects = [
+                ...(assigned?.subjects || []),
+                ...(assigned?.languages || []),
+                ...(assigned?.eca || []),
+                ...(matchingSchedule.subject || []),
+                ...(matchingSchedule.language || []),
+                ...(matchingSchedule.eca || [])
+            ].map(value => String(value).trim().toLowerCase());
+
             for (const lesson of plan.lessons || []) {
-                if (lesson.topic || lesson.topicSummary) topics.push({
-                    date: plan.date, className: plan.className, subject: lesson.subject || plan.subject,
-                    topic: lesson.topic || "", summary: lesson.topicSummary || "", teacher: plan.teacherName || ""
+                const topic = String(lesson.topic || "").trim();
+                const subject = String(lesson.subject || plan.subject || "").trim();
+
+                if (!topic) continue;
+
+                // If the schedule specifies subjects, only include matching subjects.
+                if (
+                    allowedSubjects.length > 0 &&
+                    !allowedSubjects.includes(subject.toLowerCase())
+                ) {
+                    continue;
+                }
+
+                topics.push({
+                    date: plan.date,
+                    className: plan.className || matchingSchedule.className,
+                    subject,
+                    topic,
+                    summary: lesson.topicSummary || "",
+                    teacher: plan.teacherName || matchingSchedule.teacher?.name || ""
                 });
             }
         }
-        for (const r of studentRegisters) {
-            if (r.topicCovered && !topics.some(t => t.topic === r.topicCovered && String(t.date) === String(r.date))) {
-                topics.push({ date: r.date, className: r.className, subject: r.subject, topic: r.topicCovered, summary: "", teacher: r.teacher?.name || "" });
+
+        // Add topics from this student's own class registers.
+        for (const register of studentRegisters) {
+            const topic = String(register.topicCovered || "").trim();
+
+            if (!topic) continue;
+
+            const alreadyExists = topics.some(item =>
+                item.topic === topic &&
+                String(item.date).slice(0, 10) ===
+                    String(register.date).slice(0, 10) &&
+                String(item.className || "").trim().toLowerCase() ===
+                    String(register.className || "").trim().toLowerCase()
+            );
+
+            if (!alreadyExists) {
+                topics.push({
+                    date: register.date,
+                    className: register.className || "",
+                    subject: register.subject || "",
+                    topic,
+                    summary: "",
+                    teacher: register.teacher?.name || ""
+                });
             }
         }
+
         topics.sort((a, b) => new Date(a.date) - new Date(b.date));
+
 
         const legacyWeek = legacyHomework.filter(h => {
             const dt = h.createdAt || h.lessonPlan?.date;
