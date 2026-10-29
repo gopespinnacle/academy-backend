@@ -1061,8 +1061,10 @@ router.get("/student-homework/:studentId", async (req, res) => {
             const plan = hw.lessonPlan.toObject();
 
             plan.lessons = (plan.lessons || []).filter(
-                lesson => lesson.topicId === hw.topicId
-            );
+    lesson =>
+        String(lesson.topicId || "") ===
+        String(hw.topicId || "")
+);
 
             finalData.push({
 
