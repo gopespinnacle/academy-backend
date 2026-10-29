@@ -185,17 +185,7 @@ socket.on("call:check-pending", async (acknowledge) => {
           return sendError(acknowledge, "Recipient not found.");
         }
 
-        // Do not report success if the recipient is offline.
-        const recipientSockets = await audioNamespace
-          .in(`user:${recipientId}`)
-          .fetchSockets();
-
-        if (recipientSockets.length === 0) {
-          return sendError(
-            acknowledge,
-            "Recipient is offline. They must be connected to receive the call."
-          );
-        }
+        
 
         const callId = crypto.randomUUID();
 
