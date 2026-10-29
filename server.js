@@ -179,6 +179,8 @@ const admissionAccountRoutes =
 const studentRoutes =
     require("./routes/studentRoutes");
 
+    const weeklyParentCallRoutes = require("./routes/weeklyParentCallRoutes");
+
     const studentMaterialRoutes = require("./routes/studentMaterialRoutes");
 
        
@@ -622,6 +624,8 @@ app.use(
     "/api/student",
     studentRoutes
 );
+
+app.use("/api/founder/weekly-parent-calls", weeklyParentCallRoutes);
 
 
 app.use("/api/student-materials", studentMaterialRoutes);
