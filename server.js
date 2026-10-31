@@ -7,9 +7,11 @@ const http = require("http");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const multer = require("multer");
+
 const {
     uploadFile: uploadToS3
 } = require("./config/s3");
+
 const jwt = require("jsonwebtoken");
 const { Server } = require("socket.io");
 
@@ -707,7 +709,7 @@ app.use(
 
 
 // =========================================================
-// UPLOAD FILE TO AWS S3
+// UPLOAD FILE — AWS S3
 // =========================================================
 
 app.post(
@@ -718,18 +720,15 @@ app.post(
         try {
 
             if (!req.file) {
-
                 return res.status(400).json({
                     success: false,
                     message: "No file uploaded"
                 });
-
             }
 
-            // Upload directly to S3
             const uploaded = await uploadToS3(
                 req.file,
-                "Homework"
+                "Homework/HomeworkDocuments"
             );
 
             console.log(
@@ -738,31 +737,19 @@ app.post(
             );
 
             return res.json({
-
                 success: true,
-
                 url: uploaded.Location,
-
                 key: uploaded.Key
-
             });
 
-        }
-        catch (err) {
+        } catch (err) {
 
-            console.error(
-                "S3 FILE UPLOAD ERROR:",
-                err
-            );
+            console.error("S3 UPLOAD ERROR:", err);
 
             return res.status(500).json({
-
                 success: false,
-
                 message: "File upload failed",
-
                 error: err.message
-
             });
 
         }
