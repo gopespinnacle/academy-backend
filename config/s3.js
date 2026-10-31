@@ -28,15 +28,20 @@ exports.uploadFile = async (file, folder) => {
 
     await client.send(new PutObjectCommand({
 
-        Bucket: process.env.AWS_BUCKET,
+    Bucket: process.env.AWS_BUCKET,
 
-        Key: key,
+    Key: key,
 
-        Body: file.buffer,
+    Body: file.buffer,
 
-        ContentType: file.mimetype
+    ContentType: file.mimetype,
 
-    }));
+    ContentDisposition:
+        file.mimetype === "application/pdf"
+            ? "inline"
+            : "attachment"
+
+}));
 
     return {
 

@@ -7,6 +7,9 @@ const http = require("http");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const multer = require("multer");
+const {
+    uploadFile: uploadToS3
+} = require("./config/s3");
 const jwt = require("jsonwebtoken");
 const { Server } = require("socket.io");
 
@@ -46,32 +49,18 @@ const meetingMemory =
 // FILE STORAGE
 // =========================================================
 
-const storageFile = multer.diskStorage({
+// =========================================================
+// S3 FILE UPLOAD STORAGE
+// =========================================================
 
-    destination: function (req, file, cb) {
+const storageFile = multer.memoryStorage();
 
-        cb(null, "uploads/");
-
-    },
-
-    filename: function (req, file, cb) {
-
-        const ext =
-            file.originalname.split(".").pop();
-
-        const fileName =
-            Date.now() + "." + ext;
-
-        cb(null, fileName);
-
+const uploadFile = multer({
+    storage: storageFile,
+    limits: {
+        fileSize: 25 * 1024 * 1024
     }
-
 });
-
-const uploadFile =
-    multer({
-        storage: storageFile
-    });
 
 
 // =========================================================
@@ -718,46 +707,65 @@ app.use(
 
 
 // =========================================================
-// UPLOAD FILE
+// UPLOAD FILE TO AWS S3
 // =========================================================
 
 app.post(
     "/upload-file",
     uploadFile.single("file"),
-    (req, res) => {
+    async (req, res) => {
 
-        if (!req.file) {
+        try {
 
-            return res.status(400).json({
+            if (!req.file) {
 
-                success: false,
+                return res.status(400).json({
+                    success: false,
+                    message: "No file uploaded"
+                });
 
-                message: "No file uploaded"
+            }
+
+            // Upload directly to S3
+            const uploaded = await uploadToS3(
+                req.file,
+                "Homework"
+            );
+
+            console.log(
+                "FILE UPLOADED TO S3:",
+                uploaded.Location
+            );
+
+            return res.json({
+
+                success: true,
+
+                url: uploaded.Location,
+
+                key: uploaded.Key
 
             });
 
         }
+        catch (err) {
 
-        const filePath =
-            path.join(
-                __dirname,
-                "uploads",
-                req.file.filename
+            console.error(
+                "S3 FILE UPLOAD ERROR:",
+                err
             );
 
-        const fileUrl =
-            `https://academy-backend-eatl.onrender.com/uploads/${req.file.filename}`;
+            return res.status(500).json({
 
-        res.setHeader(
-            "Content-Type",
-            req.file.mimetype
-        );
+                success: false,
 
-        res.json({
+                message: "File upload failed",
 
-            url: fileUrl
+                error: err.message
 
-        });
+            });
+
+        }
 
     }
 );
