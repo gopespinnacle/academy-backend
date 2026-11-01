@@ -912,6 +912,10 @@ app.use(
 const PeriodAssignment =
     require("./models/PeriodAssignment");
 
+    const TeacherStudentSchedule =
+    require("./models/TeacherStudentSchedule");
+
+
 const LessonPlan =
     require("./models/LessonPlan");
 
@@ -926,16 +930,12 @@ app.get(
         try {
 
             const data =
-                await PeriodAssignment
+                await TeacherStudentSchedule
                     .find()
-                    .populate(
-                        "teacher",
-                        "name"
-                    )
-                    .populate(
-                        "assignments.student",
-                        "name"
-                    );
+                    .populate("teacher", "name")
+                    .populate("assistantTeacher", "name")
+                    .populate("assignments.student", "name grade")
+                    .lean();
 
             res.json({
                 data
@@ -947,10 +947,7 @@ app.get(
             console.log(err);
 
             res.status(500).json({
-
-                message:
-                    "Error fetching periods"
-
+                message: "Error fetching teacher-student schedules"
             });
 
         }
