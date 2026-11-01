@@ -179,24 +179,10 @@ socket.on("call:check-pending", async (acknowledge) => {
         }
 
         const recipient = await User.findById(recipientId)
-          .select("_id name role");
+    .select("_id name role fcmToken");
 
-        if (!recipient) {
-          return sendError(acknowledge, "Recipient not found.");
-        }
-
-        // Check whether the recipient is currently connected.
-const recipientSockets = await audioNamespace
-    .in(`user:${recipientId}`)
-    .fetchSockets();
-
-if (recipientSockets.length === 0) {
-    endCall(callId, "recipient-offline");
-
-    return sendError(
-        acknowledge,
-        "Recipient is offline. They must be logged in to receive calls."
-    );
+if (!recipient) {
+    return sendError(acknowledge, "Recipient not found.");
 }
 
         const callId = crypto.randomUUID();
@@ -220,6 +206,57 @@ if (recipientSockets.length === 0) {
             role: socket.user.role
           }
         });
+
+        // ============================================
+// GPA AUDIO CALL — ANDROID FCM NOTIFICATION
+// ============================================
+
+try {
+
+    const fcmToken = recipient.fcmToken;
+
+    if (fcmToken) {
+
+        const pushResult = await sendPushNotification({
+
+            token: fcmToken,
+
+            title: "Incoming GPA Audio Call",
+
+            body: `${socket.user.name} is calling you`,
+
+            data: {
+                type: "incoming_audio_call",
+                callId: String(callId),
+                callerId: String(userId),
+                callerName: String(socket.user.name),
+                callerRole: String(socket.user.role)
+            }
+
+        });
+
+        console.log(
+            "[GPA AUDIO CALL FCM] Notification result:",
+            pushResult
+        );
+
+    } else {
+
+        console.log(
+            "[GPA AUDIO CALL FCM] Recipient has no FCM token:",
+            recipientId
+        );
+
+    }
+
+} catch (fcmError) {
+
+    console.error(
+        "[GPA AUDIO CALL FCM] Notification failed:",
+        fcmError.message
+    );
+
+}
 
         
 
