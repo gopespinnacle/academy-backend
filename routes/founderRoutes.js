@@ -2405,6 +2405,161 @@ router.get("/schedules", protect, authorize("founder"), async (req, res) => {
 });
 
 
+
+/* ==========================================
+   GET ASSIGNED PERIODS FOR ONE STUDENT
+========================================== */
+
+router.get(
+    "/student/:id/assigned-periods",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            const studentId = req.params.id;
+
+            if (!mongoose.isValidObjectId(studentId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid student ID"
+                });
+            }
+
+            const student = await User.findOne({
+                _id: studentId,
+                role: "student"
+            }).select("_id name");
+
+            if (!student) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Student not found"
+                });
+            }
+
+            const schedules = await TeacherStudentSchedule.find({
+                "assignments.student": studentId
+            })
+                .populate("teacher", "name teacherId")
+                .populate("assistantTeacher", "name teacherId")
+                .populate("assignments.student", "name studentId")
+                .sort({ day: 1, startTime: 1 });
+
+            const periods = schedules.map(schedule => {
+
+                const assignment = schedule.assignments.find(a =>
+                    a.student &&
+                    a.student._id.toString() === studentId
+                );
+
+                if (!assignment) return null;
+
+                return {
+                    scheduleId: schedule._id,
+
+                    teacher: schedule.teacher?.name || "Not assigned",
+
+                    assistantTeacher:
+                        schedule.assistantTeacher?.name || "Not assigned",
+
+                    className: schedule.className,
+
+                    day: schedule.day,
+
+                    startTime: schedule.startTime,
+
+                    endTime: schedule.endTime,
+
+                    subjects: assignment.subjects || [],
+
+                    languages: assignment.languages || [],
+
+                    eca: assignment.eca || []
+                };
+
+            }).filter(Boolean);
+
+            return res.json({
+                success: true,
+                student: student.name,
+                totalPeriods: periods.length,
+                periods
+            });
+
+        } catch (error) {
+            console.error("STUDENT ASSIGNED PERIODS ERROR:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to load student periods"
+            });
+        }
+    }
+);
+
+
+/* ==========================================
+   REMOVE ONE STUDENT FROM A SCHEDULE
+   DOES NOT DELETE THE WHOLE TEACHER CLASS
+========================================== */
+
+router.delete(
+    "/student-period/:scheduleId/:studentId",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            const { scheduleId, studentId } = req.params;
+
+            if (
+                !mongoose.isValidObjectId(scheduleId) ||
+                !mongoose.isValidObjectId(studentId)
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid ID"
+                });
+            }
+
+            const schedule = await TeacherStudentSchedule.findOne({
+                _id: scheduleId,
+                "assignments.student": studentId
+            });
+
+            if (!schedule) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Student assignment not found"
+                });
+            }
+
+            schedule.assignments = schedule.assignments.filter(
+                a => a.student.toString() !== studentId
+            );
+
+            await schedule.save();
+
+            // Keep legacy period records synchronized.
+            await syncLegacyPeriodAssignments(schedule);
+
+            return res.json({
+                success: true,
+                message: "Student removed from this period"
+            });
+
+        } catch (error) {
+            console.error("REMOVE STUDENT PERIOD ERROR:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to remove student from period"
+            });
+        }
+    }
+);
+
+
+
 router.get("/period/:id", protect, authorize("founder"), async (req, res) => {
     try {
         const schedule = await TeacherStudentSchedule.findById(req.params.id).populate("teacher", "name subject").populate("assignments.student", "name studentId");
