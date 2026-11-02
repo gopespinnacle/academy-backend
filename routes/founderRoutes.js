@@ -44,6 +44,8 @@ const {
 const TeacherLeave = require("../models/TeacherLeave");
 const DailyClassRegister =
     require("../models/DailyClassRegister");
+
+
 const MonthlyFee = require("../models/MonthlyFee");
 
 const FinanceCategory = require("../models/FinanceCategory");
@@ -2405,6 +2407,99 @@ router.get("/schedules", protect, authorize("founder"), async (req, res) => {
         res.json({ schedules });
     } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 });
+
+/* ==========================================
+   DAILY SCHEDULE REGISTER & HOMEWORK STATUS
+========================================== */
+
+router.get(
+    "/schedule-entry-status",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            const { date } = req.query;
+
+            if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Valid date is required."
+                });
+            }
+
+            const [year, month, day] = date.split("-").map(Number);
+
+            const startDate = new Date(year, month - 1, day);
+            const endDate = new Date(year, month - 1, day + 1);
+
+            if (
+                startDate.getFullYear() !== year ||
+                startDate.getMonth() !== month - 1 ||
+                startDate.getDate() !== day
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid date."
+                });
+            }
+
+            const [registers, homework] = await Promise.all([
+
+                DailyClassRegister.find({
+                    date: {
+                        $gte: startDate,
+                        $lt: endDate
+                    }
+                }).select("periodAssignment"),
+
+                HomeworkAssignment.find({
+                    createdAt: {
+                        $gte: startDate,
+                        $lt: endDate
+                    }
+                }).select("schedule")
+
+            ]);
+
+            const registerIds = [
+                ...new Set(
+                    registers.map(item =>
+                        String(item.periodAssignment)
+                    )
+                )
+            ];
+
+            const homeworkIds = [
+                ...new Set(
+                    homework.map(item =>
+                        String(item.schedule)
+                    )
+                )
+            ];
+
+            return res.json({
+                success: true,
+                date,
+                statuses: {
+                    registers: registerIds,
+                    homework: homeworkIds
+                }
+            });
+
+        } catch (error) {
+
+            console.error(
+                "SCHEDULE ENTRY STATUS ERROR:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to load schedule entry statuses."
+            });
+        }
+    }
+);
 
 /* =========================================================
    FOUNDER - EXACT SCHEDULE DETAILS
