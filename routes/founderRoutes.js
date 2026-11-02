@@ -53,6 +53,8 @@ const Assessment = require("../models/Assessment");
 const AuditLog = require("../models/AuditLog");
 const TeacherSchedule = require("../models/TeacherSchedule");
 const TeacherStudentSchedule = require("../models/TeacherStudentSchedule");
+const HomeworkAssignment = require("../models/HomeworkAssignment");
+const HomeworkSubmission = require("../models/HomeworkSubmission");
 const TeacherSession = require("../models/TeacherSession");
 const TeacherAttendance = require("../models/TeacherAttendance");
 const TeacherStudentMap = require("../models/TeacherStudentMap");
@@ -2403,6 +2405,133 @@ router.get("/schedules", protect, authorize("founder"), async (req, res) => {
         res.json({ schedules });
     } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 });
+
+/* =========================================================
+   FOUNDER - EXACT SCHEDULE DETAILS
+   ========================================================= */
+
+router.get(
+    "/schedule-details/:scheduleId",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            const { scheduleId } = req.params;
+            const { date } = req.query;
+
+            // Validate schedule ID
+            if (!mongoose.isValidObjectId(scheduleId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid schedule ID."
+                });
+            }
+
+            // Validate selected date
+            if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "A valid selected date is required."
+                });
+            }
+
+            const selectedDate = new Date(`${date}T00:00:00`);
+
+            if (
+                isNaN(selectedDate.getTime()) ||
+                selectedDate.toISOString().slice(0, 10) !== date
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid date."
+                });
+            }
+
+            const nextDate = new Date(selectedDate);
+            nextDate.setDate(nextDate.getDate() + 1);
+
+            // 1. Exact schedule
+            const schedule = await TeacherStudentSchedule.findById(scheduleId)
+                .populate("teacher", "name teacherId")
+                .populate("assistantTeacher", "name teacherId")
+                .populate("assignments.student", "name studentId");
+
+            if (!schedule) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Schedule not found."
+                });
+            }
+
+            // 2. Exact schedule + selected date register
+            const register = await DailyClassRegister.findOne({
+                periodAssignment: schedule._id,
+                date: {
+                    $gte: selectedDate,
+                    $lt: nextDate
+                }
+            })
+                .populate("teacher", "name teacherId")
+                .lean();
+
+            // 3. Homework belonging only to this schedule
+            const homework = await HomeworkAssignment.find({
+                schedule: schedule._id
+            })
+                .populate("teacher", "name teacherId")
+                .populate("assignedStudents", "name studentId")
+                .sort({ createdAt: -1 })
+                .lean();
+
+            // 4. Submissions belonging only to this schedule's homework
+            const homeworkIds = homework.map(item => item._id);
+
+            const submissions = homeworkIds.length
+                ? await HomeworkSubmission.find({
+                    homework: { $in: homeworkIds }
+                })
+                    .populate("student", "name studentId")
+                    .populate("reviewedBy", "name teacherId")
+                    .sort({ submittedAt: -1 })
+                    .lean()
+                : [];
+
+            const submissionsByHomework = {};
+
+            for (const submission of submissions) {
+                const key = String(submission.homework);
+
+                if (!submissionsByHomework[key]) {
+                    submissionsByHomework[key] = [];
+                }
+
+                submissionsByHomework[key].push(submission);
+            }
+
+            const homeworkWithSubmissions = homework.map(item => ({
+                ...item,
+                submissions:
+                    submissionsByHomework[String(item._id)] || []
+            }));
+
+            return res.json({
+                success: true,
+                selectedDate: date,
+                schedule,
+                register,
+                homework: homeworkWithSubmissions
+            });
+
+        } catch (error) {
+            console.error("FOUNDER SCHEDULE DETAILS ERROR:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to load schedule details."
+            });
+        }
+    }
+);
 
 
 
