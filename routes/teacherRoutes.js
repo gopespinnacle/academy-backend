@@ -745,7 +745,10 @@ router.get("/all-period-assignments", async (req, res) => {
         const teacherId = decoded.id;
 
         const assignments = await TeacherStudentSchedule.find({
-    teacher: teacherId
+    $or: [
+        { teacher: teacherId },
+        { assistantTeacher: teacherId }
+    ]
 }).populate(
     "assignments.student",
     "name studentId"
