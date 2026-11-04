@@ -756,55 +756,112 @@ router.get("/all-period-assignments", async (req, res) => {
 
 const grouped = [];
 
-assignments.forEach(a=>{
+
+assignments.forEach(a => {
 
     const existing = grouped.find(x =>
-
-    x.className === a.className &&
-
-    JSON.stringify(x.subject) === JSON.stringify(a.subject) &&
-
-    JSON.stringify(x.language) === JSON.stringify(a.language) &&
-
-    JSON.stringify(x.eca) === JSON.stringify(a.eca) &&
-
-    x.day === a.day &&
-
-    x.startTime === a.startTime &&
-
-    x.endTime === a.endTime
-
-);
-
-    if(existing){
-
-    existing.students.push(
-
-        ...a.assignments.map(x => x.student)
-
+        x.className === a.className &&
+        JSON.stringify(x.subject) === JSON.stringify(a.subject) &&
+        JSON.stringify(x.language) === JSON.stringify(a.language) &&
+        JSON.stringify(x.eca) === JSON.stringify(a.eca) &&
+        x.day === a.day &&
+        x.startTime === a.startTime &&
+        x.endTime === a.endTime
     );
 
-}else{
+    // Create a new grouped period if it does not exist
+    let period = existing;
 
-    grouped.push({
+    if (!period) {
 
-    periodId: a._id,
+        period = {
+            periodId: a._id,
+            className: a.className,
+            subject: a.subject,
+            language: a.language,
+            eca: a.eca,
+            day: a.day,
+            startTime: a.startTime,
+            endTime: a.endTime,
+            students: [],
+            assignments: []
+        };
 
-    className: a.className,
-    subject: a.subject,
-    language: a.language,
-    eca: a.eca,
-    day: a.day,
-    startTime: a.startTime,
-    endTime: a.endTime,
+        grouped.push(period);
+    }
 
-    students: a.assignments.map(x => x.student)
+    // Collect individual student assignments
+    (a.assignments || []).forEach(assignment => {
+
+        const student = assignment.student;
+
+        if (!student) return;
+
+        const studentId = String(student._id || student);
+
+        if (!studentId || studentId === "undefined") return;
+
+        // Check whether this student is already in this period
+        let studentAssignment = period.assignments.find(
+            x => String(x.student._id) === studentId
+        );
+
+        if (!studentAssignment) {
+
+            studentAssignment = {
+                student: {
+                    _id: studentId,
+                    name: student.name || "",
+                    studentId: student.studentId || ""
+                },
+                subjects: [],
+                languages: [],
+                eca: []
+            };
+
+            period.assignments.push(studentAssignment);
+        }
+
+        // Merge individual assignments without duplicates
+        studentAssignment.subjects = [
+            ...new Set([
+                ...studentAssignment.subjects,
+                ...(assignment.subjects || [])
+            ])
+        ];
+
+        studentAssignment.languages = [
+            ...new Set([
+                ...studentAssignment.languages,
+                ...(assignment.languages || [])
+            ])
+        ];
+
+        studentAssignment.eca = [
+            ...new Set([
+                ...studentAssignment.eca,
+                ...(assignment.eca || [])
+            ])
+        ];
+
+        // Preserve the existing students array for the website
+        const alreadyInStudents = period.students.some(
+            s => String(s._id) === studentId
+        );
+
+        if (!alreadyInStudents) {
+
+            period.students.push({
+                _id: studentId,
+                name: student.name || "",
+                studentId: student.studentId || ""
+            });
+        }
+
+    });
 
 });
 
-}
-
-});
 
 
 res.json({
