@@ -2401,12 +2401,21 @@ if (clashResult?.clash) {
     } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 });
 
+
 router.get("/schedules", protect, authorize("founder"), async (req, res) => {
     try {
-        const schedules = await TeacherStudentSchedule.find().populate("teacher", "name subject teacherId").populate("assistantTeacher", "name teacherId").populate("assignments.student", "name studentId subject language eca").sort({ day: 1, startTime: 1 });
+        const schedules = await TeacherStudentSchedule.find()
+            .populate("teacher", "name subject teacherId mobile")
+            .populate("assistantTeacher", "name teacherId mobile")
+            .populate("assignments.student", "name studentId subject language eca")
+            .sort({ day: 1, startTime: 1 });
+
         res.json({ schedules });
-    } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
 });
+
 
 /* ==========================================
    DAILY SCHEDULE REGISTER & HOMEWORK STATUS
