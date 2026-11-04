@@ -38,6 +38,72 @@ const storage = multer.diskStorage({
 
 const upload = multer({storage});
 
+
+/* ================= TEACHER DASHBOARD SUMMARY ================= */
+
+router.get(
+    "/dashboard-summary",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+        try {
+            const teacherId = req.user.id;
+
+            const schedules = await TeacherStudentSchedule.find({
+                $or: [
+                    { teacher: teacherId },
+                    { assistantTeacher: teacherId }
+                ]
+            })
+            .select("className assignments")
+            .lean();
+
+            // UNIQUE CLASSES
+            const classes = new Set();
+
+            // UNIQUE STUDENTS
+            const students = new Set();
+
+            schedules.forEach(schedule => {
+
+                if (schedule.className) {
+                    classes.add(schedule.className.trim());
+                }
+
+                (schedule.assignments || []).forEach(assignment => {
+
+                    if (assignment.student) {
+                        students.add(
+                            String(assignment.student)
+                        );
+                    }
+
+                });
+
+            });
+
+            return res.json({
+                success: true,
+                classes: classes.size,
+                students: students.size,
+                thisWeek: schedules.length
+            });
+
+        } catch (error) {
+
+            console.error(
+                "TEACHER DASHBOARD SUMMARY ERROR:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to load dashboard summary."
+            });
+        }
+    }
+);
+
 /* ================= TEACHER CLASSES ================= */
 
 router.get("/classes", async (req, res) => {
