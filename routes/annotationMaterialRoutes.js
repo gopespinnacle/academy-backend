@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 const AnnotationMaterial = require('../models/AnnotationMaterial');
-const PeriodAssignment = require('../models/PeriodAssignment');
+const TeacherStudentSchedule = require('../models/TeacherStudentSchedule');
 
 // server.js mounts this router without a global req.user middleware, so verify the existing JWT here.
 router.use((req, res, next) => {
@@ -41,7 +41,13 @@ function normalizeGrade(value) {
   return m ? `Grade-${m[1]}` : (/^\d+$/.test(s) ? `Grade-${s}` : s.toLowerCase());
 }
 function getPeriodTeacherIds(period) {
-  const ids = [period && period.teacher, period && period.teacherId, period && period.assignedTeacher, period && period.assignedTeacherId];
+  const ids = [
+  period && period.teacher,
+  period && period.assistantTeacher,
+  period && period.teacherId,
+  period && period.assignedTeacher,
+  period && period.assignedTeacherId
+];
   for (const a of (period && Array.isArray(period.assignments) ? period.assignments : [])) {
     if (a && (a.teacher || a.teacherId || a.assignedTeacher || a.assignedTeacherId)) ids.push(a.teacher || a.teacherId || a.assignedTeacher || a.assignedTeacherId);
   }
@@ -59,7 +65,7 @@ function getPeriodStudentIds(period) {
 }
 async function requirePeriodTeacher(periodId, teacherId) {
   if (!mongoose.Types.ObjectId.isValid(String(periodId))) throw Object.assign(new Error('A valid assigned period is required.'), { status: 400 });
-  const period = await PeriodAssignment.findById(periodId).lean();
+  const period = await TeacherStudentSchedule.findById(periodId).lean();
   if (!period) throw Object.assign(new Error('The assigned period was not found.'), { status: 404 });
   const teacherIds = getPeriodTeacherIds(period);
   if (!teacherIds.length || !teacherIds.includes(String(teacherId))) {
@@ -168,7 +174,8 @@ router.get('/mine', async (req, res) => {
     if (role === 'teacher') {
       materials = await AnnotationMaterial.find({ teacher: id }).sort({ materialDate: -1, createdAt: -1 }).lean();
     } else if (role === 'student') {
-      const assignments = await PeriodAssignment.find({ 'assignments.student': id }).select('_id assignments').lean();
+      const assignments = await TeacherStudentSchedule.find({ 'assignments.student': id })
+  .select('_id assignments').lean();
       const allowedPeriodIds = assignments.filter(p => getPeriodStudentIds(p).includes(String(id))).map(p => p._id);
       materials = await AnnotationMaterial.find({ periodId: { $in: allowedPeriodIds } }).sort({ materialDate: -1, createdAt: -1 }).lean();
     } else {
@@ -188,7 +195,10 @@ router.get('/:id', async (req, res) => {
     if (!material) return res.status(404).json({ success: false, message: 'Learning material not found.' });
     let allowed = role === 'teacher' && sameId(material.teacher, id);
     if (role === 'student') {
-      const assignment = await PeriodAssignment.findOne({ _id: material.periodId, 'assignments.student': id }).lean();
+      const assignment = await TeacherStudentSchedule.findOne({
+  _id: material.periodId,
+  'assignments.student': id
+}).lean();
       allowed = !!assignment && getPeriodStudentIds(assignment).includes(String(id));
     }
     if (!allowed) return res.status(403).json({ success: false, message: 'You are not assigned to this learning material.' });

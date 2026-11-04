@@ -11,7 +11,7 @@ const annotationMaterialSchema = new mongoose.Schema({
   description: { type: String, default: '' },
   materialDate: { type: Date, default: Date.now },
   room: { type: String, required: true },
-  periodId: { type: mongoose.Schema.Types.ObjectId, ref: 'PeriodAssignment', required: true, index: true },
+  periodId: { type: mongoose.Schema.Types.ObjectId, ref: 'TeacherStudentSchedule', required: true, index: true },
   pages: [{
     pageNumber: { type: Number, required: true },
     history: { type: [mongoose.Schema.Types.Mixed], default: [] },
