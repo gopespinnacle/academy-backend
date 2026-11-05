@@ -2297,8 +2297,9 @@ router.get(
 );
 
 
+
 /* ==========================================
-   TEACHER - DAILY SCHEDULE ENTRY STATUS
+   TEACHER - MONTHLY SCHEDULE ENTRY STATUS
 ========================================== */
 
 router.get(
@@ -2307,34 +2308,49 @@ router.get(
     authorize("teacher"),
     async (req, res) => {
         try {
-            const { date } = req.query;
+            const { month } = req.query;
             const teacherId = req.user.id;
 
-            if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            // Expected format: YYYY-MM
+            if (!month || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
                 return res.status(400).json({
                     success: false,
-                    message: "Valid date is required."
+                    message: "Valid month is required (YYYY-MM)."
                 });
             }
 
-            const [year, month, day] = date.split("-").map(Number);
+            const [year, monthNumber] = month.split("-").map(Number);
 
-            const startDate = new Date(year, month - 1, day);
-            const endDate = new Date(year, month - 1, day + 1);
+            // Academy dates are based on Indian Standard Time.
+            const IST_OFFSET = 330 * 60 * 1000;
 
-            if (
-                startDate.getFullYear() !== year ||
-                startDate.getMonth() !== month - 1 ||
-                startDate.getDate() !== day
-            ) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Invalid date."
+            const startDate = new Date(
+                Date.UTC(year, monthNumber - 1, 1) - IST_OFFSET
+            );
+
+            const endDate = new Date(
+                Date.UTC(year, monthNumber, 1) - IST_OFFSET
+            );
+
+            // Convert database dates into YYYY-MM-DD in IST.
+            const getIndiaDateKey = (value) => {
+                const parts = new Intl.DateTimeFormat("en-CA", {
+                    timeZone: "Asia/Kolkata",
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit"
+                }).formatToParts(new Date(value));
+
+                const values = {};
+
+                parts.forEach(part => {
+                    values[part.type] = part.value;
                 });
-            }
 
-            // Only schedules assigned to this teacher
-            // as the main teacher or assistant teacher.
+                return `${values.year}-${values.month}-${values.day}`;
+            };
+
+            // Only this logged-in teacher's schedules.
             const schedules = await TeacherStudentSchedule.find({
                 $or: [
                     { teacher: teacherId },
@@ -2347,7 +2363,7 @@ router.get(
             if (!scheduleIds.length) {
                 return res.json({
                     success: true,
-                    date,
+                    month,
                     statuses: {
                         registers: [],
                         homework: []
@@ -2355,14 +2371,16 @@ router.get(
                 });
             }
 
+            // Retrieve the complete month's records in two queries.
             const [registers, homework] = await Promise.all([
+
                 DailyClassRegister.find({
                     periodAssignment: { $in: scheduleIds },
                     date: {
                         $gte: startDate,
                         $lt: endDate
                     }
-                }).select("periodAssignment"),
+                }).select("periodAssignment date"),
 
                 HomeworkAssignment.find({
                     schedule: { $in: scheduleIds },
@@ -2370,42 +2388,42 @@ router.get(
                         $gte: startDate,
                         $lt: endDate
                     }
-                }).select("schedule")
+                }).select("schedule createdAt")
+
             ]);
 
-            const registerIds = [
-                ...new Set(
-                    registers.map(item => String(item.periodAssignment))
-                )
-            ];
+            const registerStatuses = registers.map(item => ({
+                scheduleId: String(item.periodAssignment),
+                date: getIndiaDateKey(item.date)
+            }));
 
-            const homeworkIds = [
-                ...new Set(
-                    homework.map(item => String(item.schedule))
-                )
-            ];
+            const homeworkStatuses = homework.map(item => ({
+                scheduleId: String(item.schedule),
+                date: getIndiaDateKey(item.createdAt)
+            }));
 
             return res.json({
                 success: true,
-                date,
+                month,
                 statuses: {
-                    registers: registerIds,
-                    homework: homeworkIds
+                    registers: registerStatuses,
+                    homework: homeworkStatuses
                 }
             });
 
         } catch (error) {
             console.error(
-                "TEACHER DAILY SCHEDULE STATUS ERROR:",
+                "TEACHER MONTHLY SCHEDULE STATUS ERROR:",
                 error
             );
 
             return res.status(500).json({
                 success: false,
-                message: "Unable to load daily schedule statuses."
+                message: "Unable to load monthly schedule statuses."
             });
         }
     }
 );
+
 
 module.exports = router;
