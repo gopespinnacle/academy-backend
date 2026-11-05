@@ -870,11 +870,19 @@ assignments.forEach(a => {
 res.json({
     data: grouped.map(period => ({
         ...period,
-        students: (period.students || []).filter(Boolean).map(student => ({
-            _id: student._id || student,
-            name: student.name || "",
-            studentId: student.studentId || ""
-        }))
+
+        students: (period.assignments || [])
+            .filter(assignment => assignment.student)
+            .map(assignment => ({
+                _id: assignment.student._id || assignment.student,
+                name: assignment.student.name || "",
+                studentId: assignment.student.studentId || "",
+
+                // Student-specific assigned activities
+                subjects: assignment.subjects || [],
+                languages: assignment.languages || [],
+                eca: assignment.eca || []
+            }))
     }))
 });
 
