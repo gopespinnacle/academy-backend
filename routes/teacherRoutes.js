@@ -23,6 +23,9 @@ const TeacherLeave = require("../models/TeacherLeave");
 const DailyClassRegister =
     require("../models/DailyClassRegister");
 
+    const HomeworkAssignment =
+    require("../models/HomeworkAssignment");
+
 const { protect, authorize } = require("../middleware/authMiddleware");
 
 /* ================= MULTER ================= */
@@ -2293,5 +2296,116 @@ router.get(
     }
 );
 
+
+/* ==========================================
+   TEACHER - DAILY SCHEDULE ENTRY STATUS
+========================================== */
+
+router.get(
+    "/daily-schedule-entry-status",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+        try {
+            const { date } = req.query;
+            const teacherId = req.user.id;
+
+            if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Valid date is required."
+                });
+            }
+
+            const [year, month, day] = date.split("-").map(Number);
+
+            const startDate = new Date(year, month - 1, day);
+            const endDate = new Date(year, month - 1, day + 1);
+
+            if (
+                startDate.getFullYear() !== year ||
+                startDate.getMonth() !== month - 1 ||
+                startDate.getDate() !== day
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid date."
+                });
+            }
+
+            // Only schedules assigned to this teacher
+            // as the main teacher or assistant teacher.
+            const schedules = await TeacherStudentSchedule.find({
+                $or: [
+                    { teacher: teacherId },
+                    { assistantTeacher: teacherId }
+                ]
+            }).select("_id");
+
+            const scheduleIds = schedules.map(schedule => schedule._id);
+
+            if (!scheduleIds.length) {
+                return res.json({
+                    success: true,
+                    date,
+                    statuses: {
+                        registers: [],
+                        homework: []
+                    }
+                });
+            }
+
+            const [registers, homework] = await Promise.all([
+                DailyClassRegister.find({
+                    periodAssignment: { $in: scheduleIds },
+                    date: {
+                        $gte: startDate,
+                        $lt: endDate
+                    }
+                }).select("periodAssignment"),
+
+                HomeworkAssignment.find({
+                    schedule: { $in: scheduleIds },
+                    createdAt: {
+                        $gte: startDate,
+                        $lt: endDate
+                    }
+                }).select("schedule")
+            ]);
+
+            const registerIds = [
+                ...new Set(
+                    registers.map(item => String(item.periodAssignment))
+                )
+            ];
+
+            const homeworkIds = [
+                ...new Set(
+                    homework.map(item => String(item.schedule))
+                )
+            ];
+
+            return res.json({
+                success: true,
+                date,
+                statuses: {
+                    registers: registerIds,
+                    homework: homeworkIds
+                }
+            });
+
+        } catch (error) {
+            console.error(
+                "TEACHER DAILY SCHEDULE STATUS ERROR:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to load daily schedule statuses."
+            });
+        }
+    }
+);
 
 module.exports = router;
