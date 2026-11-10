@@ -122,14 +122,36 @@ const dailyClassRegisterSchema =
                TEACHER ATTENDANCE
                ========================= */
 
-            teacherStatus: {
-                type: String,
-                enum: [
-                    "Present",
-                    "Absent"
-                ],
-                required: true
-            },
+            registerType: {
+    type: String,
+    enum: ["Class", "Holiday"],
+    default: "Class"
+},
+
+holidayReason: {
+    type: String,
+    enum: [
+        "Weekly Off",
+        "Festival Holiday",
+        "Regional Holiday",
+        "Religious Holiday",
+        "Other"
+    ],
+    default: null
+},
+
+holidayNote: {
+    type: String,
+    default: ""
+},
+
+teacherStatus: {
+    type: String,
+    enum: ["Present", "Absent"],
+    required: function () {
+        return this.registerType !== "Holiday";
+    }
+},
 
 
             /* =========================

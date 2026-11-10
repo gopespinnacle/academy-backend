@@ -1701,31 +1701,35 @@ router.post(
             const teacherId = req.user.id;
 
             const {
-                periodAssignmentId,
-                date,
-                className,
-                subject,
-                scheduledStartTime,
-                scheduledEndTime,
-                actualStartTime,
-                actualEndTime,
-                teacherStatus,
-                topicCovered,
-                students
-            } = req.body;
+    periodAssignmentId,
+    date,
+    className,
+    subject,
+    scheduledStartTime,
+    scheduledEndTime,
+    actualStartTime,
+    actualEndTime,
+    teacherStatus,
+    topicCovered,
+    students,
+    registerType = "Class",
+    holidayReason,
+    holidayNote
+} = req.body;
 
 
             /* ================= VALIDATION ================= */
 
             if (
-                !periodAssignmentId ||
-                !date ||
-                !className ||
-                !subject ||
-                !scheduledStartTime ||
-                !scheduledEndTime ||
-                !teacherStatus
-            ) {
+    !periodAssignmentId ||
+    !date ||
+    !className ||
+    !subject ||
+    !scheduledStartTime ||
+    !scheduledEndTime ||
+    (registerType === "Class" && !teacherStatus) ||
+    !["Class", "Holiday"].includes(registerType)
+) {
 
                 return res.status(400).json({
                     success: false,
@@ -1784,6 +1788,93 @@ const approvedLeave =
         status: "Approved"
 
     });
+
+
+    /* ================= HOLIDAY DECLARATION ================= */
+
+if (registerType === "Holiday") {
+
+    const allowedReasons = [
+        "Weekly Off",
+        "Festival Holiday",
+        "Regional Holiday",
+        "Religious Holiday",
+        "Other"
+    ];
+
+    if (!allowedReasons.includes(holidayReason)) {
+        return res.status(400).json({
+            success: false,
+            message: "Please select a valid holiday reason."
+        });
+    }
+
+    if (
+        holidayReason === "Other" &&
+        (!holidayNote || !holidayNote.trim())
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: "Please enter the holiday reason."
+        });
+    }
+
+    const existingHoliday =
+        await DailyClassRegister.findOne({
+            teacher: teacherId,
+            periodAssignment: periodAssignmentId,
+            date: new Date(date)
+        });
+
+    if (existingHoliday) {
+        return res.status(409).json({
+            success: false,
+            message:
+                "Daily class register already exists for this class and date."
+        });
+    }
+
+    const holidayRecord =
+        await DailyClassRegister.create({
+
+            teacher: teacherId,
+
+            periodAssignment: periodAssignmentId,
+
+            date: new Date(date),
+
+            className,
+
+            subject,
+
+            scheduledStartTime,
+
+            scheduledEndTime,
+
+            actualStartTime: "",
+
+            actualEndTime: "",
+
+            registerType: "Holiday",
+
+            holidayReason,
+
+            holidayNote:
+                holidayNote ? holidayNote.trim() : "",
+
+            topicCovered: "",
+
+            students: []
+
+        });
+
+    return res.status(201).json({
+        success: true,
+        message: "Holiday declared successfully.",
+        data: holidayRecord
+    });
+
+}
 
 
 /* ================= TEACHER ABSENT ================= */
