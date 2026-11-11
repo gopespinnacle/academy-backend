@@ -13,6 +13,8 @@ const Assessment = require("../models/Assessment");
 const Marks = require("../models/Marks");
 const PeriodAssignment = require("../models/PeriodAssignment");
 
+const TeacherStudentSchedule = require("../models/TeacherStudentSchedule");
+
 const {
     protect,
     authorize
@@ -41,6 +43,29 @@ function validateMarks(value, totalMarks) {
     );
 }
 
+function normalizeActivity(value) {
+    return String(value || "").trim().toLowerCase();
+}
+
+function scheduleHasActivity(schedule, activity) {
+    const requested = normalizeActivity(activity);
+
+    return [
+        ...(schedule.subject || []),
+        ...(schedule.language || []),
+        ...(schedule.eca || [])
+    ].some(item => normalizeActivity(item) === requested);
+}
+
+function hasAssignedActivity(assignment, activity) {
+    const requested = normalizeActivity(activity);
+
+    return [
+        ...(assignment.subjects || []),
+        ...(assignment.languages || []),
+        ...(assignment.eca || [])
+    ].some(item => normalizeActivity(item) === requested);
+}
 
 // ============================================================
 // FOUNDER - GET ALL STUDENTS
@@ -530,37 +555,48 @@ router.get(
     authorize("teacher"),
     async (req, res) => {
         try {
-            const periods = await PeriodAssignment.find({
-                teacher: req.user._id
-            })
-            .select("className subject day startTime endTime")
-            .sort({ className: 1, subject: 1 });
+            const periods = await TeacherStudentSchedule.find({
+                $or: [
+                    { teacher: req.user._id },
+                    { assistantTeacher: req.user._id }
+                ]
+            }).select("className subject language eca");
 
             const unique = new Map();
 
             periods.forEach(period => {
-                const key = [
-                    period.className,
-                    period.subject
-                ].join("::");
+                const activities = [
+                    ...(period.subject || []),
+                    ...(period.language || []),
+                    ...(period.eca || [])
+                ];
 
-                if (!unique.has(key)) {
-                    unique.set(key, {
-                        className: period.className,
-                        subject: period.subject
-                    });
-                }
+                activities.forEach(activity => {
+                    if (!activity) return;
+
+                    const key = [
+                        String(period.className || "").trim().toLowerCase(),
+                        String(activity).trim().toLowerCase()
+                    ].join("::");
+
+                    if (!unique.has(key)) {
+                        unique.set(key, {
+                            className: period.className,
+                            subject: String(activity).trim()
+                        });
+                    }
+                });
             });
 
-            res.json({
+            return res.json({
                 success: true,
                 periods: Array.from(unique.values())
             });
 
         } catch (error) {
-            console.error("TEACHER PERIODS:", error);
+            console.error("TEACHER PERIODS ERROR:", error);
 
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: "Unable to load assigned periods."
             });
@@ -590,16 +626,19 @@ router.get(
                 });
             }
 
-            const subjectRegex = new RegExp(
-                "^" + escapeRegex(subject) + "$",
-                "i"
-            );
+            const schedules = await TeacherStudentSchedule.find({
+                $or: [
+                    { teacher: req.user._id },
+                    { assistantTeacher: req.user._id }
+                ],
+                className
+            
+            
+            }).select("subject language eca");
 
-            const assigned = await PeriodAssignment.exists({
-                teacher: req.user._id,
-                className,
-                subject: subjectRegex
-            });
+            const assigned = schedules.some(schedule =>
+                scheduleHasActivity(schedule, subject)
+            );
 
             if (!assigned) {
                 return res.status(403).json({
@@ -608,13 +647,17 @@ router.get(
                 });
             }
 
+            const subjectRegex = new RegExp(
+                "^" + escapeRegex(subject) + "$",
+                "i"
+            );
+
             const assessments = await Assessment.find({
                 className,
                 subject: subjectRegex
-            })
-            .sort({ date: -1 });
+            }).sort({ date: -1 });
 
-            res.json({
+            return res.json({
                 success: true,
                 assessments
             });
@@ -622,7 +665,7 @@ router.get(
         } catch (error) {
             console.error("TEACHER ASSESSMENTS:", error);
 
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: "Unable to load assessments."
             });
@@ -652,44 +695,40 @@ router.get(
                 });
             }
 
-            const subjectRegex = new RegExp(
-                "^" + escapeRegex(subject) + "$",
-                "i"
-            );
-
-            const periods = await PeriodAssignment.find({
-                teacher: req.user._id,
-                className,
-                subject: subjectRegex
+            const periods = await TeacherStudentSchedule.find({
+                $or: [
+                    { teacher: req.user._id },
+                    { assistantTeacher: req.user._id }
+                ],
+                className
             }).populate(
                 "assignments.student",
-                "name studentId grade"
+                "name studentName studentId grade"
             );
 
             const studentsMap = new Map();
 
             periods.forEach(period => {
                 (period.assignments || []).forEach(assignment => {
+                    if (!hasAssignedActivity(assignment, subject)) return;
+
                     const student = assignment.student;
 
                     if (student && student._id) {
-                        studentsMap.set(
-                            String(student._id),
-                            student
-                        );
+                        studentsMap.set(String(student._id), student);
                     }
                 });
             });
 
-            res.json({
+            return res.json({
                 success: true,
                 students: Array.from(studentsMap.values())
             });
 
         } catch (error) {
-            console.error("TEACHER MARKS STUDENTS:", error);
+            console.error("TEACHER MARKS STUDENTS ERROR:", error);
 
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: "Unable to load assigned students."
             });
@@ -718,9 +757,7 @@ router.get(
                 });
             }
 
-            const assessment = await Assessment.findById(
-                assessmentId
-            );
+            const assessment = await Assessment.findById(assessmentId);
 
             if (!assessment) {
                 return res.status(404).json({
@@ -729,49 +766,54 @@ router.get(
                 });
             }
 
-            const subjectRegex = new RegExp(
-                "^" + escapeRegex(assessment.subject) + "$",
-                "i"
+            const schedules = await TeacherStudentSchedule.find({
+                $or: [
+                    { teacher: req.user._id },
+                    { assistantTeacher: req.user._id }
+                ],
+                className: assessment.className
+            }).select("subject language eca assignments");
+
+            const assignedSchedule = schedules.some(schedule =>
+                scheduleHasActivity(schedule, assessment.subject)
             );
 
-            const assigned = await PeriodAssignment.exists({
-                teacher: req.user._id,
-                className: assessment.className,
-                subject: subjectRegex
-            });
-
-            if (!assigned) {
+            if (!assignedSchedule) {
                 return res.status(403).json({
                     success: false,
                     message: "This assessment is not assigned to you."
                 });
             }
 
-            const periods = await PeriodAssignment.find({
-                teacher: req.user._id,
-                className: assessment.className,
-                subject: subjectRegex
-            }).select("assignments.student");
-
             const studentIds = [
                 ...new Set(
-                    periods.flatMap(period =>
-                        (period.assignments || []).map(item =>
-                            String(item.student)
-                        )
+                    schedules.flatMap(schedule =>
+                        (schedule.assignments || [])
+                            .filter(assignment =>
+                                hasAssignedActivity(
+                                    assignment,
+                                    assessment.subject
+                                )
+                            )
+                            .map(assignment =>
+                                String(
+                                    assignment.student?._id ||
+                                    assignment.student
+                                )
+                            )
                     )
                 )
-            ];
+            ].filter(id => validId(id));
 
             const marks = await Marks.find({
                 assessmentId,
                 studentId: { $in: studentIds }
             })
-            .populate("studentId", "name studentId grade")
-            .sort({ createdAt: 1 })
-            .lean();
+                .populate("studentId", "name studentId grade")
+                .sort({ createdAt: 1 })
+                .lean();
 
-            res.json({
+            return res.json({
                 success: true,
                 marks
             });
@@ -779,7 +821,7 @@ router.get(
         } catch (error) {
             console.error("TEACHER GET SAVED MARKS:", error);
 
-            res.status(500).json({
+            return res.status(500).json({
                 success: false,
                 message: "Unable to load saved marks."
             });
@@ -822,24 +864,29 @@ router.post(
                 });
             }
 
-            const subjectRegex = new RegExp(
-                "^" + escapeRegex(assessment.subject) + "$",
-                "i"
-            );
+            const schedules = await TeacherStudentSchedule.find({
+    $or: [
+        { teacher: req.user._id },
+        { assistantTeacher: req.user._id }
+    ],
+    className: assessment.className,
+    "assignments.student": studentId
+}).select("subject language eca assignments");
 
-            const assigned = await PeriodAssignment.exists({
-                teacher: req.user._id,
-                className: assessment.className,
-                subject: subjectRegex,
-                "assignments.student": studentId
-            });
+const assigned = schedules.some(schedule =>
+    (schedule.assignments || []).some(assignment =>
+        String(assignment.student?._id || assignment.student) ===
+            String(studentId) &&
+        hasAssignedActivity(assignment, assessment.subject)
+    )
+);
 
-            if (!assigned) {
-                return res.status(403).json({
-                    success: false,
-                    message: "You are not assigned to this student for this subject."
-                });
-            }
+if (!assigned) {
+    return res.status(403).json({
+        success: false,
+        message: "You are not assigned to this student."
+    });
+}
 
             if (!validateMarks(marksObtained, assessment.totalMarks)) {
                 return res.status(400).json({
