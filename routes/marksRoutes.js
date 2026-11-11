@@ -223,6 +223,44 @@ router.post(
                 });
             }
 
+            // =====================================================
+// VERIFY STUDENT BELONGS TO ASSESSMENT CLASS
+// =====================================================
+
+const normalizeGrade = (value) => {
+    return String(value ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/^grade\s*[-:]?\s*/, "")
+        .replace(/^class\s*[-:]?\s*/, "")
+        .replace(/\s+/g, "");
+};
+
+const studentGrade = normalizeGrade(student.grade);
+
+const assessmentGrade = normalizeGrade(
+    assessment.className
+);
+
+// Prevent saving marks when grade is missing
+if (!studentGrade || !assessmentGrade) {
+    return res.status(400).json({
+        success: false,
+        message:
+            "Student grade or assessment class is missing."
+    });
+}
+
+// Prevent saving marks for a different grade
+if (studentGrade !== assessmentGrade) {
+    return res.status(403).json({
+        success: false,
+        message:
+            `Class mismatch. Student belongs to ${student.grade}, ` +
+            `but assessment is for ${assessment.className}.`
+    });
+}
+
             if (!validateMarks(marksObtained, assessment.totalMarks)) {
                 return res.status(400).json({
                     success: false,
