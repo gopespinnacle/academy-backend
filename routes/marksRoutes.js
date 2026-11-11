@@ -357,6 +357,60 @@ router.delete(
 );
 
 
+/* ============================================================
+   FOUNDER - DELETE COMPLETE ASSESSMENT
+   DELETE /api/marks/founder/assessments/:assessmentId
+============================================================ */
+
+router.delete(
+    "/founder/assessments/:assessmentId",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            const { assessmentId } = req.params;
+
+            if (!validId(assessmentId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid assessment ID."
+                });
+            }
+
+            const assessment = await Assessment.findById(assessmentId);
+
+            if (!assessment) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Assessment not found."
+                });
+            }
+
+            // Delete every student's marks for this assessment
+            const marksResult = await Marks.deleteMany({
+                assessmentId
+            });
+
+            // Delete the assessment itself
+            await Assessment.findByIdAndDelete(assessmentId);
+
+            return res.json({
+                success: true,
+                message: "Assessment and all associated marks deleted successfully.",
+                deletedMarksCount: marksResult.deletedCount
+            });
+
+        } catch (error) {
+            console.error("DELETE COMPLETE ASSESSMENT:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to delete assessment."
+            });
+        }
+    }
+);
+
 
 // ============================================================
 // FOUNDER - PENDING MODIFICATION REQUESTS
