@@ -307,6 +307,57 @@ if (studentGrade !== assessmentGrade) {
 );
 
 
+
+/* ============================================================
+   FOUNDER - DELETE A STUDENT'S SAVED MARKS
+   DELETE /api/marks/founder/assessments/:assessmentId/marks/:studentId
+============================================================ */
+
+router.delete(
+    "/founder/assessments/:assessmentId/marks/:studentId",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            const { assessmentId, studentId } = req.params;
+
+            if (!validId(assessmentId) || !validId(studentId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid assessment or student ID."
+                });
+            }
+
+            const deletedMark = await Marks.findOneAndDelete({
+                assessmentId,
+                studentId
+            });
+
+            if (!deletedMark) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Saved marks entry not found."
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: "Student marks deleted successfully."
+            });
+
+        } catch (error) {
+            console.error("DELETE FOUNDER MARKS ERROR:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to delete student marks."
+            });
+        }
+    }
+);
+
+
+
 // ============================================================
 // FOUNDER - PENDING MODIFICATION REQUESTS
 // GET /api/marks/founder/modification-requests
@@ -988,5 +1039,70 @@ router.get(
         }
     }
 );
+
+
+
+// ============================================================
+// FOUNDER - GET SUBJECTS SCHEDULED FOR SELECTED CLASS
+// GET /api/marks/founder/subjects?className=Grade%20-%201
+// ============================================================
+
+router.get(
+    "/founder/subjects",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            const className = String(
+                req.query.className || ""
+            ).trim();
+
+            if (!className) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please select a class."
+                });
+            }
+
+            const classRegex = new RegExp(
+                "^" + escapeRegex(className) + "$",
+                "i"
+            );
+
+            const subjects = await PeriodAssignment.distinct(
+                "subject",
+                { className: classRegex }
+            );
+
+            const cleanedSubjects = subjects
+                .filter(subject =>
+                    typeof subject === "string" &&
+                    subject.trim() !== ""
+                )
+                .map(subject => subject.trim())
+                .filter((subject, index, array) =>
+                    array.findIndex(
+                        item => item.toLowerCase() === subject.toLowerCase()
+                    ) === index
+                )
+                .sort((a, b) => a.localeCompare(b));
+
+            res.json({
+                success: true,
+                className,
+                subjects: cleanedSubjects
+            });
+
+        } catch (error) {
+            console.error("FOUNDER CLASS SUBJECTS:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to load scheduled subjects."
+            });
+        }
+    }
+);
+
 
 module.exports = router;
