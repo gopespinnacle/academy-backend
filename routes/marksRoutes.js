@@ -843,4 +843,59 @@ router.get(
 );
 
 
+// ============================================================
+// FOUNDER - GET SAVED MARKS FOR AN ASSESSMENT
+// GET /api/marks/founder/assessments/:assessmentId/marks
+// ============================================================
+
+router.get(
+    "/founder/assessments/:assessmentId/marks",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
+            const { assessmentId } = req.params;
+
+            if (!validId(assessmentId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid assessment ID."
+                });
+            }
+
+            const assessment = await Assessment.findById(
+                assessmentId
+            );
+
+            if (!assessment) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Assessment not found."
+                });
+            }
+
+            const marks = await Marks.find({
+                assessmentId
+            })
+            .populate("studentId", "name studentId grade")
+            .sort({ createdAt: 1 })
+            .lean();
+
+            res.json({
+                success: true,
+                assessment,
+                marks
+            });
+
+        } catch (error) {
+            console.error("FOUNDER GET SAVED MARKS:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to load saved marks."
+            });
+        }
+    }
+);
+
 module.exports = router;
