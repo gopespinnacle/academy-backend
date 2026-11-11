@@ -971,17 +971,22 @@ router.post(
                 });
             }
 
-            const subjectRegex = new RegExp(
-                "^" + escapeRegex(assessment.subject) + "$",
-                "i"
-            );
+            const schedules = await TeacherStudentSchedule.find({
+    $or: [
+        { teacher: req.user._id },
+        { assistantTeacher: req.user._id }
+    ],
+    className: assessment.className,
+    "assignments.student": studentId
+}).select("subject language eca assignments");
 
-            const assigned = await PeriodAssignment.exists({
-                teacher: req.user._id,
-                className: assessment.className,
-                subject: subjectRegex,
-                "assignments.student": studentId
-            });
+const assigned = schedules.some(schedule =>
+    (schedule.assignments || []).some(assignment =>
+        String(assignment.student?._id || assignment.student) ===
+            String(studentId) &&
+        hasAssignedActivity(assignment, assessment.subject)
+    )
+);
 
             if (!assigned) {
                 return res.status(403).json({
