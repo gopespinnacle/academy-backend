@@ -594,6 +594,97 @@ router.get(
 
 
 // ============================================================
+// TEACHER - GET SAVED MARKS FOR AN ASSESSMENT
+// GET /api/marks/teacher/assessments/:assessmentId/marks
+// ============================================================
+
+router.get(
+    "/teacher/assessments/:assessmentId/marks",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+        try {
+            const { assessmentId } = req.params;
+
+            if (!validId(assessmentId)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid assessment ID."
+                });
+            }
+
+            const assessment = await Assessment.findById(
+                assessmentId
+            );
+
+            if (!assessment) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Assessment not found."
+                });
+            }
+
+            const subjectRegex = new RegExp(
+                "^" + escapeRegex(assessment.subject) + "$",
+                "i"
+            );
+
+            const assigned = await PeriodAssignment.exists({
+                teacher: req.user._id,
+                className: assessment.className,
+                subject: subjectRegex
+            });
+
+            if (!assigned) {
+                return res.status(403).json({
+                    success: false,
+                    message: "This assessment is not assigned to you."
+                });
+            }
+
+            const periods = await PeriodAssignment.find({
+                teacher: req.user._id,
+                className: assessment.className,
+                subject: subjectRegex
+            }).select("assignments.student");
+
+            const studentIds = [
+                ...new Set(
+                    periods.flatMap(period =>
+                        (period.assignments || []).map(item =>
+                            String(item.student)
+                        )
+                    )
+                )
+            ];
+
+            const marks = await Marks.find({
+                assessmentId,
+                studentId: { $in: studentIds }
+            })
+            .populate("studentId", "name studentId grade")
+            .sort({ createdAt: 1 })
+            .lean();
+
+            res.json({
+                success: true,
+                marks
+            });
+
+        } catch (error) {
+            console.error("TEACHER GET SAVED MARKS:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to load saved marks."
+            });
+        }
+    }
+);
+
+
+
+// ============================================================
 // TEACHER - SUBMIT MARKS
 // POST /api/marks/teacher/submit
 // ============================================================
