@@ -31,26 +31,34 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 
 /* ================= STUDENT RESULTS ================= */
 
-router.get("/results", async (req, res) => {
-    try {
-        const token = req.headers.authorization?.split(" ")[1];
-        const decoded = require("jsonwebtoken").verify(token, process.env.JWT_SECRET);
+/* ================= STUDENT RESULTS ================= */
 
-        const student = await User.findById(decoded.id);
+router.get(
+    "/results",
+    protect,
+    authorize("student"),
+    async (req, res) => {
+        try {
 
-        if (!student || student.role !== "student") {
-            return res.status(403).json({ message: "Access denied" });
+            const results = await Marks.find({
+                studentId: req.user._id
+            })
+            .populate("assessmentId")
+            .sort({ createdAt: -1 });
+
+            res.json({ results });
+
+        } catch (error) {
+
+            console.error("STUDENT RESULTS ERROR:", error);
+
+            res.status(500).json({
+                message: "Error fetching results"
+            });
+
         }
-
-        const results = await Marks.find({ studentId: student._id })
-            .populate("assessmentId");
-
-        res.json({ results });
-
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching results" });
     }
-});
+);
 
 /* ================= TODAY SESSIONS ================= */
 

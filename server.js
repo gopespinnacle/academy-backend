@@ -170,6 +170,9 @@ const admissionAccountRoutes =
 const studentRoutes =
     require("./routes/studentRoutes");
 
+    const marksRoutes =
+    require("./routes/marksRoutes");
+
     const studentWeeklyParentFeedbackRoutes =
     require("./routes/studentWeeklyParentFeedbackRoutes");
 
@@ -625,6 +628,11 @@ app.use(
 app.use(
     "/api/student",
     studentRoutes
+);
+
+app.use(
+    "/api/marks",
+    marksRoutes
 );
 
 
