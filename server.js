@@ -145,6 +145,9 @@ const teacherRoutes =
 const founderRoutes =
     require("./routes/founderRoutes");
 
+    const adminCompensationScheduleRoutes =
+    require("./routes/adminCompensationScheduleRoutes");
+
     const homeworkFlowRoutes =
     require("./routes/homeworkFlowRoutes");
 
@@ -589,6 +592,11 @@ app.use(
 app.use(
     "/api/founder",
     founderRoutes
+);
+
+app.use(
+    "/api/admin-compensation-schedule",
+    adminCompensationScheduleRoutes
 );
 
 app.use(

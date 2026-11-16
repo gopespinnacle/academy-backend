@@ -70,9 +70,12 @@ router.get("/today-sessions", protect, authorize("student"), async (req,res)=>{
         const end = new Date(today.setHours(23,59,59,999));
 
         const sessions = await TeacherSession.find({
-            date:{ $gte:start,$lte:end }
-        }).populate("teacher","name subject");
-
+    date: { $gte: start, $lte: end },
+    $or: [
+        { sessionType: { $ne: "Compensation" } },
+        { assignedStudents: req.user._id }
+    ]
+}).populate("teacher", "name subject");
         res.json({sessions});
 
     }catch(err){
@@ -92,6 +95,20 @@ router.post("/join-class", protect, authorize("student"), async (req,res)=>{
             return res.status(404).json({message:"Session not found"});
         }
 
+        // Check whether this student is assigned to this session
+// Restrict access only for compensation sessions
+if (
+    session.sessionType === "Compensation" &&
+    !session.assignedStudents.some(
+        studentId => String(studentId) === String(req.user._id)
+    )
+) {
+    return res.status(403).json({
+        allowed: false,
+        message: "You are not assigned to this compensation class."
+    });
+}
+
         const now = new Date();
 
         const [startHour,startMinute] = session.startTime.split(":");
@@ -103,7 +120,20 @@ router.post("/join-class", protect, authorize("student"), async (req,res)=>{
 
         if(now <= bufferEnd){
 
-            session.joinedStudents.push(req.user.id);
+            const existingStudent = session.joinedStudents.find(
+    entry => String(entry.student) === String(req.user._id)
+);
+
+if (!existingStudent) {
+    session.joinedStudents.push({
+        student: req.user._id,
+        joinedAt: now,
+        isOnline: true
+    });
+} else {
+    existingStudent.isOnline = true;
+    existingStudent.joinedAt = now;
+}
             await session.save();
 
             const startOfDay = new Date(session.date);

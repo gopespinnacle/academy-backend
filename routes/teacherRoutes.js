@@ -28,6 +28,9 @@ const DailyClassRegister =
 
 const { protect, authorize } = require("../middleware/authMiddleware");
 
+const CompensationScheduleRequest =
+    require("../models/CompensationScheduleRequest");
+
 /* ================= MULTER ================= */
 
 const storage = multer.diskStorage({
@@ -978,6 +981,118 @@ router.get("/teacher-attendance", async (req, res) => {
         res.status(500).json({ message: "Error fetching attendance" });
     }
 });
+
+
+
+// =====================================
+// TEACHER - SUBMIT COMPENSATION REQUEST
+// =====================================
+
+router.post(
+    "/compensation-schedule-request",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+        try {
+            const {
+                className,
+                subject,
+                language,
+                eca,
+                date,
+                startTime,
+                endTime,
+                students,
+                reason
+            } = req.body;
+
+            if (
+                !className ||
+                !date ||
+                !startTime ||
+                !endTime ||
+                !Array.isArray(students) ||
+                students.length === 0
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please provide all required details."
+                });
+            }
+
+            if (
+                !Number.isFinite(new Date(date).getTime()) ||
+                !/^\d{2}:\d{2}$/.test(startTime) ||
+                !/^\d{2}:\d{2}$/.test(endTime) ||
+                endTime <= startTime
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid date or class timing."
+                });
+            }
+
+            const request = await CompensationScheduleRequest.create({
+                teacher: req.user._id,
+                className,
+                subject: subject || [],
+                language: language || [],
+                eca: eca || [],
+                date: new Date(date),
+                startTime,
+                endTime,
+                students,
+                reason: reason || ""
+            });
+
+            res.status(201).json({
+                success: true,
+                message: "Compensation schedule request submitted.",
+                request
+            });
+
+        } catch (error) {
+            console.error("Compensation request error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Failed to submit compensation request."
+            });
+        }
+    }
+);
+
+// =====================================
+// TEACHER - VIEW MY COMPENSATION REQUESTS
+// =====================================
+
+router.get(
+    "/my-compensation-schedule-requests",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+        try {
+            const requests = await CompensationScheduleRequest.find({
+                teacher: req.user._id
+            })
+            .populate("students", "name studentId")
+            .sort({ createdAt: -1 });
+
+            res.json({
+                success: true,
+                requests
+            });
+
+        } catch (error) {
+            console.error("My compensation requests error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Failed to load compensation requests."
+            });
+        }
+    }
+);
 
 /* ================= COMPENSATION LIST ================= */
 

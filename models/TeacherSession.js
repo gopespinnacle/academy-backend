@@ -17,6 +17,12 @@ className:String,
 
 subject:String,
 
+sessionType: {
+    type: String,
+    enum: ["Regular", "Compensation"],
+    default: "Regular"
+},
+
 date:{
 type:Date,
 required:true
@@ -37,10 +43,6 @@ lateMinutes:{
 type:Number,
 default:0
 },
-compensationMinutes:{
-type:Number,
-default:0
-},
 
 compensationStatus:{
 type:String,
@@ -52,6 +54,12 @@ default:0
 },
 
 meetingLink:String,
+
+// Students assigned to this specific class
+assignedStudents: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+}],
 joinedStudents:[
 {
 student:{
