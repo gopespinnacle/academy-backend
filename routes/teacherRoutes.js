@@ -537,6 +537,39 @@ router.get("/today-sessions", protect, authorize("teacher"), async (req,res)=>{
     }
 });
 
+
+/* ================= TEACHER COMPENSATION SESSIONS ================= */
+
+router.get(
+    "/compensation-sessions",
+    protect,
+    authorize("teacher"),
+    async (req, res) => {
+        try {
+            const sessions = await TeacherSession.find({
+                teacher: req.user.id,
+                sessionType: "Compensation"
+            })
+            .populate("assignedStudents", "name studentId")
+            .sort({ date: 1, startTime: 1 });
+
+            res.json({
+                success: true,
+                sessions
+            });
+
+        } catch (error) {
+            console.error("Teacher compensation sessions error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to load compensation sessions"
+            });
+        }
+    }
+);
+
+
 /* ================= MARK SESSION PRESENT ================= */
 
 router.put("/mark-session-present/:id", protect, authorize("teacher"), async (req,res)=>{

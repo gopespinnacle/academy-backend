@@ -132,11 +132,6 @@ day: String,
 
 period: String,
 
-chapter: String,
-
-day: String,
-
-period: String,
 
 scheduledStart: String,
 

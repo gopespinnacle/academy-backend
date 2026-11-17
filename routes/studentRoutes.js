@@ -83,6 +83,37 @@ router.get("/today-sessions", protect, authorize("student"), async (req,res)=>{
     }
 });
 
+
+/* ================= STUDENT COMPENSATION SESSIONS ================= */
+
+router.get(
+    "/compensation-sessions",
+    protect,
+    authorize("student"),
+    async (req, res) => {
+        try {
+            const sessions = await TeacherSession.find({
+                sessionType: "Compensation",
+                assignedStudents: req.user._id
+            })
+            .populate("teacher", "name")
+            .sort({ date: 1, startTime: 1 });
+
+            res.json({
+                success: true,
+                sessions
+            });
+
+        } catch (error) {
+            console.error("Student compensation sessions error:", error);
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to load compensation sessions"
+            });
+        }
+    }
+);
 /* ================= JOIN CLASS ================= */
 
 router.post("/join-class", protect, authorize("student"), async (req,res)=>{
