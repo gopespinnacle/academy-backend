@@ -57,7 +57,18 @@ const dailyClassRegisterSchema =
             periodAssignment: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "TeacherStudentSchedule",
-    required: true
+    required: function () {
+        return this.registerType !== "Compensation";
+    }
+},
+
+compensationSession: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "TeacherSession",
+    default: null,
+    required: function () {
+        return this.registerType === "Compensation";
+    }
 },
 
 
@@ -124,7 +135,7 @@ const dailyClassRegisterSchema =
 
             registerType: {
     type: String,
-    enum: ["Class", "Holiday"],
+    enum: ["Class", "Holiday", "Compensation"],
     default: "Class"
 },
 
@@ -188,6 +199,7 @@ teacherStatus: {
    ONE REGISTER PER TEACHER + PERIOD + DATE
    ================================================= */
 
+// Regular class and holiday registers
 dailyClassRegisterSchema.index(
     {
         teacher: 1,
@@ -195,7 +207,23 @@ dailyClassRegisterSchema.index(
         date: 1
     },
     {
-        unique: true
+        unique: true,
+        partialFilterExpression: {
+            periodAssignment: { $type: "objectId" }
+        }
+    }
+);
+
+// One register per compensation session
+dailyClassRegisterSchema.index(
+    {
+        compensationSession: 1
+    },
+    {
+        unique: true,
+        partialFilterExpression: {
+            compensationSession: { $type: "objectId" }
+        }
     }
 );
 

@@ -1850,6 +1850,7 @@ router.post(
 
             const {
     periodAssignmentId,
+     compensationSessionId,
     date,
     className,
     subject,
@@ -1865,20 +1866,103 @@ router.post(
     holidayNote
 } = req.body;
 
+/* ================= COMPENSATION REGISTER ================= */
+
+if (registerType === "Compensation") {
+
+    if (!compensationSessionId) {
+        return res.status(400).json({
+            success: false,
+            message: "Compensation session ID is required."
+        });
+    }
+
+    const session = await TeacherSession.findOne({
+        _id: compensationSessionId,
+        teacher: teacherId,
+        sessionType: "Compensation"
+    });
+
+    if (!session) {
+        return res.status(404).json({
+            success: false,
+            message: "Compensation session not found or unauthorized."
+        });
+    }
+
+    if (
+        !Array.isArray(students) ||
+        students.length === 0 ||
+        !topicCovered ||
+        !topicCovered.trim()
+    ) {
+        return res.status(400).json({
+            success: false,
+            message: "Student attendance and topic covered are required."
+        });
+    }
+
+    const assignedIds = session.assignedStudents.map(
+        id => String(id)
+    );
+
+    const validStudents = students.every(student =>
+        assignedIds.includes(String(student.student))
+    );
+
+    if (!validStudents) {
+        return res.status(400).json({
+            success: false,
+            message: "Attendance contains students not assigned to this session."
+        });
+    }
+
+    const existing = await DailyClassRegister.findOne({
+        compensationSession: session._id
+    });
+
+    if (existing) {
+        return res.status(409).json({
+            success: false,
+            message: "Daily register already exists for this compensation class."
+        });
+    }
+
+    const register = await DailyClassRegister.create({
+        teacher: teacherId,
+        compensationSession: session._id,
+        date: session.date,
+        className: session.className,
+        subject: session.subject,
+        scheduledStartTime: session.startTime,
+        scheduledEndTime: session.endTime,
+        actualStartTime: actualStartTime || "",
+        actualEndTime: actualEndTime || "",
+        registerType: "Compensation",
+        teacherStatus: teacherStatus || "Present",
+        topicCovered: topicCovered.trim(),
+        students
+    });
+
+    return res.status(201).json({
+        success: true,
+        message: "Compensation class register saved successfully.",
+        data: register
+    });
+}
 
             /* ================= VALIDATION ================= */
 
             if (
-    !periodAssignmentId ||
+    (registerType !== "Compensation" && !periodAssignmentId) ||
     !date ||
     !className ||
     !subject ||
     !scheduledStartTime ||
     !scheduledEndTime ||
-    (registerType === "Class" && !teacherStatus) ||
-    !["Class", "Holiday"].includes(registerType)
+    (registerType !== "Holiday" && !teacherStatus) ||
+    !["Class", "Holiday", "Compensation"].includes(registerType)
 ) {
-
                 return res.status(400).json({
                     success: false,
                     message:
