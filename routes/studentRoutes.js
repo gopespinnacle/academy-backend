@@ -206,8 +206,15 @@ if (!existingStudent) {
         });
 
     }catch(err){
-        res.status(500).json({message:"Server error"});
-    }
+
+    console.error("STUDENT JOIN CLASS ERROR:", err);
+
+    res.status(500).json({
+        message: "Server error",
+        error: err.message
+    });
+
+}
 });
 
 /* ================= TIMETABLE ================= */
