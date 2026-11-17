@@ -223,6 +223,8 @@ require("./cron/sessionCron");
 require("./cron/attendanceCron");
 require("./cron/attendanceAutoExit");
 
+require("./cron/compensationSessionCleanup");
+
 
 // =========================================================
 // EXPRESS APP
