@@ -178,14 +178,15 @@ if (!existingStudent) {
                 studentId: req.user.id,
                 className: session.className,
                 subject: session.subject,
-                createdAt: { $gte: startOfDay, $lte: endOfDay }
+                date: { $gte: startOfDay, $lte: endOfDay }
             },
             {
-                studentId: req.user.id,
-                className: session.className,
-                subject: session.subject,
-                status: "Present"
-            },
+    studentId: req.user.id,
+    className: session.className,
+    subject: session.subject,
+    date: new Date(),
+    status: "Present"
+},
             { upsert: true, new: true });
 
             return res.json({
