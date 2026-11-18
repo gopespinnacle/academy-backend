@@ -15,7 +15,9 @@ const ChampionshipRegistration =
     require("../models/ChampionshipPasswordOTP");
 
 const {
-    sendChampionshipOTP
+    sendChampionshipOTP,
+    sendWhatsAppMessage,
+    sendChampionshipRegistrationAck
 } = require("../services/whatsappService");
 
 const {
@@ -208,6 +210,53 @@ if (uniqueCompetitionNames.size !== competitions.length) {
                     registrationStatus: "Payment Pending"
 
                 });
+
+
+
+// Send registration acknowledgement using approved WhatsApp template
+try {
+
+    let whatsappPhone = registration.parentPhone.replace(/\D/g, "");
+
+    if (whatsappPhone.length === 10) {
+        whatsappPhone = "91" + whatsappPhone;
+    } else if (
+        whatsappPhone.length === 11 &&
+        whatsappPhone.startsWith("0")
+    ) {
+        whatsappPhone = "91" + whatsappPhone.substring(1);
+    }
+
+    const competitionNames = registration.competitions
+        .map(item =>
+            item.competition + " (" + item.category + ")"
+        )
+        .join(", ");
+
+    const whatsappResult =
+        await sendChampionshipRegistrationAck(
+            whatsappPhone,
+            registration.studentName,
+            competitionNames,
+            registration.totalAmount
+        );
+
+    if (!whatsappResult.success) {
+        console.error(
+            "Championship registration acknowledgement failed:",
+            whatsappResult.error
+        );
+    }
+
+} catch (whatsappError) {
+
+    console.error(
+        "Championship acknowledgement error:",
+        whatsappError.message
+    );
+
+}
+
 
             res.status(201).json({
                 success: true,

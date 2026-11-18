@@ -220,6 +220,78 @@ async function sendStudentAccountWhatsApp(
     }
 }
 
+
+async function sendChampionshipRegistrationAck(
+    phone,
+    studentName,
+    competitions,
+    totalAmount
+) {
+    try {
+        const response = await axios.post(
+            `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+            {
+                messaging_product: "whatsapp",
+                to: phone,
+                type: "template",
+                template: {
+                    name: "championship_registration_ack",
+                    language: {
+                        code: "en"
+                    },
+                    components: [
+                        {
+                            type: "body",
+                            parameters: [
+                                {
+                                    type: "text",
+                                    text: String(studentName)
+                                },
+                                {
+                                    type: "text",
+                                    text: String(competitions)
+                                },
+                                {
+                                    type: "text",
+                                    text: String(totalAmount)
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        console.log(
+            "Championship registration acknowledgement sent:",
+            response.data
+        );
+
+        return {
+            success: true,
+            data: response.data
+        };
+
+    } catch (error) {
+        console.error(
+            "Championship registration acknowledgement error:",
+            error.response?.data || error.message
+        );
+
+        return {
+            success: false,
+            error: error.response?.data || error.message
+        };
+    }
+}
+
+
 async function sendChampionshipOTP(phone, otp) {
 
     try {
@@ -304,5 +376,6 @@ module.exports = {
     sendWhatsAppMessage,
     sendWhatsAppTemplate,
     sendStudentAccountWhatsApp,
-    sendChampionshipOTP
+    sendChampionshipOTP,
+    sendChampionshipRegistrationAck
 };
