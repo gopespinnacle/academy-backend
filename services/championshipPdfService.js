@@ -1,5 +1,6 @@
 
 const PDFDocument = require("pdfkit");
+const path = require("path");
 
 function generateChampionshipPDF(registration, participantId, loginId, temporaryPassword) {
 
@@ -22,14 +23,21 @@ function generateChampionshipPDF(registration, participantId, loginId, temporary
 
             doc.on("error", reject);
 
-            // Academy heading
-            doc
-                .fillColor("#14294d")
-                .fontSize(21)
-                .font("Helvetica-Bold")
-                .text("GOPES PINNACLE ACADEMY", {
-                    align: "center"
-                });
+            // Academy logo - top left corner
+const logoPath = path.join(__dirname, "../assets/gpa_logo.png");
+
+doc.image(logoPath, 50, 40, {
+    width: 70
+});
+
+// Academy heading
+doc
+    .fillColor("#14294d")
+    .fontSize(21)
+    .font("Helvetica-Bold")
+    .text("GOPES PINNACLE ACADEMY", {
+        align: "center"
+    });
 
             doc.moveDown(0.5);
 
