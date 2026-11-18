@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 
 const multer = require("multer");
 
@@ -9,6 +10,13 @@ const ChampionshipRegistration =
     require("../models/ChampionshipRegistration");
 
     const User = require("../models/User");
+
+    const ChampionshipPasswordOTP =
+    require("../models/ChampionshipPasswordOTP");
+
+const {
+    sendWhatsAppMessage
+} = require("../services/whatsappService");
 
 const {
     uploadFile: uploadToS3
@@ -400,8 +408,7 @@ router.put(
 // Generate participant login credentials
 const loginId = participantId;
 
-const temporaryPassword =
-    crypto.randomBytes(8).toString("hex");
+const temporaryPassword = "Gopes@1";
 
 // Create separate championship student account
 createdParticipantUser = await User.create({
@@ -558,6 +565,442 @@ router.put(
 
         }
 
+    }
+);
+
+
+/* RESET CHAMPIONSHIP TEST PARTICIPANT PASSWORD */
+
+router.put(
+    "/founder/reset-test-password/:participantId",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+
+        try {
+
+            const user = await User.findOne({
+                email: req.params.participantId,
+                accountType: "championship"
+            });
+
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Championship participant not found."
+                });
+            }
+
+            user.password = "Gopes@1";
+            user.mustChangePassword = true;
+            user.passwordChangedAt = new Date();
+
+            await user.save();
+
+            return res.json({
+                success: true,
+                message: "Test participant password reset successfully.",
+                loginId: user.email,
+                temporaryPassword: "Gopes@1"
+            });
+
+        } catch (error) {
+
+            console.error("TEST PASSWORD RESET ERROR:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to reset test password."
+            });
+
+        }
+    }
+);
+
+/* ==========================================
+   PARTICIPANT - SEND PASSWORD RESET OTP
+========================================== */
+
+router.post(
+    "/participant/forgot-password",
+    async (req, res) => {
+        const genericMessage =
+            "If the participant details are valid, an OTP will be sent to the registered WhatsApp number.";
+
+        try {
+            const { participantId } = req.body;
+
+            if (!participantId) {
+                return res.status(200).json({
+                    success: true,
+                    message: genericMessage
+                });
+            }
+
+            const user = await User.findOne({
+                email: participantId.trim().toUpperCase(),
+                accountType: "championship"
+            });
+
+            if (!user) {
+                return res.status(200).json({
+                    success: true,
+                    message: genericMessage
+                });
+            }
+
+            const registration =
+                await ChampionshipRegistration.findOne({
+                    participantUser: user._id,
+                    registrationStatus: "Confirmed",
+                    "payment.status": "Verified"
+                });
+
+            if (!registration || !registration.parentPhone) {
+                return res.status(200).json({
+                    success: true,
+                    message: genericMessage
+                });
+            }
+
+            // Prevent OTP requests within 60 seconds
+            const existingOTP =
+                await ChampionshipPasswordOTP.findOne({
+                    participantUser: user._id
+                });
+
+            if (
+                existingOTP &&
+                Date.now() - existingOTP.lastSentAt.getTime() < 60000
+            ) {
+                return res.status(200).json({
+                    success: true,
+                    message: genericMessage
+                });
+            }
+
+            // Generate a secure 6-digit OTP
+            const otp = crypto.randomInt(100000, 1000000).toString();
+
+            const otpHash = crypto
+                .createHash("sha256")
+                .update(otp)
+                .digest("hex");
+
+            // Normalize Indian mobile numbers
+            let phone = registration.parentPhone.replace(/\D/g, "");
+
+            if (phone.length === 10) {
+                phone = "91" + phone;
+            } else if (phone.length === 11 && phone.startsWith("0")) {
+                phone = "91" + phone.substring(1);
+            }
+
+            if (phone.length < 11) {
+                return res.status(200).json({
+                    success: true,
+                    message: genericMessage
+                });
+            }
+
+            // Save hashed OTP
+            await ChampionshipPasswordOTP.findOneAndUpdate(
+                { participantUser: user._id },
+                {
+                    participantUser: user._id,
+                    otpHash,
+                    expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+                    attempts: 0,
+                    lastSentAt: new Date()
+                },
+                { upsert: true, new: true, setDefaultsOnInsert: true }
+            );
+
+            // Send OTP through existing WhatsApp service
+            const whatsappResult = await sendWhatsAppMessage(
+                phone,
+                `Gopes Pinnacle Academy - Pinnacle Star Championship 2026
+
+Your password reset OTP is: ${otp}
+
+This OTP is valid for 5 minutes. Do not share it with anyone.`
+            );
+
+            if (!whatsappResult.success) {
+                await ChampionshipPasswordOTP.deleteOne({
+                    participantUser: user._id
+                });
+
+                console.error(
+                    "CHAMPIONSHIP OTP WHATSAPP DELIVERY FAILED:",
+                    whatsappResult.error
+                );
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: genericMessage
+            });
+
+        } catch (error) {
+            console.error("CHAMPIONSHIP SEND OTP ERROR:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to process the request. Please try again."
+            });
+        }
+    }
+);
+
+
+/* ==========================================
+   PARTICIPANT - VERIFY PASSWORD RESET OTP
+========================================== */
+
+router.post(
+    "/participant/verify-otp",
+    async (req, res) => {
+        try {
+            const { participantId, otp } = req.body;
+
+            if (!participantId || !otp) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Participant ID and OTP are required."
+                });
+            }
+
+            const user = await User.findOne({
+                email: participantId.trim().toUpperCase(),
+                accountType: "championship"
+            });
+
+            if (!user) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid participant ID or OTP."
+                });
+            }
+
+            const otpRecord =
+                await ChampionshipPasswordOTP.findOne({
+                    participantUser: user._id
+                });
+
+            if (!otpRecord) {
+                return res.status(400).json({
+                    success: false,
+                    message: "OTP expired or not found. Please request a new OTP."
+                });
+            }
+
+            // Check expiry
+            if (Date.now() > otpRecord.expiresAt.getTime()) {
+                await ChampionshipPasswordOTP.deleteOne({
+                    _id: otpRecord._id
+                });
+
+                return res.status(400).json({
+                    success: false,
+                    message: "OTP has expired. Please request a new OTP."
+                });
+            }
+
+            // Check maximum attempts
+            if (otpRecord.attempts >= 5) {
+                await ChampionshipPasswordOTP.deleteOne({
+                    _id: otpRecord._id
+                });
+
+                return res.status(429).json({
+                    success: false,
+                    message: "Maximum OTP attempts exceeded. Please request a new OTP."
+                });
+            }
+
+            // Hash submitted OTP
+            const submittedHash = crypto
+                .createHash("sha256")
+                .update(String(otp))
+                .digest("hex");
+
+            const storedHashBuffer =
+                Buffer.from(otpRecord.otpHash, "hex");
+
+            const submittedHashBuffer =
+                Buffer.from(submittedHash, "hex");
+
+            const isValid =
+                storedHashBuffer.length === submittedHashBuffer.length &&
+                crypto.timingSafeEqual(
+                    storedHashBuffer,
+                    submittedHashBuffer
+                );
+
+            if (!isValid) {
+                otpRecord.attempts += 1;
+
+                if (otpRecord.attempts >= 5) {
+                    await ChampionshipPasswordOTP.deleteOne({
+                        _id: otpRecord._id
+                    });
+
+                    return res.status(429).json({
+                        success: false,
+                        message: "Maximum OTP attempts exceeded. Please request a new OTP."
+                    });
+                }
+
+                await otpRecord.save();
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Incorrect OTP. Please try again."
+                });
+            }
+
+            // OTP can only be used once
+            await ChampionshipPasswordOTP.deleteOne({
+                _id: otpRecord._id
+            });
+
+            // Generate short-lived password reset token
+            const resetToken = jwt.sign(
+                {
+                    id: user._id,
+                    purpose: "championship-password-reset"
+                },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: "10m"
+                }
+            );
+
+            return res.json({
+                success: true,
+                message: "OTP verified successfully.",
+                resetToken
+            });
+
+        } catch (error) {
+            console.error(
+                "CHAMPIONSHIP OTP VERIFICATION ERROR:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to verify OTP. Please try again."
+            });
+        }
+    }
+);
+
+
+/* ==========================================
+   PARTICIPANT - RESET PERMANENT PASSWORD
+========================================== */
+
+router.post(
+    "/participant/reset-password",
+    async (req, res) => {
+        try {
+            const {
+                resetToken,
+                newPassword,
+                confirmPassword
+            } = req.body;
+
+            if (!resetToken || !newPassword || !confirmPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please fill all required fields."
+                });
+            }
+
+            if (newPassword.length < 8) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Password must contain at least 8 characters."
+                });
+            }
+
+            if (newPassword !== confirmPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Passwords do not match."
+                });
+            }
+
+            // Verify the short-lived reset token
+            let decoded;
+
+            try {
+                decoded = jwt.verify(
+                    resetToken,
+                    process.env.JWT_SECRET
+                );
+            } catch (tokenError) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Password reset session expired. Please verify OTP again."
+                });
+            }
+
+            if (
+                decoded.purpose !== "championship-password-reset" ||
+                !decoded.id
+            ) {
+                return res.status(401).json({
+                    success: false,
+                    message: "Invalid password reset session."
+                });
+            }
+
+            const user = await User.findById(decoded.id);
+
+            if (!user || user.accountType !== "championship") {
+                return res.status(404).json({
+                    success: false,
+                    message: "Championship participant not found."
+                });
+            }
+
+            // Prevent reuse of a reset token after password change
+            if (
+                user.passwordChangedAt &&
+                decoded.iat * 1000 < user.passwordChangedAt.getTime()
+            ) {
+                return res.status(401).json({
+                    success: false,
+                    message: "This password reset session has already been used."
+                });
+            }
+
+            // Save the new permanent password
+            user.password = newPassword;
+            user.mustChangePassword = false;
+            user.passwordChangedAt = new Date();
+
+            await user.save();
+
+            return res.json({
+                success: true,
+                message: "Password changed successfully. Please login again."
+            });
+
+        } catch (error) {
+            console.error(
+                "CHAMPIONSHIP PASSWORD RESET ERROR:",
+                error
+            );
+
+            return res.status(500).json({
+                success: false,
+                message: "Unable to reset password. Please try again."
+            });
+        }
     }
 );
 
