@@ -145,6 +145,10 @@ const teacherRoutes =
 const founderRoutes =
     require("./routes/founderRoutes");
 
+    // PINNACLE STAR CHAMPIONSHIP 2026
+const championshipRoutes =
+    require("./routes/championshipRoutes");
+
     const adminCompensationScheduleRoutes =
     require("./routes/adminCompensationScheduleRoutes");
 
@@ -594,6 +598,12 @@ app.use(
 app.use(
     "/api/founder",
     founderRoutes
+);
+
+// PINNACLE STAR CHAMPIONSHIP 2026
+app.use(
+    "/api/championship",
+    championshipRoutes
 );
 
 app.use(
