@@ -5,6 +5,8 @@ const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const mongoose = require("mongoose");
+
+const User = require("./models/User");
 const cors = require("cors");
 const multer = require("multer");
 
@@ -2493,22 +2495,44 @@ app.get(
 // =========================================================
 
 mongoose
-    .connect(
-        process.env.MONGO_URI
-    )
-    .then(
-        () =>
+    .connect(process.env.MONGO_URI)
+    .then(async () => {
+
+        console.log("✅ MongoDB Connected");
+
+        try {
+
+            const result = await User.updateMany(
+                {
+                    accountType: "championship",
+                    mustChangePassword: { $exists: false }
+                },
+                {
+                    $set: {
+                        mustChangePassword: true
+                    }
+                }
+            );
+
             console.log(
-                "✅ MongoDB Connected"
-            )
-    )
-    .catch(
-        err =>
-            console.log(
-                "❌ MongoDB Error:",
-                err
-            )
-    );
+                "🏆 Championship password migration:",
+                result.modifiedCount,
+                "accounts updated"
+            );
+
+        } catch (migrationError) {
+
+            console.error(
+                "❌ Championship password migration error:",
+                migrationError
+            );
+
+        }
+
+    })
+    .catch(err => {
+        console.log("❌ MongoDB Error:", err);
+    });
 
 
 // =========================================================
