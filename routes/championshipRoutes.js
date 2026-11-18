@@ -287,6 +287,15 @@ router.get(
                 });
             }
 
+            // Require permanent password before dashboard access
+if (user.mustChangePassword === true) {
+    return res.status(403).json({
+        success: false,
+        mustChangePassword: true,
+        message: "Please change your temporary password before accessing the dashboard."
+    });
+}
+
             // Find only this participant's registration
             const registration =
                 await ChampionshipRegistration.findOne({
@@ -412,6 +421,7 @@ createdParticipantUser = await User.create({
       whatsapp: registration.parentPhone,
 
     accountType: "championship",
+    mustChangePassword: true,
 
     menuPermissions: {
         dashboard: true,

@@ -66,6 +66,16 @@ accountType: {
     default: "academy"
 },
 
+mustChangePassword: {
+    type: Boolean,
+    default: false
+},
+
+passwordChangedAt: {
+    type: Date,
+    default: null
+},
+
 teacherId: {
     type: String,
     unique: true,

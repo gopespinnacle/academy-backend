@@ -115,7 +115,8 @@ exports.loginUser = async (req, res) => {
 
     // ✅ NEW
     menuPermissions: user.menuPermissions,
-    accountType: user.accountType
+    accountType: user.accountType,
+    mustChangePassword: user.mustChangePassword
 }
 });
 
@@ -194,5 +195,77 @@ message:"Server Error"
 });
 
 }
+
+};
+
+
+
+/* ================= CHAMPIONSHIP PASSWORD CHANGE ================= */
+
+exports.changeChampionshipPassword = async (req, res) => {
+
+    try {
+
+        const { newPassword, confirmPassword } = req.body;
+
+        const user = await User.findById(req.user._id);
+
+        if (!user || user.accountType !== "championship") {
+            return res.status(403).json({
+                success: false,
+                message: "Championship participants only."
+            });
+        }
+
+        if (!user.mustChangePassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Password change is not required."
+            });
+        }
+
+        if (!newPassword || !confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Please enter and confirm your new password."
+            });
+        }
+
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Passwords do not match."
+            });
+        }
+
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must contain at least 8 characters."
+            });
+        }
+
+        user.password = newPassword;
+        user.mustChangePassword = false;
+
+        user.passwordChangedAt = new Date();
+
+        await user.save();
+
+        res.json({
+            success: true,
+            message: "Permanent password updated successfully. Please login again."
+        });
+
+    } catch (error) {
+
+        console.error("CHAMPIONSHIP PASSWORD CHANGE ERROR:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Unable to change password."
+        });
+
+    }
 
 };
