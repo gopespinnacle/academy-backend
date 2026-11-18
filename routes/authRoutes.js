@@ -6,6 +6,8 @@ const {
     changeChampionshipPassword
 } = require("../controllers/authController");
 const User = require("../models/User");
+
+const { protect, authorize } = require("../middleware/authMiddleware");
 /* REGISTER */
 router.post("/register", registerUser);
 
