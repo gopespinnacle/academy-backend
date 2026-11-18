@@ -1,4 +1,5 @@
 const axios = require("axios");
+const FormData = require("form-data");
 
 async function sendWhatsAppMessage(phone, message) {
 
@@ -372,10 +373,119 @@ async function sendChampionshipOTP(phone, otp) {
         };
     }
 }
+
+
+
+async function sendWhatsAppDocument(
+    phone,
+    pdfBuffer,
+    filename,
+    studentName,
+    participantId
+) {
+    try {
+
+        // Step 1: Upload PDF to WhatsApp
+        const formData = new FormData();
+
+        formData.append("messaging_product", "whatsapp");
+
+        formData.append("file", pdfBuffer, {
+            filename: filename,
+            contentType: "application/pdf"
+        });
+
+        const uploadResponse = await axios.post(
+            `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/media`,
+            formData,
+            {
+                headers: {
+                    ...formData.getHeaders(),
+                    Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`
+                }
+            }
+        );
+
+        const mediaId = uploadResponse.data.id;
+
+        // Step 2: Send PDF using approved Utility template
+        const sendResponse = await axios.post(
+            `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+            {
+                messaging_product: "whatsapp",
+                to: phone,
+                type: "template",
+
+                template: {
+                    name: "championship_participant_confirmation",
+
+                    language: {
+                        code: "en"
+                    },
+
+                    components: [
+                        {
+                            type: "header",
+                            parameters: [
+                                {
+                                    type: "document",
+                                    document: {
+                                        id: mediaId,
+                                        filename: filename
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            type: "body",
+                            parameters: [
+                                {
+                                    type: "text",
+                                    text: String(studentName ?? "")
+                                },
+                                {
+                                    type: "text",
+                                    text: String(participantId ?? "")
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        console.log("Championship PDF sent successfully.");
+
+        return {
+            success: true,
+            data: sendResponse.data
+        };
+
+    } catch (error) {
+
+        console.error(
+            "WhatsApp championship PDF delivery failed:",
+            error.response?.data || error.message
+        );
+
+        return {
+            success: false,
+            error: error.response?.data || error.message
+        };
+    }
+}
+
 module.exports = {
     sendWhatsAppMessage,
     sendWhatsAppTemplate,
     sendStudentAccountWhatsApp,
     sendChampionshipOTP,
-    sendChampionshipRegistrationAck
+    sendChampionshipRegistrationAck,
+    sendWhatsAppDocument
 };

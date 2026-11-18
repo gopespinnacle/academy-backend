@@ -17,8 +17,13 @@ const ChampionshipRegistration =
 const {
     sendChampionshipOTP,
     sendWhatsAppMessage,
-    sendChampionshipRegistrationAck
+    sendChampionshipRegistrationAck,
+    sendWhatsAppDocument
 } = require("../services/whatsappService");
+
+const {
+    generateChampionshipPDF
+} = require("../services/championshipPdfService");
 
 const {
     uploadFile: uploadToS3
@@ -507,6 +512,53 @@ registration.accountCreatedAt = new Date();
             registration.registrationStatus = "Confirmed";
 
             await registration.save();
+
+
+            // Send participant confirmation PDF to parent's WhatsApp
+            try {
+
+                let whatsappPhone = registration.parentPhone.replace(/\D/g, "");
+
+                if (whatsappPhone.length === 10) {
+                    whatsappPhone = "91" + whatsappPhone;
+                } else if (
+                    whatsappPhone.length === 11 &&
+                    whatsappPhone.startsWith("0")
+                ) {
+                    whatsappPhone = "91" + whatsappPhone.substring(1);
+                }
+
+                const pdfBuffer = await generateChampionshipPDF(
+                    registration,
+                    participantId,
+                    loginId,
+                    temporaryPassword
+                );
+
+                const pdfResult = await sendWhatsAppDocument(
+                    whatsappPhone,
+                    pdfBuffer,
+                    `${participantId}_Confirmation.pdf`,
+                    registration.studentName,
+                    participantId
+                );
+
+                if (!pdfResult.success) {
+                    console.error(
+                        "Championship confirmation PDF delivery failed:",
+                        pdfResult.error
+                    );
+                }
+
+            } catch (pdfError) {
+
+                console.error(
+                    "Championship PDF generation/delivery error:",
+                    pdfError.message
+                );
+
+            }
+
 
             res.json({
     success: true,
