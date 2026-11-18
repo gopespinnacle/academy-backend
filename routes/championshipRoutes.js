@@ -15,7 +15,7 @@ const ChampionshipRegistration =
     require("../models/ChampionshipPasswordOTP");
 
 const {
-    sendWhatsAppMessage
+    sendChampionshipOTP
 } = require("../services/whatsappService");
 
 const {
@@ -716,15 +716,10 @@ router.post(
                 { upsert: true, new: true, setDefaultsOnInsert: true }
             );
 
-            // Send OTP through existing WhatsApp service
-            const whatsappResult = await sendWhatsAppMessage(
-                phone,
-                `Gopes Pinnacle Academy - Pinnacle Star Championship 2026
-
-Your password reset OTP is: ${otp}
-
-This OTP is valid for 5 minutes. Do not share it with anyone.`
-            );
+           const whatsappResult = await sendChampionshipOTP(
+    phone,
+    otp
+);
 
             if (!whatsappResult.success) {
                 await ChampionshipPasswordOTP.deleteOne({

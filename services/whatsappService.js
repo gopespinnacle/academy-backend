@@ -219,8 +219,90 @@ async function sendStudentAccountWhatsApp(
         };
     }
 }
+
+async function sendChampionshipOTP(phone, otp) {
+
+    try {
+
+        const response = await axios.post(
+            `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+            {
+                messaging_product: "whatsapp",
+                to: phone,
+                type: "template",
+
+                template: {
+                    name: "championship_password_otp",
+
+                    language: {
+                        code: "en"
+                    },
+
+                    components: [
+
+                        {
+                            type: "body",
+
+                            parameters: [
+                                {
+                                    type: "text",
+                                    text: String(otp)
+                                }
+                            ]
+                        },
+
+                        {
+                            type: "button",
+                            sub_type: "url",
+                            index: "0",
+
+                            parameters: [
+                                {
+                                    type: "text",
+                                    text: String(otp)
+                                }
+                            ]
+                        }
+
+                    ]
+                }
+            },
+            {
+                headers: {
+                    Authorization:
+                        `Bearer ${process.env.WHATSAPP_TOKEN}`,
+
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        console.log(
+            "✅ Championship OTP template sent:",
+            response.data
+        );
+
+        return {
+            success: true,
+            data: response.data
+        };
+
+    } catch (error) {
+
+        console.error(
+            "❌ Championship OTP template error:",
+            error.response?.data || error.message
+        );
+
+        return {
+            success: false,
+            error: error.response?.data || error.message
+        };
+    }
+}
 module.exports = {
     sendWhatsAppMessage,
     sendWhatsAppTemplate,
-    sendStudentAccountWhatsApp
+    sendStudentAccountWhatsApp,
+    sendChampionshipOTP
 };
