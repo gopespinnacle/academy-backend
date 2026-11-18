@@ -114,7 +114,8 @@ exports.loginUser = async (req, res) => {
     meetingLink: user.meetingLink,
 
     // ✅ NEW
-    menuPermissions: user.menuPermissions
+    menuPermissions: user.menuPermissions,
+    accountType: user.accountType
 }
 });
 

@@ -136,6 +136,42 @@ const championshipRegistrationSchema = new mongoose.Schema(
             sparse: true
         },
 
+        // Championship participant login account
+participantUser: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
+},
+
+loginId: {
+    type: String,
+    default: ""
+},
+
+accountCreatedAt: {
+    type: Date,
+    default: null
+},
+
+// WhatsApp credential delivery tracking
+credentialsDelivery: {
+    status: {
+        type: String,
+        enum: ["Not Sent", "Sent", "Failed"],
+        default: "Not Sent"
+    },
+
+    sentAt: {
+        type: Date,
+        default: null
+    },
+
+    error: {
+        type: String,
+        default: ""
+    }
+},
+
         registeredAt: {
             type: Date,
             default: Date.now

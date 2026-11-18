@@ -59,6 +59,13 @@ studentId: {
     sparse: true
 },
 
+// Championship participant account
+accountType: {
+    type: String,
+    enum: ["academy", "championship"],
+    default: "academy"
+},
+
 teacherId: {
     type: String,
     unique: true,

@@ -1,11 +1,14 @@
 
 const express = require("express");
 const router = express.Router();
+const crypto = require("crypto");
 
 const multer = require("multer");
 
 const ChampionshipRegistration =
     require("../models/ChampionshipRegistration");
+
+    const User = require("../models/User");
 
 const {
     uploadFile: uploadToS3
@@ -51,6 +54,7 @@ router.post(
     "/register",
     upload.single("paymentProof"),
     async (req, res) => {
+
 
         try {
 
@@ -262,6 +266,75 @@ router.get(
 
 
 /* ==========================================
+   PARTICIPANT - VIEW OWN REGISTRATION
+========================================== */
+
+router.get(
+    "/participant/me",
+    protect,
+    authorize("student"),
+    async (req, res) => {
+
+        try {
+
+            // Confirm this is a championship account
+            const user = await User.findById(req.user._id);
+
+            if (!user || user.accountType !== "championship") {
+                return res.status(403).json({
+                    success: false,
+                    message: "Access denied. Championship participants only."
+                });
+            }
+
+            // Find only this participant's registration
+            const registration =
+                await ChampionshipRegistration.findOne({
+                    participantUser: user._id,
+                    registrationStatus: "Confirmed",
+                    "payment.status": "Verified"
+                }).select(
+                    "studentName grade competitions participantId registrationStatus registeredAt createdAt"
+                );
+
+            if (!registration) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Championship registration not found."
+                });
+            }
+
+            res.json({
+                success: true,
+                participant: {
+                    studentName: registration.studentName,
+                    grade: registration.grade,
+                    participantId: registration.participantId,
+                    competitions: registration.competitions,
+                    registrationStatus: registration.registrationStatus,
+                    eventDate: "December 27, 2026"
+                }
+            });
+
+        } catch (error) {
+
+            console.error(
+                "CHAMPIONSHIP PARTICIPANT DETAILS ERROR:",
+                error
+            );
+
+            res.status(500).json({
+                success: false,
+                message: "Unable to load participant details."
+            });
+
+        }
+
+    }
+);
+
+
+/* ==========================================
    FOUNDER - VERIFY CHAMPIONSHIP PAYMENT
 ========================================== */
 
@@ -270,6 +343,7 @@ router.put(
     protect,
     authorize("founder"),
     async (req, res) => {
+                let createdParticipantUser = null;
 
         try {
 
@@ -313,7 +387,52 @@ router.put(
             const participantId =
                 `PSC26-${String(counter.sequenceValue).padStart(4, "0")}`;
 
+
+// Generate participant login credentials
+const loginId = participantId;
+
+const temporaryPassword =
+    crypto.randomBytes(8).toString("hex");
+
+// Create separate championship student account
+createdParticipantUser = await User.create({
+
+    name: registration.studentName,
+
+    email: loginId,
+
+    password: temporaryPassword,
+
+    role: "student",
+
+    grade: registration.grade,
+
+    mobile: registration.parentPhone,
+
+      whatsapp: registration.parentPhone,
+
+    accountType: "championship",
+
+    menuPermissions: {
+        dashboard: true,
+        myClasses: false,
+        attendance: false,
+        aiAssessment: false,
+        homework: false,
+        calendar: false,
+        marksEntry: false
+    }
+
+});
+
+
             registration.participantId = participantId;
+
+            registration.participantUser = createdParticipantUser._id;
+
+registration.loginId = loginId;
+
+registration.accountCreatedAt = new Date();
 
             registration.payment.status = "Verified";
             registration.payment.verifiedBy = req.user._id;
@@ -324,13 +443,32 @@ router.put(
             await registration.save();
 
             res.json({
-                success: true,
-                message: "Payment verified successfully",
-                participantId,
-                registration
-            });
+    success: true,
+
+    message: "Payment verified and participant account created successfully",
+
+    participantId,
+
+    loginId,
+
+    temporaryPassword,
+
+    registration
+});
 
         } catch (error) {
+
+
+            if (createdParticipantUser) {
+    try {
+        await User.findByIdAndDelete(createdParticipantUser._id);
+    } catch (cleanupError) {
+        console.error(
+            "PARTICIPANT ACCOUNT CLEANUP ERROR:",
+            cleanupError
+        );
+    }
+}
 
             console.error(
                 "CHAMPIONSHIP PAYMENT VERIFICATION ERROR:",
