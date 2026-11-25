@@ -3370,11 +3370,16 @@ const studentId = await getNextStudentId();
 
             email: loginEmail,
 
-            password: temporaryPassword,
+password: temporaryPassword,
 
-            role: "student",
+loginEmail: loginEmail,
+loginPassword: temporaryPassword,
 
-            studentId: studentId,
+monthlyFee: Number(admission.totalAmount) || 0,
+
+role: "student",
+
+studentId: studentId,
 
             accountType: "academy",
 
