@@ -1,42 +1,44 @@
+
 const mongoose = require("mongoose");
 
 const admissionSchema = new mongoose.Schema({
 
-    parentName:String,
+    parentName: String,
 
-    studentName:String,
+    studentName: String,
 
-    grade:String,
+    grade: String,
 
-    mobile:String,
+    board: String, // ✅ NEW: Board / Curriculum
 
-    courses:[String],
+    mobile: String,
 
-    studentDOB:String,
+    courses: [String],
 
-    parentMobile:String,
+    studentDOB: String,
 
-    parentWhatsapp:String,
+    parentMobile: String,
 
-    parentEmail:String,
+    parentWhatsapp: String,
 
-    address:String,
+    parentEmail: String,
 
-    subjects:[String],
+    address: String,
 
-    selectedPlan:String,
+    subjects: [String],
 
-    totalAmount:String,
+    selectedPlan: String,
 
-    utr:String
+    totalAmount: String,
+
+    utr: String
 
 },
 {
-    timestamps:true
+    timestamps: true
 });
 
-module.exports =
-mongoose.model(
+module.exports = mongoose.model(
     "Admission",
     admissionSchema
 );
