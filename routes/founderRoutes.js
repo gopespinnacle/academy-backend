@@ -3295,6 +3295,175 @@ router.get("/admissions", async (req, res) => {
     }
 });
 
+// =================================================
+// APPROVE ADMISSION → CREATE STUDENT ACCOUNT
+// =================================================
+
+router.post("/admission/:id/approve", async (req, res) => {
+
+    try {
+
+        const admission = await Admission.findById(req.params.id);
+
+        if (!admission) {
+            return res.status(404).json({
+                success: false,
+                message: "Admission not found"
+            });
+        }
+
+        // Prevent duplicate approval
+        if (admission.approved) {
+            return res.status(400).json({
+                success: false,
+                message: "This admission has already been approved"
+            });
+        }
+
+        // Check for existing student using mobile
+        const existingStudent = await User.findOne({
+            role: "student",
+            mobile: admission.mobile
+        });
+
+        if (existingStudent) {
+            return res.status(400).json({
+                success: false,
+                message: "A student account already exists with this mobile number"
+            });
+        }
+
+        // Generate sequential Student ID
+const studentId = await getNextStudentId();
+
+
+        // Generate unique login email
+        const cleanName = (admission.studentName || "student")
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "");
+
+        const loginEmail = `${cleanName}.${studentId.replace("GPA-", "")}@student.com`;
+
+        // Check email uniqueness
+        const emailExists = await User.findOne({
+            email: loginEmail
+        });
+
+        if (emailExists) {
+            return res.status(409).json({
+                success: false,
+                message: "Generated login email already exists. Please retry."
+            });
+        }
+
+        // Generate temporary password
+        const crypto = require("crypto");
+
+        const temporaryPassword =
+            crypto.randomBytes(6).toString("hex");
+
+
+        // Create student account
+        const student = new User({
+
+            name: admission.studentName,
+
+            email: loginEmail,
+
+            password: temporaryPassword,
+
+            role: "student",
+
+            studentId: studentId,
+
+            accountType: "academy",
+
+            mustChangePassword: true,
+
+            grade: admission.grade || "",
+
+            board: admission.board || "",
+
+            subject: admission.subjects || [],
+
+            mobile: admission.mobile || "",
+
+            whatsapp: admission.parentWhatsapp || admission.mobile || "",
+
+            address: admission.address || "",
+
+            parentName: admission.parentName || "",
+
+            studentDOB: admission.studentDOB || "",
+
+            parentMobile: admission.parentMobile || "",
+
+            parentWhatsapp: admission.parentWhatsapp || "",
+
+            parentEmail: admission.parentEmail || "",
+
+            courses: admission.courses || [],
+
+            selectedPlan: admission.selectedPlan || "",
+
+            totalAmount: admission.totalAmount || "",
+
+            utr: admission.utr || ""
+
+        });
+
+
+        // Save student (password is automatically hashed)
+        await student.save();
+
+
+        // Mark admission as approved
+        admission.approved = true;
+
+        admission.approvedAt = new Date();
+
+        admission.createdStudentId = student._id;
+
+        await admission.save();
+
+
+        // Return credentials to Founder page
+        res.status(200).json({
+
+            success: true,
+
+            message: "Admission approved successfully",
+
+            student: {
+
+                name: student.name,
+
+                studentId: student.studentId,
+
+                email: student.email,
+
+                temporaryPassword: temporaryPassword
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.error("Admission approval error:", error);
+
+        res.status(500).json({
+
+            success: false,
+
+            message: "Error approving admission"
+
+        });
+
+    }
+
+});
+
 // DELETE ADMISSION
 router.delete("/admission/:id", async (req, res) => {
   try {
@@ -3304,6 +3473,9 @@ router.delete("/admission/:id", async (req, res) => {
     res.status(500).json({ message: "Error deleting" });
   }
 });
+
+
+
 const multer = require("multer");
 const path = require("path");
 const stream = require("stream");
