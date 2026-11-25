@@ -63,4 +63,25 @@ const authorize = (...roles) => {
         next();
     };
 };
-module.exports = { protect, authorize };
+
+
+const requireChampionshipParticipant = (req, res, next) => {
+    if (
+        !req.user ||
+        req.user.accountType !== "championship" ||
+        !req.user.studentId
+    ) {
+        return res.status(403).json({
+            success: false,
+            message: "Access restricted to championship participants."
+        });
+    }
+
+    next();
+};
+
+module.exports = {
+    protect,
+    authorize,
+    requireChampionshipParticipant
+};
