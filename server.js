@@ -151,6 +151,9 @@ const founderRoutes =
 const championshipRoutes =
     require("./routes/championshipRoutes");
 
+    const championshipAbacusRoutes =
+    require("./routes/championshipAbacusRoutes");
+
     const adminCompensationScheduleRoutes =
     require("./routes/adminCompensationScheduleRoutes");
 
@@ -606,6 +609,11 @@ app.use(
 app.use(
     "/api/championship",
     championshipRoutes
+);
+
+app.use(
+    "/api/championship-abacus",
+    championshipAbacusRoutes
 );
 
 app.use(
