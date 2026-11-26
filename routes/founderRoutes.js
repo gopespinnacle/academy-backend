@@ -3476,6 +3476,59 @@ studentId: studentId,
         // Save student (password is automatically hashed)
         await student.save();
 
+        // ================================================
+// GENERATE STUDENT CREDENTIAL PDF & SEND WHATSAPP
+// ================================================
+
+let whatsappPDFResult = null;
+
+try {
+
+    const pdfBuffer = await generateAdmissionCredentialPDF({
+        studentName: student.name,
+        studentId: student.studentId,
+        email: student.email,
+        temporaryPassword: temporaryPassword,
+        grade: student.grade,
+        board: student.board
+    });
+
+    let parentPhone = admission.parentWhatsapp ||
+                      admission.parentMobile ||
+                      admission.mobile ||
+                      "";
+
+    parentPhone = String(parentPhone).replace(/\D/g, "");
+
+    if (parentPhone.length === 10) {
+        parentPhone = "91" + parentPhone;
+    } else if (parentPhone.startsWith("0") && parentPhone.length === 11) {
+        parentPhone = "91" + parentPhone.substring(1);
+    }
+
+    if (parentPhone) {
+
+        whatsappPDFResult = await sendWhatsAppDocument(
+            parentPhone,
+            pdfBuffer,
+            `${student.studentId}_login_credentials.pdf`,
+            student.name,
+            student.studentId
+        );
+
+    }
+
+    console.log("Admission credentials PDF WhatsApp:", whatsappPDFResult?.success);
+
+} catch (whatsappError) {
+
+    console.error(
+        "Admission PDF WhatsApp failed:",
+        whatsappError.response?.data || whatsappError.message
+    );
+
+}
+
 
         // Mark admission as approved
         admission.approved = true;
