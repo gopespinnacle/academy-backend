@@ -2336,20 +2336,75 @@ const studentId = await getNextStudentId();
     }
 });
 
-router.put("/student/:id", async (req,res)=>{
-    try{
-        const updatedStudent = await User.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new:true }
-        );
+router.put(
+    "/student/:id",
+    protect,
+    authorize("founder"),
+    async (req, res) => {
+        try {
 
-        res.json({ student:updatedStudent });
+            const student = await User.findById(req.params.id);
 
-    }catch(error){
-        res.status(500).json({ message:"Server error" });
+            if (!student) {
+                return res.status(404).json({
+                    message: "Student not found"
+                });
+            }
+
+            // UPDATE STUDENT INFORMATION
+            const allowedFields = [
+                "name",
+                "grade",
+                "board",
+                "subject",
+                "eca",
+                "language",
+                "mobile",
+                "whatsapp",
+                "parentName",
+                "studentDOB",
+                "parentMobile",
+                "parentWhatsapp",
+                "parentEmail",
+                "courses",
+                "selectedPlan",
+                "totalAmount",
+                "utr",
+                "address",
+                "monthlyFee",
+                "loginEmail"
+            ];
+
+            allowedFields.forEach(field => {
+                if (req.body[field] !== undefined) {
+                    student[field] = req.body[field];
+                }
+            });
+
+            // UPDATE PASSWORD ONLY IF PROVIDED
+            if (req.body.password && req.body.password.trim() !== "") {
+                student.password = req.body.password;
+                student.loginPassword = req.body.password;
+            }
+
+            await student.save();
+
+            res.json({
+                message: "Student updated successfully",
+                student
+            });
+
+        } catch (error) {
+
+            console.error("Student update error:", error);
+
+            res.status(500).json({
+                message: "Unable to update student"
+            });
+
+        }
     }
-});
+);
 
 router.delete("/student/:id", async (req,res)=>{
     await User.findByIdAndDelete(req.params.id);
