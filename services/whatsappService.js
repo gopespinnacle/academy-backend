@@ -479,11 +479,98 @@ async function sendWhatsAppDocument(
     }
 }
 
+async function sendAdmissionAccountPDF(
+    phone,
+    pdfBuffer,
+    filename,
+    studentName
+) {
+    try {
+        // Step 1: Upload PDF to WhatsApp
+        const formData = new FormData();
+        formData.append("messaging_product", "whatsapp");
+        formData.append("file", pdfBuffer, {
+            filename: filename,
+            contentType: "application/pdf"
+        });
+
+        const uploadResponse = await axios.post(
+            `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/media`,
+            formData,
+            {
+                headers: {
+                    ...formData.getHeaders(),
+                    Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`
+                }
+            }
+        );
+
+        const mediaId = uploadResponse.data.id;
+
+        // Step 2: Send admission PDF using approved Utility template
+        const sendResponse = await axios.post(
+            `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
+            {
+                messaging_product: "whatsapp",
+                to: phone,
+                type: "template",
+                template: {
+                    name: "admission_account_pdf",
+                    language: { code: "en" },
+                    components: [
+                        {
+                            type: "header",
+                            parameters: [
+                                {
+                                    type: "document",
+                                    document: {
+                                        id: mediaId,
+                                        filename: filename
+                                    }
+                                }
+                            ]
+                        },
+                        {
+                            type: "body",
+                            parameters: [
+                                {
+                                    type: "text",
+                                    text: String(studentName ?? "")
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        console.log("Admission account PDF sent successfully.");
+        return { success: true, data: sendResponse.data };
+
+    } catch (error) {
+        console.error(
+            "Admission account PDF WhatsApp failed:",
+            error.response?.data || error.message
+        );
+
+        return {
+            success: false,
+            error: error.response?.data || error.message
+        };
+    }
+}
 module.exports = {
     sendWhatsAppMessage,
     sendWhatsAppTemplate,
     sendStudentAccountWhatsApp,
     sendChampionshipOTP,
     sendChampionshipRegistrationAck,
-    sendWhatsAppDocument
+    sendWhatsAppDocument,
+    sendAdmissionAccountPDF
 };

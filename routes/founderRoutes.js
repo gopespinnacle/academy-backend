@@ -24,8 +24,9 @@ const router = express.Router();
 const founderController = require("../controllers/founderController")
 const {
     sendWhatsAppMessage,
-    sendStudentAccountWhatsApp
-} = require("../services/whatsappService");;
+    sendStudentAccountWhatsApp,
+    sendAdmissionAccountPDF
+} = require("../services/whatsappService");
 const {
     buildStudentLoginMessage
 } = require("../utils/whatsappTemplates");
@@ -33,6 +34,8 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
 const User = require("../models/User");
+
+const { generateAdmissionCredentialPdf } = require("../services/admissionCredentialPdf");
 const TeacherPayment = require("../models/TeacherPayment");
 const {
     createTeacherPaymentReceipt
@@ -3484,14 +3487,14 @@ let whatsappPDFResult = null;
 
 try {
 
-    const pdfBuffer = await generateAdmissionCredentialPDF({
-        studentName: student.name,
-        studentId: student.studentId,
-        email: student.email,
-        temporaryPassword: temporaryPassword,
-        grade: student.grade,
-        board: student.board
-    });
+    const pdfBuffer = await generateAdmissionCredentialPdf({
+    name: student.name,
+    studentId: student.studentId,
+    email: student.email,
+    temporaryPassword: temporaryPassword,
+    grade: student.grade,
+    board: student.board
+});
 
     let parentPhone = admission.parentWhatsapp ||
                       admission.parentMobile ||
@@ -3508,13 +3511,12 @@ try {
 
     if (parentPhone) {
 
-        whatsappPDFResult = await sendWhatsAppDocument(
-            parentPhone,
-            pdfBuffer,
-            `${student.studentId}_login_credentials.pdf`,
-            student.name,
-            student.studentId
-        );
+        whatsappPDFResult = await sendAdmissionAccountPDF(
+    parentPhone,
+    pdfBuffer,
+    `${student.studentId}_login_credentials.pdf`,
+    student.name
+);
 
     }
 
