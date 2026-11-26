@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const Admission = require("../models/Admission");
 const AdmissionEnquiry = require("../models/AdmissionEnquiry");
-const axios = require("axios");
+const { sendWhatsAppTemplate } = require("../services/whatsappService");
 
 router.post("/admission", async (req, res) => {
     try {
@@ -73,62 +73,96 @@ router.post("/admission", async (req, res) => {
 
         await newAdmission.save();
 
-        // SEND TO ADMIN (YOU)
-        await axios.post(
-            `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
-            {
-                messaging_product: "whatsapp",
-                to: "919566911472",
-                type: "text",
-                text: {
-                    body: `📥 New Admission
+     // ===============================
+// SEND WHATSAPP TEMPLATE TO FOUNDER
+// ===============================
 
-Parent: ${parentName}
-Student: ${studentName}
-Grade: ${grade}
-Board: ${board || "Not specified"}
-Mobile: ${mobile}
-Courses: ${courses.join(", ")}`
-                }
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-                    "Content-Type": "application/json"
-                }
-            }
+const founderPhone = "919566911472";
+
+let founderWhatsAppResult = null;
+
+try {
+
+    founderWhatsAppResult = await sendWhatsAppTemplate(
+        founderPhone,
+        [
+            parentName || "N/A",
+            studentName || "N/A",
+            grade || "N/A",
+            board || "N/A",
+            parentMobile || mobile || "N/A",
+            parentWhatsapp || "N/A",
+            parentEmail || "N/A",
+            Array.isArray(courses) ? courses.join(", ") : (courses || "N/A"),
+            Array.isArray(subjects) ? subjects.join(", ") : (subjects || "N/A"),
+            selectedPlan || "N/A",
+            String(totalAmount || 0),
+            utr || "N/A"
+        ],
+        "new_admission_founder_alert"
+    );
+
+    console.log("Founder WhatsApp:", founderWhatsAppResult.success);
+
+} catch (whatsappError) {
+    console.error("Founder WhatsApp failed:", whatsappError.message);
+}
+
+
+// ===============================
+// SEND WHATSAPP TEMPLATE TO PARENT
+// ===============================
+
+let parentPhone = parentWhatsapp || parentMobile || mobile || "";
+
+parentPhone = String(parentPhone).replace(/\D/g, "");
+
+if (parentPhone.length === 10) {
+    parentPhone = "91" + parentPhone;
+} else if (parentPhone.startsWith("0") && parentPhone.length === 11) {
+    parentPhone = "91" + parentPhone.substring(1);
+}
+
+let parentWhatsAppResult = null;
+
+if (parentPhone) {
+
+    try {
+
+        parentWhatsAppResult = await sendWhatsAppTemplate(
+            parentPhone,
+            [
+                parentName || "Parent",
+                studentName || "N/A",
+                grade || "N/A",
+                board || "N/A",
+                String(totalAmount || 0),
+                utr || "N/A"
+            ],
+            "admission_payment_confirmation"
         );
 
-        // SEND CONFIRMATION
-        await axios.post(
-            `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
-            {
-                messaging_product: "whatsapp",
-                to: "919566911472",
-                type: "text",
-                text: {
-                    body: `Hi ${parentName},
+        console.log("Parent WhatsApp:", parentWhatsAppResult.success);
 
-Thank you for contacting Gopes Pinnacle Academy.
+    } catch (whatsappError) {
 
-Your admission request for ${studentName} (Grade ${grade}) has been received.
+        console.error("Parent WhatsApp failed:", whatsappError.message);
 
-Board: ${board || "Not specified"}
+    }
 
-Our team will contact you shortly.
+}
 
-– Gopes Pinnacle Academy`
-                }
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-                    "Content-Type": "application/json"
-                }
-            }
-        );
+// ===============================
+// FINAL RESPONSE
+// ===============================
 
-        res.status(200).json({ message: "Saved + WhatsApp Sent" });
+res.status(200).json({
+    message: "Admission saved successfully",
+    whatsapp: {
+        founder: founderWhatsAppResult?.success || false,
+        parent: parentWhatsAppResult?.success || false
+    }
+});
 
     } catch (err) {
         console.error(err);

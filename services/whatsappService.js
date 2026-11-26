@@ -54,7 +54,7 @@ async function sendWhatsAppMessage(phone, message) {
     }
 }
 
-async function sendWhatsAppTemplate(phone, parameters) {
+async function sendWhatsAppTemplate(phone, parameters, templateName = "daily_class_report") {
 
     try {
 
@@ -62,13 +62,11 @@ async function sendWhatsAppTemplate(phone, parameters) {
             `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
             {
                 messaging_product: "whatsapp",
-
                 to: phone,
-
                 type: "template",
 
                 template: {
-                    name: "daily_class_report",
+                    name: templateName,
 
                     language: {
                         code: "en"
@@ -90,15 +88,14 @@ async function sendWhatsAppTemplate(phone, parameters) {
                 headers: {
                     Authorization:
                         `Bearer ${process.env.WHATSAPP_TOKEN}`,
-
-                    "Content-Type":
-                        "application/json"
+                    "Content-Type": "application/json"
                 }
             }
         );
 
         console.log(
             "✅ WhatsApp template sent:",
+            templateName,
             response.data
         );
 
@@ -111,6 +108,7 @@ async function sendWhatsAppTemplate(phone, parameters) {
 
         console.log(
             "❌ WhatsApp Template Error:",
+            templateName,
             error.response?.data || error.message
         );
 
