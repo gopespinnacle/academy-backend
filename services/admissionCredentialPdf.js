@@ -9,8 +9,8 @@ function generateAdmissionCredentialPdf(student) {
             const doc = new PDFDocument({
                 size: "A4",
                 margins: {
-                    top: 50,
-                    bottom: 50,
+                    top: 40,
+                    bottom: 40,
                     left: 50,
                     right: 50
                 }
@@ -22,6 +22,8 @@ function generateAdmissionCredentialPdf(student) {
             doc.on("end", () => resolve(Buffer.concat(chunks)));
             doc.on("error", reject);
 
+            const pageWidth = 495;
+
             // =========================================
             // ACADEMY LOGO
             // =========================================
@@ -31,11 +33,13 @@ function generateAdmissionCredentialPdf(student) {
                 path.join(__dirname, "../images/logo.png")
             ];
 
-            const logoPath = logoCandidates.find(file => fs.existsSync(file));
+            const logoPath = logoCandidates.find(file =>
+                fs.existsSync(file)
+            );
 
             if (logoPath) {
                 doc.image(logoPath, 50, 40, {
-                    fit: [150, 65]
+                    fit: [145, 60]
                 });
             }
 
@@ -43,71 +47,54 @@ function generateAdmissionCredentialPdf(student) {
             // HEADER
             // =========================================
 
-            doc.moveDown(4);
-
             doc.font("Helvetica-Bold")
-                .fontSize(20)
+                .fontSize(19)
                 .fillColor("#123456")
-                .text("STUDENT ACCOUNT DETAILS", {
+                .text("STUDENT ACCOUNT DETAILS", 50, 125, {
+                    width: pageWidth,
                     align: "center"
                 });
-
-            doc.moveDown(0.5);
 
             doc.font("Helvetica")
-                .fontSize(11)
+                .fontSize(10)
                 .fillColor("#555555")
-                .text("Gopes Pinnacle Academy", {
+                .text("Gopes Pinnacle Academy", 50, 153, {
+                    width: pageWidth,
                     align: "center"
                 });
 
-            doc.moveDown(1.5);
-
-            // Divider
-            doc.moveTo(50, doc.y)
-                .lineTo(545, doc.y)
+            doc.moveTo(50, 180)
+                .lineTo(545, 180)
                 .strokeColor("#123456")
                 .lineWidth(1.5)
                 .stroke();
-
-            doc.moveDown(1.5);
 
             // =========================================
             // STUDENT INFORMATION
             // =========================================
 
             doc.font("Helvetica-Bold")
-                .fontSize(13)
+                .fontSize(12)
                 .fillColor("#123456")
-                .text("Student Information");
-
-            doc.moveDown(0.8);
+                .text("Student Information", 50, 200);
 
             doc.font("Helvetica")
-                .fontSize(11)
+                .fontSize(10.5)
                 .fillColor("#222222");
 
-            doc.text(`Student Name: ${student.name || "N/A"}`);
-            doc.moveDown(0.4);
-
-            doc.text(`Student ID: ${student.studentId || "N/A"}`);
-            doc.moveDown(0.4);
-
-            doc.text(`Grade / Class: ${student.grade || "N/A"}`);
-            doc.moveDown(0.4);
-
-            doc.text(`Board: ${student.board || "N/A"}`);
-
-            doc.moveDown(1.5);
+            doc.text(`Student Name: ${student.name || "N/A"}`, 50, 225);
+            doc.text(`Student ID: ${student.studentId || "N/A"}`, 50, 245);
+            doc.text(`Grade / Class: ${student.grade || "N/A"}`, 50, 265);
+            doc.text(`Board: ${student.board || "N/A"}`, 50, 285);
 
             // =========================================
             // LOGIN CREDENTIALS BOX
             // =========================================
 
             const boxX = 50;
-            const boxY = doc.y;
+            const boxY = 320;
             const boxWidth = 495;
-            const boxHeight = 150;
+            const boxHeight = 135;
 
             doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 10)
                 .fillColor("#f0f6ff")
@@ -118,110 +105,124 @@ function generateAdmissionCredentialPdf(student) {
                 .lineWidth(1)
                 .stroke();
 
-            doc.fillColor("#123456")
-                .font("Helvetica-Bold")
-                .fontSize(14)
-                .text("LOGIN CREDENTIALS", boxX + 20, boxY + 20);
-
-            doc.fillColor("#222222")
-                .font("Helvetica")
-                .fontSize(11);
-
-            doc.text("Login Email:", boxX + 20, boxY + 55);
-
-            doc.font("Helvetica-Bold")
-                .fontSize(12)
-                .fillColor("#000000")
-                .text(student.email || "N/A", boxX + 20, boxY + 75);
-
-            doc.font("Helvetica")
-                .fontSize(11)
-                .fillColor("#222222")
-                .text("Temporary Password:", boxX + 20, boxY + 105);
-
-            doc.font("Helvetica-Bold")
-                .fontSize(13)
-                .fillColor("#b91c1c")
-                .text(student.temporaryPassword || "N/A", boxX + 155, boxY + 105);
-
-            doc.y = boxY + boxHeight + 30;
-
-            // =========================================
-            // INSTRUCTIONS
-            // =========================================
-
             doc.font("Helvetica-Bold")
                 .fontSize(13)
                 .fillColor("#123456")
-                .text("Important Instructions");
-
-            doc.moveDown(0.8);
+                .text("LOGIN CREDENTIALS", boxX + 20, boxY + 18);
 
             doc.font("Helvetica")
+                .fontSize(10.5)
+                .fillColor("#222222")
+                .text("Login Email:", boxX + 20, boxY + 48);
+
+            doc.font("Helvetica-Bold")
                 .fontSize(11)
+                .fillColor("#000000")
+                .text(student.email || "N/A", boxX + 20, boxY + 65, {
+                    width: boxWidth - 40
+                });
+
+            doc.font("Helvetica")
+                .fontSize(10.5)
+                .fillColor("#222222")
+                .text("Temporary Password:", boxX + 20, boxY + 95);
+
+            doc.font("Helvetica-Bold")
+                .fontSize(12)
+                .fillColor("#b91c1c")
+                .text(
+                    student.temporaryPassword || "N/A",
+                    boxX + 155,
+                    boxY + 95,
+                    {
+                        width: boxWidth - 175
+                    }
+                );
+
+            // =========================================
+            // IMPORTANT INSTRUCTIONS
+            // =========================================
+
+            doc.font("Helvetica-Bold")
+                .fontSize(12)
+                .fillColor("#123456")
+                .text("Important Instructions", 50, 485);
+
+            doc.font("Helvetica")
+                .fontSize(10)
                 .fillColor("#222222");
 
-            doc.text(
-                "1. Use the login email and temporary password provided above to log in to the Academy student portal.",
-                {
-                    width: 495,
-                    lineGap: 5
-                }
-            );
+            const instructions = [
+                "Use the login email and temporary password provided above to log in to the Academy student portal.",
+                "You must change your temporary password immediately after your first login.",
+                "Please keep these login credentials confidential and do not share them with others."
+            ];
 
-            doc.moveDown(0.8);
+            let instructionY = 510;
 
-            doc.text(
-                "2. You must change your temporary password immediately after your first login.",
-                {
-                    width: 495,
-                    lineGap: 5
-                }
-            );
+            instructions.forEach((instruction, index) => {
+                doc.font("Helvetica-Bold")
+                    .fontSize(10)
+                    .fillColor("#123456")
+                    .text(`${index + 1}.`, 50, instructionY, {
+                        width: 20
+                    });
 
-            doc.moveDown(0.8);
+                doc.font("Helvetica")
+                    .fontSize(10)
+                    .fillColor("#222222")
+                    .text(instruction, 70, instructionY, {
+                        width: 475,
+                        lineGap: 4
+                    });
 
-            doc.text(
-                "3. Please keep these login credentials confidential and do not share them with others.",
-                {
-                    width: 495,
-                    lineGap: 5
-                }
-            );
-
-            doc.moveDown(1.5);
+                instructionY = doc.y + 15;
+            });
 
             // =========================================
             // FOOTER MESSAGE
             // =========================================
 
+            const footerY = Math.max(instructionY + 25, 680);
+
             doc.font("Helvetica-Bold")
                 .fontSize(12)
                 .fillColor("#123456")
-                .text("Welcome to Gopes Pinnacle Academy!", {
-                    align: "center"
-                });
-
-            doc.moveDown(0.5);
+                .text(
+                    "Welcome to Gopes Pinnacle Academy!",
+                    50,
+                    footerY,
+                    {
+                        width: pageWidth,
+                        align: "center"
+                    }
+                );
 
             doc.font("Helvetica")
                 .fontSize(10)
                 .fillColor("#555555")
                 .text(
                     "We wish you a wonderful learning journey.",
+                    50,
+                    footerY + 25,
                     {
+                        width: pageWidth,
                         align: "center"
                     }
                 );
 
-            doc.moveDown(1);
-
             doc.font("Helvetica-Bold")
-                .fontSize(11)
+                .fontSize(10.5)
                 .fillColor("#123456")
-                .text("Gopes Pinnacle Academy", {
-                    align: "center"
-                });
+                .text(
+                    "Gopes Pinnacle Academy",
+                    50,
+                    footerY + 50,
+                    {
+                        width: pageWidth,
+                        align: "center"
+                    }
+                );
 
             // =========================================
             // FINALIZE PDF
