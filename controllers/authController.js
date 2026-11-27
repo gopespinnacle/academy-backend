@@ -74,24 +74,42 @@ if (role === "founder") {
 
 /* ================= LOGIN ================= */
 
+/* ================= LOGIN ================= */
+
 exports.loginUser = async (req, res) => {
     try {
 
         const { email, password, role } = req.body;
 
+        // Accept either Email or Participant/Student ID
+        const loginIdentifier = email?.trim();
+
+        if (!loginIdentifier || !password || !role) {
+            return res.status(400).json({
+                message: "Please enter your login ID and password."
+            });
+        }
+
         const user = await User.findOne({
-    email,
-    role
-});
+            role,
+            $or: [
+                { email: loginIdentifier },
+                { studentId: loginIdentifier }
+            ]
+        });
 
         if (!user) {
-            return res.status(400).json({ message: "User not found" });
+            return res.status(400).json({
+                message: "User not found"
+            });
         }
 
         const isMatch = await user.matchPassword(password);
 
         if (!isMatch) {
-            return res.status(400).json({ message: "Invalid credentials" });
+            return res.status(400).json({
+                message: "Invalid credentials"
+            });
         }
 
         const token = jwt.sign(
@@ -101,28 +119,30 @@ exports.loginUser = async (req, res) => {
         );
 
         res.status(200).json({
-    message: "Login successful",
-    token,
-    role: user.role,
+            message: "Login successful",
+            token,
+            role: user.role,
 
-    // 🔥 IMPORTANT FIX
-    user: {
-    _id: user._id,
-    studentId: user.studentId,
-    studentName: user.name,
-    className: user.grade,
-    meetingLink: user.meetingLink,
-
-    // ✅ NEW
-    menuPermissions: user.menuPermissions,
-    accountType: user.accountType,
-    mustChangePassword: user.mustChangePassword
-}
-});
+            user: {
+                _id: user._id,
+                studentId: user.studentId,
+                studentName: user.name,
+                className: user.grade,
+                meetingLink: user.meetingLink,
+                menuPermissions: user.menuPermissions,
+                accountType: user.accountType,
+                mustChangePassword: user.mustChangePassword
+            }
+        });
 
     } catch (error) {
+
         console.error("LOGIN ERROR:", error);
-        res.status(500).json({ message: "Server error" });
+
+        res.status(500).json({
+            message: "Server error"
+        });
+
     }
 };
 const PeriodAssignment = require("../models/PeriodAssignment");
